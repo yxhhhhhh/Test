@@ -3921,10 +3921,15 @@ void UI_DrawZoomSubMenuPage(void)
 
 	}
 
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_OFF_S, 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart= 270;
-		tOsdImgInfo.uwYStart =729;	
-		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_OFF_S, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart= 270;
+	tOsdImgInfo.uwYStart =729;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_POINT, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 302;
+	tOsdImgInfo.uwYStart = 1066;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_S, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 48+(96*4);
@@ -4002,16 +4007,19 @@ void UI_ZoomDisplay(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_OFF+(ubSubMenuItemPreFlag*2), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 270+(ubSubMenuItemPreFlag*76);
 	tOsdImgInfo.uwYStart =729;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_OFF_S+(ubSubMenuItemFlag*2), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 270+(ubSubMenuItemFlag*76);
-	tOsdImgInfo.uwYStart =729;		
+	tOsdImgInfo.uwXStart = 270+(ubSubMenuItemFlag*76);
+	tOsdImgInfo.uwYStart = 729;		
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_POINT, 1, &tOsdImgInfo); //20180323
+	tOsdImgInfo.uwXStart = 302+(ubSubMenuItemFlag*75);
+	tOsdImgInfo.uwYStart = 1066;	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 }
 
@@ -4225,7 +4233,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 				if(ubCamFullFlag == 0)
 				{
-					ubPairDisplayTime = 10;
+					ubPairDisplayTime = 60; //10
 					tPairInfo.tPairSelCam = ubPairSelCam;
 					tPairInfo.tDispLocation = ubPairSelCam;
 					
@@ -4300,7 +4308,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-	uint8_t ubMenu_MaxNum[3] = {3,3, 4};
+	uint8_t ubMenu_MaxNum[3] = {3, 3, 4};
 	
 	switch(tArrowKey)
 	{
@@ -4315,7 +4323,6 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 				ubSubSubMenuItemFlag = 0 ;
 				ubSubSubMenuItemPreFlag =  1;
 			}
-			
 			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
 		break;	
 
@@ -4330,7 +4337,6 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 				ubSubSubMenuItemPreFlag =  0;
 				ubSubSubMenuItemFlag = ubMenu_MaxNum[ubSubMenuItemFlag];
 			}	
-			
 			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
 		break;	
 
@@ -4569,7 +4575,7 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 			   (INVALID_ID == tUI_CamStatus[tUI_PuSetting.tAdoSrcCamNum].ulCAM_ID))
 				tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
 
-			ubPairDisplayTime = 10;
+			ubPairDisplayTime = 60; //10
 	
 			UI_ResetDevSetting(tPairInfo.tPairSelCam);
 			UI_UpdateDevStatusInfo();

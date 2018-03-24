@@ -27,7 +27,7 @@
 #include "USBD_API.h"
 //------------------------------------------------------------------------------
 #define APP_EVENTQUEUE_SZ			30
-#define APP_PAIRING_TIMEOUT			10	//!< Unit: seconds
+#define APP_PAIRING_TIMEOUT			60	//!< Unit: seconds
 #define osHeapSize                  ((size_t) (768*1024))
 
 typedef enum
