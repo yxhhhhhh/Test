@@ -1,0 +1,253 @@
+/*!
+	The information contained herein is the exclusive property of SONiX and
+	shall not be distributed, or disclosed in whole or in part without prior
+	permission of SONiX.
+	SONiX reserves the right to make changes without further notice to the
+	product to improve reliability, function or design. SONiX does not assume
+	any liability arising out of the application or use of any product or
+	circuits described herein. All application information is advisor and does
+	not from part of the specification.
+
+	\file		LCD_GPM1125A0.c
+	\brief		LCD GPM1125A0 Funcation
+	\author		Pierce
+	\version	0.1
+	\date		2017/03/13
+	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+*/
+//------------------------------------------------------------------------------
+#include <stdio.h>
+#include <stdint.h>
+#include "LCD.h"
+#include "TIMER.h"
+//------------------------------------------------------------------------------
+#if (LCD_PANEL <= LCD_GPM1125A0_BT656 || LCD_PANEL == LCD_TEST_PANEL)
+uint16_t uwLCD_GPM1125A0_Read(uint8_t ubAddr)
+{
+	uint16_t uwValue=0;
+	uint8_t  ubi;
+	
+	GPM1125A0_SDAO = 1;
+	GPM1125A0_SCL = 1;
+	GPM1125A0_CS = 1;
+	GPM1125A0_SDAIO = 1;
+	GPM1125A0_SCLIO = 1;
+	GPM1125A0_CSIO = 1;	
+	TIMER_Delay_us(1);
+	
+	GPM1125A0_CS = 0;
+	for (ubi=0; ubi<LCD_GPM1125A0_ADDR_MAX; ++ubi)
+	{
+		GPM1125A0_SCL = 0;
+		if (ubAddr & (1 << (LCD_GPM1125A0_ADDR_SFT - ubi)))
+			GPM1125A0_SDAO = 1;
+		else
+			GPM1125A0_SDAO = 0;
+		TIMER_Delay_us(1);
+		GPM1125A0_SCL = 1;
+		TIMER_Delay_us(1);
+	}
+	
+	//! Read
+	GPM1125A0_SCL = 0;
+	GPM1125A0_SDAO = 1;
+	TIMER_Delay_us(1);
+	GPM1125A0_SCL = 1;
+	TIMER_Delay_us(1);
+	//! Data input
+	GPM1125A0_SDAIO = 0;
+	
+	for (ubi=0; ubi<LCD_GPM1125A0_DATA_MAX; ++ubi)
+	{
+		GPM1125A0_SCL = 0;
+		TIMER_Delay_us(1);
+		GPM1125A0_SCL = 1;
+		if (GPM1125A0_SDAI)
+			uwValue |= (1 << (LCD_GPM1125A0_DATA_SFT - ubi));
+		TIMER_Delay_us(1);
+	}
+	TIMER_Delay_us(1);
+	GPM1125A0_CS = 1;
+	return uwValue;
+}
+//------------------------------------------------------------------------------
+bool bLCD_GPM1125A0_Write(uint16_t uwSetting)
+{
+	uint16_t uwWrData, uwRdData;
+	uint8_t  ubAddr, ubi;
+	
+	GPM1125A0_SDAO = 1;
+	GPM1125A0_SCL = 1;
+	GPM1125A0_CS = 1;
+	GPM1125A0_SDAIO = 1;
+	GPM1125A0_SCLIO = 1;
+	GPM1125A0_CSIO = 1;	
+	TIMER_Delay_us(1);
+	
+	GPM1125A0_CS = 0;
+	for (ubi=0; ubi<LCD_GPM1125A0_SETTING_MAX; ++ubi)
+	{
+		GPM1125A0_SCL = 0;
+		if (uwSetting & (1 << (LCD_GPM1125A0_SETTING_SFT - ubi)))
+			GPM1125A0_SDAO = 1;
+		else
+			GPM1125A0_SDAO = 0;
+		TIMER_Delay_us(1);
+		GPM1125A0_SCL = 1;
+		TIMER_Delay_us(1);
+	}
+	TIMER_Delay_us(1);
+	GPM1125A0_CS = 1;
+	if ((uwWrData = uwSetting & LCD_GPM1125A0_DATA_MASK) !=  (uwRdData = uwLCD_GPM1125A0_Read(ubAddr = (uwSetting >> LCD_GPM1125A0_ADDR_SB))))
+	{
+		printf ("Write GPM1125A0 R%d Fail\n", ubAddr);
+		printf ("Write Data = 0x%X\n", uwWrData);
+		printf ("Read Data = 0x%X\n", uwRdData);
+		return false;
+	}
+	return true;
+}
+//------------------------------------------------------------------------------
+bool bLCD_GPM1125A0_SerialRgbData (void)
+{
+	//! GPM1125A0 (SEL: 0)
+	printf("LCD GPM1125A0\n");
+	printf("AU_UPS051_8 Mode\n");
+	printf("Screen Size 480 x 234\n");		
+	LCD->LCD_MODE = LCD_AU_UPS051_8;			
+	LCD->SEL_TV = 0;
+	if (false == bLCD_GPM1125A0_Write(0x6000))	return false;
+
+	LCD->LCD_HO_SIZE = 480;
+	LCD->LCD_VO_SIZE = 234;
+	//! Timing
+	LCD->LCD_HT_DM_SIZE = 22;
+	LCD->LCD_VT_DM_SIZE = 30;
+	LCD->LCD_HT_START = 100;
+	LCD->LCD_VT_START = 16;
+	
+	LCD->LCD_HS_WIDTH = 1;
+	LCD->LCD_VS_WIDTH = 1;
+			
+	LCD->LCD_PCK_SPEED = 16;
+	LCD->LCD_RGB_REVERSE = 0;
+	LCD->LCD_EVEN_RGB = 0;
+	LCD->LCD_ODD_RGB = 0;
+	LCD->LCD_HSYNC_HIGH = 0;
+	LCD->LCD_VSYNC_HIGH = 0;			
+	LCD->LCD_PCK_RIS = 1;
+	LCD->LCD_FS0_FIELD_MODE = 0;
+	LCD->LCD_FS1_FIELD_MODE = 0;	
+	return true;
+}
+//------------------------------------------------------------------------------
+bool bLCD_GPM1125A0_RgbDummy (void)
+{
+	//! GPM1125A0 (SEL: 1)
+	printf("LCD GPM1125A0\n");
+	printf("RGB Dummy Mode\n");
+	printf("Screen Size 320 x 240\n");		
+	LCD->LCD_MODE = LCD_RGB_DUMMY;			
+	LCD->SEL_TV = 0;
+	if (false == bLCD_GPM1125A0_Write(0x6001))	return false;
+
+	LCD->LCD_HO_SIZE = 320;
+	LCD->LCD_VO_SIZE = 240;
+	//! Timing
+	LCD->LCD_HT_DM_SIZE = 40;
+	LCD->LCD_VT_DM_SIZE = 30;
+	LCD->LCD_HT_START = 253;
+	LCD->LCD_VT_START = 16;
+	
+	LCD->LCD_HS_WIDTH = 1;
+	LCD->LCD_VS_WIDTH = 1;
+			
+	LCD->LCD_PCK_SPEED = 6;
+	LCD->LCD_RGB_REVERSE = 0;
+	LCD->LCD_EVEN_RGB = 0;
+	LCD->LCD_ODD_RGB = 0;
+	LCD->LCD_HSYNC_HIGH = 0;
+	LCD->LCD_VSYNC_HIGH = 0;			
+	LCD->LCD_PCK_RIS = 1;
+	LCD->LCD_FS0_FIELD_MODE = 0;
+	LCD->LCD_FS1_FIELD_MODE = 0;	
+	return true;
+}
+//------------------------------------------------------------------------------
+bool bLCD_GPM1125A0_CCIR601 (void)
+{
+	//! GPM1125A0 (SEL: 4)
+	printf("LCD GPM1125A0\n");
+	printf("BT601 Mode\n");
+	printf("Screen Size 720 x 480\n");
+	LCD->LCD_MODE = LCD_BT656_BT601;
+	LCD->SEL_TV = 0;
+	if (false == bLCD_GPM1125A0_Write(0x6004))	return false;
+	//! BT Mode
+	LCD->BT_MODE = 0;
+	LCD->BT_PROG = 1;
+	LCD->BT_VS1_ST = 0;
+	LCD->BT_VS1_END = 19;
+	LCD->BT_VS2_ST = 0;
+	LCD->BT_VS2_END = 19;
+	LCD->BT_FLD1 = 3;
+	LCD->BT_FLD2 = 3;		
+
+	LCD->LCD_HO_SIZE = 720;
+	LCD->LCD_VO_SIZE = 480;	
+	//! Timing
+	LCD->LCD_HT_DM_SIZE = 0;
+	LCD->LCD_VT_DM_SIZE = 0;
+	LCD->LCD_HT_START = 246;
+	LCD->LCD_VT_START = 0;
+	
+	LCD->LCD_HS_WIDTH = 1;
+	LCD->LCD_VS_WIDTH = 1;
+			
+	LCD->LCD_PCK_SPEED = 4;
+	LCD->LCD_HSYNC_HIGH = 0;
+	LCD->LCD_VSYNC_HIGH = 0;			
+	LCD->LCD_PCK_RIS = 1;
+	LCD->LCD_FS0_FIELD_MODE = 1;
+	LCD->LCD_FS1_FIELD_MODE = 1;
+	return true;
+}
+//------------------------------------------------------------------------------
+bool bLCD_GPM1125A0_CCIR656 (void)
+{
+	//! GPM1125A0 (SEL: 7)
+	printf("LCD GPM1125A0\n");
+	printf("BT656 Mode\n");
+	printf("Screen Size 720 x 480\n");
+	LCD->LCD_MODE = LCD_BT656_BT601;
+	LCD->SEL_TV = 0;			
+	if (false == bLCD_GPM1125A0_Write(0x6007))	return false;
+	//if (false == bLCD_GPM1125A0_Write(0xA020))	return false;
+	//! BT Mode
+	LCD->BT_MODE = 2;
+	LCD->BT_PROG = 1;
+	LCD->BT_VS1_ST = 0;
+	LCD->BT_VS1_END = 19;
+	LCD->BT_VS2_ST = 0;
+	LCD->BT_VS2_END = 19;
+	LCD->BT_FLD1 = 3;
+	LCD->BT_FLD2 = 3;		
+
+	LCD->LCD_HO_SIZE = 720;
+	LCD->LCD_VO_SIZE = 480;	
+	//! Timing
+	LCD->LCD_HT_DM_SIZE = 0;
+	LCD->LCD_VT_DM_SIZE = 0;
+	LCD->LCD_HT_START = 0;
+	LCD->LCD_VT_START = 4;
+	
+	LCD->LCD_HS_WIDTH = 134;
+	LCD->LCD_VS_WIDTH = 0;
+			
+	LCD->LCD_PCK_SPEED = 4;
+	LCD->LCD_PCK_RIS = 1;
+	LCD->LCD_FS0_FIELD_MODE = 1;
+	LCD->LCD_FS1_FIELD_MODE = 1;
+	return true;
+}
+#endif
