@@ -23,7 +23,11 @@
 
     2. Camera匹配倒计时改为60s
 
-    3. 
+    3. Setting -> Anti-Screen Flicher 添加白色光标
+
+    4. Setting -> Language 添加白色光标
+
+    5. Setting -> Temperature Unit Setting 添加白色光标
 
 
   Camera匹配倒计时改为60s: 
