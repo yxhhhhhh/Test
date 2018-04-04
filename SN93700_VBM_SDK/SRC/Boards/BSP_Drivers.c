@@ -54,9 +54,10 @@ void BSP_DriversInit(void)
 	PWM->PWM3_RATE  	= 127;
 	PWM->PWM3_PERIOD 	= 0xC00;
 	PWM->PWM3_HIGH_CNT 	= 0xA00;
+	
 	//! BL Enable
 	GPIO->GPIO_OE11 = 1;
-	GPIO->GPIO_O11  = 1;
+	//GPIO->GPIO_O11  = 1;
 	PWM->PWM_EN3    = 1;
 
 	//! Speaker
@@ -107,7 +108,7 @@ void BSP_DriversInit(void)
 	//GPIO->GPIO_O3	= 0;
 
 	//! Speaker
-	GPIO->GPIO_OE4 	= 1;
+	GPIO->GPIO_OE5 	= 1;
 
 	//! RTC GPIO1
 	RTC_SetGPO_1(1, RTC_PullDownDisable);

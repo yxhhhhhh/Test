@@ -341,6 +341,7 @@ typedef enum
 
 typedef enum
 {
+	ANT_SIGNALLVL6,
 	ANT_SIGNALLVL5,
 	ANT_SIGNALLVL4,
 	ANT_SIGNALLVL3,
@@ -527,7 +528,7 @@ typedef struct
 	uint8_t				ubFeatCode0;	
 	uint8_t				ubFeatCode1;	
 	uint8_t				ubFeatCode2;	
-	uint16_t				ubScanTime;
+	uint16_t			ubScanTime;
 	uint8_t				ubHighTempSetting;	
 	uint8_t				ubLowTempSetting;
 	uint8_t				ubTempAlertSetting;	
@@ -535,6 +536,9 @@ typedef struct
 	uint8_t				ubSoundAlertSetting;		
 	uint8_t				ubAutoBrightness;
 	uint8_t				ubSleepMode;
+	uint8_t				ubZoomScale;
+	uint8_t				ubFlickerFlag;
+	uint8_t				ubLangageFlag;
 	uint8_t				ubTempunitFlag;
 	uint8_t				ubReserved[224];
 }UI_PUSetting_t;
@@ -743,16 +747,19 @@ void UI_DrawBrightnessSubMenuPage(void);
 void UI_BrightnessSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_BrightnessDisplay(uint8_t value);
 void UI_AutoBriDisplay(uint8_t value);
+void UI_DrawBrightnessSubMenuPage_NoSel(void);
 
 void UI_DrawAutoLcdSubMenuPage(void);
-void UI_AutoLcdResetSleepTime(uint8_t KeyAction); //20180319
+uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction);
 void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_AutoLcdSubMenuDisplay(uint8_t value);
+void UI_DrawAutoLcdSubMenuPage_NoSel(void);
 
 void UI_DrawAlarmSubMenuPage(void);
 void UI_AlarmSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_AlarmSubSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_AlarmSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
+void UI_DrawAlarmSubMenuPage_NoSel(void);
 
 void UI_AlarmmenuDisplay(void);
 void UITempSubmenuDisplay(void);
@@ -765,19 +772,22 @@ void UITempSubSubSubmenuDisplay(uint8_t SubMenuItem);
 void UISoundSubSubSubmenuDisplay(uint8_t SubMenuItem);
 void InitAlarmSubSubSubmenu(uint8_t SubMenuItem);
 void UI_SetAlarm(uint8_t SubMenuItem);
-
+void UI_SetAlert(uint8_t time);
 
 void UI_DrawTimeSubMenuPage(void);
 void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_TimeSubMenuDisplay(uint8_t value);
+void UI_DrawTimeSubMenuPage_NoSel(void);
 
 void UI_DrawZoomSubMenuPage(void);
 void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_ZoomDisplay(void);
+void UI_DrawZoomSubMenuPage_NoSel(void);
 
 void UI_CamSubmenuDisplay(void);
 void UI_CamSubSubmenuDisplay(uint8_t SubMenuItem);
 void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
+void UI_DrawCamsSubMenuPage_NoSel(void);
 
 void UI_DelatemenuDisplay(void);
 
@@ -792,6 +802,7 @@ void UI_LangageDisplay(uint8_t value);
 void UI_FlickerDisplay(uint8_t value);
 void UI_DefualtDisplay(uint8_t value);
 void UI_TempUnitDisplay(uint8_t value);
+void UI_DrawSettingSubMenuPage_NoSel(void);
 
 void UI_NightModeSubSubSubmenuDisplay(uint8_t value);
 void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
@@ -805,7 +816,9 @@ void UI_ShowSysVolume(UI_ArrowKey_t tArrowKey, uint8_t value);
 void UI_FS_LangageMenuDisplay(uint8_t value);
 void UI_FS_SetTimeMenuDisplay(uint8_t value);
 
-void UI_UpdateBarIcon(void);
+void UI_UpdateBarIcon_Part1(void);
+void UI_UpdateBarIcon_Part2(void);
+void UI_Update(void);
 void UI_GetVolData(UI_CamNum_t tCamNum, void *pvTrig);
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig);
 void UI_TempBarDisplay(uint8_t value);
@@ -817,6 +830,7 @@ void UI_TimeSetSystemTime(void);
 void UI_SetScanMenu(uint8_t value);
 
 void UI_CheckTempAlarm(void);
+void UI_CheckSoundAlarm(void);
 void UI_TimerEventStop(void);
 void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb);
 void UI_AutoBrightnessAdjust(void);

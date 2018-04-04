@@ -1075,6 +1075,9 @@ bool bLCD_MIPI_SSD2828_Init (void)
 	LCD_SSD2828_DatWr(0x001C);	
 	TIMER_Delay_ms(5);
 	#endif
+
+	//LCD_SSD2828_RegWr(0xBC, 0x0002);
+	//LCD_SSD2828_RegWr(0xBF, 0x0136);
 	
 	//! mipi_0data(0x11);	
 	LCD_SSD2828_RegWr(0xBC,0x0001);

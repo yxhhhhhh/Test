@@ -34,6 +34,7 @@
 #include "CLI.h"
 #include "LCD.h"
 #include "OSD.h"
+#include "UI_VBMPU.h"
 
 //------------------------------------------------------------------------------
 extern uint32_t Image$$RW_UNCACHED_HEAP$$Base;
@@ -72,6 +73,22 @@ static APP_DispLocMap_t tAPP_DispLocMap[] =
 APP_PairRoleInfo_t tAPP_PairRoleInfo;
 #endif
 static void APP_StartThread(void const *argument);
+
+uint8_t CheckPowerKey(void) //20180330
+{
+	static uint16_t checkCount = 80;
+	
+	while(checkCount)
+	{
+		if(ubRTC_GetKey() == 1)
+			osDelay(20);
+		else
+			break;
+		checkCount--;
+	}
+	printf("CheckPowerKey checkCount: %d.\n", checkCount);
+	return (!checkCount);
+}
 //------------------------------------------------------------------------------
 void APP_Init(void)
 {
@@ -139,6 +156,17 @@ void APP_PowerOnFunc(void)
 {
 	uint32_t ulBUF_StartAddr = 0;
 
+	#ifdef VBM_PU //20180330
+	if(CheckPowerKey() == 0)
+	{
+		printd(DBG_Debug1Lvl, "APP_PowerOnFunc Power OFF!\n");
+		RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
+		RTC_PowerDisable();
+		while(1);
+	}
+	LCDBL_ENABLE(UI_ENABLE);
+	#endif
+	
 	APP_LoadKNLSetupInfo();
 #if USBD_ENABLE
 	//! USB Device initialization

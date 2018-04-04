@@ -188,15 +188,47 @@ void BUZ_PlayLowBatSound(void) {
 		{30,	M_DO_1, 3,		0,		63},
 		{50,	M_DO_1, 3,		15,		63},
 		{150,	ZERO_0, 3,		0,		63},
+	};
+	
+	BUZ_PlayStart(1, 8, BUZ_LowBatSound, sizeof(BUZ_LowBatSound) / sizeof(BUZ_ToneParam_t));
+}
+
+void BUZ_PlayTempAlarmSound(void) {   
+	static BUZ_ToneParam_t BUZ_TempAlarmSound[] = {
+	//	delay	Freq_0	Tab_0	LvIdx_0	Vol_0
+		{30,	H_DO_1, 3,		0,		63},
+		{50,	H_DO_1, 3,		15,		63},
+		{20,	ZERO_0, 3,		0,		63},
+		{30,	M_DO_1, 3,		0,		63},
+		{50,	M_DO_1, 3,		15,		63},
+		{150,	ZERO_0,	3,		0,		63},
 		{30,	H_DO_1, 3,		0,		63},
 		{50,	H_DO_1, 3,		15,		63},
 		{20,	ZERO_0, 3,		0,		63},
 		{30,	M_DO_1, 3,		0,		63},
 		{50,	M_DO_1, 3,		15,		63},
 		{150,	ZERO_0, 3,		0,		63},
+		{30,	H_DO_1, 3,		0,		63},
+		{50,	H_DO_1, 3,		15,		63},
+		{20,	ZERO_0, 3,		0,		63},
+		{30,	M_DO_1, 3,		0,		63},
+		{50,	M_DO_1, 3,		15,		63},
+		{150,	ZERO_0, 3,		0,		63},
+		{30,	H_DO_1, 3,		0,		63},
+		{50,	H_DO_1, 3,		15,		63},
+		{20,	ZERO_0, 3,		0,		63},
+		{30,	M_DO_1, 3,		0,		63},
+		{50,	M_DO_1, 3,		15,		63},
+		{150,	ZERO_0,	3,		0,		63},
+		{30,	H_DO_1, 3,		0,		63},
+		{50,	H_DO_1, 3,		15,		63},
+		{20,	ZERO_0, 3,		0,		63},
+		{30,	M_DO_1, 3,		0,		63},
+		{50,	M_DO_1, 3,		15,		63},
+		{150,	ZERO_0,	3,		0,		63},
 	};
 	
-	BUZ_PlayStart(1, 8, BUZ_LowBatSound, sizeof(BUZ_LowBatSound) / sizeof(BUZ_ToneParam_t));
+	BUZ_PlayStart(1, 8, BUZ_TempAlarmSound, sizeof(BUZ_TempAlarmSound) / sizeof(BUZ_ToneParam_t));
 }
 
 void BUZ_PlayTestSound(void) {   
