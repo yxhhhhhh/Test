@@ -1,1104 +1,0 @@
-Dependencies for Project 'SN93700_VBM_SDK', Target 'SN93700_VBM_BU_HS_A7130': (DO NOT MODIFY !)
-F (.\SRC\APP\APP_HS.c)(0x5ABD93FF)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\app_hs.o --omf_browse .\bin\app_hs.crf --depend .\bin\app_hs.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (SRC\APP\APP_HS.h)(0x5AB6ABF6)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (.\SRC\UI\HS\UI.h)(0x5AAFF5A2)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (.\SRC\UI\KEY.h)(0x5AAFF5FA)
-I (.\SRC\UI\PKEY.h)(0x5AAFF55E)
-I (.\SRC\UI\AKEY.h)(0x5984C864)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (.\SRC\UI\HS\OSDLogo_Table.h)(0x5AA86A84)
-I (.\SRC\UI\HS\OSD1Image_Table.h)(0x5AA86A78)
-I (.\SRC\UI\HS\OSD2Image_Table.h)(0x5AB4526A)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\BUF\BUF.h)(0x5A2F1B56)
-I (..\COMMON_LIB\header\FWU_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-I (..\COMMON_LIB\header\SF_API.h)(0x59AF5152)
-I (..\COMMON_LIB\header\MMU_API.h)(0x5A24496E)
-I (..\COMMON_LIB\header\DDR_API.h)(0x5982660C)
-I (..\COMMON_LIB\header\DMAC_API.h)(0x59AF5152)
-I (.\SRC\VDO\VDO.h)(0x5AA86DD6)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (.\SRC\ADO\ADO.h)(0x5A429322)
-I (..\COMMON_SRC\RC\RC.h)(0x59EA9400)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_SRC\LCD\LCD.h)(0x5A79E6D0)
-I (..\COMMON_SRC\LCD\LCD_TYPE.h)(0x5949A252)
-I (..\COMMON_SRC\LCD\LCD_SSD2828.h)(0x5A3EE368)
-I (..\COMMON_SRC\LCD\LCD_TV.h)(0x5949A252)
-I (..\COMMON_LIB\header\LCD_HDMI_IT66121_API.h)(0x5982660C)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\OSD\OSD.h)(0x5A79E6D0)
-F (.\SRC\UI\HS\UI.c)(0x5AAFF50E)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\ui.o --omf_browse .\bin\ui.crf --depend .\bin\ui.d)
-I (SRC\UI\HS\UI.h)(0x5AAFF5A2)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (.\SRC\UI\KEY.h)(0x5AAFF5FA)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (.\SRC\UI\PKEY.h)(0x5AAFF55E)
-I (.\SRC\UI\AKEY.h)(0x5984C864)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (SRC\UI\HS\OSDLogo_Table.h)(0x5AA86A84)
-I (SRC\UI\HS\OSD1Image_Table.h)(0x5AA86A78)
-I (SRC\UI\HS\OSD2Image_Table.h)(0x5AB4526A)
-I (.\SRC\APP\APP_HS.h)(0x5AB6ABF6)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\LCD\LCD.h)(0x5A79E6D0)
-I (..\COMMON_SRC\LCD\LCD_TYPE.h)(0x5949A252)
-I (..\COMMON_SRC\LCD\LCD_SSD2828.h)(0x5A3EE368)
-I (..\COMMON_SRC\LCD\LCD_TV.h)(0x5949A252)
-I (..\COMMON_LIB\header\LCD_HDMI_IT66121_API.h)(0x5982660C)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\OSD\OSD.h)(0x5A79E6D0)
-I (..\COMMON_SRC\BUF\BUF.h)(0x5A2F1B56)
-F (.\SRC\UI\HS\UI_VBMBU.c)(0x5ABD397E)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\ui_vbmbu.o --omf_browse .\bin\ui_vbmbu.crf --depend .\bin\ui_vbmbu.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (SRC\UI\HS\UI_VBMBU.h)(0x5AB5831A)
-I (SRC\UI\HS\UI.h)(0x5AAFF5A2)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (.\SRC\UI\KEY.h)(0x5AAFF5FA)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (.\SRC\UI\PKEY.h)(0x5AAFF55E)
-I (.\SRC\UI\AKEY.h)(0x5984C864)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (SRC\UI\HS\OSDLogo_Table.h)(0x5AA86A84)
-I (SRC\UI\HS\OSD1Image_Table.h)(0x5AA86A78)
-I (SRC\UI\HS\OSD2Image_Table.h)(0x5AB4526A)
-I (.\SRC\APP\APP_HS.h)(0x5AB6ABF6)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\MD_API.h)(0x59CC373E)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_LIB\header\ISP_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\SF_API.h)(0x59AF5152)
-I (..\COMMON_SRC\Buzzer\Buzzer.h)(0x5ABA8B78)
-I (..\COMMON_LIB\header\FWU_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\MC_API.h)(0x5A06412C)
-I (..\COMMON_SRC\I2C\i2c.h)(0x5949A252)
-F (.\SRC\UI\HS\UI_VBMPU.c)(0x5ABD800B)()
-F (.\SRC\UI\KEY.c)(0x5AAFF53A)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\key.o --omf_browse .\bin\key.crf --depend .\bin\key.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (SRC\UI\KEY.h)(0x5AAFF5FA)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (SRC\UI\PKEY.h)(0x5AAFF55E)
-I (SRC\UI\AKEY.h)(0x5984C864)
-I (.\SRC\UI\HS\UI.h)(0x5AAFF5A2)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (.\SRC\UI\HS\OSDLogo_Table.h)(0x5AA86A84)
-I (.\SRC\UI\HS\OSD1Image_Table.h)(0x5AA86A78)
-I (.\SRC\UI\HS\OSD2Image_Table.h)(0x5AB4526A)
-F (.\SRC\UI\PKEY.c)(0x5AAFF5D4)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\pkey.o --omf_browse .\bin\pkey.crf --depend .\bin\pkey.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (SRC\UI\PKEY.h)(0x5AAFF55E)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (SRC\UI\KEY.h)(0x5AAFF5FA)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (SRC\UI\AKEY.h)(0x5984C864)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-F (.\SRC\UI\AKEY.c)(0x5A010550)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\akey.o --omf_browse .\bin\akey.crf --depend .\bin\akey.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (SRC\UI\AKEY.h)(0x5984C864)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (SRC\UI\KEY.h)(0x5AAFF5FA)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (SRC\UI\PKEY.h)(0x5AAFF55E)
-I (..\COMMON_SRC\SADC\SADC.h)(0x5984C864)
-F (..\COMMON_SRC\CMSIS\main.c)(0x5A79E6D0)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\main.o --omf_browse .\bin\main.crf --depend .\bin\main.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (..\COMMON_SRC\CMSIS\system__510PF.c)(0x5A429322)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\system__510pf.o --omf_browse .\bin\system__510pf.crf --depend .\bin\system__510pf.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-F (..\COMMON_SRC\CMSIS\startup\startup_510PF.s)(0x5984C864)(--cpu ARM926EJ-S -g --apcs=interwork -I..\COMMON_SRC\CMSIS\rtos-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"--pd "RTOS SETA 1"--list .\lst\startup_510pf.lst --xref -o .\bin\startup_510pf.o --depend .\bin\startup_510pf.d)
-I (..\COMMON_SRC\CMSIS\rtos\osMacro.s)(0x5984C864)
-F (..\COMMON_SRC\CMSIS\Retarget.c)(0x5949A252)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\retarget.o --omf_browse .\bin\retarget.crf --depend .\bin\retarget.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdarg.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\rt_misc.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\time.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (..\COMMON_SRC\CMSIS\rtos\RTOS.lib)(0x5A79E6D0)()
-F (..\COMMON_LIB\PROFILE.lib)(0x5A1F32D0)()
-F (..\COMMON_LIB\DDR.lib)(0x5A2F1B56)()
-F (..\COMMON_LIB\MMU.lib)(0x5A2F1B56)()
-F (..\COMMON_LIB\DMAC.lib)(0x5A79E6D0)()
-F (..\COMMON_LIB\RTC.lib)(0x5A6A676E)()
-F (..\COMMON_SRC\INTC\INTC.c)(0x59557898)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\intc.o --omf_browse .\bin\intc.crf --depend .\bin\intc.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (..\COMMON_SRC\Timer\TIMER.c)(0x5A517906)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\timer.o --omf_browse .\bin\timer.crf --depend .\bin\timer.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-F (..\COMMON_SRC\WDT\WDT.c)(0x5982660C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\wdt.o --omf_browse .\bin\wdt.crf --depend .\bin\wdt.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\WDT\WDT.h)(0x5984C864)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (..\COMMON_SRC\VCS\VCS.c)(0x59EA97E8)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\vcs.o --omf_browse .\bin\vcs.crf --depend .\bin\vcs.d)
-I (..\COMMON_SRC\VCS\VCS.h)(0x5984C864)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (..\COMMON_LIB\header\DDR_API.h)(0x5982660C)
-I (..\COMMON_LIB\header\MMU_API.h)(0x5A24496E)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\DMAC_API.h)(0x59AF5152)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\UART\UART.h)(0x5984C864)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_SRC\WDT\WDT.h)(0x5984C864)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (..\COMMON_LIB\header\CQ_API.h)(0x5982660C)
-I (..\COMMON_SRC\CQI2C\CQI2C.h)(0x5984C864)
-I (..\COMMON_SRC\SADC\SADC.h)(0x5984C864)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\RF_API.h)(0x5984C864)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_LIB\header\SF_API.h)(0x59AF5152)
-I (..\COMMON_LIB\header\SDIO_API.h)(0x5A24496E)
-I (..\COMMON_LIB\header\CIPHER_API.h)(0x5984C864)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\IMG_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\JPEG_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_LIB\header\ISP_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\FWU_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\MC_API.h)(0x5A06412C)
-F (..\COMMON_SRC\APBC\APBC.c)(0x59EA97E8)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\apbc.o --omf_browse .\bin\apbc.crf --depend .\bin\apbc.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\APBC\APBC.h)(0x59EA97E8)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-F (..\COMMON_SRC\BSP\BSP.c)(0x5949A252)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\bsp.o --omf_browse .\bin\bsp.crf --depend .\bin\bsp.d)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-F (.\SRC\Boards\BSP_Board.c)(0x5ABBE780)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\bsp_board.o --omf_browse .\bin\bsp_board.crf --depend .\bin\bsp_board.d)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (.\SRC\Boards\BSP_Drivers.c)(0x5ABBE7A4)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\bsp_drivers.o --omf_browse .\bin\bsp_drivers.crf --depend .\bin\bsp_drivers.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-I (..\COMMON_SRC\UART\UART.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\WDT\WDT.h)(0x5984C864)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_LIB\header\CQ_API.h)(0x5982660C)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-I (..\COMMON_LIB\header\CIPHER_API.h)(0x5984C864)
-I (..\COMMON_LIB\header\DMAC_API.h)(0x59AF5152)
-I (..\COMMON_LIB\header\SDIO_API.h)(0x5A24496E)
-I (..\COMMON_SRC\APBC\APBC.h)(0x59EA97E8)
-F (..\COMMON_LIB\CQ.lib)(0x5984C864)()
-F (..\COMMON_LIB\SDIO.lib)(0x5A24496E)()
-F (..\COMMON_SRC\UART\UART.c)(0x5984C864)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\uart.o --omf_browse .\bin\uart.crf --depend .\bin\uart.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\math.h)(0x53463A44)
-I (..\COMMON_SRC\UART\UART.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-F (..\COMMON_SRC\I2C\I2C.c)(0x59E8EF24)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\i2c.o --omf_browse .\bin\i2c.crf --depend .\bin\i2c.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-F (..\COMMON_SRC\CQI2C\CQI2C.c)(0x5982660C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cqi2c.o --omf_browse .\bin\cqi2c.crf --depend .\bin\cqi2c.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CQI2C\CQI2C.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\CQ_API.h)(0x5982660C)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-F (..\COMMON_SRC\SADC\SADC.c)(0x5984C864)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\sadc.o --omf_browse .\bin\sadc.crf --depend .\bin\sadc.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\SADC\SADC.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (..\COMMON_LIB\MC.lib)(0x5A0642E6)()
-F (..\COMMON_SRC\SPI\SPI.c)(0x59F795DE)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\spi.o --omf_browse .\bin\spi.crf --depend .\bin\spi.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\SPI\SPI.h)(0x59F795DE)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\APBC\APBC.h)(0x59EA97E8)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-F (..\COMMON_SRC\Buzzer\Buzzer.c)(0x5ABA8B6C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\buzzer.o --omf_browse .\bin\buzzer.crf --depend .\bin\buzzer.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\math.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\Buzzer\Buzzer.h)(0x5ABA8B78)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (..\COMMON_SRC\KNL\KNL.c)(0x5ABD38F3)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\knl.o --omf_browse .\bin\knl.crf --depend .\bin\knl.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\BUF\BUF.h)(0x5A2F1B56)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (..\COMMON_LIB\header\EN_API.h)(0x59BABBAC)
-I (..\COMMON_SRC\OSD\OSD.h)(0x5A79E6D0)
-I (..\COMMON_SRC\LCD\LCD.h)(0x5A79E6D0)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (..\COMMON_SRC\LCD\LCD_TYPE.h)(0x5949A252)
-I (..\COMMON_SRC\LCD\LCD_SSD2828.h)(0x5A3EE368)
-I (..\COMMON_SRC\LCD\LCD_TV.h)(0x5949A252)
-I (..\COMMON_LIB\header\LCD_HDMI_IT66121_API.h)(0x5982660C)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_LIB\header\IMG_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\ISP_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\JPEG_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\CRC_API.h)(0x5982660C)
-I (..\COMMON_LIB\header\DMAC_API.h)(0x59AF5152)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\USBH_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_SRC\RC\RC.h)(0x59EA9400)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-I (..\COMMON_LIB\header\SD_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\FS_API.h)(0x59A5AE30)
-I (..\COMMON_LIB\header\REC_API.h)(0x59E6C992)
-I (..\COMMON_LIB\header\PLY_API.h)(0x59A5AE30)
-I (..\COMMON_SRC\MEDIA\MEDIA.h)(0x59A5AE30)
-I (..\COMMON_SRC\AVI\AVI.h)(0x59A5AE30)
-I (..\COMMON_SRC\MP4\MP4.h)(0x59A5AE30)
-F (..\COMMON_SRC\BUF\BUF.c)(0x5A78E3E4)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\buf.o --omf_browse .\bin\buf.crf --depend .\bin\buf.d)
-I (..\COMMON_SRC\BUF\BUF.h)(0x5A2F1B56)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-F (..\COMMON_LIB\BB_AP.lib)(0x5A4D4FDA)()
-F (..\COMMON_LIB\BB_STA.lib)(0x5A4D4FDA)()
-F (..\COMMON_LIB\RF_A7130_AP.lib)(0x5A4D4FDA)()
-F (..\COMMON_LIB\RF_A7130_STA.lib)(0x5A4D4FDA)()
-F (..\COMMON_LIB\TWC_AP.lib)(0x5A173D7C)()
-F (..\COMMON_LIB\TWC_STA.lib)(0x5A173D7C)()
-F (..\COMMON_SRC\PAIR\PAIR.c)(0x5A24496E)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\pair.o --omf_browse .\bin\pair.crf --depend .\bin\pair.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdarg.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\ctype.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\math.h)(0x53463A44)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\SF_API.h)(0x59AF5152)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-F (..\COMMON_LIB\SF.lib)(0x5A1F21C6)()
-F (..\COMMON_SRC\OSD\OSD.c)(0x5A79E6D0)()
-F (..\COMMON_SRC\LCD\LCD.c)(0x5A95FA02)()
-F (..\COMMON_SRC\LCD\LCD_GPM1125A0.c)(0x5949A252)()
-F (..\COMMON_SRC\LCD\LCD_TM023KDH03.c)(0x5949A252)()
-F (..\COMMON_SRC\LCD\LCD_TM024HDH03.c)(0x5949A252)()
-F (..\COMMON_SRC\LCD\LCD_TM035KDH03.c)(0x5949A252)()
-F (..\COMMON_SRC\LCD\LCD_SSD2828_Y50019N00N.c)(0x5ABC3E02)()
-F (..\COMMON_SRC\LCD\LCD_SSD2828.c)(0x5949A252)()
-F (..\COMMON_SRC\LCD\LCD_SN9C271A.c)(0x5949A252)()
-F (..\COMMON_SRC\LCD\LCD_TV.c)(0x5949A252)()
-F (..\COMMON_LIB\HDMI.lib)(0x5984C864)()
-F (..\COMMON_LIB\CIPHER.lib)(0x5984C864)()
-F (.\SRC\VDO\VDO.c)(0x5AA86DCA)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\vdo.o --omf_browse .\bin\vdo.crf --depend .\bin\vdo.d)
-I (SRC\VDO\VDO.h)(0x5AA86DD6)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\BUF\Buf.h)(0x5A2F1B56)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-F (..\COMMON_LIB\H264.lib)(0x5A4D4FDA)()
-F (..\COMMON_LIB\IMG.lib)(0x5A4D4FDA)()
-F (..\COMMON_LIB\JPEG.lib)(0x5A3EE368)()
-F (.\SRC\ADO\ADO.c)(0x5ABD3926)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\ado.o --omf_browse .\bin\ado.crf --depend .\bin\ado.d)
-I (SRC\ADO\ADO.h)(0x5A429322)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-F (..\COMMON_LIB\ADO.lib)(0x5A8F0654)()
-F (..\COMMON_SRC\SEN\SEN.c)(0x5AB57F5A)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\sen.o --omf_browse .\bin\sen.crf --depend .\bin\sen.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\INTC\INTC.h)(0x59557898)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\ISP_API.h)(0x5A3EE368)
-I (..\COMMON_LIB\header\AE_API.h)(0x5A69252A)
-I (..\COMMON_LIB\header\AF_API.h)(0x5982660C)
-I (..\COMMON_LIB\header\AWB_API.h)(0x5A69252A)
-I (..\COMMON_LIB\header\DIS_API.h)(0x59C18A84)
-I (..\COMMON_LIB\header\MD_API.h)(0x59CC373E)
-I (..\COMMON_SRC\BUF\BUF.h)(0x5A2F1B56)
-F (..\COMMON_SRC\SEN\AR0330.c)(0x59FA1BF2)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\ar0330.o --omf_browse .\bin\ar0330.crf --depend .\bin\ar0330.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_LIB\header\CQ_API.h)(0x5982660C)
-I (..\COMMON_SRC\CQI2C\CQI2C.h)(0x5984C864)
-F (..\COMMON_SRC\SEN\OV9715.c)(0x59E8EF24)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\ov9715.o --omf_browse .\bin\ov9715.crf --depend .\bin\ov9715.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-I (..\COMMON_LIB\header\CQ_API.h)(0x5982660C)
-I (..\COMMON_SRC\CQI2C\CQI2C.h)(0x5984C864)
-I (.\SRC\APP\APP_HS.h)(0x5AB6ABF6)
-I (.\SRC\UI\HS\UI.h)(0x5AAFF5A2)
-I (.\SRC\UI\KEY.h)(0x5AAFF5FA)
-I (.\SRC\UI\PKEY.h)(0x5AAFF55E)
-I (.\SRC\UI\AKEY.h)(0x5984C864)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (.\SRC\UI\HS\OSDLogo_Table.h)(0x5AA86A84)
-I (.\SRC\UI\HS\OSD1Image_Table.h)(0x5AA86A78)
-I (.\SRC\UI\HS\OSD2Image_Table.h)(0x5AB4526A)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-F (..\COMMON_SRC\SEN\OV9732.c)(0x59FA1BF2)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\ov9732.o --omf_browse .\bin\ov9732.crf --depend .\bin\ov9732.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-F (..\COMMON_SRC\SEN\H62.c)(0x5A457EAE)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\h62.o --omf_browse .\bin\h62.crf --depend .\bin\h62.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-F (..\COMMON_SRC\SEN\H62_MIPI.c)(0x59FA1BF2)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\h62_mipi.o --omf_browse .\bin\h62_mipi.crf --depend .\bin\h62_mipi.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-F (..\COMMON_SRC\SEN\IMX323.c)(0x5A17750C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\imx323.o --omf_browse .\bin\imx323.crf --depend .\bin\imx323.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (..\COMMON_SRC\Timer\TIMER.h)(0x5984C864)
-F (..\COMMON_LIB\IQ.lib)(0x5A69252A)()
-F (..\COMMON_SRC\IQ\IQ_OPT_OV9715_RAW.C)(0x5A29EA8C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\iq_opt_ov9715_raw.o --omf_browse .\bin\iq_opt_ov9715_raw.crf --depend .\bin\iq_opt_ov9715_raw.d)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-F (..\COMMON_SRC\IQ\IQ_OPT_OV9732_RAW.c)(0x5A29EA8C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\iq_opt_ov9732_raw.o --omf_browse .\bin\iq_opt_ov9732_raw.crf --depend .\bin\iq_opt_ov9732_raw.d)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-F (..\COMMON_SRC\IQ\IQ_OPT_AR0330_RAW.c)(0x5A29EA8C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\iq_opt_ar0330_raw.o --omf_browse .\bin\iq_opt_ar0330_raw.crf --depend .\bin\iq_opt_ar0330_raw.d)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-F (..\COMMON_SRC\IQ\IQ_OPT_H62_RAW.c)(0x5A2085B8)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\iq_opt_h62_raw.o --omf_browse .\bin\iq_opt_h62_raw.crf --depend .\bin\iq_opt_h62_raw.d)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\IQ\IQ_OPT_H62_RAW.H)(0x5991E6CE)
-F (..\COMMON_SRC\IQ\IQ_OPT_H62_MIPI_RAW.c)(0x5A29EA8C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\iq_opt_h62_mipi_raw.o --omf_browse .\bin\iq_opt_h62_mipi_raw.crf --depend .\bin\iq_opt_h62_mipi_raw.d)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-F (..\COMMON_SRC\IQ\IQ_OPT_IMX323_RAW.c)(0x5A29EA8C)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\iq_opt_imx323_raw.o --omf_browse .\bin\iq_opt_imx323_raw.crf --depend .\bin\iq_opt_imx323_raw.d)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-F (..\COMMON_LIB\ISP.lib)(0x5A69252A)()
-F (..\COMMON_SRC\RC\RC.c)(0x5A457EAE)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\rc.o --omf_browse .\bin\rc.crf --depend .\bin\rc.d)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_SRC\RC\RC.h)(0x59EA9400)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (.\SRC\APP\APP_HS.h)(0x5AB6ABF6)
-I (.\SRC\UI\HS\UI.h)(0x5AAFF5A2)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (.\SRC\UI\KEY.h)(0x5AAFF5FA)
-I (.\SRC\UI\PKEY.h)(0x5AAFF55E)
-I (.\SRC\UI\AKEY.h)(0x5984C864)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (.\SRC\UI\HS\OSDLogo_Table.h)(0x5AA86A84)
-I (.\SRC\UI\HS\OSD1Image_Table.h)(0x5AA86A78)
-I (.\SRC\UI\HS\OSD2Image_Table.h)(0x5AB4526A)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-F (..\COMMON_LIB\FWU.lib)(0x5A517906)()
-F (..\COMMON_LIB\USBD.lib)(0x5A3EE368)()
-F (..\COMMON_LIB\USBH.lib)(0x5A69252A)()
-F (..\COMMON_SRC\CLI\CLI.c)(0x5A429322)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cli.o --omf_browse .\bin\cli.crf --depend .\bin\cli.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\schema.h)(0x5A457EAE)
-F (..\COMMON_SRC\CLI\command\cmd_h264.c)(0x5984C864)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_h264.o --omf_browse .\bin\cmd_h264.crf --depend .\bin\cmd_h264.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-F (..\COMMON_SRC\CLI\command\cmd_printf.c)(0x5984C864)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_printf.o --omf_browse .\bin\cmd_printf.crf --depend .\bin\cmd_printf.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\include\cmd_printf.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-F (..\COMMON_SRC\CLI\command\cmd_vcs.c)(0x59E529AA)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_vcs.o --omf_browse .\bin\cmd_vcs.crf --depend .\bin\cmd_vcs.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\VCS\VCS.h)(0x5984C864)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-F (..\COMMON_SRC\CLI\command\cmd_i2c.c)(0x59E26FDA)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_i2c.o --omf_browse .\bin\cmd_i2c.crf --depend .\bin\cmd_i2c.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_SRC\I2C\I2C.h)(0x5949A252)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-F (..\COMMON_SRC\CLI\command\cmd_isp.c)(0x5A2085B8)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_isp.o --omf_browse .\bin\cmd_isp.crf --depend .\bin\cmd_isp.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_LIB\header\IQ_API.h)(0x5A2085B8)
-I (..\COMMON_SRC\SEN\SEN.h)(0x5A69252A)
-I (..\COMMON_LIB\header\IQ_PARSER_API.h)(0x5A2085B8)
-I (..\COMMON_LIB\header\USBD_API.h)(0x5A3EE368)
-I (..\COMMON_SRC\SEN\H62.h)(0x5A17750C)
-I (..\COMMON_LIB\header\AE_API.h)(0x5A69252A)
-I (..\COMMON_LIB\header\AWB_API.h)(0x5A69252A)
-I (.\SRC\APP\APP_HS.h)(0x5AB6ABF6)
-I (.\SRC\UI\HS\UI.h)(0x5AAFF5A2)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (.\SRC\UI\KEY.h)(0x5AAFF5FA)
-I (.\SRC\UI\PKEY.h)(0x5AAFF55E)
-I (.\SRC\UI\AKEY.h)(0x5984C864)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-I (..\COMMON_LIB\header\PROFILE_API.h)(0x5984C864)
-I (.\SRC\UI\HS\OSDLogo_Table.h)(0x5AA86A84)
-I (.\SRC\UI\HS\OSD1Image_Table.h)(0x5AA86A78)
-I (.\SRC\UI\HS\OSD2Image_Table.h)(0x5AB4526A)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_SRC\PAIR\PAIR.h)(0x5A24496E)
-I (..\COMMON_SRC\BSP\BSP.h)(0x5A31A604)
-I (.\SRC\Boards\bsp_board_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_driver_defs.h)(0x5984C864)
-I (.\SRC\Boards\bsp_config.h)(0x5ABBE7BA)
-I (..\COMMON_SRC\WDT\WDT.h)(0x5984C864)
-F (..\COMMON_SRC\CLI\command\cmd_sf.c)(0x5A308944)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_sf.o --omf_browse .\bin\cmd_sf.crf --depend .\bin\cmd_sf.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_LIB\header\SF_API.h)(0x59AF5152)
-I (.\SRC\APP\APP_CFG.h)(0x5AA86ECE)
-F (..\COMMON_SRC\CLI\command\cmd_system.c)(0x5A557436)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_system.o --omf_browse .\bin\cmd_system.crf --depend .\bin\cmd_system.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_SRC\KNL\KNL.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-I (..\COMMON_LIB\header\H264_API.h)(0x5A3AD9EE)
-I (..\COMMON_LIB\header\TWC_API.h)(0x5A0A4A78)
-I (..\COMMON_LIB\header\RTC_API.h)(0x5A6A676E)
-F (..\COMMON_SRC\CLI\command\cmd_bb.c)(0x59E69EB6)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_bb.o --omf_browse .\bin\cmd_bb.crf --depend .\bin\cmd_bb.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_LIB\header\BB_API.h)(0x5A457EAE)
-F (..\COMMON_SRC\CLI\command\cmd_lcd.c)(0x5A03411A)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_lcd.o --omf_browse .\bin\cmd_lcd.crf --depend .\bin\cmd_lcd.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_SRC\LCD\LCD_TYPE.H)(0x5949A252)
-I (..\COMMON_SRC\LCD\LCD_SSD2828.h)(0x5A3EE368)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdbool.h)(0x53463A44)
-I (..\COMMON_SRC\LCD\LCD_TV.h)(0x5949A252)
-I (..\COMMON_LIB\header\LCD_HDMI_IT66121_API.h)(0x5982660C)
-F (..\COMMON_SRC\CLI\command\cmd_mc.c)(0x5A308944)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_mc.o --omf_browse .\bin\cmd_mc.crf --depend .\bin\cmd_mc.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_LIB\header\MC_API.H)(0x5A06412C)
-F (..\COMMON_SRC\CLI\command\cmd_ado.c)(0x5A6A676E)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_ado.o --omf_browse .\bin\cmd_ado.crf --depend .\bin\cmd_ado.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdlib.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\string.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_LIB\header\ADO_API.h)(0x5A8F0654)
-I (..\COMMON_SRC\Buzzer\Buzzer.h)(0x5ABA8B78)
-F (..\COMMON_SRC\CLI\command\cmd_ddr.c)(0x5A457EAE)(-c --cpu ARM926EJ-S -g -O0 --apcs=interwork -I..\COMMON_SRC\CMSIS -I..\COMMON_SRC\CMSIS\rtos -I..\COMMON_SRC\I2C -I..\COMMON_SRC\CQI2C -I..\COMMON_SRC\UART -I..\COMMON_SRC\Timer -I..\COMMON_SRC\BUF -I..\COMMON_SRC\KNL -I..\COMMON_SRC\RC -I..\COMMON_SRC\OSD -I..\COMMON_SRC\LCD -I..\COMMON_SRC\INTC -I..\COMMON_SRC\SEN -I..\COMMON_SRC\SADC -I..\COMMON_SRC\BSP -I..\COMMON_SRC\WDT -I..\COMMON_SRC\PAIR -I..\COMMON_SRC\MEDIA -I..\COMMON_SRC\AVI -I..\COMMON_SRC\MP4 -I..\COMMON_SRC\CLI -I..\COMMON_SRC\CLI\include -I..\COMMON_SRC\VCS -I..\COMMON_LIB\header -I.\SRC\APP -I.\SRC\UI -I.\SRC\UI\HS -I.\SRC\VDO -I.\SRC\ADO -I.\SRC\Boards -I..\COMMON_SRC\APBC -I..\COMMON_SRC\SPI -I..\COMMON_SRC\Buzzer --c99-I "E:\Program Files\keil5\ARM\RV31\INC"-I "E:\Program Files\keil5\ARM\CMSIS\Include"-D_510PF_SDK_ -DRTOS -DASIC -DHS_MODE -DOP_STA -DVBM_BU-o .\bin\cmd_ddr.o --omf_browse .\bin\cmd_ddr.crf --depend .\bin\cmd_ddr.d)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdio.h)(0x53463A44)
-I (..\COMMON_SRC\CLI\cmd.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_h264.h)(0x5984C864)
-I (..\COMMON_SRC\CMSIS\_510PF.h)(0x5A3EE368)
-I (..\COMMON_SRC\CMSIS\system__510PF.h)(0x5A429322)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stdint.h)(0x53463A44)
-I (E:\Program Files\keil5\ARM\ARMCC\include\stddef.h)(0x53463A44)
-I (..\COMMON_SRC\CMSIS\Retarget.h)(0x5949A252)
-I (..\COMMON_SRC\CMSIS\rtos\cmsis_os.h)(0x5A79E6D0)
-I (..\COMMON_SRC\CLI\include\cmd_vcs.h)(0x5A457EAE)
-I (..\COMMON_SRC\CLI\include\cmd_system.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_i2c.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_isp.h)(0x59E172B2)
-I (..\COMMON_SRC\CLI\include\cmd_sf.h)(0x59E4F834)
-I (..\COMMON_SRC\CLI\include\cmd_bb.h)(0x59E69B48)
-I (..\COMMON_SRC\CLI\include\cmd_ado.h)(0x5A308944)
-I (..\COMMON_SRC\CLI\include\cmd_ddr.h)(0x5A557436)
-I (..\COMMON_SRC\CLI\CLI.h)(0x5A308944)
-I (..\COMMON_SRC\BUF\BUF.h)(0x5A2F1B56)

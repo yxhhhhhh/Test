@@ -31,7 +31,7 @@
 										PWM->PWM_EN3 	= en;			\
 									}
 #define LCD_BACKLIGHT_CTRL(LvL)		(PWM->PWM3_HIGH_CNT = LvL)
-#define SPEAKER_EN(en)				(GPIO->GPIO_O13 = en) //(GPIO->GPIO_O12 = en)
+#define SPEAKER_EN(en)				(GPIO->GPIO_O12 = en) //(GPIO->GPIO_O12 = en)
 #define POWER_LED_IO				(GPIO->GPIO_O2)
 #define POWER_LED_IO_ENABLE			(GPIO->GPIO_OE2)
 #define	SIGNAL_LED_IO				(GPIO->GPIO_O3)

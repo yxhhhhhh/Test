@@ -34,6 +34,8 @@
 #define 	RECORD_PWRSTS_ADDR	0
 #define 	PWRSTS_KEEP			3
 
+#define 	ALARM_INTERVAL		300
+
 typedef void (*pvUiFuncPtr)(void);
 
 typedef enum
@@ -242,6 +244,24 @@ typedef enum
 	SEC_ITEM,
 	ALLCALE_ITEM,
 }UI_CalendarItem_t;
+
+typedef enum
+{
+	TEMP_ALARM_IDLE = 0,
+	HIGH_TEMP_ALARM_ON,
+	HIGH_TEMP_ALARM_ING,
+	LOW_TEMP_ALARM_ON,
+	LOW_TEMP_ALARM_ING,
+	TEMP_ALARM_OFF,	
+}TEMP_ALARM_STATE;
+
+typedef enum
+{
+	PICKUP_ALARM_IDLE = 0,
+	PICKUP_ALARM_ON,	
+	PICKUP_ALARM_ING,	
+	PICKUP_ALARM_OFF,	
+}PICKUP_ALARM_STATE;
 
 typedef struct
 {
@@ -836,4 +856,10 @@ void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb);
 void UI_AutoBrightnessAdjust(void);
 
 uint8_t UI_TempCToF(uint8_t cTemp);
+uint8_t UI_CheckStopAlarm(void);
+
+void UI_TempAlarmCheck(void);
+void UI_PickupAlarmCheck(void);
+
+void UI_PTNDisplay(uint8_t value);
 #endif

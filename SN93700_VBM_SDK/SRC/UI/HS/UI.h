@@ -91,6 +91,14 @@ typedef enum
 
 typedef enum
 {
+	PTZ_UP = 1,
+	PTZ_DOWN,
+	PTZ_LEFT,
+	PTZ_RIGHT,
+}UI_PtzMode_t;
+
+typedef enum
+{
 #define OSDLOGOPOOL(idx,addr)  OSDLOGO_##idx,
 #include "OSDLogo_Table.h"
 	OSDLOGO_MAX

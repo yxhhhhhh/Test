@@ -61,6 +61,7 @@ void BSP_DriversInit(void)
 	PWM->PWM_EN3    = 1;
 
 	//! Speaker
+	GPIO->GPIO_OE12 = 1; //20180322
 	GPIO->GPIO_OE13 = 1; //20180322
 
 	//! LCD POWER	
