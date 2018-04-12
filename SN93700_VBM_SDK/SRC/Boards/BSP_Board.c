@@ -165,8 +165,12 @@ void BSP_BoardInit(void)
 	GLB->PADIO13 = 4;
 	GLB->PADIO14 = 4;
 
+		
 	//! Speaker
-	GLB->PADIO33 = 0;
+	GLB->PADIO16 = 0;
+	
+	//! IR LED
+	GLB->PADIO32 = 0;
 
 	//! LED
 	GLB->PADIO29 = 0;

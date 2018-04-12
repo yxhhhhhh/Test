@@ -103,13 +103,16 @@ void BSP_DriversInit(void)
 	//! LED
 	GPIO->GPIO_OE1 	= 1;
 	GPIO->GPIO_O1	= 1;
-	GPIO->GPIO_OE2 	= 1;
-	GPIO->GPIO_O2	= 0;
+	//GPIO->GPIO_OE2 	= 1;
+	//GPIO->GPIO_O2	= 0;
 	GPIO->GPIO_OE3 	= 1;
 	//GPIO->GPIO_O3	= 0;
 
 	//! Speaker
-	GPIO->GPIO_OE5 	= 1;
+	GPIO->GPIO_OE2 	= 1;
+
+	//! IR LED
+	GPIO->GPIO_OE4 	= 1;
 
 	//! RTC GPIO1
 	RTC_SetGPO_1(1, RTC_PullDownDisable);

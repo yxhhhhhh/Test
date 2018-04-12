@@ -35,6 +35,9 @@ void UI_Init(osMessageQId *pvMsgQId)
     osMessageQDef(UI_EventQueue, UI_Q_SIZE, UI_Event_t);
     UI_EventQueue = osMessageCreate(osMessageQ(UI_EventQueue), NULL);
 	KEY_Init(&UI_EventQueue);
+	#ifdef VBM_BU
+	UI_MotoControlInit();
+	#endif
 	osThreadDef(UI_EventThread, UI_EventThread, THREAD_PRIO_UIEVENT_HANDLER, 1, THREAD_STACK_UIEVENT_HANDLER);
 	osThreadCreate(osThread(UI_EventThread), NULL);
 	KNL_SetBbFrmMonitCbFunc(UI_FrameTRXFinish);

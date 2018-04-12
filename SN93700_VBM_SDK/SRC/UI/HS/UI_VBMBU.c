@@ -30,6 +30,8 @@
 
 #define osUI_SIGNALS	0x6A
 
+#define MC_ENABLE  1
+
 /**
  * Key event mapping table
  *
@@ -60,6 +62,7 @@ UI_SettingFuncPtr_t tUiSettingMap2Func[] =
 	[UI_IMGPROC_SETTING]		= UI_ImageProcSetting,
 	[UI_MD_SETTING]				= UI_MDSetting,
 	[UI_VOICETRIG_SETTING]		= UI_VoiceTrigSetting,
+	[UI_MOTOR_SETTING]		    = UI_PtzControlSetting,
 };
 
 //ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n36DB, R2R_VOL_n23p5DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
@@ -139,7 +142,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 
 			if(rUI_SUCCESS == tPair_Result)
 				UI_ResetDevSetting();
-			PAIRING_LED_IO = 0;
+			//PAIRING_LED_IO = 0;
 			break;
 		}
 		case APP_LINKSTS_RPT:
@@ -181,15 +184,15 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			(*pThreadCnt)++;
 			break;
 		case APP_PAIRING_STATE:
-			if((*pThreadCnt % UI_PAIRINGLED_PERIOD) == 0)
-				PAIRING_LED_IO = ~PAIRING_LED_IO;
+			//if((*pThreadCnt % UI_PAIRINGLED_PERIOD) == 0)
+				//PAIRING_LED_IO = ~PAIRING_LED_IO;
 			(*pThreadCnt)++;
 			osMutexRelease(UI_BUMutex);
 			return;
 		default:
 			break;
 	}
-	PAIRING_LED_IO = 0;
+	//PAIRING_LED_IO = 0;
 	tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
 	UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
 	osMutexRelease(UI_BUMutex);
@@ -212,7 +215,7 @@ void UI_EventHandles(UI_Event_t *ptEventPtr)
 void UI_PowerKey(void)
 {
 	POWER_LED_IO   = 0;
-	PAIRING_LED_IO = 0;
+	//PAIRING_LED_IO = 0;
 	//SIGNAL_LED_IO  = 0;
 	RTC_WriteUserRam(0, 0);
 	RTC_SetGPO_1(0, RTC_PullDownEnable);
@@ -467,29 +470,29 @@ void UI_TempCheck(void) //20180322
 	uint8_t cur_temp;
 	UI_BUReqCmd_t tUI_TempReqCmd;
 
-	 I2C1_Type *pI2C;
-	 uint8_t   ubData[4] = {0};
-	 uint8_t   ubReg = 0xE3;
-	 bool ret = 0;
-	 uint32_t tem = 0;
+	I2C1_Type *pI2C;
+	uint8_t   ubData[4] = {0};
+	uint8_t   ubReg = 0xE3;
+	bool ret = 0;
+	uint32_t tem = 0;
 	 
-	 pI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
-	 ret=bI2C_MasterProcess (pI2C,  0x40, &ubReg, 1, ubData, 2);
+	pI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+	ret = bI2C_MasterProcess (pI2C,  0x40, &ubReg, 1, ubData, 2);
 
-	 tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
+	tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
 
 	cur_temp = tem;
 	
 	//if(ubTemp_bak != cur_temp)
-	//{
+	{
 		tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] = UI_TEMP_CHECK;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA] = cur_temp;
 		tUI_TempReqCmd.ubCmd_Len  			  = 3;
 		UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
 
-	//	ubTemp_bak = cur_temp;
-	//}
+		ubTemp_bak = cur_temp;
+	}
 }
 //------------------------------------------------------------------------------
 void UI_ANRSetting(void *pvAnrMode)
@@ -831,7 +834,6 @@ void UI_MotoControlInit(void)
   #if (MC_ENABLE)
 	MC_Setup_t tMC_SettingApp;
 	//! MC
-	#if (1)
 	GLB->PADIO0 = 1;	// MC0
 	GLB->PADIO1 = 1;
 	GLB->PADIO2 = 1;
@@ -840,16 +842,7 @@ void UI_MotoControlInit(void)
 	GLB->PADIO5 = 1;
 	GLB->PADIO6 = 1;
 	GLB->PADIO7 = 1;
-	#else
-	GLB->PADIO39 = 5;	// MC0
-	GLB->PADIO40 = 5;
-	GLB->PADIO41 = 5;
-	GLB->PADIO42 = 5;
-	GLB->PADIO43 = 5;	// MC1
-	GLB->PADIO44 = 5;
-	GLB->PADIO45 = 5;
-	GLB->PADIO46 = 5;
-    #endif
+
 	ubUI_Mc1RunFlag = 0;
 	ubUI_Mc2RunFlag = 0;
 	ubUI_Mc1RunCnt = 0;
@@ -857,23 +850,23 @@ void UI_MotoControlInit(void)
 	
 	tMC_SettingApp.ubMC_ClockDivider = 63;		// T
 	tMC_SettingApp.ubMC_ClockPerPeriod = 255;	// 
-	tMC_SettingApp.ubMC_HighPeriod = 24;//18;	// %
-	tMC_SettingApp.ubMC_PeriodPerStep = 18;//16;
+	tMC_SettingApp.ubMC_HighPeriod = 48;//24;//18;	// %
+	tMC_SettingApp.ubMC_PeriodPerStep = 36;//18;//16;
 	tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
-	tMC_SettingApp.pfMC_StartIoHook = MC0_StartHook;
-    	tMC_SettingApp.pfMC_StopIoHook = MC0_StopHook;
-  	tMC_SettingApp.pfMC_FinishHook = MC0_FinishHook;
+	//tMC_SettingApp.pfMC_StartIoHook = MC0_StartHook;
+    	//tMC_SettingApp.pfMC_StopIoHook = MC0_StopHook;
+  	//  tMC_SettingApp.pfMC_FinishHook = MC0_FinishHook;
 	tMC_Setup(MC_0,&tMC_SettingApp);
-	tMC_SettingApp.pfMC_StartIoHook = MC1_StartHook;
- 	tMC_SettingApp.pfMC_StopIoHook = MC1_StopHook;
-  	tMC_SettingApp.pfMC_FinishHook = MC1_FinishHook;
+	//tMC_SettingApp.pfMC_StartIoHook = MC1_StartHook;
+ 	//   tMC_SettingApp.pfMC_StopIoHook = MC1_StopHook;
+  	//  tMC_SettingApp.pfMC_FinishHook = MC1_FinishHook;
 	tMC_Setup(MC_1,&tMC_SettingApp);
-	MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
-	MC_Stop(MC_0);
+//	MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
+//	MC_Stop(MC_0);
 	tMC_SettingApp.ubMC_HighPeriod = 17;//18;	// %
 	tMC_SettingApp.ubMC_PeriodPerStep = 14;//16;
-	MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);
-	MC_Stop(MC_1);
+//	MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);
+//	MC_Stop(MC_1);
   #endif
 }
 
@@ -882,74 +875,76 @@ void UI_MotoControlInit(void)
 //------------------------------------------------------------------------------
 void UI_PtzControlSetting(void *pvMCParam)
 {
-  #if (MC_ENABLE)
+  	#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
 	switch(pMC_Param[0])
 	{
+		case 0:
+			if(ubUI_Mc1RunFlag == 1)
+			{
+				ubUI_Mc1RunFlag = 0;
+				MC_Stop(MC_1);
+			}
+
+			if(ubUI_Mc2RunFlag == 1)
+			{
+				ubUI_Mc2RunFlag = 0;
+				MC_Stop(MC_1);
+			}
+
+			if(ubUI_Mc3RunFlag == 1)
+			{
+				ubUI_Mc3RunFlag = 0;
+				MC_Stop(MC_0);
+			}
+
+			if(ubUI_Mc4RunFlag == 1)
+			{
+				ubUI_Mc4RunFlag = 0;
+				MC_Stop(MC_0);
+			}
+			break;
+			
 		case 1:		// 水平，正转
 			ubUI_Mc1RunCnt = 2;
 			if(ubUI_Mc1RunFlag == 0)
 			{
 				ubUI_Mc1RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);			// 正转
+				MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);			// 正转
 			}
-		break;
+			break;
 		
 		case 2:		// 水平，反转
 			ubUI_Mc1RunCnt = 2;
 			if(ubUI_Mc2RunFlag == 0)
 			{
 				ubUI_Mc2RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
+				MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
 			}
-		break;
+			break;
 		
 		case 3:		// 垂直, 正转
 			ubUI_Mc2RunCnt = 2;
 			if(ubUI_Mc3RunFlag == 0)
 			{
 				ubUI_Mc3RunFlag = 1;
-				MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);			// 正转
+				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);			// 正转
 			}
-		break;
+			break;
 		
 		case 4:		// 垂直，反转
 			ubUI_Mc2RunCnt = 2;
 			if(ubUI_Mc4RunFlag == 0)
 			{
 				ubUI_Mc4RunFlag = 1;
-				MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
+				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
 			}
-		break;
+			break;
+
+		default:
+			break;
 	}
-	
-// 	if((pMC_Param[0] == 1)||(pMC_Param[0] == 2))	// 水平方向
-// 	{
-// 		ubUI_Mc1RunCnt = 2;
-// 		if(ubUI_Mc1RunFlag == 0)
-// 		{
-// 			printf(">> MC0 Runing!!\r\n");
-// 			if(pMC_Param[0] == 1)
-// 				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);			// 正转
-// 			else
-// 				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
-// 		}
-// 		ubUI_Mc1RunFlag = 1;
-// 	}
-// 	if((pMC_Param[0] == 3)||(pMC_Param[0] == 4))	// 垂直方向
-// 	{
-// 		ubUI_Mc2RunCnt = 2;
-// 		if(ubUI_Mc2RunFlag == 0)
-// 		{
-// 			printf(">> MC1 Runing!!\r\n");
-// 			if(pMC_Param[0] == 3)
-// 				MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);			// 正转
-// 			else
-// 				MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
-// 		}
-// 		ubUI_Mc2RunFlag = 1;
-// 	}
-  #endif
+  	#endif
 }
 
 //------------------------------------------------------------------------------
@@ -983,4 +978,18 @@ void UI_UpdateMCStatus(void)
 		}
 	}
   #endif
+}
+
+
+void UI_BrightnessCheck(void) //20180408
+{
+	uint16_t uwDetLvl = 0x3FF;
+	uwDetLvl = uwSADC_GetReport(1);
+	printf("uwDetLvl  %x \n",uwDetLvl);
+	
+	if(uwDetLvl < 10)
+	{
+		GPIO->GPIO_O4	= 0; //关
+		//GPIO->GPIO_O4	= 1; //开
+	}
 }

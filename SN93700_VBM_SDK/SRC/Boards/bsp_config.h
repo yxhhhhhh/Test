@@ -47,9 +47,9 @@
 #define BSP_BOARD_VBMBU_EV
 #else
 #define BSP_BOARD_VBMBU_DEMO
-#define SPEAKER_EN(en)				(GPIO->GPIO_O5 = en)
-#define	PAIRING_LED_IO				(GPIO->GPIO_O2)
-#define	PAIRING_LED_IO_ENABLE		(GPIO->GPIO_OE2)
+#define SPEAKER_EN(en)				(GPIO->GPIO_O2 = en)
+//#define	PAIRING_LED_IO				(GPIO->GPIO_O2)
+//#define	PAIRING_LED_IO_ENABLE		(GPIO->GPIO_OE2)
 #define POWER_LED_IO				(GPIO->GPIO_O1)
 #define POWER_LED_IO_ENABLE			(GPIO->GPIO_OE1)
 #define	SIGNAL_LED_IO				(GPIO->GPIO_O3)

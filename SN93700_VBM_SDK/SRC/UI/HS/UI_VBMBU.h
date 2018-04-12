@@ -161,6 +161,7 @@ typedef enum
 	UI_IMGPROC_SETTING,
 	UI_MD_SETTING,
 	UI_VOICETRIG_SETTING,
+	UI_MOTOR_SETTING,
 }UI_PUReqCmdID_t;
 
 typedef enum
@@ -247,6 +248,7 @@ void UI_VoxTrigger(void);
 void UI_VoiceTrigSetting(void *pvTrigMode);
 void UI_VoiceTrigger(void);
 void UI_ANRSetting(void *pvSysInfo);
+void UI_PtzControlSetting(void *pvMCParam);
 void UI_IspSetup(void);
 void UI_ImageProcSetting(void *pvImgProc);
 void UI_MDTrigger(void);
@@ -257,5 +259,7 @@ void UI_UpdateDevStatusInfo(void);
 
 void UI_VoiceCheck(void);
 void UI_TempCheck(void);
+
+void UI_MotoControlInit(void);
 
 #endif

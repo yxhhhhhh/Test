@@ -263,6 +263,34 @@ typedef enum
 	PICKUP_ALARM_OFF,	
 }PICKUP_ALARM_STATE;
 
+typedef enum
+{
+	MC0_OFF = 0,
+	MC0_ON,
+	MC0_TOP,
+}MCO_STATE;
+
+typedef enum
+{
+	MC1_OFF = 0,
+	MC1_ON,
+	MC1_TOP,
+}MC1_STATE;
+
+typedef enum
+{
+	MC_UP_DOWN_OFF 	 	= 0x00,
+	MC_UP_ON 	 		= 0x11,
+	MC_UP_TOP 	 		= 0x12,
+	MC_DOWN_ON 	 		= 0x21,
+	MC_DOWN_TOP  		= 0x22,
+	MC_LEFT_RIGHT_OFF  	= 0x01,
+	MC_LEFT_ON 	 		= 0x31,
+	MC_LEFT_TOP  		= 0x32,
+	MC_RIGHT_ON  		= 0x41,
+	MC_RIGHT_TOP 		= 0x42,
+}MC_STATE;
+
 typedef struct
 {
 	void (*pvFuncPtr)(UI_ArrowKey_t);
@@ -624,6 +652,7 @@ typedef enum
 	UI_IMGPROC_SETTING,
 	UI_MD_SETTING,
 	UI_VOICETRIG_SETTING,
+	UI_MOTOR_SETTING,//20180410
 }UI_PUReqCmdID_t;
 
 typedef enum
@@ -857,9 +886,11 @@ void UI_AutoBrightnessAdjust(void);
 
 uint8_t UI_TempCToF(uint8_t cTemp);
 uint8_t UI_CheckStopAlarm(void);
-
+uint8_t UI_GetAlarmStatus(void);
 void UI_TempAlarmCheck(void);
 void UI_PickupAlarmCheck(void);
 
 void UI_PTNDisplay(uint8_t value);
+void UI_MotorControl(uint8_t Value);
+void UI_MotorStateCheck(void);
 #endif
