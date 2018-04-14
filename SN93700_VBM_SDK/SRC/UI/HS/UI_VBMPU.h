@@ -416,6 +416,9 @@ typedef enum
 	BL_LVL3,
 	BL_LVL4,
 	BL_LVL5,
+	BL_LVL6,
+	BL_LVL7,
+	BL_LVL8,
 }UI_BrightnessLvl_t;
 
 typedef enum
@@ -588,6 +591,7 @@ typedef struct
 	uint8_t				ubFlickerFlag;
 	uint8_t				ubLangageFlag;
 	uint8_t				ubTempunitFlag;
+	uint8_t 			ubNightmodeFlag[4];
 	uint8_t				ubReserved[224];
 }UI_PUSetting_t;
 

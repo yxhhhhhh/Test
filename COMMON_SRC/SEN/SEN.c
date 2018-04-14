@@ -488,26 +488,11 @@ void SEN_InitProcess(void)
 		GLB->PADIO45 = 0;
 		GPIO->GPIO_OE3 = 1;
 		GPIO->GPIO_O3 = 1 ;
-
-		/*
-		//PD
-		GPIO->GPIO_OE14 = 1;
-		GPIO->GPIO_O14 = 1 ;
-		//I2C
-		GLB->PADIO13 = 4;
-		GLB->PADIO14 = 4;
-		GLB->PADIO15 = 4;
-		GLB->PADIO16 = 4;
-		GLB->PADIO17 = 4;
-		*/
 		
 		//I2C
 		GLB->PADIO13 = 4;
 		GLB->PADIO14 = 4;
-		//GLB->PADIO15 = 4;
-		//GLB->PADIO16 = 4;
-		//GLB->PADIO17 = 4;
-
+	
 		//REST
 		GLB->PADIO15 = 0;
 		GPIO->GPIO_OE1 = 1;

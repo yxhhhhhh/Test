@@ -177,7 +177,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				UI_MDTrigger();
 
 			UI_VoiceCheck();
-			UI_TempCheck(); //20180322
+			UI_TempCheck();
+			UI_BrightnessCheck();
 			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
@@ -192,6 +193,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 		default:
 			break;
 	}
+	//UI_MCStateCheck();
 	//PAIRING_LED_IO = 0;
 	tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
 	UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
@@ -214,7 +216,7 @@ void UI_EventHandles(UI_Event_t *ptEventPtr)
 //------------------------------------------------------------------------------
 void UI_PowerKey(void)
 {
-	POWER_LED_IO   = 0;
+	//POWER_LED_IO   = 0;
 	//PAIRING_LED_IO = 0;
 	//SIGNAL_LED_IO  = 0;
 	RTC_WriteUserRam(0, 0);
@@ -435,7 +437,7 @@ void UI_VoiceCheck(void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	printf("ulUI_AdcRpt  %lx \n",ulUI_AdcRpt);	
+	//printf("ulUI_AdcRpt  %lx \n",ulUI_AdcRpt);	
 
 	if(ulUI_AdcRpt > 0x6000)
 		voice_temp = 5;
@@ -831,7 +833,7 @@ void MC1_FinishHook(void)
 //------------------------------------------------------------------------------
 void UI_MotoControlInit(void)
 {
-  #if (MC_ENABLE)
+  	#if (MC_ENABLE)
 	MC_Setup_t tMC_SettingApp;
 	//! MC
 	GLB->PADIO0 = 1;	// MC0
@@ -848,26 +850,15 @@ void UI_MotoControlInit(void)
 	ubUI_Mc1RunCnt = 0;
 	ubUI_Mc2RunCnt = 0;
 	
-	tMC_SettingApp.ubMC_ClockDivider = 63;		// T
-	tMC_SettingApp.ubMC_ClockPerPeriod = 255;	// 
-	tMC_SettingApp.ubMC_HighPeriod = 48;//24;//18;	// %
-	tMC_SettingApp.ubMC_PeriodPerStep = 36;//18;//16;
+	tMC_SettingApp.ubMC_ClockDivider = 63;
+	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	tMC_SettingApp.ubMC_HighPeriod = 24;//48/24/18
+	tMC_SettingApp.ubMC_PeriodPerStep = 18;//36/18/16
 	tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
-	//tMC_SettingApp.pfMC_StartIoHook = MC0_StartHook;
-    	//tMC_SettingApp.pfMC_StopIoHook = MC0_StopHook;
-  	//  tMC_SettingApp.pfMC_FinishHook = MC0_FinishHook;
+	
 	tMC_Setup(MC_0,&tMC_SettingApp);
-	//tMC_SettingApp.pfMC_StartIoHook = MC1_StartHook;
- 	//   tMC_SettingApp.pfMC_StopIoHook = MC1_StopHook;
-  	//  tMC_SettingApp.pfMC_FinishHook = MC1_FinishHook;
 	tMC_Setup(MC_1,&tMC_SettingApp);
-//	MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
-//	MC_Stop(MC_0);
-	tMC_SettingApp.ubMC_HighPeriod = 17;//18;	// %
-	tMC_SettingApp.ubMC_PeriodPerStep = 14;//16;
-//	MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);
-//	MC_Stop(MC_1);
-  #endif
+  	#endif
 }
 
 //------------------------------------------------------------------------------
@@ -877,68 +868,28 @@ void UI_PtzControlSetting(void *pvMCParam)
 {
   	#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
+	
 	switch(pMC_Param[0])
 	{
 		case 0:
-			if(ubUI_Mc1RunFlag == 1)
-			{
-				ubUI_Mc1RunFlag = 0;
-				MC_Stop(MC_1);
-			}
-
-			if(ubUI_Mc2RunFlag == 1)
-			{
-				ubUI_Mc2RunFlag = 0;
-				MC_Stop(MC_1);
-			}
-
-			if(ubUI_Mc3RunFlag == 1)
-			{
-				ubUI_Mc3RunFlag = 0;
-				MC_Stop(MC_0);
-			}
-
-			if(ubUI_Mc4RunFlag == 1)
-			{
-				ubUI_Mc4RunFlag = 0;
-				MC_Stop(MC_0);
-			}
+			MC_Stop(MC_1);
+			MC_Stop(MC_0);
 			break;
 			
-		case 1:		// 水平，正转
-			ubUI_Mc1RunCnt = 2;
-			if(ubUI_Mc1RunFlag == 0)
-			{
-				ubUI_Mc1RunFlag = 1;
-				MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);			// 正转
-			}
+		case 1:	//水平,正转
+			MC_Start(MC_1, 42, MC_Clockwise, MC_WaitReady);
 			break;
 		
-		case 2:		// 水平，反转
-			ubUI_Mc1RunCnt = 2;
-			if(ubUI_Mc2RunFlag == 0)
-			{
-				ubUI_Mc2RunFlag = 1;
-				MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
-			}
+		case 2:	//水平,反转
+			MC_Start(MC_1, 42, MC_Counterclockwise, MC_WaitReady);
 			break;
 		
-		case 3:		// 垂直, 正转
-			ubUI_Mc2RunCnt = 2;
-			if(ubUI_Mc3RunFlag == 0)
-			{
-				ubUI_Mc3RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);			// 正转
-			}
+		case 3:	//垂直,正转
+			MC_Start(MC_0, 42, MC_Clockwise, MC_WaitReady);
 			break;
 		
-		case 4:		// 垂直，反转
-			ubUI_Mc2RunCnt = 2;
-			if(ubUI_Mc4RunFlag == 0)
-			{
-				ubUI_Mc4RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);	// 反转
-			}
+		case 4:	// 垂直,反转
+			MC_Start(MC_0, 42, MC_Counterclockwise, MC_WaitReady);
 			break;
 
 		default:
@@ -948,11 +899,34 @@ void UI_PtzControlSetting(void *pvMCParam)
 }
 
 //------------------------------------------------------------------------------
+void UI_MCStateCheck(void)
+{
+	printf(">> MC tUI_SyncAppState: %d\r\n", tUI_SyncAppState);
+	if(tUI_SyncAppState != APP_LINK_STATE)
+	{
+		if((ubUI_Mc1RunFlag == 1)||(ubUI_Mc2RunFlag == 1))
+		{
+			ubUI_Mc1RunFlag = 0;
+			ubUI_Mc2RunFlag = 0;
+			MC_Stop(MC_1);
+			printf(">> MC1 Stop!!\r\n");
+		}
+
+		if((ubUI_Mc3RunFlag == 1)||(ubUI_Mc4RunFlag == 1))
+		{
+			ubUI_Mc3RunFlag = 0;
+			ubUI_Mc4RunFlag = 0;
+			MC_Stop(MC_0);
+			printf(">> MC0 Stop!!\r\n");
+		}
+	}
+}
+//------------------------------------------------------------------------------
 //NOTE: 
 //------------------------------------------------------------------------------
 void UI_UpdateMCStatus(void)
 {
-  #if (MC_ENABLE)
+  	#if (MC_ENABLE)
 	if((ubUI_Mc1RunFlag == 1)||(ubUI_Mc2RunFlag == 1))
 	{
 		ubUI_Mc1RunCnt--;
@@ -965,6 +939,7 @@ void UI_UpdateMCStatus(void)
 			printf(">> MC0 Stop!!\r\n");
 		}
 	}
+	
 	if((ubUI_Mc3RunFlag == 1)||(ubUI_Mc4RunFlag == 1))
 	{
 		ubUI_Mc2RunCnt--;
@@ -977,7 +952,7 @@ void UI_UpdateMCStatus(void)
 			printf(">> MC1 Stop!!\r\n");
 		}
 	}
-  #endif
+  	#endif
 }
 
 
@@ -985,7 +960,7 @@ void UI_BrightnessCheck(void) //20180408
 {
 	uint16_t uwDetLvl = 0x3FF;
 	uwDetLvl = uwSADC_GetReport(1);
-	printf("uwDetLvl  %x \n",uwDetLvl);
+	printf("uwDetLvl  0x%x \n",uwDetLvl);
 	
 	if(uwDetLvl < 10)
 	{

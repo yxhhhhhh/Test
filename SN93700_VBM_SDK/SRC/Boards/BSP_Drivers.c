@@ -42,18 +42,16 @@ void BSP_DriversInit(void)
     APBC_Init();
 
 	//! LED
-	GPIO->GPIO_OE2 	= 1;
-	GPIO->GPIO_O2  	= 1;
 	GPIO->GPIO_OE3 	= 1;
 	GPIO->GPIO_O3 	= 0;
 	GPIO->GPIO_OE13	= 1;
 	GPIO->GPIO_OE0	= 1;
 	GPIO->GPIO_OE1	= 1;
 
-	//! BL Control
-	PWM->PWM3_RATE  	= 127;
-	PWM->PWM3_PERIOD 	= 0xC00;
-	PWM->PWM3_HIGH_CNT 	= 0xA00;
+	//! BackLight Control
+	PWM->PWM8_RATE  	= 127;
+	PWM->PWM8_PERIOD 	= 0xC00;
+	PWM->PWM8_HIGH_CNT 	= 0xA00;
 	
 	//! BL Enable
 	GPIO->GPIO_OE11 = 1;
@@ -61,8 +59,7 @@ void BSP_DriversInit(void)
 	PWM->PWM_EN3    = 1;
 
 	//! Speaker
-	GPIO->GPIO_OE12 = 1; //20180322
-	GPIO->GPIO_OE13 = 1; //20180322
+	GPIO->GPIO_OE2 = 1; //20180322
 
 	//! LCD POWER	
 	GPIO->GPIO_OE10 = 1;

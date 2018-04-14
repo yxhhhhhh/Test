@@ -261,5 +261,6 @@ void UI_VoiceCheck(void);
 void UI_TempCheck(void);
 
 void UI_MotoControlInit(void);
-
+void UI_MCStateCheck(void);
+void UI_BrightnessCheck(void);
 #endif

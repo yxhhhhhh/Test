@@ -66,19 +66,18 @@ void BSP_BoardInit(void)
 	GLB->PADIO7  = 4;
 	
 	//! Speaker
-	GLB->PADIO54 = 0;
+	GLB->PADIO16 = 0;
 	
 	GLB->PADIO55 = 0;
 
 	//! LED
-	GLB->PADIO16 = 0;
 	GLB->PADIO17 = 0;
 	GLB->PADIO55 = 0;
 	GLB->PADIO56 = 0;
 	GLB->PADIO57 = 0;
 	
-	//! BL
-	GLB->PADIO51 = 7;
+	//! BackLight
+	GLB->PADIO24 = 7;
 
 	// LCD POWER
 	GLB->PADIO52 = 0;
