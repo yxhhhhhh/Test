@@ -36,7 +36,8 @@ void UI_Init(osMessageQId *pvMsgQId)
     UI_EventQueue = osMessageCreate(osMessageQ(UI_EventQueue), NULL);
 	KEY_Init(&UI_EventQueue);
 	#ifdef VBM_BU
-	UI_MotoControlInit();
+	//UI_MotoControlInit();
+	UI_BuInit();
 	#endif
 	osThreadDef(UI_EventThread, UI_EventThread, THREAD_PRIO_UIEVENT_HANDLER, 1, THREAD_STACK_UIEVENT_HANDLER);
 	osThreadCreate(osThread(UI_EventThread), NULL);

@@ -41,6 +41,7 @@ extern uint32_t Image$$RW_UNCACHED_HEAP$$Base;
 extern uint32_t Image$$RW_IRAM3$$Base;
 
 extern uint8_t ubDisplaymodeFlag;
+extern uint8_t ubSetViewCam;
 //------------------------------------------------------------------------------
 static uint8_t osHeap[osHeapSize] __attribute__((aligned (8)));
 osMessageQId APP_EventQueue;
@@ -449,6 +450,18 @@ uint8_t APP_UpdateLinkStatus(void)
 	uint8_t ubAPP_Event = APP_LOSTLINK_EVENT;
 	KNL_ROLE ubKNL_RoleNum;
 
+	ubKNL_RoleNum =(KNL_ROLE) ubSetViewCam ;
+
+	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum] 	 = rLOSTLINK;
+	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+4] = 0;
+	if(ubKNL_GetCommLinkStatus(ubKNL_RoleNum) == BB_LINK)
+	{
+		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum]   = rLINK;
+		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+4] = KNL_GetPerValue(ubKNL_RoleNum);
+		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = KNL_GetRssiValue(ubKNL_RoleNum);
+		ubAPP_Event = APP_LINK_EVENT;
+	}
+	
 	for(ubKNL_RoleNum = KNL_STA1; ubKNL_RoleNum <= KNL_STA4; ubKNL_RoleNum++)
 	{
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum] 	 = rLOSTLINK;
@@ -458,7 +471,7 @@ uint8_t APP_UpdateLinkStatus(void)
 			tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum]   = rLINK;
 			tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+4] = KNL_GetPerValue(ubKNL_RoleNum);
 			tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = KNL_GetRssiValue(ubKNL_RoleNum);
-			ubAPP_Event = APP_LINK_EVENT;
+			//ubAPP_Event = APP_LINK_EVENT;
 		}
 	}
 	return ubAPP_Event;

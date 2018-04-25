@@ -54,16 +54,17 @@ void BSP_DriversInit(void)
 	PWM->PWM8_HIGH_CNT 	= 0xA00;
 	
 	//! BL Enable
-	GPIO->GPIO_OE11 = 1;
-	//GPIO->GPIO_O11  = 1;
-	PWM->PWM_EN3    = 1;
+	//GPIO->GPIO_OE11 = 1;
+	PWM->PWM_EN8    = 1;
 
 	//! Speaker
-	GPIO->GPIO_OE2 = 1; //20180322
+	GPIO->GPIO_OE2 = 1;
 
-	//! LCD POWER	
-	GPIO->GPIO_OE10 = 1;
-	GPIO->GPIO_O10  = 0;
+	//! AUDIO+
+	GPIO->GPIO_OE9 = 0;
+	
+	//! AUDIO-	
+	GPIO->GPIO_OE10 = 0;
 	
 	printd(DBG_CriticalLvl, "SONiX SN9370X High Speed Mode Start!\n");
 }
@@ -81,8 +82,8 @@ void BSP_DriversInit(void)
 	SDIO_Init();
 
 	//! BL	
-	GPIO->GPIO_OE10 = 1;
-	GPIO->GPIO_O10  = 1;
+	//GPIO->GPIO_OE10 = 1;
+	//GPIO->GPIO_O10  = 1;
 
 	printd(DBG_CriticalLvl, "SONiX SN9370X High Speed Mode Start!\n");
 }

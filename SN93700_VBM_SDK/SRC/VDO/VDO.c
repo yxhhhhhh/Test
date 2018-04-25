@@ -47,6 +47,8 @@ static uint8_t ubVDO_SysSetupFlag;
 #endif
 static uint16_t uwVDO_HSIZE;
 static uint16_t uwVDO_VSIZE;
+
+extern uint8_t ubSetViewCam;
 //------------------------------------------------------------------------------
 void VDO_Init(void)
 {
@@ -65,7 +67,7 @@ void VDO_Init(void)
 	KNL_SetVdoFps(15);
 #endif
 #ifdef VBM_PU
-	tVDO_SvPlayRole =KNL_STA1;   //(DISPLAY_MODE == DISPLAY_1T1R)?KNL_STA1:KNL_NONE;
+	tVDO_SvPlayRole = (KNL_ROLE)ubSetViewCam;//KNL_STA1;   //(DISPLAY_MODE == DISPLAY_1T1R)?KNL_STA1:KNL_NONE;
 	//! Display Setting
 	tVDO_Status.tVdoDispType = VDO_DISP_TYPE;
 	KNL_VdoDisplaySetting();

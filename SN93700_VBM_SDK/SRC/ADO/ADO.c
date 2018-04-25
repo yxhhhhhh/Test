@@ -174,7 +174,7 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.Sys_speed			 = HIGH_SPEED;
 	tADO_KNLParm.Rec_device			 = SIG_DEL_ADC;
 	tADO_KNLParm.Ply_device			 = R2R_DAC;
-    	tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_DIFFERENTIAL;
+    tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_DIFFERENTIAL;
    	//tADO_KNLParm.ADO_SigDelAdcMode   =  ADO_SIG_SINGLE_END;	
 	tADO_KNLParm.Rec_fmt.sign_flag   = SIGNED;
 	tADO_KNLParm.Rec_fmt.channel     = MONO;

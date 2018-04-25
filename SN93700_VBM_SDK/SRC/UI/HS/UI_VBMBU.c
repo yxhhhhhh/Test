@@ -66,7 +66,8 @@ UI_SettingFuncPtr_t tUiSettingMap2Func[] =
 };
 
 //ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n36DB, R2R_VOL_n23p5DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
-ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n32p4DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n8p2DB};
+//ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n32p4DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n8p2DB};
+ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n36DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 
 static UI_BUStatus_t tUI_BuStsInfo;
 static APP_State_t tUI_SyncAppState;
@@ -83,6 +84,8 @@ static uint8_t ubUI_Mc2RunCnt;
 
 uint8_t ubVoicetemp_bak = 0xff;
 uint8_t ubTemp_bak = 25;
+
+I2C1_Type *pTempI2C;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -176,9 +179,16 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				UI_MDTrigger();
 
-			UI_VoiceCheck();
-			UI_TempCheck();
-			UI_BrightnessCheck();
+			if(((*pThreadCnt)%10) == 0)
+			{
+				UI_VoiceCheck();
+				UI_BrightnessCheck();
+			}
+			
+			if(((*pThreadCnt)%25) == 0)
+			{
+				UI_TempCheck();
+			}
 			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
@@ -193,7 +203,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 		default:
 			break;
 	}
-	//UI_MCStateCheck();
 	//PAIRING_LED_IO = 0;
 	tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
 	UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
@@ -437,7 +446,7 @@ void UI_VoiceCheck(void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	//printf("ulUI_AdcRpt  %lx \n",ulUI_AdcRpt);	
+	printf("ulUI_AdcRpt  0x%lx \n",ulUI_AdcRpt);	
 
 	if(ulUI_AdcRpt > 0x6000)
 		voice_temp = 5;
@@ -454,7 +463,7 @@ void UI_VoiceCheck(void)
 
 	if(ubVoicetemp_bak != voice_temp)
 	{
-		printf("voice_temp  %lx \n",voice_temp);
+		printf("voice_temp: %d \n",voice_temp);
 	
 		tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_CHECK;
@@ -472,20 +481,20 @@ void UI_TempCheck(void) //20180322
 	uint8_t cur_temp;
 	UI_BUReqCmd_t tUI_TempReqCmd;
 
-	I2C1_Type *pI2C;
+	//I2C1_Type *pI2C;
 	uint8_t   ubData[4] = {0};
 	uint8_t   ubReg = 0xE3;
 	bool ret = 0;
 	uint32_t tem = 0;
 	 
-	pI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
-	ret = bI2C_MasterProcess (pI2C,  0x40, &ubReg, 1, ubData, 2);
+	//pI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+	ret = bI2C_MasterProcess (pTempI2C,  0x40, &ubReg, 1, ubData, 2);
 
 	tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
 
 	cur_temp = tem;
 	
-	//if(ubTemp_bak != cur_temp)
+	if(ubTemp_bak != cur_temp)
 	{
 		tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] = UI_TEMP_CHECK;
@@ -721,8 +730,8 @@ void UI_ResetDevSetting(void)
 
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
-	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_OFF);
-	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamWdrMode,  		CAMSET_OFF);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_ON);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamWdrMode,  		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamDisMode,  		CAMSET_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamFlicker,		CAMFLICKER_60HZ);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCbrMode,  		CAMSET_ON);
@@ -779,7 +788,7 @@ void UI_LoadDevStatusInfo(void)
 			UI_CHK_CAMPARAM(tUI_BuStsInfo.MdParam.ubMD_Param[i], 0);
 	}
 
-	ADO_SetDacR2RVol(tUI_VOLTable[4]);
+	ADO_SetDacR2RVol(R2R_VOL_n14p6DB);
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)
@@ -960,11 +969,17 @@ void UI_BrightnessCheck(void) //20180408
 {
 	uint16_t uwDetLvl = 0x3FF;
 	uwDetLvl = uwSADC_GetReport(1);
-	printf("uwDetLvl  0x%x \n",uwDetLvl);
+	//printf("uwDetLvl  0x%x \n",uwDetLvl);
 	
 	if(uwDetLvl < 10)
 	{
 		GPIO->GPIO_O4	= 0; //¹Ø
 		//GPIO->GPIO_O4	= 1; //¿ª
 	}
+}
+
+void UI_BuInit(void)
+{
+	UI_MotoControlInit();
+	pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
 }

@@ -24,7 +24,7 @@
 //------------------------------------------------------------------------------
 #ifdef BSP_BOARD_VBMPU_DEMO
 void BSP_BoardInit(void)
-{
+{	
 	//! UART
 	GLB->PADIO22 = 2;
 	GLB->PADIO23 = 2;
@@ -47,6 +47,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO34 = 5;
 	GLB->PADIO35 = 5;
 	GLB->PADIO36 = 5;
+	
 
 	//! RF SPI
 	GLB->PADIO18 = 1;
@@ -79,7 +80,16 @@ void BSP_BoardInit(void)
 	//! BackLight
 	GLB->PADIO24 = 7;
 
-	// LCD POWER
+	//! IO9/IO10 default is GPIO,set other mode for IO51/52
+	GLB->PADIO9  = 3;
+	GLB->PADIO10 = 3;
+	GLB->PADIO37 = 3;
+	GLB->PADIO38 = 3;
+	
+	//! AUDIO+
+	GLB->PADIO51 = 0;
+
+	//! AUDIO-
 	GLB->PADIO52 = 0;
 }
 #endif
@@ -110,7 +120,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO36 = 5;
 
 	//! SDIO Wi-Fi
-	GLB->PADIO52 = 4;
+	//GLB->PADIO52 = 4;
 	GLB->PADIO53 = 4;
 	GLB->PADIO54 = 4;
 	GLB->PADIO55 = 4;
@@ -207,7 +217,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO7 = 4;
 
 	//! SDIO Wi-Fi
-	GLB->PADIO52 = 4;
+	//GLB->PADIO52 = 4;
 	GLB->PADIO53 = 4;
 	GLB->PADIO54 = 4;
 	GLB->PADIO55 = 4;

@@ -591,8 +591,9 @@ typedef struct
 	uint8_t				ubFlickerFlag;
 	uint8_t				ubLangageFlag;
 	uint8_t				ubTempunitFlag;
-	uint8_t 			ubNightmodeFlag[4];
-	uint8_t				ubReserved[224];
+	uint8_t 				NightmodeFlag;
+	uint8_t				ubCamViewNum;		
+	uint8_t				ubReserved[220];
 }UI_PUSetting_t;
 
 typedef struct
@@ -897,4 +898,6 @@ void UI_PickupAlarmCheck(void);
 void UI_PTNDisplay(uint8_t value);
 void UI_MotorControl(uint8_t Value);
 void UI_MotorStateCheck(void);
+
+void UI_GetBatLevel(void);
 #endif

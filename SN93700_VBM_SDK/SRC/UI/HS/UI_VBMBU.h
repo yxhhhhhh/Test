@@ -263,4 +263,6 @@ void UI_TempCheck(void);
 void UI_MotoControlInit(void);
 void UI_MCStateCheck(void);
 void UI_BrightnessCheck(void);
+
+void UI_BuInit(void);
 #endif
