@@ -26,7 +26,7 @@ PKEY_SCAN_t tPKEY_Scan;
 
 KEY_Event_t tGKEY_Event;
 GKEY_SCAN_t tGKEY_Scan;
-
+GKEY_ID_t tGKEY_LastID;
 //----------------------------------------------------------
 void PKEY_Init(void)
 {
@@ -105,20 +105,33 @@ void PKEY_Thread(void)
 
 //--------------------------------------------------------------
 void GKEY_Init(void)
-{
+{	
+	#ifdef VBM_BU
 	GLB->PADIO34 = 0;
 	GPIO->GPIO_OE6 = 0;
+	#endif
+
+	#ifdef VBM_PU
+	tGKEY_LastID = GKEY_UNKNOW;
 	
-	tGKEY_Scan.ubGKEY_KeyScanState = KEY_UNKNOW_STATE;
+	GLB->PADIO51 = 0; 	//! AUDIO+
+	GLB->PADIO52 = 0; 	//! AUDIO-	
+	
+	GPIO->GPIO_OE9  = 0; //! AUDIO+
+	GPIO->GPIO_OE10 = 0; //! AUDIO-			
+	#endif
+	
+	tGKEY_Scan.uwGKEY_KeyScanTime	=GKEY_DET_TIME;
+	tGKEY_Scan.ubGKEY_KeyScanState = KEY_DET_STATE;
 }
 
 void GKEY_Thread(void)
 {
 	static uint16_t uwGKEY_ThreadCnt = 0;
 
+	#ifdef VBM_BU
 	if(uwGKEY_ThreadCnt % tGKEY_Scan.uwGKEY_KeyScanTime == 0)
 	{
-		//printf(" GPIO6  %d \n",GPIO->GPIO_I6);
 		uwGKEY_ThreadCnt = 0;
 		switch(tGKEY_Scan.ubGKEY_KeyScanState)
 		{
@@ -179,6 +192,95 @@ void GKEY_Thread(void)
 				break;
 		}
 	}
+	#endif
+
+	#ifdef VBM_PU
+	GKEY_ID_t tGKEY_DetID;
+
+	tGKEY_DetID = GKEY_Detection();
+	if(uwGKEY_ThreadCnt % tGKEY_Scan.uwGKEY_KeyScanTime == 0)
+	{
+		uwGKEY_ThreadCnt = 0;
+		switch(tGKEY_Scan.ubGKEY_KeyScanState)
+		{
+			case KEY_DET_STATE:
+				if(tGKEY_DetID != GKEY_UNKNOW)
+				{
+					tGKEY_Scan.ubGKEY_KeyScanState 	= KEY_DEBONC_STATE;
+					tGKEY_Scan.uwGKEY_KeyScanTime  	= GKEY_DEB_TIME;
+					tGKEY_Scan.uwGKEY_KeyScanCnt 	= 0;
+				}
+				else
+				{
+					tGKEY_Scan.uwGKEY_KeyScanTime  = GKEY_DET_TIME;
+				}
+				break;
+			case KEY_DEBONC_STATE:
+				if(tGKEY_DetID == tGKEY_LastID)
+				{
+					tGKEY_Scan.ubGKEY_KeyScanState = KEY_CNT_STATE;
+					tGKEY_Scan.uwGKEY_KeyScanTime  = GKEY_CNT_TIME;
+					tGKEY_Event.ubKeyAction = KEY_DOWN_ACT;
+					tGKEY_Event.ubKeyID	  	= tGKEY_DetID;
+					tGKEY_Event.uwKeyCnt  	= 0;
+					KEY_QueueSend(GKEY, &tGKEY_Event);
+				}
+				else
+				{
+					tGKEY_Scan.ubGKEY_KeyScanState = KEY_DET_STATE;
+					tGKEY_Scan.uwGKEY_KeyScanTime  = GKEY_DET_TIME;
+				}
+				break;
+			case KEY_CNT_STATE:
+				if(tGKEY_DetID == tGKEY_LastID)
+				{
+					tGKEY_Scan.uwGKEY_KeyScanCnt = (tGKEY_Scan.uwGKEY_KeyScanCnt < 255)?
+					                               (++tGKEY_Scan.uwGKEY_KeyScanCnt):tGKEY_Scan.uwGKEY_KeyScanCnt;
+					tGKEY_Event.ubKeyAction = KEY_CNT_ACT;
+					tGKEY_Event.ubKeyID	  	= tGKEY_DetID;
+					tGKEY_Event.uwKeyCnt  	= tGKEY_Scan.uwGKEY_KeyScanCnt;
+					KEY_QueueSend(GKEY, &tGKEY_Event);
+				}
+				else
+				{
+					tGKEY_Scan.uwGKEY_KeyScanCnt   = 0;
+					tGKEY_Scan.ubGKEY_KeyScanState = KEY_DET_STATE;
+					tGKEY_Scan.uwGKEY_KeyScanTime  = GKEY_DET_TIME;
+					tGKEY_Event.ubKeyAction = KEY_UP_ACT;
+					tGKEY_Event.ubKeyID	  	= tGKEY_LastID;
+					tGKEY_Event.uwKeyCnt  	= 0;
+					KEY_QueueSend(GKEY, &tGKEY_Event);
+					tGKEY_DetID = GKEY_UNKNOW;
+				}
+				break;
+			}
+		tGKEY_LastID = tGKEY_DetID;
+	}
+	#endif
+	
 	uwGKEY_ThreadCnt++;
 }
 
+GKEY_ID_t GKEY_Detection(void)
+{
+	#ifdef VBM_PU
+	if((GPIO->GPIO_I9 == 1)&&(GPIO->GPIO_I10 == 1))
+	{
+		return GKEY_UNKNOW;
+	}
+
+	if((GPIO->GPIO_I9 == 0)&&(GPIO->GPIO_I10 == 1))
+	{
+		return GKEY_ID0;
+	}
+
+	if((GPIO->GPIO_I10 == 0)&&(GPIO->GPIO_I9 == 1))
+	{
+		return GKEY_ID1;
+	}
+	
+	return GKEY_UNKNOW;
+	#endif
+
+	return 0;
+}

@@ -32,9 +32,7 @@ void KEY_Init(osMessageQId *pEventQueueHandle)
 	PKEY_Init();
 	AKEY_Init();
 
-	#ifdef VBM_BU
 	GKEY_Init();
-	#endif
 	
 	pKEY_EventQH = pEventQueueHandle;
     osThreadDef(KEY_Thread, KEY_Thread, THREAD_PRIO_KEY_HANDLER, 1, THREAD_STACK_KEY_HANDLER);
@@ -47,10 +45,7 @@ static void KEY_Thread(void const *argument)
 	{
 		PKEY_Thread();
 		AKEY_Thread();
-
-		#ifdef VBM_BU
 		GKEY_Thread();
-		#endif
 		
         osDelay(KEY_THREAD_PERIOD);
 	}

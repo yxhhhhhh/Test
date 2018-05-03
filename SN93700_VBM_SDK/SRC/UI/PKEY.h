@@ -51,11 +51,21 @@ typedef struct
 	uint16_t uwPKEY_KeyScanCnt;
 }PKEY_SCAN_t;
 
-
+#ifdef VBM_PU
 typedef enum
 {
-	GKEY_ID0,
+	GKEY_UNKNOW,
+	GKEY_ID0 = 0x11,
+	GKEY_ID1 = 0x12,		
 }GKEY_ID_t;
+#endif
+
+#ifdef VBM_BU
+typedef enum
+{
+	GKEY_ID0,	
+}GKEY_ID_t;
+#endif
 
 typedef struct
 {
@@ -69,5 +79,7 @@ void PKEY_Thread(void);
 
 void GKEY_Init(void);
 void GKEY_Thread(void);
+
+GKEY_ID_t GKEY_Detection(void);
 
 #endif														// Define _PKEY_H_

@@ -1439,11 +1439,11 @@ void KNL_BlockInit(void)
 		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_6DB); //ok
 
 		#ifdef VBM_BU
-		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_3DB);
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_20DB, ADO_SIG_PGA_33DB);
 		#endif
 
 		#ifdef VBM_PU
-		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_20DB, ADO_SIG_PGA_6DB);
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_20DB, ADO_SIG_PGA_33DB); //20180503
 		#endif
 
 		//---------------------------------

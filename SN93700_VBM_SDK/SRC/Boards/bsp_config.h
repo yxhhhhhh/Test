@@ -24,18 +24,21 @@
 #define BSP_BOARD_VBMPU_EV
 #else
 #define BSP_BOARD_VBMPU_DEMO
+/*
 #define LCDBL_ENABLE(en)												\
 									{									\
 										GPIO->GPIO_OE11 = en;			\
 										GPIO->GPIO_O11 	= en; 			\
 										PWM->PWM_EN8 	= en;			\
 									}
+									*/
+#define LCDBL_ENABLE(en)			{PWM->PWM_EN8 	= en;}
 #define LCD_BACKLIGHT_CTRL(LvL)		(PWM->PWM8_HIGH_CNT = LvL)
 #define SPEAKER_EN(en)				(GPIO->GPIO_O2 = en)
-//#define POWER_LED_IO				(GPIO->GPIO_O2)
-//#define POWER_LED_IO_ENABLE		(GPIO->GPIO_OE2)
-#define	SIGNAL_LED_IO				(GPIO->GPIO_O3)
-#define	SIGNAL_LED_IO_ENABLE		(GPIO->GPIO_OE3)
+//#define 	POWER_LED_IO				(GPIO->GPIO_O2)
+//#define 	POWER_LED_IO_ENABLE			(GPIO->GPIO_OE2)
+//#define	SIGNAL_LED_IO				(GPIO->GPIO_O3)
+//#define	SIGNAL_LED_IO_ENABLE		(GPIO->GPIO_OE3)
 #define	LCD_PWR_ENABLE				(GPIO->GPIO_O10 = 0)	//output low
 #define	LCD_PWR_DISABLE				(GPIO->GPIO_O10 = 1)	//output high
 
@@ -48,12 +51,12 @@
 #else
 #define BSP_BOARD_VBMBU_DEMO
 #define SPEAKER_EN(en)				(GPIO->GPIO_O2 = en)
-//#define	PAIRING_LED_IO			(GPIO->GPIO_O2)
-//#define	PAIRING_LED_IO_ENABLE	(GPIO->GPIO_OE2)
-#define POWER_LED_IO				(GPIO->GPIO_O1)
-#define POWER_LED_IO_ENABLE			(GPIO->GPIO_OE1)
-#define	SIGNAL_LED_IO				(GPIO->GPIO_O3)
-#define	SIGNAL_LED_IO_ENABLE		(GPIO->GPIO_OE3)
+//#define	PAIRING_LED_IO				(GPIO->GPIO_O2)
+//#define	PAIRING_LED_IO_ENABLE		(GPIO->GPIO_OE2)
+//#define 	POWER_LED_IO				(GPIO->GPIO_O1)
+//#define 	POWER_LED_IO_ENABLE			(GPIO->GPIO_OE1)
+//#define	SIGNAL_LED_IO				(GPIO->GPIO_O3)
+//#define	SIGNAL_LED_IO_ENABLE		(GPIO->GPIO_OE3)
 #endif
 #endif
 

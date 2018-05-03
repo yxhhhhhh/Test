@@ -27,6 +27,7 @@ osMessageQId UI_EventQueue;
 osMessageQId *pAPP_MessageQH;
 static void UI_Thread(void const *argument);
 static void UI_EventThread(void const *argument);
+
 //------------------------------------------------------------------------------
 void UI_Init(osMessageQId *pvMsgQId)
 {
@@ -36,7 +37,6 @@ void UI_Init(osMessageQId *pvMsgQId)
     UI_EventQueue = osMessageCreate(osMessageQ(UI_EventQueue), NULL);
 	KEY_Init(&UI_EventQueue);
 	#ifdef VBM_BU
-	//UI_MotoControlInit();
 	UI_BuInit();
 	#endif
 	osThreadDef(UI_EventThread, UI_EventThread, THREAD_PRIO_UIEVENT_HANDLER, 1, THREAD_STACK_UIEVENT_HANDLER);
@@ -60,12 +60,13 @@ uint32_t ulUI_BufSetup(uint32_t ulBUF_StartAddr)
 void UI_PlugIn(void)
 {
 #ifdef VBM_PU
-GPIO->GPIO_O1 = 1;
+	GPIO->GPIO_O1 = 1;
 	LCD_Init(LCD_LCD_PANEL);
 	LCD_SetGammaLevel(4);
 	LCD_SetLcdBufAddr(ulBUF_GetBlkBufAddr(0, BUF_LCD_IP));
 	tOSD_Init(OSD_WEIGHT_8DIV8, uwLCD_GetLcdHoSize(), uwLCD_GetLcdVoSize(), 0, 0, OSD_SCALE_1X, OSD_SCALE_1X);
 	UI_OnInitDialog();
+	UI_PuInit();
 #endif
 	osThreadDef(UI_Thread, UI_Thread, THREAD_PRIO_UI_HANDLER, 1, THREAD_STACK_UI_HANDLER);
 	osUI_ThreadId = osThreadCreate(osThread(UI_Thread), NULL);

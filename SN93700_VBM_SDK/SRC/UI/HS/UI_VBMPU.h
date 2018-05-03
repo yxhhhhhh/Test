@@ -865,7 +865,7 @@ void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem);
 void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem);
 void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem);
 
-void UI_ShowSysVolume(UI_ArrowKey_t tArrowKey, uint8_t value);
+void UI_ShowSysVolume(uint8_t value);
 
 void UI_FS_LangageMenuDisplay(uint8_t value);
 void UI_FS_SetTimeMenuDisplay(uint8_t value);
@@ -900,4 +900,7 @@ void UI_MotorControl(uint8_t Value);
 void UI_MotorStateCheck(void);
 
 void UI_GetBatLevel(void);
+void UI_VolUpKey(void);
+void UI_VolDownKey(void);
+void UI_PuInit(void);
 #endif

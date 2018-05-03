@@ -75,21 +75,6 @@ APP_PairRoleInfo_t tAPP_PairRoleInfo;
 #endif
 static void APP_StartThread(void const *argument);
 
-uint8_t CheckPowerKey(void) //20180330
-{
-	static uint16_t checkCount = 80;
-	
-	while(checkCount)
-	{
-		if(ubRTC_GetKey() == 1)
-			osDelay(20);
-		else
-			break;
-		checkCount--;
-	}
-	printf("CheckPowerKey checkCount: %d.\n", checkCount);
-	return (!checkCount);
-}
 //------------------------------------------------------------------------------
 void APP_Init(void)
 {
@@ -149,26 +134,88 @@ void APP_StartThread(void const *argument)
 		if(osAPP_EventStauts == osEventTimeout)
 			tAPP_EventMsg.ubAPP_Event = APP_REFRESH_EVENT;
 		if(APP_StateCtrlFunc)
+		{
 			APP_StateCtrlFunc(&tAPP_EventMsg);
+		}
 	}
 }
 //------------------------------------------------------------------------------
+void RTC_PowerOff(void)
+{
+	printd(DBG_Debug1Lvl, "RTC_PowerOff Power OFF!\n");
+	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
+	RTC_PowerDisable();
+	while(1);
+}
+
+uint8_t APP_GetBatteryValue(void)
+{
+	return 50;
+}
+
+//------------------------------------------------------------------------------
+uint8_t ubStartUpState = 1;
 void APP_PowerOnFunc(void)
 {
 	uint32_t ulBUF_StartAddr = 0;
-
-	#ifdef VBM_PU //20180330
-	if(CheckPowerKey() == 0)
-	{
-		printd(DBG_Debug1Lvl, "APP_PowerOnFunc Power OFF!\n");
-		RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
-		RTC_PowerDisable();
-		while(1);
-	}
-	LCDBL_ENABLE(UI_ENABLE);
-	#endif
 	
 	APP_LoadKNLSetupInfo();
+
+	#if 0 //def VBM_PU //20180330
+	uint16_t checkCount = 0;
+	printf("APP_PowerOnFunc GPIO->GPIO_I3: %d.\n", GPIO->GPIO_I3);
+
+	#if 1
+	while(1)
+	{
+		if(GPIO->GPIO_I3 == 1) //Usb On
+		{
+			if(ubRTC_GetKey() == 1)
+			{
+				checkCount++;
+				if(checkCount >= 80)
+				{
+					printf("break######\n");
+					break;
+				}
+			}
+			else
+			{
+				checkCount = 0;
+				if(APP_GetBatteryValue() == 100)
+				{
+					//Charge Full
+				}
+			}
+		}
+		else
+		{
+			if(APP_GetBatteryValue() <= 10)
+			{
+				break; //RTC_PowerOff();
+			}
+			
+			if(ubRTC_GetKey() == 1)
+			{
+				checkCount++;
+				if(checkCount >= 80)
+				{
+					printf("break@@@@@@\n");
+					break;
+				}
+			}
+			else
+			{
+				RTC_PowerOff();
+			}
+		}
+		osDelay(20);
+	}
+	#endif
+	LCDBL_ENABLE(UI_ENABLE);
+	printf("APP_PowerOnFunc LCDBL_ENABLE###\n");
+	#endif
+
 #if USBD_ENABLE
 	//! USB Device initialization
 	USBD_Init(tAPP_KNLInfo.tUsbdClassMode);

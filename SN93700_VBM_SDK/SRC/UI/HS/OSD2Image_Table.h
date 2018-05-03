@@ -292,6 +292,7 @@ OSD2IMGPOOL(MENU_PAIR_6,			0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_PAIR_7,			0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_PAIR_8,			0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_PAIR_9,			0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_SUB1_POINT,		0x3000,	       0,        0)
 
 //-------------------------------------------
 OSD2IMGPOOL(DIS_ALARMON,			0x3000,	       0,        0)

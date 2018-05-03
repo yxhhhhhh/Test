@@ -788,7 +788,7 @@ void UI_LoadDevStatusInfo(void)
 			UI_CHK_CAMPARAM(tUI_BuStsInfo.MdParam.ubMD_Param[i], 0);
 	}
 
-	ADO_SetDacR2RVol(R2R_VOL_n14p6DB);
+	ADO_SetDacR2RVol(R2R_VOL_n0DB);
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)
