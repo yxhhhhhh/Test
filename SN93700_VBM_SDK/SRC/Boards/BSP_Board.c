@@ -25,6 +25,7 @@
 #ifdef BSP_BOARD_VBMPU_DEMO
 void BSP_BoardInit(void)
 {
+	#if 1
 	GLB->PADIO9  = 3;
 	GLB->PADIO10  = 3;
 	GLB->PADIO37  = 3;
@@ -92,6 +93,63 @@ void BSP_BoardInit(void)
 
 	//! USB_DET
 	GLB->PADIO17 = 0;
+	#else //DEMO
+	//! UART
+	GLB->PADIO22 = 2;
+	GLB->PADIO23 = 2;
+
+	//! LCD
+	//! GPIO SPI
+	GLB->PADIO47 = 1;
+	GLB->PADIO48 = 1;
+	GLB->PADIO49 = 1;
+	GLB->PADIO50 = 1;
+	//! LCD Pin
+	GLB->PADIO26 = 5;
+	GLB->PADIO27 = 5;
+	GLB->PADIO28 = 5;
+	GLB->PADIO29 = 5;
+	GLB->PADIO30 = 5;
+	GLB->PADIO31 = 5;
+	GLB->PADIO32 = 5;
+	GLB->PADIO33 = 5;
+	GLB->PADIO34 = 5;
+	GLB->PADIO35 = 5;
+	GLB->PADIO36 = 5;
+
+	//! RF SPI
+	GLB->PADIO18 = 1;
+	GLB->PADIO19 = 1;
+	GLB->PADIO20 = 1;
+	GLB->PADIO15 = 0;
+	GLB->PADIO21 = 0;
+
+	//! SD
+	GLB->PADIO0  = 4;
+	GLB->PADIO1  = 4;
+	GLB->PADIO2  = 4;
+	GLB->PADIO3  = 4;
+	GLB->PADIO4  = 4;
+	GLB->PADIO5  = 4;
+	GLB->PADIO6  = 4;
+	GLB->PADIO7  = 4;
+
+	//! Speaker
+	GLB->PADIO54 = 0;
+
+	//! LED
+	GLB->PADIO16 = 0;
+	GLB->PADIO17 = 0;
+	GLB->PADIO55 = 7;
+	GLB->PADIO56 = 7;
+	GLB->PADIO57 = 7;
+	
+	//! BL
+	GLB->PADIO51 = 7;
+
+	// LCD POWER
+	GLB->PADIO52 = 0;
+	#endif
 	
 }
 #endif

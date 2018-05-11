@@ -86,6 +86,7 @@ struct cmd_table cmd_system_tbl[] = {
 	CMD_TBL_SYS_PHYMEM_RW
 	CMD_TBL_SYS_FPS
 	CMD_TBL_SYS_PADIO
+	CMD_TBL_SYS_WDT
 	CMD_TBL_HELP
 	CMD_TBL_BACK
 	CMD_TBL_ENTRY(NULL, 0, NULL, NULL, 0, NULL ,NULL)
@@ -232,6 +233,7 @@ struct cmd_table cmd_main_tbl[] = {
 	CMD_TBL_DDR
 #endif
 
+	CMD_TBL_SHOW_DEV_ID
 	CMD_TBL_SET_DEBUG_LV
 	CMD_TBL_HELP
 	CMD_TBL_ENTRY(NULL, 0, NULL, NULL, 0, NULL ,NULL)

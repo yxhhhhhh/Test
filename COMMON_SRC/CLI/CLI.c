@@ -78,6 +78,12 @@ int32_t CLI_cmd_setloglv(int argc, char* argv[])
 	return cliPASS;
 }
 //------------------------------------------------------------------------------
+int32_t CLI_cmd_showDevId(int argc, char* argv[])
+{
+	PAIR_ShowDeviceID();
+	return cliPASS;
+}
+//------------------------------------------------------------------------------
 int32_t CLI_cmd_logout(int argc, char* argv[])
 {
 	login = 0;
@@ -374,7 +380,7 @@ void CLI_Init()
 {
 	//RBK the stack size was 5k, increate to 5k*3 due to stack overflow
 	CLI_recvInit();
-	osThreadDef(cliThread, CLI_RecvThread, osPriorityLow, 1, 1280);
+	osThreadDef(cliThread, CLI_RecvThread, osPriorityBelowNormal, 1, 1280);
 	osThreadCreate(osThread(cliThread), NULL);
 }
 //------------------------------------------------------------------------------

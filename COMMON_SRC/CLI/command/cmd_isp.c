@@ -39,6 +39,7 @@ static void isp_ctrl_usage() {
 	printf("	0: ISP XDATA Register Read Operation\n");
 	printf("	1: ISP XDATA Register Write Operation\n");
 	printf("	2: ISP tuning mode read / write\n");
+	printf("	3: ISP Get Alg Version\n");
 	printf(" Example: write ISP xdata 0x2004, value 1\n");
 	printf("	isp_ctrl 1 0x2004 1\n");
 	printf(" Example: read ISP xdata 0x2004\n");
@@ -47,6 +48,8 @@ static void isp_ctrl_usage() {
 	printf("	isp_ctrl 2 1 1\n");
 	printf(" Example: get ISP tuning mode\n");
 	printf("	isp_ctrl 2 0\n");
+	printf(" Example: get Alg version\n");
+	printf("	isp_ctrl 3\n");
 	printf("###################################\n");
 }  
 
@@ -56,7 +59,7 @@ int32_t cmd_isp_ctrl(int argc, char* argv[])
 	uint32_t addr = 0, value = 0;
 	uint8_t mode = 0;
 
-	if ((argc < 3) || (argc > 4)) {
+	if ((argc < 2) || (argc > 4)) {
 		isp_ctrl_usage();
 		return cliFAIL; 
 	}
@@ -176,15 +179,21 @@ int32_t cmd_isp_ctrl(int argc, char* argv[])
 			printf("===================================\n");
 			WDT_Disable(WDT_RST);
 			WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+			while(1);
 		} else if (mode == 0) {
-//			value = APP_GetTuningToolMode();
 			printf("===================================\n");
-			printf("Get ISP tuning mode:%d\n", APP_GetTuningToolMode());	//! printf("Get ISP tuning mode:%d\n", value);
+			printf("Get ISP tuning mode:%d\n", APP_GetTuningToolMode());
 			printf("===================================\n");
 		} else {
 			isp_ctrl_usage();
 			return cliFAIL; 
 		}
+	} else if (opt == 3) {		
+		//Get Alg Version
+		printf("===================================\n");
+		printf( "AE Alg Ver=%s\n" ,pbAE_GetAlgVerID());    
+		printf( "AWB Alg Ver=%s\n" ,pbAWB_GetAlgVerID());    
+		printf("===================================\n");
 	} else {
 		isp_ctrl_usage();
 		return cliFAIL; 

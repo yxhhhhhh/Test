@@ -109,10 +109,9 @@ void ADO_PTTStart(void)
 	
 	for(i=0; i<ADO_AUDIO32_MAX_NUM; i++)
 	{
-		ADO_Audio32_Encoder_UnInit(i);
 		ADO_Audio32_Encoder_Init(i,ADO_GetAudio32EncFormat(i));
 	}
-	ADO_Set_Process_Type(NR, AEC_NR_16kHZ);
+	ADO_Noise_Process_Type(NOISE_NR, AEC_NR_16kHZ);
 	
 	KNL_AdoStart(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	printd(DBG_InfoLvl, "		=>PTT Play\n");
@@ -170,12 +169,12 @@ void ADO_KNLParamSetup(void)
 {
 	ADO_KNL_PARA_t tADO_KNLParm;
 	uint32_t i;
-
+	
 	tADO_KNLParm.Sys_speed			 = HIGH_SPEED;
 	tADO_KNLParm.Rec_device			 = SIG_DEL_ADC;
 	tADO_KNLParm.Ply_device			 = R2R_DAC;
-    tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_DIFFERENTIAL;
-   	//tADO_KNLParm.ADO_SigDelAdcMode   =  ADO_SIG_SINGLE_END;	
+	//tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_SINGLE_END;
+	tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_DIFFERENTIAL;		
 	tADO_KNLParm.Rec_fmt.sign_flag   = SIGNED;
 	tADO_KNLParm.Rec_fmt.channel     = MONO;
 	tADO_KNLParm.Rec_fmt.sample_size = SAMPLESIZE_16_BIT;
@@ -188,9 +187,9 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.Compress_method 	 = COMPRESS_NONE;
 
 	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;
-	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_64KB;
+	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_32KB;
 	tADO_KNLParm.Audio32_En_buf_size = BUF_SIZE_16KB;
-	tADO_KNLParm.Audio32_De_buf_size = BUF_SIZE_16KB;
+	tADO_KNLParm.Audio32_De_buf_size = BUF_SIZE_64KB;
 	tADO_KNLParm.AAC_En_buf_size     = BUF_SIZE_16KB;
 	tADO_KNLParm.AAC_De_buf_size     = BUF_SIZE_16KB;
 	tADO_KNLParm.Alarm_buf_size 	 = BUF_SIZE_1KB;
@@ -214,7 +213,7 @@ void ADO_KNLParamSetup(void)
 	ADO_Set_Audio32_Enable(ADO_ON);
 
 	//! AEC and NR Setting
-	ADO_Set_Process_Type(NR,AEC_NR_16kHZ);
+	ADO_Noise_Process_Type(NOISE_NR,AEC_NR_16kHZ);
 
 	ADO_Set_DeHowling_Enable(ADO_OFF);
 }

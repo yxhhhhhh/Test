@@ -22,11 +22,22 @@
 #include "CLI.h"
 #ifdef CONFIG_CLI_CMD_VCS
 //------------------------------------------------------------------------------
+static void vcs_usage() {   
+	printf(" pls check uasge!\n");
+	printf("###################################\n");
+	printf(" Usage : VCS <ID>\n");
+	printf(" Example: show all library version\n");
+	printf("	VCS all\n");
+	printf("###################################\n");
+}
+
 int32_t cmd_vcs_getVer(int argc, char* argv[])
 {
-	if((argc < 2) || (argc > 2))
+	if (argc != 2) {
+		vcs_usage();
 		return cliFAIL;	
-
+	}
+	
 	uwVCS_LibraryVersionList(argv[1]);
 
 	return cliPASS;	

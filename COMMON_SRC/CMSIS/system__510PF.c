@@ -131,4 +131,10 @@ void SYS_SetPrintLevel(SYS_PrintLevel_t tLevel)
 	printf("New lv=%d\n",lSYS_DebugLvl);
 	printf("===================================\n");
 }
+
+uint16_t uwSYS_GetOsVersion(void)
+{
+    return osCMSIS_KERNEL;
+}
+
 //------------------------------------------------------------------------------

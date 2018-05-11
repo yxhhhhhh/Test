@@ -243,6 +243,8 @@ void UI_RecvPUResponse(TWC_TAG tRecv_StaNum, TWC_STATUS tStatus);
 void UI_RecvPURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data);
 void UI_SystemSetup(void);
 void UI_PowerSaveSetting(void *pvPS_Mode);
+void UI_ChangePsModeToWorMode(void);
+void UI_ChangePsModeToNormalMode(void);
 void UI_DisableVox(void);
 void UI_VoxTrigger(void);
 void UI_VoiceTrigSetting(void *pvTrigMode);

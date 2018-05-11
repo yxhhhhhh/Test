@@ -47,6 +47,8 @@
 #include "JPEG_API.h"
 #include "ADO_API.h"
 #ifdef OP_STA
+#include "AE_API.h"
+#include "AWB_API.h"
 #include "IQ_API.h"
 #include "ISP_API.h"
 #endif
@@ -64,28 +66,29 @@
 
 VCS_GetVersionFuncPtr_t tVCS_GetVerFunc[] = 
 {
+	{"OS",			uwSYS_GetOsVersion},
 	{"PROFILE",		uwPROFILE_GetVersion},
 	{"DDR",			uwDDR_GetVersion},
 	{"MMU",			uwMMU_GetVersion},
 	{"DMAC",		uwDMAC_GetVersion},
-	{"UART",		uwUART_GetVersion},
-	{"TIMER",		uwTIMER_GetVersion},
-	{"WDT",			uwWDT_GetVersion},
+//	{"UART",		uwUART_GetVersion},
+//	{"TIMER",		uwTIMER_GetVersion},
+//	{"WDT",			uwWDT_GetVersion},
 	{"RTC",			uwRTC_GetVersion},
-	{"I2C",			uwI2C_GetVersion},
+//	{"I2C",			uwI2C_GetVersion},
 	{"CQ",			uwCQ_GetVersion},
-	{"CQI2C",		uwCQI2C_GetVersion},
-	{"SADC",		uwSADC_GetVersion},
+//	{"CQI2C",		uwCQI2C_GetVersion},
+//	{"SADC",		uwSADC_GetVersion},
 	{"BB",			uwBB_GetVersion},
 	{"RFA7130",		uwRFA7130_GetVersion},
 	{"TWC",			uwTWC_GetVersion},
-	{"PAIR",		uwPAIR_GetVersion},
+//	{"PAIR",		uwPAIR_GetVersion},
 	{"SF",			uwSF_GetVersion},
 	{"SDIO",		uwSDIO_GetVersion},
 	{"CIPHER",		uwCIPHER_GetVersion},
 #ifdef OP_AP
-	{"LCD",			uwLCD_GetVersion},
-	{"OSD",			uwOSD_GetVersion},
+//	{"LCD",			uwLCD_GetVersion},
+//	{"OSD",			uwOSD_GetVersion},
 	{"HDMI",		uwHDMI_IT66121_GetVersion},
 #endif
 	{"H264",		uwH264_GetVersion},
@@ -93,6 +96,8 @@ VCS_GetVersionFuncPtr_t tVCS_GetVerFunc[] =
 	{"JPEG",		uwJPEG_GetVersion},
 	{"AUDIO",		uwADO_GetVersion},
 #ifdef OP_STA
+	{"AE",			uwAE_GetVersion},
+	{"AWB",			uwAWB_GetVersion},
 	{"IQ",			uwIQ_GetVersion},
 	{"ISP",			uwISP_GetVersion},
 #endif
@@ -127,19 +132,18 @@ void uwVCS_LibraryVersionList(char *LibraryName)
 	uwVCS_Cnt = sizeof tVCS_GetVerFunc / sizeof(VCS_GetVersionFuncPtr_t);
 	printf("===================================\n");
 	printf("        Library List  		 \n");
-	printf("-----------------------------------\n");
 	if(!strcmp(LibraryName, "all") || !strcmp(LibraryName, "ALL"))
 	{
 		for(uwIdx = 0; uwIdx < uwVCS_Cnt; uwIdx++)
 		{
 			uwVCS_Ver = tVCS_GetVerFunc[uwIdx].pvLibraryVcFunc();
-			printf("   [%s] 		  : V%d.%d\n", tVCS_GetVerFunc[uwIdx].pLibName, (uwVCS_Ver >> 8), (uwVCS_Ver & 0xF));
+			printf("   [%s] 		  : V%d.%d\n", tVCS_GetVerFunc[uwIdx].pLibName, (uwVCS_Ver >> 8), (uwVCS_Ver & 0xFF));
 		}
 	}
 	else
 	{
 		uwVCS_Ver = uwVCS_GetLibraryVersion(LibraryName);
-		printf("   [%s] 		  : V%d.%d\n", LibraryName, (uwVCS_Ver == 0xFFFF)?0xFF:(uwVCS_Ver >> 8), (uwVCS_Ver == 0xFFFF)?0xFF:(uwVCS_Ver & 0xF));
+		printf("   [%s] 		  : V%d.%d\n", LibraryName, (uwVCS_Ver == 0xFFFF)?0xFF:(uwVCS_Ver >> 8), (uwVCS_Ver == 0xFFFF)?0xFF:(uwVCS_Ver & 0xFF));
 	}
 	printf("===================================\n");
 }

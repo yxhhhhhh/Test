@@ -11,8 +11,8 @@
 	\file		ADO_API.h
 	\brief		Audio header file
 	\author		Chinwei Hsu/Brouce Hsu
-	\version	2.5
-	\date		2018/02/13
+	\version	2.10
+	\date		2018/03/22
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ typedef struct ADO_Queue_Info
 //------------------------------------------------------------------------------
 typedef struct ADO_Aud32_Enc_Info
 {
-	uint32_t ulResultSize;
+	uint32_t ulOutputSize;
 	uint32_t ulRemainStartAddr;
 	uint32_t ulRemainSize;
 }ADO_AUD32_ENC_INFO;
@@ -75,11 +75,11 @@ typedef enum
 //------------------------------------------------------------------------------
 typedef enum 
 {
-	DISABLE,
-	AEC,
-	NR,
-	ALL
-}ADO_PROCESS_TYPE;
+	NOISE_DISABLE,
+	NOISE_AEC,
+	NOISE_NR,
+	NOISE_ALL
+}ADO_NOISE_PROCESS_TYPE;
 //------------------------------------------------------------------------------
 typedef enum 
 {
@@ -356,6 +356,7 @@ typedef enum
 typedef enum
 {
     ADO_IP_NONREADY = 0,
+    ADO_IP_READY_FOR_STARTUP_SOUND,
     ADO_IP_READY
 }ADO_IP_READY_t;
 //------------------------------------------------------------------------------
@@ -419,6 +420,13 @@ typedef enum
 	ADO_AUDIO_OUT_STATE
 }ADO_DAC_STATE_TYPE;
 //------------------------------------------------------------------------------
+//! DAC State
+typedef enum
+{
+	ADO_PLY_BUF_STARTUP,
+	ADO_PLY_BUF_AFTER_STARTUP
+}ADO_PLY_BUF_INIT_TYPE;
+//------------------------------------------------------------------------------
 // Audio clock
 typedef struct AUDIO_CLOCK
 {
@@ -441,13 +449,11 @@ typedef struct AUDIO_BUF_MONITOR
 	uint32_t buf_addr_end;          //!< Buffer end address
 	uint32_t buf_addr_index_in;     //!< Buffer index for in
 	uint32_t buf_addr_index_out;    //!< Buffer index for out
-	uint32_t finish_size;           //!< Audio current finish size
-	int32_t  firmware_count;        //!< Audio data count monitor for firmware
 }ADO_BUF_MONIT_t;
 //------------------------------------------------------------------------------
 // Audio parameter for kernal setting
 typedef struct KNL_ADO_PARAMETER
-{
+{	
 	uint8_t ubQ_InitFlg;                //!< Audio queue initial, 0:No init; 1:Init
 	
 	ADO_SYS_SPEED_MODE_t Sys_speed;     //!< System speed mode
@@ -507,7 +513,8 @@ typedef struct AUDIO_METADATA
 	ADO_CLOCK_t ADO_clk;                    //!< Audio clock
 	
 	ADO_BUFFERSIZE Rec_buf_size;            //!< ADC buffer size
-	ADO_BUFFERSIZE Ply_buf_size;            //!< DAC buffer size
+	ADO_BUFFERSIZE Ply_buf_size_startup;	//!< DAC startup buffer size
+	ADO_BUFFERSIZE Ply_buf_size;            //!< DAC practical buffer size
 	ADO_BUFFERSIZE TempProcess_buf_size;	
 	ADO_BUFFERSIZE Audio32_En_buf_size;
 	ADO_BUFFERSIZE Audio32_De_buf_size;
@@ -650,10 +657,10 @@ void ADO_PlyStop(void);
 \return(no)
 \par [Example]
 \code 
-    ADO_Set_Process_Type(DISABLE ,AEC_NR_8kHZ);
+    ADO_Noise_Process_Type(NOISE_DISABLE ,AEC_NR_16kHZ);
 \endcode
 */
-void ADO_Set_Process_Type(ADO_PROCESS_TYPE Type ,AEC_NR_SAMPLERATE_MODE_t SampleRate);
+void ADO_Noise_Process_Type(ADO_NOISE_PROCESS_TYPE Type ,AEC_NR_SAMPLERATE_MODE_t SampleRate);
 //------------------------------------------------------------------------------
 /*!
 \brief Sigma-delta ADC gain setting
@@ -890,17 +897,6 @@ void ADO_Set_Audio32_Enable(ADO_FUN_SWITCH Switch);
 void ADO_Audio32_Encoder_Init(uint8_t ubUseIdx, ADO_SNX_AUD32_FORMAT Format);
 //------------------------------------------------------------------------------
 /*!
-\brief Uninitial Audio32 Encoder
-\param ubUseIdx		range:0~(ADO_AUDIO32_MAX_NUM-1); support (ADO_AUDIO32_MAX_NUM) encoder Uninitial
-\return(no)
-\par [Example]
-\code 
-        ADO_Audio32_Encoder_UnInit(0);
-\endcode
-*/
-void ADO_Audio32_Encoder_UnInit(uint8_t ubUseIdx);
-//------------------------------------------------------------------------------
-/*!
 \brief Audio32 Decoder Initial
 \param ubUseIdx		range:0~(ADO_AUDIO32_MAX_NUM-1); support (ADO_AUDIO32_MAX_NUM) decoder initial
 \param Format       Audio32 Format Enum 
@@ -911,17 +907,6 @@ void ADO_Audio32_Encoder_UnInit(uint8_t ubUseIdx);
 \endcode
 */
 void ADO_Audio32_Decoder_Init(uint8_t ubUseIdx, ADO_SNX_AUD32_FORMAT Format);
-//------------------------------------------------------------------------------
-/*!
-\brief Uninitial Audio32 Decoder
-\param ubUseIdx		range:0~(ADO_AUDIO32_MAX_NUM-1); support (ADO_AUDIO32_MAX_NUM) decoder Uninitial
-\return(no)
-\par [Example]
-\code 
-        ADO_Audio32_Decoder_UnInit(0);
-\endcode
-*/
-void ADO_Audio32_Decoder_UnInit(uint8_t ubUseIdx);
 //------------------------------------------------------------------------------
 /*!
 \brief Get Audio32 encoder format

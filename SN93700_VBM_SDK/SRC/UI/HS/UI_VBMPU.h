@@ -24,12 +24,16 @@
 #include "OSD.h"
 #include "RTC_API.h"
 
-#define		INVALID_ID 					0xFFFFFFFF
-#define  	INVAILD_ACT					0xFFFFFFFE
-#define 	UI_UPDATESTS_PERIOD			(1000 / UI_TASK_PERIOD)
-#define 	UI_SHOWLOSTLOGO_PERIOD		(1000 / UI_TASK_PERIOD)
-#define 	UI_UPDATEBRILVL_PERIOD		(1000 / UI_TASK_PERIOD)
-#define 	UI_UPDATEVOLLVL_PERIOD		(1000 / UI_TASK_PERIOD)
+#define	INVALID_ID 					0xFFFFFFFF
+#define INVAILD_ACT					0xFFFFFFFE
+#define UI_UPDATESTS_PERIOD			(1000 / UI_TASK_PERIOD)
+#define UI_SHOWLOSTLOGO_PERIOD		(1000 / UI_TASK_PERIOD)
+#define UI_UPDATEBRILVL_PERIOD		(1000 / UI_TASK_PERIOD)
+#define UI_UPDATEVOLLVL_PERIOD		(1000 / UI_TASK_PERIOD)
+
+#define QUAL_TYPE_ITEM				6
+#define SCAN_TYPE_ITEM				5
+#define DUAL_TYPE_ITEM				4
 
 #define 	RECORD_PWRSTS_ADDR	0
 #define 	PWRSTS_KEEP			3
@@ -361,8 +365,8 @@ typedef enum
 
 typedef struct
 {
-	UI_CamNum_t 	 tCamViewNum;
 	UI_CamViewType_t tCamViewType;
+	UI_CamNum_t 	 tCamViewPool[CAM_4T];
 }UI_CamViewSelect_t;
 
 typedef struct
@@ -573,6 +577,7 @@ typedef struct
 		uint8_t				ubVOL_UpdateCnt;
 	}VolLvL;
 	UI_CamNum_t			tAdoSrcCamNum;
+	UI_PowerSaveMode_t	tPsMode;
 	uint8_t				ubScanModeEn;
 	uint8_t				ubDualModeEn;
 	uint8_t				ubDefualtFlag;	
@@ -592,7 +597,7 @@ typedef struct
 	uint8_t				ubLangageFlag;
 	uint8_t				ubTempunitFlag;
 	uint8_t 				NightmodeFlag;
-	uint8_t				ubCamViewNum;		
+	uint8_t				ubCamViewNum;	
 	uint8_t				ubReserved[220];
 }UI_PUSetting_t;
 
@@ -769,7 +774,7 @@ void UI_UpdateBuStatusOsdImg(OSD_IMG_INFO *pOsdImgInfo, OSD_UPDATE_TYP tUpdateMo
 	                         UI_OsdImgFnType_t tOsdImgFnType, UI_DisplayLocation_t tDispLoc);
 void UI_ClearBuConnectStatusFlag(void);
 void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum);
-void UI_RedrawNoSingalOsdIcon(UI_CamNum_t tCamNum, UI_OsdImgFnType_t tOsdImgFnType);
+void UI_RedrawNoSignalOsdIcon(UI_CamNum_t tCamNum, UI_OsdImgFnType_t tOsdImgFnType);
 void UI_ClearStatusBarOsdIcon(void);
 void UI_RedrawStatusBar(uint16_t *pThreadCnt);
 void UI_ReportBuConnectionStatus(void *pvConnectionSts);
@@ -791,7 +796,6 @@ void UI_EnableScanMode(void);
 void UI_DisableScanMode(void);
 void UI_ScanModeExec(void);
 UI_Result_t UI_CheckCameraSource4SV(void);
-void UI_SwitchCameraSource(void);
 void UI_EngModeKey(void);
 void UI_EngModeCtrl(UI_ArrowKey_t tArrowKey);
 void UI_PairingControl(UI_ArrowKey_t tArrowKey);
@@ -902,5 +906,6 @@ void UI_MotorStateCheck(void);
 void UI_GetBatLevel(void);
 void UI_VolUpKey(void);
 void UI_VolDownKey(void);
+
 void UI_PuInit(void);
 #endif

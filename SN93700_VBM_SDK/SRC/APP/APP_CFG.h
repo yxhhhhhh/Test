@@ -39,17 +39,18 @@
 #define THREAD_PRIO_IMG_MONIT			osPriorityNormal
 #define THREAD_PRIO_APP_HANDLER			osPriorityAboveNormal
 #define THREAD_PRIO_PAIRING_HANDLER		osPriorityNormal
-#define THREAD_PRIO_EN_HANDLER			osPriorityLow
+#define THREAD_PRIO_EN_HANDLER			osPriorityBelowNormal
 #define THREAD_PRIO_JPEG_MONIT			osPriorityBelowNormal
 #define THREAD_PRIO_LINK_MONIT			osPriorityBelowNormal
 #define THREAD_PRIO_RC_MONIT			osPriorityBelowNormal
 #define THREAD_PRIO_RC_SYS_MONIT		osPriorityBelowNormal
-#define THREAD_PRIO_LINK_UPDATE			osPriorityLow
-#define THREAD_PRIO_SEC_MONIT			osPriorityLow
-#define THREAD_PRIO_SYS_MONIT			osPriorityLow
+#define THREAD_PRIO_LINK_UPDATE			osPriorityBelowNormal
+#define THREAD_PRIO_SEC_MONIT			osPriorityBelowNormal
+#define THREAD_PRIO_SYS_MONIT			osPriorityBelowNormal
 #define THREAD_PRIO_SD_HANDLER          osPriorityNormal
 #define THREAD_PRIO_FS_HANDLER          osPriorityNormal
 #define THREAD_PRIO_LOOPREC_HANDLER     osPriorityNormal
+#define THREAD_PRIO_WDT_HANDLER			osPriorityLow				// other thread can not set osPriorityLow!!!
 
 //Thread Stack Size Setting
 //-----------------------------------------------------
@@ -140,6 +141,21 @@ typedef enum
 	VGA_WIDTH   = 640,
 	VGA_HEIGHT  = 480,
 }APP_DISPLAY_RESOLUTION;
+
+#define RTC_RECORD_PWRSTS_ADDR			0
+#define RTC_PWRSTS_KEEP_TAG				0x03
+#define RTC_WATCHDOG_CHK_TAG			0x0C
+#define RTC_PS_WOR_TAG					0x30
+
+#define RTC_RECORD_VIEW_MODE_ADDR		1
+#define RTC_RECORD_VIEW_CAM_ADDR		2
+
+#define WDT_TIMEOUT_CNT					3	// unit: 1 second
+
+
+//! SF Write protect use GPIO
+#define SF_WP_GPIN				14		//0~13, >=14 is no wp pin
+
 
 #endif
 

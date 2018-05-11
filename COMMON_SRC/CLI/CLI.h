@@ -36,6 +36,7 @@ int32_t CLI_cmd_quit(void);
 int32_t CLI_cmd_help(int argc, char* argv[]);
 int32_t CLI_cmd_back(int argc, char* argv[]);
 int32_t CLI_cmd_logout(int argc, char* argv[]);
+int32_t CLI_cmd_showDevId(int argc, char* argv[]);
 int32_t CLI_cmd_setloglv(int argc, char* argv[]);
 /* Common command */
 #define CMD_TBL_LOGOUT    CMD_TBL_ENTRY(          \
@@ -65,6 +66,12 @@ int32_t CLI_cmd_setloglv(int argc, char* argv[]);
 #define CMD_TBL_MAIN    CMD_TBL_ENTRY(          \
 	"main",		4,	NULL,       \
 	"main		- Main the program",	CFG_DEFAULT_CMD_LEVEL,\
+	NULL,		NULL			\
+),
+
+#define CMD_TBL_SHOW_DEV_ID    CMD_TBL_ENTRY(          \
+	"showid",		6,	CLI_cmd_showDevId,       \
+	"showid		- Show Device ID",	CFG_DEFAULT_CMD_LEVEL,\
 	NULL,		NULL			\
 ),
 

@@ -11,9 +11,9 @@
 	\file		IQ_OPT_H62_RAW.c
 	\brief		H62 image quality relation function
 	\author		
-	\version	0.4
-	\date		2017-11-30
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.5
+	\date		2018-03-09
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 //==========================================================
@@ -107,9 +107,9 @@ void IQ_DynamicLSC_4G5(void) {
 //------------------------------------------------------------------------------
 void IQ_DynamicCCM_4G5(void) {
 	int32_t 	slCCM_Temp[0x40], slCCM_Temp2[0x40];
-	uint32_t 	ulData[6];	
-	int16_t 	slTemp;
-	uint16_t 	uwAeIdxGainTmp;    
+	uint32_t 	ulData[6];
+	uint32_t 	ulAeIdxGainTmp;    
+	int16_t 	slTemp;   
 	uint8_t 	i,shift[6];
 	uint8_t 	ccmspr = 0x40;
 

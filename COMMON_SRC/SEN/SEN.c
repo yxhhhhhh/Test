@@ -41,6 +41,7 @@
 osSemaphoreId 	SEM_SEN_VSyncRdy;
 osMessageQId tSEN_ExtEventQueue;
 static void SEN_DoVsyncThread(void const *argument);
+static pvSEN_CbFunc pSEN_CbFunc = NULL;
 static bool bSEN_InitFlg = FALSE;
 uint8_t ubSEN_VIDEO[3]={0,0,0};
 
@@ -83,7 +84,7 @@ void SEN_SetOutResolution(uint8_t ubPath, uint16_t uwH, uint16_t uwV)
 		sensor_cfg.ulFrameSize3 = uwH * uwV * 3 / 2;
 	}
 	// Set scaler
-	printd(DBG_InfoLvl,"P=%d,h=%d,v=%d,H=%d,V=%d\r\n",ubPath, uwH, uwV, sensor_cfg.ulHSize, sensor_cfg.ulVSize);
+	printd(DBG_Debug3Lvl,"P=%d,h=%d,v=%d,H=%d,V=%d\n",ubPath, uwH, uwV, sensor_cfg.ulHSize, sensor_cfg.ulVSize);
 	ISP_SetScaler(ubPath, uwH, uwV, sensor_cfg.ulHSize, sensor_cfg.ulVSize);
 }
 
@@ -285,6 +286,8 @@ void SEN_HwEnd_ISR(void)
 	uint32_t ulSEN_NextYuv1Addr, ulSEN_NextYuv2Addr, ulSEN_NextYuv3Addr;
 	SEN_EVENT_PROCESS tProcess;
 	uint8_t ubSrc;
+	static uint8_t ubSEN_ImgStabCnt  = 6;
+	static uint8_t ubSEN_IspReadyFlg = 0;
 
 	// Clear HW_END flag.
 	if( SEN->HW_END_INT_FLAG )
@@ -456,12 +459,22 @@ void SEN_HwEnd_ISR(void)
                 SEN->VIDEO_STR_EN_3 = 0;
             }
         }        
-    }    
+    }
 	SEN->IMG_TX_EN = 1;	
 	//================================================================================
 
 	if (ubSEN_UvcPathFlag) {
         SEN_SetISPOutputFormat();
+	}
+
+	if(!ubSEN_IspReadyFlg)
+	{
+		if(!(--ubSEN_ImgStabCnt))
+		{			
+			if(pSEN_CbFunc)
+				pSEN_CbFunc();
+			ubSEN_IspReadyFlg = 1;
+		}
 	}
 }
 
@@ -582,12 +595,10 @@ void SEN_InitProcess(void)
 
     SEN->IMG_TX_EN = 1;
 	SEN->SEN_CLK_EN = 1;    
-        
-	if(bSEN_InitFlg == FALSE)
-		SEN_ISPInitial();
 
 	if(bSEN_InitFlg == FALSE)
 	{
+		SEN_ISPInitial();
 		bSEN_InitFlg = TRUE;
 	}
 }
@@ -611,7 +622,35 @@ void SEN_ISRInitial(void)
 	SEN->SEN_VSYNC_INT_EN = 0;
 	SEN->SEN_HSYNC_INT_EN = 0;	
 }
+//------------------------------------------------------------------------------
+void ISP_SetMirrorFlip(uint8_t pFlip_Param) 
+{ 
+	switch(pFlip_Param)
+	{
+		case 0:
+			IQ_SetIspReorderPattern(0x0000003); //Flip
+			IQ_SetMirrorFlip(0,0); 
+			break;
+			
+		case 1:
+			IQ_SetIspReorderPattern(0x0030000);	//Flip 
+			IQ_SetMirrorFlip(0,1);
+			break;
+			
+		case 2:
+			IQ_SetIspReorderPattern(0x0000300); //Mirror
+			IQ_SetMirrorFlip(1,0);
+			break;
+			
+		case 3:
+			IQ_SetIspReorderPattern(0x3000000); //Mirror
+			IQ_SetMirrorFlip(1,1);
+			break;
 
+		default:
+			break;
+	} 
+} 
 //------------------------------------------------------------------------------
 void SEN_ISPInitial(void)
 {
@@ -634,12 +673,14 @@ void SEN_ISPInitial(void)
 
 	IQ_Init();
 	IQ_ReadIQTable();
-	IQ_SetDynFrameRate(sensor_cfg.ulSensorFrameRate);
+	IQ_SetDynFrameRate(30/*sensor_cfg.ulSensorFrameRate*/);
 
     // open 3DNR frame buffer compression
     ISP_Set3DNR_FBC();
     //NR Day mode
     SEN_SetIrMode(0);
+
+	ISP_SetMirrorFlip(2); //20180508 ·­×ªsensor»­Ãæ
 }
 
 //------------------------------------------------------------------------------
@@ -924,7 +965,7 @@ uint32_t ulSEN_GetSenVSize(uint8_t ubType)
 //------------------------------------------------------------------------------
 void SEN_SetFrameRate(uint8_t ubFPS)
 {
-	ubSEN_FrameRate = ubFPS;	
+	//ubSEN_FrameRate = ubFPS;	
 }
 
 //------------------------------------------------------------------------------
@@ -1124,4 +1165,10 @@ uint8_t ubSEN_GetAlgReportFg(void)
 uint16_t uwSEN_GetVersion(void)
 {
     return ((SEN_MAJORVER << 8) + SEN_MINORVER);
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetIspFinishCbFunc(pvSEN_CbFunc pvCB)
+{
+	pSEN_CbFunc = pvCB;
 }

@@ -112,6 +112,7 @@ void SYS_SetState(SYS_STATE state);
 SYS_STATE SYS_GetState(void);
 void SYS_SetPrintLevel(SYS_PrintLevel_t tLevel);
 void APP_Init(void);
+uint16_t uwSYS_GetOsVersion(void);
 //------------------------------------------------------------------------------
 extern uint32_t SystemCoreClock;												//!< Variable to hold the system core clock value
 extern int32_t lSYS_DebugLvl;                                                   //!< System Debug Level

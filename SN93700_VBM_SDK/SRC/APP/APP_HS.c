@@ -33,9 +33,10 @@
 #include "RC.h"
 #include "CLI.h"
 #include "LCD.h"
+#include "WDT.h"
 #include "OSD.h"
 #include "UI_VBMPU.h"
-
+#include "TIMER.h"
 //------------------------------------------------------------------------------
 extern uint32_t Image$$RW_UNCACHED_HEAP$$Base;
 extern uint32_t Image$$RW_IRAM3$$Base;
@@ -43,6 +44,7 @@ extern uint32_t Image$$RW_IRAM3$$Base;
 extern uint8_t ubDisplaymodeFlag;
 extern uint8_t ubSetViewCam;
 //------------------------------------------------------------------------------
+const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
 static uint8_t osHeap[osHeapSize] __attribute__((aligned (8)));
 osMessageQId APP_EventQueue;
 pvAPP_StateCtrl APP_StateCtrlFunc;
@@ -74,7 +76,38 @@ static APP_DispLocMap_t tAPP_DispLocMap[] =
 APP_PairRoleInfo_t tAPP_PairRoleInfo;
 #endif
 static void APP_StartThread(void const *argument);
-
+static void APP_WatchDogThread(void const *argument);
+uint8_t CheckPowerKey(void) //20180330
+{
+	static uint16_t checkCount = 10;
+	static uint8_t PkeyFlag = 0;
+	
+	while(checkCount)
+	{
+		//printf("ubRTC_GetKey: %d.\n", ubRTC_GetKey());
+		if(ubRTC_GetKey() == 1)
+		{
+			checkCount--;
+			if(checkCount == 0)
+			{
+				PkeyFlag = 1;
+				break;
+			}
+		}	
+		else
+		{
+			PkeyFlag = 0;
+			break;
+		}
+		//osDelay(20);
+		TIMER_Delay_ms(200);
+		
+	}
+	//printf("CheckPowerKey checkCount: %d.\n", checkCount);
+	//printf("PkeyFlag: %d.\n", PkeyFlag);
+	return (PkeyFlag);
+	//return (!checkCount);
+}
 //------------------------------------------------------------------------------
 void APP_Init(void)
 {
@@ -89,11 +122,17 @@ void APP_Init(void)
 	RTC_Init(RTC_TimerDisable);
 #endif
 	BSP_Init();
-	printd(DBG_CriticalLvl, "%s\n", osKernelSystemId);
+	//printd(DBG_InfoLvl, "%s\n", osKernelSystemId);	// Move to CLI VCS command
     if(APP_OsStatus != osOK)
     {
-        printd(DBG_CriticalLvl, "RTOS initial fail\n");
+        printd(DBG_ErrorLvl, "RTOS initial fail\n");
     }
+
+
+	if (ubAPP_SfWpGpioPin <= 13) {
+		printd(DBG_InfoLvl, "SF_WP=GPIO%d\n",ubAPP_SfWpGpioPin);
+	}
+	SF_SetWpPin(ubAPP_SfWpGpioPin);
 	SF_Init();
 	PROF_Init();
 	MMU_Init();
@@ -101,6 +140,14 @@ void APP_Init(void)
 	CLI_Init();
 	FWU_Init();
 	UI_Init(&APP_EventQueue);
+	#if 0
+	if(CheckPowerKey() == 0)
+	{
+		printf( "APP_PowerOnFunc Power OFF!\n");
+		//printd(DBG_Debug1Lvl, "APP_PowerOnFunc Power OFF!\n");
+	}
+	#endif
+	
 	tAPP_StsReport.tAPP_State  	= APP_POWER_OFF_STATE;
 	ulAPP_WaitTickTime      	= 0;	//!< osWaitForever;
 	APP_StateCtrlFunc 			= APP_StateFlowCtrl;
@@ -111,10 +158,16 @@ void APP_Init(void)
     osThreadDef(APP_StartThread, APP_StartThread, THREAD_PRIO_APP_HANDLER, 1, THREAD_STACK_APP_HANDLER);
     if(osThreadCreate(osThread(APP_StartThread), NULL) == NULL)
 	{
-		printd(DBG_CriticalLvl, "Create APP_StartThread fail !!!!\r\n");
+		printd(DBG_ErrorLvl, "Create APP_StartThread fail!\n");
 		while(1);
 	}
 
+    osThreadDef(APP_WatchDogThread, APP_WatchDogThread, THREAD_PRIO_WDT_HANDLER, 1, 256);
+    if(osThreadCreate(osThread(APP_WatchDogThread), NULL) == NULL)
+	{
+		printd(DBG_ErrorLvl, "Create APP_WatchDogThread fail!\n");
+		while(1);
+	}
 	/*! Start the kernel.  From here on, only tasks and interrupts will run. */
 	osKernelStart();
 
@@ -134,12 +187,18 @@ void APP_StartThread(void const *argument)
 		if(osAPP_EventStauts == osEventTimeout)
 			tAPP_EventMsg.ubAPP_Event = APP_REFRESH_EVENT;
 		if(APP_StateCtrlFunc)
-		{
 			APP_StateCtrlFunc(&tAPP_EventMsg);
-		}
 	}
 }
-//------------------------------------------------------------------------------
+
+void APP_WatchDogThread(void const *argument)
+{
+	while(1) {		
+		WDT_TimerClr(WDT_RST);
+		osDelay(500);
+	}
+}
+
 void RTC_PowerOff(void)
 {
 	printd(DBG_Debug1Lvl, "RTC_PowerOff Power OFF!\n");
@@ -155,17 +214,31 @@ uint8_t APP_GetBatteryValue(void)
 
 //------------------------------------------------------------------------------
 uint8_t ubStartUpState = 1;
+//------------------------------------------------------------------------------
 void APP_PowerOnFunc(void)
 {
 	uint32_t ulBUF_StartAddr = 0;
+
+	/*
+	#ifdef VBM_PU //20180330
+	if(CheckPowerKey() == 0)
+	{
+		printd(DBG_Debug1Lvl, "APP_PowerOnFunc Power OFF!\n");
+		RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
+		RTC_PowerDisable();
+		while(1);
+	}
+	LCDBL_ENABLE(UI_ENABLE);
+	#endif
+	*/
 	
 	APP_LoadKNLSetupInfo();
 
-	#if 0 //def VBM_PU //20180330
+	#ifdef VBM_PU //20180330
 	uint16_t checkCount = 0;
 	printf("APP_PowerOnFunc GPIO->GPIO_I3: %d.\n", GPIO->GPIO_I3);
 
-	#if 1
+	#if 0
 	while(1)
 	{
 		if(GPIO->GPIO_I3 == 1) //Usb On
@@ -302,10 +375,13 @@ void APP_IdleStateFunc(APP_EventMsg_t *ptEventMsg)
 		case APP_UNBIND_BU_EVENT:
 			APP_doUnbindBU(ptEventMsg);
 			break;
+		case APP_VIEWTYPECHG_EVENT:
+			APP_SwitchViewTypeExec(ptEventMsg);
+			break;
+	#endif
 		case APP_POWERSAVE_EVENT:
 			APP_PowerSaveExec(ptEventMsg);
 			break;
-	#endif
 		default:
 			break;
 	}
@@ -397,10 +473,10 @@ void APP_LostLinkStateFunc(APP_EventMsg_t *ptEventMsg)
 		case APP_UNBIND_BU_EVENT:
 			APP_doUnbindBU(ptEventMsg);
 			break;
+	#endif
 		case APP_POWERSAVE_EVENT:
 			APP_PowerSaveExec(ptEventMsg);
 			break;
-	#endif
 		default:
 			break;
 	}
@@ -653,23 +729,22 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 	KNL_ROLE tKNL_Role[3];
 	KNL_DISP_TYPE tKNL_DispType;
 	UI_CamViewType_t tAPP_CamView;
-	uint8_t ubAPP_ScanModeFlag = FALSE, i;
+	uint8_t i;
 
 	tAPP_CamView = (UI_CamViewType_t)ptEventMsg->ubAPP_Message[1];
-	tKNL_DispType = (tAPP_CamView == SINGLE_VIEW)?KNL_DISP_SINGLE:
-					(tAPP_CamView == QUAL_CHGDUAL_VIEW)?KNL_DISP_DUAL_C:VDO_DISP_TYPE_1;
-
-					
-	for(i = 0; i < 3; i++)
+	tKNL_DispType = ((tAPP_CamView == SINGLE_VIEW) || (tAPP_CamView == SCAN_VIEW))?KNL_DISP_SINGLE:
+					(tAPP_CamView == DUAL_VIEW)?KNL_DISP_DUAL_C:KNL_DISP_QUAD;
+	for(i = 0; i < 2; i++)
 		tKNL_Role[i] = tAPP_STANumTable[ptEventMsg->ubAPP_Message[2+i]].tKNL_StaNum;
 	tAPP_StsReport.tAPP_ReportType = APP_VWMODESTS_RPT;
-	tAPP_StsReport.ubAPP_Report[0] = ubAPP_ScanModeFlag = ptEventMsg->ubAPP_Message[5];
+	tAPP_StsReport.ubAPP_Report[0] = tAPP_CamView;
 	UI_UpdateAppStatus(&tAPP_StsReport);
 	tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
-	if(TRUE == ubAPP_ScanModeFlag)
-	{
-		tAPP_KNLInfo.tAdoSrcRole = tKNL_Role[0];
+
+	if ((tAPP_CamView == SINGLE_VIEW) || (tAPP_CamView == SCAN_VIEW)) {
+		tAPP_KNLInfo.tAdoSrcRole = tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum;
 		ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
+		APP_UpdateKNLSetupInfo();
 	}
 	VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
 }
@@ -711,15 +786,15 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 	{
 		case PS_VOX_MODE:
 		{
-			VDO_VoxFuncPtr_t tAPP_VoxFunc[]     = {VDO_Start, VDO_Stop};
+			VDO_PsFuncPtr_t tAPP_VoxFunc[] = {VDO_Start, VDO_Stop};
 		#ifdef VBM_PU
 			APP_ActFuncPtr_t tAPP_LcdFunc[] 	= {APP_LcdDisplayOn, APP_LcdDisplayOff};	//! {LCD_Resume, LCD_Suspend};
 			SYS_PowerState_t tAPP_PsState[] 	= {SYS_PS0, SYS_PS1};
 		#endif
 			uint8_t ubAPP_PsFlag = ptEventMsg->ubAPP_Message[2];
 
-			if(tAPP_VoxFunc[ubAPP_PsFlag].VDO_tVoxFunPtr)
-				tAPP_VoxFunc[ubAPP_PsFlag].VDO_tVoxFunPtr();
+			if(tAPP_VoxFunc[ubAPP_PsFlag].VDO_tPsFunPtr)
+				tAPP_VoxFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
 		#ifdef VBM_PU
 			SYS_SetPowerStates(tAPP_PsState[ubAPP_PsFlag]);
 
@@ -729,10 +804,9 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 			tAPP_StsReport.ubAPP_Report[0] = ubAPP_PsFlag;
 			UI_UpdateAppStatus(&tAPP_StsReport);
 			tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
-						
+
 			if(tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr)
 				tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr();
-
 		#endif
 			break;
 		}
@@ -749,6 +823,23 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 			VDO_ChangePlayState(tKNL_Role, tAPP_VdoPlySte);
 			KNL_WakeupDevice(tKNL_Role, ptEventMsg->ubAPP_Message[2]);
 		}
+		#endif
+			break;
+		case PS_WOR_MODE:
+		#ifdef VBM_BU
+		{
+			VDO_PsFuncPtr_t tAPP_WorFunc[] = {VDO_Stop, VDO_Start};
+			uint8_t ubAPP_PsFlag = ptEventMsg->ubAPP_Message[2];
+			uint8_t ubAPP_VdoActFlag = ptEventMsg->ubAPP_Message[4];
+
+			if((TRUE == ubAPP_VdoActFlag) &&
+			   (tAPP_WorFunc[ubAPP_PsFlag].VDO_tPsFunPtr))
+				tAPP_WorFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
+			KNL_WakeupDevice(KNL_MASTER_AP, ptEventMsg->ubAPP_Message[3]);
+		}
+		#endif
+		#ifdef VBM_PU
+			KNL_EnableWORFunc();
 		#endif
 			break;
 		default:
@@ -796,5 +887,8 @@ void APP_Start(void)
 
 	tAPP_StsReport.tAPP_State = APP_IDLE_STATE;
 	UI_UpdateAppStatus(&tAPP_StsReport);
+#ifdef VBM_PU
+	UI_SwitchCameraSource();
+#endif
 }
 //------------------------------------------------------------------------------

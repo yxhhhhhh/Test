@@ -76,9 +76,27 @@ void BUZ_PlayStart(uint8_t ubChCnt, uint8_t ubWeight, BUZ_ToneParam_t *pTonePara
 }
 
 void BUZ_PlayThread(void const *argument) {
+	
+	uint8_t ubFlag;
+	ADO_IP_READY_t AdoIpRdyFlg;
+	
+	ubFlag = 0;
     while(1) {
-		if( ADO_GetIpReadyStatus() == ADO_IP_READY ) {
+		
+#if defined(VBM_PU)
+		if( ubFlag==0 )
+			AdoIpRdyFlg = ADO_IP_READY_FOR_STARTUP_SOUND;
+		else if( ubFlag==1 )
+			AdoIpRdyFlg = ADO_IP_READY;
+#endif
+#if defined(VBM_BU)
+			AdoIpRdyFlg = ADO_IP_READY;
+#endif
+		
+		if( ADO_GetIpReadyStatus() == AdoIpRdyFlg ) {
 			uint8_t ubLoop;
+			
+			ubFlag = 1;
 			
 			ADO_SetDacAutoMute(ADO_OFF);					// Automute
 			ADO->BUZ_EN = 1;

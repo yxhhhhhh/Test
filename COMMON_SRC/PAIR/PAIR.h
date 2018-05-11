@@ -132,6 +132,7 @@ void PAIR_Prp(TWC_TAG GetSta,uint8_t *pData);
 void PAIR_Paap(TWC_TAG GetSta,uint8_t *pData);
 void PAIR_CheckIdTable(void);
 #endif
+void PAIR_ShowDeviceID(void);
 //------------------------------------------------------------------------
 /*!
 \brief 	Get Pairing Version	

@@ -21,6 +21,8 @@
 #include "LCD.h"
 #include "OSD.h"
 #include "BUF.h"
+#include "UI_VBMBU.h"
+
 
 osThreadId osUI_ThreadId;
 osMessageQId UI_EventQueue;

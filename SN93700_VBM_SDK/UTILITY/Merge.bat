@@ -46,6 +46,8 @@ rem                         Generate bin/hex for current target
 rem -----------------------------------------------------------------------------------------
 :resume
 
+.\UTILITY\binConverter -swp .\BIN\%1 39920
+.\UTILITY\binModify .\BIN\ISPMemDrive 39920 %errorlevel%
 .\UTILITY\binConverter -re .\BIN\%1 %2
 .\UTILITY\binModify .\CONFIG\Header %5 %errorlevel%
 .\UTILITY\binModify .\CONFIG\Header %4 %3h

@@ -23,6 +23,7 @@
 #include "CLI.h"
 #include "SF_API.h"
 #include "APP_CFG.h"
+#include "WDT.h"
 
 //------------------------------------------------------------------------------
 #ifdef CONFIG_CLI_CMD_SF
@@ -117,6 +118,8 @@ int32_t cmd_sf_ctrl(int argc, char* argv[])
 	opt = strtoul(argv[1], NULL, 0);
 	addr = strtoul(argv[2], NULL, 0);
 	
+	WDT_Disable(WDT_RST);
+
 	if (opt == 1) {
 		SF_DisableWrProtect();
 		SF_Erase(SF_SE, addr, pSF_Info->ulSecSize);
@@ -196,8 +199,10 @@ int32_t cmd_sf_ctrl(int argc, char* argv[])
 		printf("===================================\n");
 	} else {
 		sf_ctrl_usage();
+		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 		return cliFAIL; 
 	}
+	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	return cliPASS; 
 }
 

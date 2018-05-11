@@ -40,6 +40,14 @@ PAIR_ID_TABLE   PAIR_IdTable;
 PAIR_Info_t 	tPAIR_Info;
 osThreadId      PAIR_ThreadId;
 static uint32_t ulPAIR_SFAddr;
+uint8_t ubFixChTable[3] =
+{
+	10,90,150
+};
+uint8_t ubTestChTable[3] = 		
+{
+	10,90,150
+};
 //------------------------------------------------------------------------------
 static void PAIR_Thread(void const *argument)
 {
@@ -171,22 +179,11 @@ void PAIR_Init(osMessageQId *pvMsgQId)
 //------------------------------------------------------------------------------
 void PAIR_LoadId(void)
 {
-    uint8_t i;
-
 	SF_Read(ulPAIR_SFAddr, sizeof(PAIR_Info_t), (uint8_t *)&tPAIR_Info);
 	memcpy(&PAIR_IdTable, &tPAIR_Info.tPAIR_Table, sizeof(PAIR_ID_TABLE));
 #if OP_AP
 	PAIR_CheckIdTable();
 #endif
-    printf("ID Table: 0x%X\n", PAIR_IdTable.ubTxNumber);
-	printf("    [%X] : %02X.%02X.%02X.%02X\n", 0xF, *((uint8_t *)&PAIR_IdTable.ulAp_ID), *((uint8_t *)&PAIR_IdTable.ulAp_ID + 1),
-	                                                *((uint8_t *)&PAIR_IdTable.ulAp_ID + 2), *((uint8_t *)&PAIR_IdTable.ulAp_ID + 3));
-	for(i = 0; i < 4; i++)
-	{
-		printf("    [%X] : %02X.%02X.%02X.%02X\n", i, *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i]), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 1),
-	                                                  *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 2), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 3));
-	}
-	printf("\n");
 }
 //------------------------------------------------------------------------------
 void PAIR_SaveId(void)
@@ -402,6 +399,21 @@ void PAIR_CheckIdTable(void)
 #endif
 }
 #endif
+//------------------------------------------------------------------------------
+void PAIR_ShowDeviceID(void)
+{
+	uint8_t i;
+
+    printf("ID Table: 0x%X\n", PAIR_IdTable.ubTxNumber);
+	printf("    [%X] : %02X.%02X.%02X.%02X\n", 0xF, *((uint8_t *)&PAIR_IdTable.ulAp_ID), *((uint8_t *)&PAIR_IdTable.ulAp_ID + 1),
+	                                                *((uint8_t *)&PAIR_IdTable.ulAp_ID + 2), *((uint8_t *)&PAIR_IdTable.ulAp_ID + 3));
+	for(i = 0; i < 4; i++)
+	{
+		printf("    [%X] : %02X.%02X.%02X.%02X\n", i, *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i]), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 1),
+	                                                  *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 2), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 3));
+	}
+	printf("\n");
+}
 //------------------------------------------------------------------------------
 uint16_t uwPAIR_GetVersion(void)
 {

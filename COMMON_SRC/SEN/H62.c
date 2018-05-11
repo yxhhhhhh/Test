@@ -308,11 +308,11 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 	ulSEN_I2C_Read (H62_CHIP_ID_LOW_ADDR, &pBuf[0]);
 	if (H62_CHIP_ID != uwPID)
 	{
-		printf("This is not H62 Sensor!! 0x%x 0x%x\n", H62_CHIP_ID, uwPID);
+		printd(DBG_ErrorLvl, "This is not H62 Sensor!! 0x%x 0x%x\n", H62_CHIP_ID, uwPID);
         TIMER_Delay_us(10000);
 //        goto _RETRY;
 	}	
-    printf("chip ID check ok!\r\n");
+    printd(DBG_CriticalLvl, "H62 Sensor\n");
  
     //stream off
     ulSEN_I2C_Read (0x74, &temp);
@@ -547,6 +547,6 @@ void SEN_SetSensorImageSize(void)
 void SEN_SetSensorType(void)
 {
     sensor_cfg.ulSensorType = SEN_H62;
-    printf("sensor type is H62\r\n");	
+    printd(DBG_Debug1Lvl, "sensor type is H62\n");	
 }
 #endif

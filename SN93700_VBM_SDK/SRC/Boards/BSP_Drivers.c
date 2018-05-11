@@ -30,17 +30,20 @@
 #include "DMAC_API.h"
 #include "SDIO_API.h"
 #include "APBC.h"
+#include "APP_CFG.h"
 
 #ifdef BSP_BOARD_VBMPU_DEMO
 void BSP_DriversInit(void)
 {
 	WDT_Disable(WDT_RST);
+	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	UART_Init(UART_2, UART_CLOCK_96M, BR_115200, UART_1STOPBIT, NULL);
 	TIMER_Init();
 	CIPHER_Init();
 	CQ_Init();
-    APBC_Init();
+    	APBC_Init();
 
+	#if 1
 	//! LED
 	//GPIO->GPIO_OE3 	= 1;
 	//GPIO->GPIO_O3 	= 0;
@@ -69,6 +72,36 @@ void BSP_DriversInit(void)
 	//! USB_DET	
 	GPIO->GPIO_OE3 = 0;
 	
+	#else //DEMO
+	//! LED
+	GPIO->GPIO_OE2 	= 1;
+	GPIO->GPIO_O2  	= 1;
+	GPIO->GPIO_OE3 	= 1;
+	GPIO->GPIO_O3 	= 0;
+	GPIO->GPIO_OE13	= 1;
+	GPIO->GPIO_OE0	= 1;
+	GPIO->GPIO_OE1	= 1;
+
+	//! BL Control
+	PWM->PWM3_RATE  	= 127;
+	PWM->PWM3_PERIOD 	= 0xC00;
+	PWM->PWM3_HIGH_CNT 	= 0xA00;
+	//! BL Enable
+	GPIO->GPIO_OE11 = 1;
+	GPIO->GPIO_O11  = 1;
+	PWM->PWM_EN3    = 1;
+
+	//! Speaker
+	GPIO->GPIO_OE12 = 1;
+
+	//! LCD POWER	
+	GPIO->GPIO_OE10 = 1;
+	GPIO->GPIO_O10  = 0;
+
+#endif
+	
+	//! RTC GPIO1
+	RTC_SetGPO_1(1, RTC_PullDownDisable);		
 	printd(DBG_CriticalLvl, "SONiX SN9370X High Speed Mode Start!\n");
 }
 #endif
@@ -96,6 +129,7 @@ void BSP_DriversInit(void)
 void BSP_DriversInit(void)
 {
 	WDT_Disable(WDT_RST);
+	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	UART_Init(UART_2, UART_CLOCK_96M, BR_115200, UART_1STOPBIT, NULL);
 	TIMER_Init();
 	CIPHER_Init();
@@ -126,6 +160,7 @@ void BSP_DriversInit(void)
 void BSP_DriversInit(void)
 {
 	WDT_Disable(WDT_RST);
+	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	UART_Init(UART_2, UART_CLOCK_96M, BR_115200, UART_1STOPBIT, NULL);
 	TIMER_Init();
 	CIPHER_Init();

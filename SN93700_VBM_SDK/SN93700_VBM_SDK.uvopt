@@ -27,7 +27,7 @@
     <TargetOption>
       <CLKADS>204000000</CLKADS>
       <OPTTT>
-        <gFlags>1</gFlags>
+        <gFlags>0</gFlags>
         <BeepAtEnd>1</BeepAtEnd>
         <RunSim>1</RunSim>
         <RunTarget>0</RunTarget>
@@ -75,19 +75,7 @@
         <tvExpOptDlg>0</tvExpOptDlg>
         <IsCurrentTarget>1</IsCurrentTarget>
       </OPTFL>
-      <CpuCode>16</CpuCode>
-      <Books>
-        <Book>
-          <Number>0</Number>
-          <Title>Datasheet</Title>
-          <Path>DATASHTS\ATMEL\AT91SAM9260_DS.PDF</Path>
-        </Book>
-        <Book>
-          <Number>1</Number>
-          <Title>Summary</Title>
-          <Path>DATASHTS\ATMEL\AT91SAM9260_DC.PDF</Path>
-        </Book>
-      </Books>
+      <CpuCode>0</CpuCode>
       <DebugOpt>
         <uSim>0</uSim>
         <uTrg>1</uTrg>
@@ -99,7 +87,7 @@
         <sRfunc>1</sRfunc>
         <sRbox>1</sRbox>
         <tLdApp>0</tLdApp>
-        <tGomain>0</tGomain>
+        <tGomain>1</tGomain>
         <tRbreak>1</tRbreak>
         <tRwatch>1</tRwatch>
         <tRmem>1</tRmem>
@@ -127,69 +115,23 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
-          <Key>JLTDLG</Key>
-          <Name></Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>JLTAgdi</Key>
-          <Name>-O302 -J1 -Y1000 -Z0 -FO7 -FD200000 -FC800 -FN0</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>DLGTARM</Key>
-          <Name></Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>DLGDARM</Key>
-          <Name>(5014=-1,-1,-1,-1,0)(5013=-1,-1,-1,-1,0)(5001=-1,-1,-1,-1,0)(7000=-1,-1,-1,-1,0)(7001=-1,-1,-1,-1,0)(7002=-1,-1,-1,-1,0)(5019=-1,-1,-1,-1,0)(9005=-1,-1,-1,-1,0)(9006=-1,-1,-1,-1,0)(9007=-1,-1,-1,-1,0)(9008=-1,-1,-1,-1,0)(9009=-1,-1,-1,-1,0)(9010=-1,-1,-1,-1,0)(9011=-1,-1,-1,-1,0)(5015=-1,-1,-1,-1,0)(5016=-1,-1,-1,-1,0)(5021=-1,-1,-1,-1,0)(5029=-1,-1,-1,-1,0)(5017=-1,-1,-1,-1,0)(5033=-1,-1,-1,-1,0)(5031=-1,-1,-1,-1,0)(5006=-1,-1,-1,-1,0)(5008=-1,-1,-1,-1,0)(5007=-1,-1,-1,-1,0)(125=-1,-1,-1,-1,0)(126=-1,-1,-1,-1,0)(5011=-1,-1,-1,-1,0)(5012=-1,-1,-1,-1,0)(5009=-1,-1,-1,-1,0)</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>ARMDBGFLAGS</Key>
-          <Name>-T5F</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
           <Key>UL2ARM</Key>
-          <Name>-UV2077N9E -O47 -S0 -C0 -N00("ARM926EJ-S Core") -D00(0792603F) -L00(4) -FO7 -FD300000 -FC1000 -FN1 -FF0AT91SAM9_DF_P1056_CS1 -FS020000000 -FL083BE00)</Name>
+          <Name>UL2ARM(-UV2077N9E -O47 -S0 -C0 -N00("ARM926EJ-S Core") -D00(0792603F) -L00(4) -FO7 -FD300000 -FC1000 -FN1 -FF0AT91SAM9_DF_P1056_CS1 -FS020000000 -FL083BE00)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
       <Breakpoint/>
-      <WatchWindow1>
-        <Ww>
-          <count>0</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>tOsdImgInfo</ItemText>
-        </Ww>
-      </WatchWindow1>
-      <MemoryWindow1>
-        <Mm>
-          <WinNumber>1</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>tOsdImgInfo</ItemText>
-        </Mm>
-      </MemoryWindow1>
-      <MemoryWindow2>
-        <Mm>
-          <WinNumber>2</WinNumber>
-          <SubType>2</SubType>
-          <ItemText>0x100000</ItemText>
-        </Mm>
-      </MemoryWindow2>
       <Tracepoint>
         <THDelay>0</THDelay>
       </Tracepoint>
       <DebugFlag>
         <trace>0</trace>
-        <periodic>1</periodic>
+        <periodic>0</periodic>
         <aLwin>0</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
         <aPa>0</aPa>
-        <viewmode>1</viewmode>
+        <viewmode>0</viewmode>
         <vrSel>0</vrSel>
         <aSym>0</aSym>
         <aTbox>0</aTbox>
@@ -219,7 +161,7 @@
     <TargetOption>
       <CLKADS>204000000</CLKADS>
       <OPTTT>
-        <gFlags>1</gFlags>
+        <gFlags>0</gFlags>
         <BeepAtEnd>1</BeepAtEnd>
         <RunSim>1</RunSim>
         <RunTarget>0</RunTarget>
@@ -263,23 +205,11 @@
         <LExpSel>0</LExpSel>
       </OPTXL>
       <OPTFL>
-        <tvExp>1</tvExp>
+        <tvExp>0</tvExp>
         <tvExpOptDlg>0</tvExpOptDlg>
         <IsCurrentTarget>0</IsCurrentTarget>
       </OPTFL>
-      <CpuCode>16</CpuCode>
-      <Books>
-        <Book>
-          <Number>0</Number>
-          <Title>Datasheet</Title>
-          <Path>DATASHTS\ATMEL\AT91SAM9260_DS.PDF</Path>
-        </Book>
-        <Book>
-          <Number>1</Number>
-          <Title>Summary</Title>
-          <Path>DATASHTS\ATMEL\AT91SAM9260_DC.PDF</Path>
-        </Book>
-      </Books>
+      <CpuCode>0</CpuCode>
       <DebugOpt>
         <uSim>0</uSim>
         <uTrg>1</uTrg>
@@ -319,79 +249,23 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
-          <Key>JLTDLG</Key>
-          <Name></Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>JLTAgdi</Key>
-          <Name>-O302 -J1 -Y1000 -Z1 -FO7 -FD200000 -FC800 -FN0</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>DLGTARM</Key>
-          <Name></Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>DLGDARM</Key>
-          <Name>(5014=-1,-1,-1,-1,0)(5013=-1,-1,-1,-1,0)(5001=-1,-1,-1,-1,0)(7000=-1,-1,-1,-1,0)(7001=-1,-1,-1,-1,0)(7002=-1,-1,-1,-1,0)(5019=-1,-1,-1,-1,0)(9005=-1,-1,-1,-1,0)(9006=-1,-1,-1,-1,0)(9007=-1,-1,-1,-1,0)(9008=-1,-1,-1,-1,0)(9009=-1,-1,-1,-1,0)(9010=-1,-1,-1,-1,0)(9011=-1,-1,-1,-1,0)(5015=-1,-1,-1,-1,0)(5016=-1,-1,-1,-1,0)(5021=-1,-1,-1,-1,0)(5029=-1,-1,-1,-1,0)(5017=-1,-1,-1,-1,0)(5033=-1,-1,-1,-1,0)(5031=-1,-1,-1,-1,0)(5006=-1,-1,-1,-1,0)(5008=-1,-1,-1,-1,0)(5007=-1,-1,-1,-1,0)(125=-1,-1,-1,-1,0)(126=-1,-1,-1,-1,0)(5011=-1,-1,-1,-1,0)(5012=-1,-1,-1,-1,0)(5009=-1,-1,-1,-1,0)</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>ARMDBGFLAGS</Key>
-          <Name>-T5F</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
           <Key>UL2ARM</Key>
-          <Name>-UV2077N9E -O47 -S0 -C0 -N00("ARM926EJ-S Core") -D00(0792603F) -L00(4) -FO7 -FD300000 -FC1000 -FN1 -FF0AT91SAM9_DF_P1056_CS1 -FS020000000 -FL083BE00)</Name>
+          <Name>UL2ARM(-UV2077N9E -O47 -S0 -C0 -N00("ARM926EJ-S Core") -D00(0792603F) -L00(4) -FO7 -FD300000 -FC1000 -FN1 -FF0AT91SAM9_DF_P1056_CS1 -FS020000000 -FL083BE00)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
       <Breakpoint/>
-      <WatchWindow1>
-        <Ww>
-          <count>0</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>Timer_EventMethod</ItemText>
-        </Ww>
-        <Ww>
-          <count>1</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>Timer_Event[tDevice]</ItemText>
-        </Ww>
-        <Ww>
-          <count>2</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>tVDO_KNLRoleInfo</ItemText>
-        </Ww>
-      </WatchWindow1>
-      <MemoryWindow1>
-        <Mm>
-          <WinNumber>1</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>ptest1</ItemText>
-        </Mm>
-      </MemoryWindow1>
-      <MemoryWindow2>
-        <Mm>
-          <WinNumber>2</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>0x1400000</ItemText>
-        </Mm>
-      </MemoryWindow2>
       <Tracepoint>
         <THDelay>0</THDelay>
       </Tracepoint>
       <DebugFlag>
         <trace>0</trace>
-        <periodic>1</periodic>
-        <aLwin>1</aLwin>
+        <periodic>0</periodic>
+        <aLwin>0</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
         <aPa>0</aPa>
-        <viewmode>1</viewmode>
+        <viewmode>0</viewmode>
         <vrSel>0</vrSel>
         <aSym>0</aSym>
         <aTbox>0</aTbox>

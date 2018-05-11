@@ -377,7 +377,7 @@ void LCD_Resume (void)
 		GLB->LCDPLL_SDM_EN = 1;
 		TIMER_Delay_us(1);
 	}
-	LCD_PixelPllSetting(0);
+	LCD_PixelPllSetting();
 	LCD->TV_LCD_EN = 1;
 #if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
 	LCD_MIPI_SSD2828_Wakeup();
@@ -676,7 +676,7 @@ void LCD_Init (LCD_OUTPUT_TYP tLcdOutput)
 		LCD->LCD_FS1_FIR2 = 8;
 		LCD->LCD_FS1_FIR1 = 16;
 		LCD->LCD_FS1_FIR0 = 256 - ((16 + 8 + 4 + 2) << 1);
-		LCD_PixelPllSetting(0);
+		LCD_PixelPllSetting();
 	}
 	ubLCD_StartFlag = 0;
 	if(osLCD_Mutex == NULL) 
@@ -1223,13 +1223,15 @@ osMessageQId* pLCD_SwitchModeInit(uint32_t ulStackSize, osPriority priority)
 	return &LCD_SwitchModeQueue;
 }
 //------------------------------------------------------------------------------
-void LCD_PixelPllSetting (uint8_t ubFps)
+void LCD_PixelPllSetting(void)
 {
-	uint8_t  ubDiv, ubPllDiv;
-	float    fPixelClock, fPllN;
-	
-	if (!ubFps)
-		ubFps = (LCD_BT656_BT601 == LCD->LCD_MODE)?50:60;
+	float fPixelClock;
+	uint8_t ubFps;
+	float fFVCO;
+
+#if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
+	ubFps = 60;
+#endif
 	//! Calculation Pixel Clock
 	switch (LCD->LCD_MODE)
 	{
@@ -1259,45 +1261,10 @@ void LCD_PixelPllSetting (uint8_t ubFps)
 			return;
 	}
 	
-	printd(DBG_Debug1Lvl, "LCD Pixel Clock = %f MHz\n", fPixelClock);					
-	ubDiv = LCD_PLLN_MIN * LCD_PLL_OSC / fPixelClock;
-	if (LCD_PLLN_MIN * (float)LCD_PLL_OSC > fPixelClock * (float)ubDiv)
-	{
-		if (LCD_PLLN_MAX * (float)LCD_PLL_OSC > fPixelClock * (float)(ubDiv + 1))
-		{
-			++ubDiv;
-			if (1 & ubDiv)
-			{
-				if (LCD_PLLN_MAX * (float)LCD_PLL_OSC > fPixelClock * (float)(ubDiv + 1))
-					++ubDiv;
-			}
-		}
-	}	
-	if (!(ubDiv % 12) || 6 == ubDiv)
-	{
-		GLB->LCDPLL_CK_SEL = 0;
-		LCD->LCD_PCK_SPEED = ubDiv / 6;
-		ubPllDiv = 6;
-	}
-	else if (!(ubDiv & 3) || 2 == ubDiv)
-	{
-		GLB->LCDPLL_CK_SEL = 1;
-		LCD->LCD_PCK_SPEED = ubDiv >> 1;
-		ubPllDiv = 2;
-	}		
-	else
-	{
-		GLB->LCDPLL_CK_SEL = 2;
-		LCD->LCD_PCK_SPEED = ubDiv;
-		ubPllDiv = 1;
-	}
+	printd(DBG_InfoLvl, "LCD Pixel Clock = %f MHz\n", fPixelClock);					
 #if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
-	LCD->LCD_PCK_SPEED = 3;//2;
-#endif
-	fPllN = fPixelClock * ubPllDiv * LCD->LCD_PCK_SPEED / LCD_PLL_OSC;
-	printd(DBG_Debug1Lvl, "LCD PLL N = %f\n", fPllN);
-	printd(DBG_Debug1Lvl, "LCD PLL Divide = %d\n", ubPllDiv);
-	printd(DBG_Debug1Lvl, "LCD Pixel Clock Divide = %d\n", LCD->LCD_PCK_SPEED);
+	LCD->LCD_PCK_SPEED = 2;//2;
+	GLB->LCDPLL_CK_SEL = 2;
 	//! LCD PLL
 	if (!GLB->LCDPLL_PD_N)
 	{
@@ -1307,12 +1274,23 @@ void LCD_PixelPllSetting (uint8_t ubFps)
 		GLB->LCDPLL_SDM_EN = 1;
 		TIMER_Delay_us(1);
 	}	
-	GLB->LCDPLL_INT = (uint32_t)fPllN;
-	GLB->LCDPLL_FRA = (uint32_t)((fPllN - GLB->LCDPLL_INT) * LCD_PLLN_FSCALE);
-	printd(DBG_Debug1Lvl, "LCD PLL %X. %X\n", GLB->LCDPLL_INT, GLB->LCDPLL_FRA);
+	GLB->LCDPLL_INT = 12;
+	GLB->LCDPLL_FRA = 0xb0c34;
 	TIMER_Delay_us(1);
 	GLB->LCDPLL_INT_FRA_VLD = 1;
 	TIMER_Delay_us(1);	
 	//! LCD Controller rate
 	GLB->LCD_RATE = 1;
+#endif
+	if (GLB->LCDPLL_CK_SEL == 0)
+		fFVCO = fPixelClock * LCD->LCD_PCK_SPEED * 6;
+	else if (GLB->LCDPLL_CK_SEL == 1)
+		fFVCO = fPixelClock * LCD->LCD_PCK_SPEED * 2;
+	else
+		fFVCO = fPixelClock * LCD->LCD_PCK_SPEED * 1;
+	
+	if ((fFVCO < 148.3) || (fFVCO > 165)) { //range:148.3M ~ 165M
+		printd(DBG_ErrorLvl, "fFVCO=%f MHz,Change PLL pls!\n", fFVCO);
+		while(1);
+	}
 }

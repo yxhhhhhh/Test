@@ -17,7 +17,7 @@ if exist .\BIN\ISPMemDrive.bin ren .\BIN\ISPMemDrive.bin ISPMemDrive.a
 del .\BIN\*.bin
 del .\BIN\*.hex
 del *.uvgui.*
-rem del *.uvopt
+del *.uvopt
 del *.dep
 del *.bak
 del JLinkLog.txt

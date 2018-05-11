@@ -59,11 +59,6 @@ digraph LCD_Flow {
 
 #define LCD_CH_NOIMG_MAX_BOUNDARY	(0xFF)	//!< Max boundary of LCD channel no detect signal
 
-#define LCD_RATE_MULTI		(16)
-#define LCD_PLL_OSC			(12)
-#define LCD_PLLN_MAX		(17.7375)			//(13.74) //!< 29%
-#define LCD_PLLN_MIN		(8.774416666667)	//(12.36)
-#define LCD_PLLN_FSCALE		(1 << 20)
 //------------------------------------------------------------------------------
 #define LCD_HVIEW_CAMF_HSIZE		(160)	//!< LCD H-Type view Cam F(Ch0) Hsize
 //------------------------------------------------------------------------------
@@ -806,14 +801,12 @@ uint16_t uwLCD_GetVersion (void);
 //------------------------------------------------------------------------------	
 /*!
 	\brief 		LCD Pixel Clock Setting Function
-	\param[in]	ubFps Assign LCD frame rate
-					  Set 0 value is suggest LCD frame rate (50 or 60 Fps by different LCD type) 
 	\par [Example]
 	\code    	
-		  LCD_PixelPllSetting(0);
+		  LCD_PixelPllSetting();
 	\endcode
 */
-void LCD_PixelPllSetting (uint8_t ubFps);
+void LCD_PixelPllSetting (void);
 //------------------------------------------------------------------------------	
 /*!
 	\brief 		Setting LCD Gamma Level Function

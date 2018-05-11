@@ -22,7 +22,7 @@
 #include <stdint.h>
 
 //! SN937XX Firmware Version
-#define SN937XX_FW_VERSION				"V1.0.1.022"
+#define SN937XX_FW_VERSION				"01.00.01.023"
 
 typedef enum
 {

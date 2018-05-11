@@ -18,6 +18,7 @@
 //#define CONFIG_CLI_CMD_MC
 #define CONFIG_CLI_CMD_ADO
 #define CONFIG_CLI_CMD_DDR
+#define CONFIG_CLI_CMD_PAIR
 
 #ifdef CONFIG_CLI_CMD_PRINTF
 #include "cmd_printf.h"
@@ -69,6 +70,10 @@
 
 #ifdef CONFIG_CLI_CMD_DDR
 #include "cmd_ddr.h"
+#endif
+
+#ifdef CONFIG_CLI_CMD_PAIR
+#include "cmd_pair.h"
 #endif
 
 #endif

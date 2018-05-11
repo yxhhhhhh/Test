@@ -290,7 +290,7 @@ _RETRY:
 	ulSEN_I2C_Read (H62_CHIP_ID_LOW_ADDR, &pBuf[0]);
 	if (H62_CHIP_ID != uwPID)
 	{
-		printf("This is not H62 MIPI Sensor!! 0x%x 0x%x\n", H62_CHIP_ID, uwPID);
+		printd(DBG_ErrorLvl, "This is not H62 MIPI Sensor!! 0x%x 0x%x\n", H62_CHIP_ID, uwPID);
         TIMER_Delay_us(10000);
         goto _RETRY;
 	}	
@@ -606,6 +606,6 @@ void SEN_SetSensorImageSize(void)
 void SEN_SetSensorType(void)
 {
     sensor_cfg.ulSensorType = SEN_H62_MIPI;
-    printf("sensor type is H62 mipi\r\n");	
+    printd(DBG_Debug1Lvl, "sensor type is H62 mipi\n");	
 }
 #endif

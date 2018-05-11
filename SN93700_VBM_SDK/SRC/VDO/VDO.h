@@ -24,15 +24,22 @@
 #include "Buf.h"
 #include "SEN.h"
 
-//#define VDO_MAIN_H_SIZE					(DISPLAY_MODE == DISPLAY_4T1R)?VGA_WIDTH:HD_WIDTH
-//#define VDO_MAIN_V_SIZE					(DISPLAY_MODE == DISPLAY_4T1R)?VGA_HEIGHT:HD_HEIGHT
-#define VDO_MAIN_H_SIZE					(DISPLAY_MODE == DISPLAY_4T1R)?HD_WIDTH:HD_WIDTH
-#define VDO_MAIN_V_SIZE					(DISPLAY_MODE == DISPLAY_4T1R)?HD_HEIGHT:HD_HEIGHT
+// Default video mode setting
+//#define VDO_DISP_TYPE					((DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_QUAD:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE)
+#define VDO_DISP_TYPE					((DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_SINGLE:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE)
+#define VDO_DISP_SCAN					((VDO_DISP_TYPE == KNL_DISP_SINGLE)?FALSE:FALSE)
 
-#define VDO_SUB_H_SIZE					(VGA_WIDTH)
-#define VDO_SUB_V_SIZE					(VGA_HEIGHT)
-#define VDO_DISP_TYPE					(DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_SINGLE:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE
-#define VDO_DISP_TYPE_1				(DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_QUAD:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE
+#ifdef VBM_PU
+#define VDO_MAIN_H_SIZE					((tKNL_GetDispType() == KNL_DISP_QUAD)?VGA_WIDTH:HD_WIDTH)
+#define VDO_MAIN_V_SIZE					((tKNL_GetDispType() == KNL_DISP_QUAD)?VGA_HEIGHT:HD_HEIGHT)
+#endif
+#ifdef VBM_BU
+#define VDO_MAIN_H_SIZE					((VDO_DISP_TYPE == KNL_DISP_QUAD)?VGA_WIDTH:HD_WIDTH)
+#define VDO_MAIN_V_SIZE					((VDO_DISP_TYPE == KNL_DISP_QUAD)?VGA_HEIGHT:HD_HEIGHT)
+#endif
+
+#define VDO_SUB_H_SIZE					VGA_WIDTH
+#define VDO_SUB_V_SIZE					VGA_HEIGHT
 
 #ifdef VBM_BU
 #define KNL_SenorSetup(KNL_MainSrcNum, KNL_SubSrcNum)																\
@@ -50,7 +57,6 @@
 #define KNL_VdoDisplaySetting()																				\
 										{																	\
 											KNL_SetDispHV(LCD_H_SIZE, LCD_V_SIZE);							\
-											KNL_SetDispType(VDO_DISP_TYPE);									\
 											KNL_SetDispRotate(KNL_DISP_ROTATE_90);							\
 										}
 #define KNL_VdoDisplayParamUpdate()		ubKNL_SetDispCropScaleParam();
@@ -99,8 +105,8 @@ typedef struct
 
 typedef struct
 {
-	void (*VDO_tVoxFunPtr)(void);
-}VDO_VoxFuncPtr_t;
+	void (*VDO_tPsFunPtr)(void);
+}VDO_PsFuncPtr_t;
 
 void VDO_Init(void);
 void VDO_Setup(void);

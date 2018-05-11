@@ -86,4 +86,6 @@ void AE_SetPID(uint8_t ubLowFrame);
 \return(no)
 */
 void AE_SetCtrlTable(void);
+uint8_t* pbAE_GetAlgVerID(void);
+
 #endif

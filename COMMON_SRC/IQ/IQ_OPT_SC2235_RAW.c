@@ -11,9 +11,9 @@
 	\file		IQ_OPT_SC2235_RAW.c
 	\brief		SC2235 image quality relation function
 	\author		
-	\version	0.4
-	\date		2017-11-30
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.5
+	\date		2018-03-09
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 //==========================================================
@@ -107,17 +107,17 @@ void IQ_DynamicLSC_4G5(void) {
 //------------------------------------------------------------------------------
 void IQ_DynamicCCM_4G5(void) {
 	int32_t 	slCCM_Temp[0x40], slCCM_Temp2[0x40];
-	int16_t 	slTemp;	
 	uint32_t 	ulData[6];	
-	uint16_t 	uwAeIdxGainTmp;
+	uint32_t 	ulAeIdxGainTmp;    
+	int16_t 	slTemp;	
 	uint8_t 	i,shift[6];
 	uint8_t 	ccmspr = 0x40;
     	
-	uwAeIdxGainTmp = (uint16_t)(xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain * (uint16_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx);
+	ulAeIdxGainTmp = (uint16_t)(xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain * (uint16_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx);
     
 	IQ_DynamicLinearInterpolation(xtIQDnInst.xtIQJudgeInst.uwAWB_BGainX128, slIQ_CcmLinear[0][1], sizeof(slIQ_CcmLinear[0]) / sizeof(int32_t), &slIQ_CcmLinear[3][0], slCCM_Temp);
 	
-	IQ_DynamicLinearInterpolation(uwAeIdxGainTmp, slIQ_CcmLowLightLinear[0][1], sizeof(slIQ_CcmLowLightLinear[0]) / sizeof(int32_t), &slIQ_CcmLowLightLinear[3][0], slCCM_Temp2);
+	IQ_DynamicLinearInterpolation(ulAeIdxGainTmp, slIQ_CcmLowLightLinear[0][1], sizeof(slIQ_CcmLowLightLinear[0]) / sizeof(int32_t), &slIQ_CcmLowLightLinear[3][0], slCCM_Temp2);
 	
 	for (i = 0; i < 6; i ++) {       
 		ulData[i] = slCCM_Temp[i];

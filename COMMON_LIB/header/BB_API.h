@@ -33,6 +33,46 @@
 #define BB_RF_DETECT				BB_RF_DETECT_GPIO8_USE	
 #endif
 
+
+typedef enum
+{
+	SET_STA1 = 0,
+	SET_STA2 = 1,
+	SET_STA3 = 2,
+	SET_STA4 = 3,
+	SET_SLAVE_AP = 4,
+	SET_MASTER_AP = 0xF,
+}EN_SET_ROLE;
+typedef enum
+{
+	EN_IDLE = 0,
+	EN_TX_POWER,
+	EN_TX_0101,
+	EN_TX_PRBS,
+	EN_RX_ONLY,
+	EN_FIX_HOPPING,
+	EN_AFH_HOPPING,
+}EN_STATUS;
+typedef enum
+{
+	SET_SUCCESS = 0,
+	SET_FAIL,
+}EN_RETURN_STATUS;
+typedef struct 
+{
+	uint8_t ubEnalbe;
+	uint8_t ubPoint;
+	uint8_t ubUsFlg;
+	uint8_t ubNowPoint;
+	uint8_t ubLayer1;
+	uint8_t ubLayer2;
+	uint8_t ubLayer3;
+	EN_STATUS tStatus;
+	EN_SET_ROLE tRole;
+	uint8_t ubData1;
+	uint8_t ubData2;
+}EN_MODE_UI;
+
 typedef enum
 {
 	BB_TX_ADO_STA1 = 0,
@@ -755,4 +795,8 @@ void BB_SetWakeUp(uint8_t ubStatus,uint8_t ubSta);
 \return	Version
 */
 uint16_t uwBB_GetVersion(void);
+EN_RETURN_STATUS tEN_Start(EN_STATUS tEnStatus,EN_SET_ROLE tRole,uint8_t *pData1,uint8_t *pData2); 
+
+extern uint8_t ubTestChTable[3];
+extern uint8_t ubFixChTable[3];
 #endif	/*__ST53510_BB_API_H*/

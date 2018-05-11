@@ -25,6 +25,7 @@ int32_t cmd_system_date(int argc, char* argv[]);
 int32_t cmd_system_phymem_rw(int argc, char* argv[]);
 int32_t cmd_system_fps(int argc, char* argv[]);
 int32_t cmd_system_padio(int argc, char* argv[]);
+int32_t cmd_system_wdt(int argc, char* argv[]);
 
 #define CMD_TBL_SYSTEM    CMD_TBL_ENTRY(          \
 	"system",		6,	NULL,       \
@@ -53,6 +54,12 @@ int32_t cmd_system_padio(int argc, char* argv[]);
 #define CMD_TBL_SYS_PADIO    CMD_TBL_ENTRY(          \
 	"padio",	5,	cmd_system_padio,       \
 	"padio		- Get PADIO Config",	CFG_DEFAULT_CMD_LEVEL,\
+	NULL,		NULL			\
+),
+
+#define CMD_TBL_SYS_WDT    CMD_TBL_ENTRY(          \
+	"wdt",	3,	cmd_system_wdt,       \
+	"wdt		- Watch Dog Timer Control",	CFG_DEFAULT_CMD_LEVEL,\
 	NULL,		NULL			\
 ),
 

@@ -195,6 +195,8 @@ typedef struct {
 	uint8_t 	ubPath;
 }SEN_EVENT_PROCESS;
 
+typedef void (*pvSEN_CbFunc)(void);
+
 //==============================================================================
 // DEFINITION
 //==============================================================================
@@ -783,6 +785,13 @@ void SEN_SetAlgReportFg(uint8_t ubFlg);
 \endcode
 */
 uint8_t ubSEN_GetAlgReportFg(void);
+//------------------------------------------------------------------------
+/*!
+\brief Sensor image stable call back function
+\param pvCB     Callback function when image stable is ready
+\return (no)
+*/
+void SEN_SetIspFinishCbFunc(pvSEN_CbFunc pvCB);
 //==============================================================================
 // SENSOR extern item
 //==============================================================================

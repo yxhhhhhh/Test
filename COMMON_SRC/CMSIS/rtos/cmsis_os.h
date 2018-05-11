@@ -72,7 +72,7 @@
 #define OS_VERSION_NUM      "V1.1"
 
 //! \note CAN BE CHANGED: \b osCMSIS_KERNEL identifies the underlying RTOS kernel and version number.
-#define osCMSIS_KERNEL	((OS_MAJOR_VER<<8) + OS_MINOR_VER                       //!< RTOS identification and version (major [15:8] .minor [7:0])
+#define osCMSIS_KERNEL	((OS_MAJOR_VER<<8) + OS_MINOR_VER)                      //!< RTOS identification and version (major [15:8] .minor [7:0])
 
 //! \note MUST REMAIN UNCHANGED: \b osKernelSystemId shall be consistent in every CMSIS-RTOS.
 #define osKernelSystemId	"CMSIS-RTOS "##OS_VERSION_NUM                       //!< RTOS identification string

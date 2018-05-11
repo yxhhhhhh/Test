@@ -195,5 +195,7 @@ void SF_DisableWrProtect(void);
 */
 void SF_Erase(uint8_t ubEraseCmd, uint32_t ulStaAddr, uint32_t ulLength);
 //------------------------------------------------------------------------------
+void SF_SetWpPin(uint8_t ubPin);
+//------------------------------------------------------------------------------
 
 #endif

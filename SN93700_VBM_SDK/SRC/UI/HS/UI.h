@@ -62,9 +62,9 @@ typedef enum
 typedef enum
 {
 	SINGLE_VIEW = 1,
+	SCAN_VIEW,	
 	DUAL_VIEW,
 	QUAL_VIEW,
-	QUAL_CHGDUAL_VIEW
 }UI_CamViewType_t;
 
 typedef enum
@@ -149,6 +149,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt);
 void UI_EventHandles(UI_Event_t *ptEventPtr);
 void UI_FrameTRXFinish(uint8_t ubFrmRpt);
 //------------------------------------------------------------------------------
+void UI_SwitchCameraSource(void);
 
 #endif
 

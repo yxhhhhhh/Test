@@ -57,7 +57,7 @@ UI_SettingFuncPtr_t tUiSettingMap2Func[] =
 	[UI_SYSINFO_SETTING] 		= NULL,
 	[UI_VOXMODE_SETTING] 		= UI_PowerSaveSetting,
 	[UI_ECOMODE_SETTING] 		= UI_PowerSaveSetting,
-	[UI_WORMODE_SETTING] 		= NULL,
+	[UI_WORMODE_SETTING] 		= UI_PowerSaveSetting,
 	[UI_ADOANR_SETTING]			= UI_ANRSetting,
 	[UI_IMGPROC_SETTING]		= UI_ImageProcSetting,
 	[UI_MD_SETTING]				= UI_MDSetting,
@@ -73,6 +73,8 @@ static UI_BUStatus_t tUI_BuStsInfo;
 static APP_State_t tUI_SyncAppState;
 static UI_ThreadNotify_t tosUI_Notify;
 static uint8_t ubUI_ClearThdCntFlag;
+static uint8_t ubUI_WorModeEnFlag;
+static uint8_t ubUI_WorWakeUpCnt;
 osMutexId UI_BUMutex;
 
 static uint8_t ubUI_Mc1RunFlag;
@@ -126,7 +128,9 @@ void UI_StateReset(void)
 	UI_BUMutex = osMutexCreate(osMutex(UI_BUMutex));
 	if(tTWC_RegTransCbFunc(TWC_UI_SETTING, UI_RecvPUResponse, UI_RecvPURequest) != TWC_SUCCESS)
 		printd(DBG_ErrorLvl, "UI setting 2way command fail !\n");
-	ubUI_ClearThdCntFlag = FALSE;	
+	ubUI_ClearThdCntFlag = FALSE;
+	ubUI_WorModeEnFlag	 = FALSE;
+	ubUI_WorWakeUpCnt 	 = 0;	
 	UI_LoadDevStatusInfo();
 	tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
 }
@@ -172,6 +176,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	switch(tUI_SyncAppState)
 	{
 		case APP_LINK_STATE:
+			if(TRUE == ubUI_WorModeEnFlag)
+				UI_ChangePsModeToNormalMode();
 			if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
 				UI_VoxTrigger();
 			if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
@@ -185,14 +191,25 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				UI_BrightnessCheck();
 			}
 			
-			if(((*pThreadCnt)%25) == 0)
+			if(((*pThreadCnt)%10) == 0)
 			{
 				UI_TempCheck();
 			}
 			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
-				UI_UpdateBUStatusToPU();
+				UI_UpdateBUStatusToPU();			
 			(*pThreadCnt)++;
+			break;
+		case APP_LOSTLINK_STATE:
+			if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
+			{
+				if(FALSE == ubUI_WorModeEnFlag)
+					UI_ChangePsModeToWorMode();
+				if(!ubUI_WorWakeUpCnt)
+					UI_VoiceTrigger();
+				else if(++ubUI_WorWakeUpCnt > (6000 / UI_TASK_PERIOD))
+					UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
+			}
 			break;
 		case APP_PAIRING_STATE:
 			//if((*pThreadCnt % UI_PAIRINGLED_PERIOD) == 0)
@@ -327,7 +344,7 @@ void UI_RecvPURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data)
 void UI_SystemSetup(void)
 {
 	UI_IspSetup();
-	ADO_Set_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NR:DISABLE, AEC_NR_16kHZ);
+	ADO_Noise_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
 	UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
 	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
 	UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
@@ -345,7 +362,7 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
 	switch(pPS_Mode[0])
 	{
 		case PS_VOX_MODE:
-			tUI_PsMessage.ubAPP_Event 	 = APP_POWERSAVE_EVENT;
+			tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 			tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
 			tUI_PsMessage.ubAPP_Message[1] = pPS_Mode[0];
 			tUI_PsMessage.ubAPP_Message[2] = TRUE;
@@ -368,6 +385,15 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
 			UI_SendMessageToAPP(&tUI_PsMessage);
 			tUI_BuStsInfo.tCamPsMode = PS_ECO_MODE;
 			break;
+		case PS_WOR_MODE:
+			ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_ON);
+			tUI_BuStsInfo.tCamPsMode   = PS_WOR_MODE;
+			tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
+			UI_UpdateDevStatusInfo();
+			ubUI_WorModeEnFlag = FALSE;
+			ubUI_WorWakeUpCnt  = 0;
+			printd(DBG_InfoLvl, "		=> WOR Mode\n");
+			break;
 		case POWER_NORMAL_MODE:
 			if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
 				UI_DisableVox();
@@ -375,6 +401,39 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
 		default:
 			break;
 	}
+}
+//------------------------------------------------------------------------------
+void UI_ChangePsModeToWorMode(void)
+{
+	APP_EventMsg_t tUI_PsMessage = {0};
+
+	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+	tUI_PsMessage.ubAPP_Message[0] = 4;		//! Message Length
+	tUI_PsMessage.ubAPP_Message[1] = PS_WOR_MODE;
+	tUI_PsMessage.ubAPP_Message[2] = FALSE;
+	tUI_PsMessage.ubAPP_Message[3] = FALSE;
+	tUI_PsMessage.ubAPP_Message[4] = TRUE;
+	UI_SendMessageToAPP(&tUI_PsMessage);
+	ubUI_WorModeEnFlag = TRUE;
+}
+//------------------------------------------------------------------------------
+void UI_ChangePsModeToNormalMode(void)
+{
+	APP_EventMsg_t tUI_PsMessage = {0};
+
+	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+	tUI_PsMessage.ubAPP_Message[0] = 4;		//! Message Length
+	tUI_PsMessage.ubAPP_Message[1] = PS_WOR_MODE;
+	tUI_PsMessage.ubAPP_Message[2] = TRUE;
+	tUI_PsMessage.ubAPP_Message[3] = FALSE;
+	tUI_PsMessage.ubAPP_Message[4] = (!ubUI_WorWakeUpCnt)?TRUE:FALSE;
+	UI_SendMessageToAPP(&tUI_PsMessage);
+	ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_OFF);
+	tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
+	UI_UpdateDevStatusInfo();
+	ubUI_WorModeEnFlag = FALSE;
+	ubUI_WorWakeUpCnt  = 0;
+	printd(DBG_InfoLvl, "		=> WOR Disable\n");
 }
 //------------------------------------------------------------------------------
 void UI_DisableVox(void)
@@ -426,18 +485,39 @@ void UI_VoiceTrigger(void)
 	uint32_t ulUI_AdcRpt = 0;
 
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
-	if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
+	if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
 	{
-		tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
-		tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_TRIG;
-		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] = TRUE;
-		tUI_VoiceReqCmd.ubCmd_Len  			  = 3;
-		UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
-		printd(DBG_InfoLvl, "		=> Voice Trigger\n");
+		if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
+		{
+			APP_EventMsg_t tUI_PsMessage = {0};
+
+			tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+			tUI_PsMessage.ubAPP_Message[0] = 4;		//! Message Length
+			tUI_PsMessage.ubAPP_Message[1] = PS_WOR_MODE;
+			tUI_PsMessage.ubAPP_Message[2] = TRUE;
+			tUI_PsMessage.ubAPP_Message[3] = TRUE;
+			tUI_PsMessage.ubAPP_Message[4] = TRUE;
+			UI_SendMessageToAPP(&tUI_PsMessage);
+			ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_OFF);
+			ubUI_WorWakeUpCnt++;
+			printd(DBG_InfoLvl, "		=> Voice Trigger\n");
+		}
 	}
-}
-//------------------------------------------------------------------------------
-void UI_VoiceCheck(void)
+	else if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
+	{
+		if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
+		{
+			tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
+			tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_TRIG;
+			tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] = TRUE;
+			tUI_VoiceReqCmd.ubCmd_Len  			  = 3;
+			UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
+			printd(DBG_InfoLvl, "		=> Voice Trigger\n");
+		}
+	}
+}	
+//------------------------------------------------------------------------------
+void UI_VoiceCheck (void)
 {
 	UI_BUReqCmd_t tUI_VoiceReqCmd;
 	uint32_t ulUI_AdcRpt = 0;
@@ -475,7 +555,7 @@ void UI_VoiceCheck(void)
 	}
 	
 }
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 void UI_TempCheck(void) //20180322
 {
 	uint8_t cur_temp;
@@ -506,12 +586,14 @@ void UI_TempCheck(void) //20180322
 	}
 }
 //------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
 void UI_ANRSetting(void *pvAnrMode)
 {
 	uint8_t *pUI_AnrMode = (uint8_t *)pvAnrMode;
 
 	tUI_BuStsInfo.tCamAnrMode = (UI_CamsSetMode_t)pUI_AnrMode[0];
-	ADO_Set_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NR:DISABLE, AEC_NR_16kHZ);
+	ADO_Noise_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
 	UI_UpdateDevStatusInfo();
 	printd(DBG_InfoLvl, "		=> ANR %s\n", (CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?"ON":"OFF");
 }
@@ -731,7 +813,7 @@ void UI_ResetDevSetting(void)
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_ON);
-	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamWdrMode,  		CAMSET_ON);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamWdrMode,  		CAMSET_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamDisMode,  		CAMSET_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamFlicker,		CAMFLICKER_60HZ);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCbrMode,  		CAMSET_ON);
@@ -766,9 +848,9 @@ void UI_LoadDevStatusInfo(void)
 	} else {
 		printd(DBG_ErrorLvl, "TAG no match, Reset UI\n");
 	}
-	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_OFF);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_ON);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
-	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_OFF);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_ON);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamWdrMode,  		CAMSET_OFF);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamDisMode,  		CAMSET_OFF);
 	UI_CHK_CAMFLICER(tUI_BuStsInfo.tCamFlicker);

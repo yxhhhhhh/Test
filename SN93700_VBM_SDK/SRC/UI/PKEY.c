@@ -113,12 +113,15 @@ void GKEY_Init(void)
 
 	#ifdef VBM_PU
 	tGKEY_LastID = GKEY_UNKNOW;
-	
+
+#if 0
 	GLB->PADIO51 = 0; 	//! AUDIO+
 	GLB->PADIO52 = 0; 	//! AUDIO-	
 	
 	GPIO->GPIO_OE9  = 0; //! AUDIO+
-	GPIO->GPIO_OE10 = 0; //! AUDIO-			
+	GPIO->GPIO_OE10 = 0; //! AUDIO-
+#endif
+
 	#endif
 	
 	tGKEY_Scan.uwGKEY_KeyScanTime	=GKEY_DET_TIME;

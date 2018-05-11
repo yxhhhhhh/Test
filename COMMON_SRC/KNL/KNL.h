@@ -1185,10 +1185,10 @@ void KNL_SenStop(uint8_t ubSrcNum);
 
 //------------------------------------------------------------------------
 /*!
-\brief Start-up timer for image stability
+\brief Image stability
 \return (no)
 */
-void KNL_StartImgStabTimer(void);
+void KNL_ImgStabNotifyFunc(void);
 //------------------------------------------------------------------------
 /*!
 \brief Check sensor state change is done or not

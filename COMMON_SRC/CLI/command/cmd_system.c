@@ -23,6 +23,8 @@
 #include "CLI.h"
 #include "KNL.h"
 #include "RTC_API.h"
+#include "APP_CFG.h"
+#include "WDT.h"
 
 //------------------------------------------------------------------------------
 #ifdef CONFIG_CLI_CMD_SYSTEM
@@ -379,6 +381,43 @@ int32_t cmd_system_padio(int argc, char* argv[]) {
 		printf("===================================\n");
 	} else {
 		system_padio_usage();
+		return cliFAIL; 
+	}
+	return cliPASS; 
+}
+
+static void system_wdt_usage() {   
+	printf(" pls check uasge!\n");
+	printf("###################################\n");
+	printf(" Usage: wdt <OPT>\n");
+	printf(" OPT:\n");
+	printf("	1: Watch Dog Reset Enable\n");
+	printf("	0: Watch Dog Reset Disable\n");
+	printf("###################################\n");
+}  
+
+int32_t cmd_system_wdt(int argc, char* argv[]) {
+	uint8_t OPT = 0;
+
+	if (argc < 2) {
+		system_wdt_usage();
+		return cliFAIL; 
+	}
+
+	OPT = strtoul(argv[1], NULL, 0);
+	
+	if (OPT == 1) {
+		printf("===================================\n");
+		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
+		printf("Watch Dog Reset Enable\n");
+		printf("===================================\n");
+	} else if (OPT == 0) {
+		printf("===================================\n");
+		WDT_Disable(WDT_RST);
+		printf("Watch Dog Reset Disable\n");
+		printf("===================================\n");
+	} else {
+		system_wdt_usage();
 		return cliFAIL; 
 	}
 	return cliPASS; 

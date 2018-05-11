@@ -74,4 +74,5 @@ uint16_t uwAWB_GetVersion (void);
 \return(no)
 */
 void AWB_SetCtrlTable(void);
+uint8_t* pbAWB_GetAlgVerID(void);
 #endif
