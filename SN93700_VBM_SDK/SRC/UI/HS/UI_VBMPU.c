@@ -106,6 +106,7 @@ UI_ReportFuncPtr_t tUiReportMap2Func[] =
 
 //ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n36DB, R2R_VOL_n23p5DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 //ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n32p4DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n8p2DB};
+//ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n36DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 
 //uint32_t ulUI_BLTable[] = {0x100, 0x118, 0x200, 0x400, 0x600, 0x700, 0x800, 0x0900, 0xA00};
@@ -248,6 +249,12 @@ void UI_KeyEventExec(void *pvKeyEvent)
 
 	if(ubStartUpState)
 		return;
+
+	if(tUI_PuSetting.ubDefualtFlag == TRUE) //恢复出厂设置只有上下左右,Enter键有用
+	{
+		if((ptKeyEvent->ubKeyID < AKEY_UP) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
+			return;
+	}
 
 	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1) //20180319
 		return;
@@ -477,7 +484,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	
 	osMutexWait(UI_PUMutex, osWaitForever);
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
-	
+
 	switch(tUI_SyncAppState)
 	{
 		case APP_IDLE_STATE:
@@ -520,8 +527,13 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 					UI_TempAlarmCheck();
 					UI_PickupAlarmCheck();
 					UI_MotorStateCheck();
+				}
+
+				if((*pThreadCnt)%5 == 0)
+				{
 					//UI_GetBatLevel();
 				}
+			
 				UI_RedrawStatusBar(pThreadCnt);
 				(*pThreadCnt)++;
 				ubUI_SendMsg2AppFlag = TRUE;
@@ -1711,6 +1723,14 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 				}
 				*/
+
+				#if 0 //Test
+				static int ImgProcState = 0;
+
+				ImgProcState = !ImgProcState;
+				UI_CamvLDCModeCmd(ImgProcState, 0);
+				#endif
+				
 				UI_MotorControl(MC_LEFT_ON);
 				break;
 			}
@@ -1774,16 +1794,11 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{	
-				#if 1
-				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL8)
+				#if 0
+				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL >= VOL_LVL8)
 	  				break;
 				
-				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL8)
-				{
-
-				}
-				else
-	 				tUI_PuSetting.VolLvL.tVOL_UpdateLvL++;
+	 			tUI_PuSetting.VolLvL.tVOL_UpdateLvL++;
 				UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
 				#endif
 				
@@ -1819,15 +1834,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{	
-				#if 1
-				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL < VOL_LVL0)
+				#if 0
+				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL <= VOL_LVL0)
 	  				break;
-
-				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
-				{
-
-				}
-				else			
+			
 	 			tUI_PuSetting.VolLvL.tVOL_UpdateLvL--;
 				UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
 				#endif
@@ -2696,10 +2706,14 @@ void UI_DrawAlarmSubMenuPage(void)
 	OSD_IMG_INFO tOsdImgInfo;
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TEMP_ALERT_S, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 309;
-	tOsdImgInfo.uwYStart =729;	
-	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+	tOsdImgInfo.uwXStart = 309;
+	tOsdImgInfo.uwYStart = 729;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALARM_S, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 48+(96*2);
+	tOsdImgInfo.uwYStart = 1173;	
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
 void UI_AlarmSubMenuPage(UI_ArrowKey_t tArrowKey)
@@ -2795,7 +2809,7 @@ void UI_DrawSubSubMenu_Alarm(void)
 	tOsdImgInfo.uwXStart= 48;
 	tOsdImgInfo.uwYStart =284;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-//--------------------------------------------------------------------------------
+	//--------------------------------------------------------------------------------
 	if(ubSubMenuItemFlag == 0)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_S, 1, &tOsdImgInfo);
@@ -2857,7 +2871,7 @@ void UI_DrawSubSubMenu_Alarm(void)
 		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
 	}
 	
-/*
+	/*
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 270;
 	tOsdImgInfo.uwYStart =507;	
@@ -2867,8 +2881,8 @@ void UI_DrawSubSubMenu_Alarm(void)
 	tOsdImgInfo.uwXStart= 346;
 	tOsdImgInfo.uwYStart =480;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-*/	
-//---------------------------------------------------------------------------------
+	*/	
+	//---------------------------------------------------------------------------------
 }
 
 void UITempSubmenuDisplay(void)
@@ -5915,7 +5929,13 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 				tUI_PuSetting.ubFeatCode2			= 0x00;	
 				printf("defulat ~~~\n");			
 				UI_UpdateDevStatusInfo();	
-				ubFactorySettingFlag = 0;	
+				ubFactorySettingFlag = 0;
+
+				tOsdImgInfo.uwHSize  = 720;
+				tOsdImgInfo.uwVSize  = 1280;
+				tOsdImgInfo.uwXStart = 0;
+				tOsdImgInfo.uwYStart = 0;
+				OSD_EraserImg2(&tOsdImgInfo); //复位重启以后OSD可能会有残留
 
 				WDT_Disable(WDT_RST);
 				WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
@@ -6368,6 +6388,40 @@ void UI_EnableMotor(uint8_t value)
 	}
 }
 
+void UI_CamvLDCModeCmd(uint8_t value)
+{
+	UI_PUReqCmd_t tUI_CamvLDCModeCmd;
+
+	printf("UI_CamvLDCModeCmd value: %d.\n", value);
+	tUI_CamvLDCModeCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+	tUI_CamvLDCModeCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
+	tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_ITEM] 	= UI_IMGPROC_SETTING;
+	tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_DATA] 	= UI_IMGvLDC_SETTING;
+	tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_DATA+1] = value;
+	tUI_CamvLDCModeCmd.ubCmd_Len  			  	= 4;
+	if(UI_SendRequestToBU(osThreadGetId(), &tUI_CamvLDCModeCmd) != rUI_SUCCESS)
+	{
+		printd(DBG_ErrorLvl, "UI_CamvLDCModeCmd Fail!\n");
+	}
+}
+
+void UI_TestCmd(uint8_t Value1, uint8_t Value2)
+{
+	UI_PUReqCmd_t tUI_TestCmd;
+
+	printf("UI_TestCmd (%d, %d): %d.\n", Value1, Value2);
+	tUI_TestCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+	tUI_TestCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
+	tUI_TestCmd.ubCmd[UI_SETTING_ITEM] 	= UI_TEST_SETTING;
+	tUI_TestCmd.ubCmd[UI_SETTING_DATA] 	= Value1;
+	tUI_TestCmd.ubCmd[UI_SETTING_DATA+1] = Value2;
+	tUI_TestCmd.ubCmd_Len  			  	= 4;
+	if(UI_SendRequestToBU(osThreadGetId(), &tUI_TestCmd) != rUI_SUCCESS)
+	{
+		printd(DBG_ErrorLvl, "tUI_TestCmd Fail!\n");
+	}
+}
+
 void UI_MotorDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
@@ -6506,7 +6560,7 @@ void UI_MotorControl(uint8_t Value)
 
 void UI_MotorStateCheck(void)
 {
-	#define MC_MAX_CNT	40 //10s
+	#define MC_MAX_CNT	20 //10s /40
 	
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
@@ -7977,7 +8031,6 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 		}
 		else
 		{		
-
 			tOSD_GetOsdImgInfor(1, OSD_IMG1, OSD1IMG_ANKER_LOGO28, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 0;
 			tOsdImgInfo.uwYStart =0;	
@@ -8245,6 +8298,7 @@ void  UI_UpdateBuStatus(UI_CamNum_t tCamNum, void *pvStatus)
 //------------------------------------------------------------------------------
 void UI_RightArrowLongKey(void)
 {
+	#if 0
 	if(TRUE == ubUI_ShowTimeFlag)
 	{
 		OSD_IMG_INFO tOsdImgInfo;
@@ -8258,6 +8312,21 @@ void UI_RightArrowLongKey(void)
 		return;
 	}
 	ubUI_ShowTimeFlag = TRUE;
+	#else
+	if(tUI_PuSetting.ubDefualtFlag == FALSE)
+	{
+		if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
+			return;
+	}
+	static int value1 = 0;
+
+	if(value1 == 1)
+		value1 = 0;
+	else
+		value1 = 1;
+	
+	UI_TestCmd(value1, 0);
+	#endif
 }
 //------------------------------------------------------------------------------
 void UI_ShowSysTime(void)
@@ -8620,6 +8689,7 @@ void UI_LoadDevStatusInfo(void)
 	tCamViewSel.tCamViewPool[0] = tUI_PuSetting.ubCamViewNum;
 	printf("tCamViewSel.tCamViewNum  %d \n",tCamViewSel.tCamViewPool[0]);
 
+	UI_CamvLDCModeCmd(CAMSET_ON); //20180517
 	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 }
 //------------------------------------------------------------------------------

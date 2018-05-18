@@ -1436,7 +1436,7 @@ void KNL_BlockInit(void)
 		// Sigma-delta ADC gain
 		//---------------------------------
        	 	//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_37DB, ADO_SIG_PGA_33DB);
-		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_n12DB);
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_n12DB); //20180517
 		//---------------------------------
 		// ADC djust functions
 		//---------------------------------

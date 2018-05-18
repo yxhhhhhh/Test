@@ -662,7 +662,8 @@ typedef enum
 	UI_IMGPROC_SETTING,
 	UI_MD_SETTING,
 	UI_VOICETRIG_SETTING,
-	UI_MOTOR_SETTING,//20180410
+	UI_MOTOR_SETTING,
+	UI_TEST_SETTING,
 }UI_PUReqCmdID_t;
 
 typedef enum
@@ -908,4 +909,6 @@ void UI_VolUpKey(void);
 void UI_VolDownKey(void);
 
 void UI_PuInit(void);
+
+void UI_TestCmd(uint8_t Value1, uint8_t Value2);
 #endif

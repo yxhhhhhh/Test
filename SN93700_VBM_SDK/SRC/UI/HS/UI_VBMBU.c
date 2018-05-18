@@ -63,6 +63,7 @@ UI_SettingFuncPtr_t tUiSettingMap2Func[] =
 	[UI_MD_SETTING]				= UI_MDSetting,
 	[UI_VOICETRIG_SETTING]		= UI_VoiceTrigSetting,
 	[UI_MOTOR_SETTING]		    = UI_PtzControlSetting,
+	[UI_TEST_SETTING]		    = UI_TestSetting,
 };
 
 //ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n36DB, R2R_VOL_n23p5DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
@@ -88,6 +89,8 @@ uint8_t ubVoicetemp_bak = 0xff;
 uint8_t ubTemp_bak = 25;
 
 I2C1_Type *pTempI2C;
+
+uint8_t ubTestMode = 0;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -185,10 +188,15 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				UI_MDTrigger();
 
+			if(((*pThreadCnt)%5) == 0)
+			{
+				//UI_TestCheck(); //20180517
+			}
+			
 			if(((*pThreadCnt)%10) == 0)
 			{
 				UI_VoiceCheck();
-				UI_BrightnessCheck();
+				//UI_BrightnessCheck();
 			}
 			
 			if(((*pThreadCnt)%10) == 0)
@@ -959,6 +967,14 @@ void UI_PtzControlSetting(void *pvMCParam)
 {
   	#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
+
+	/*
+	if(ubTestMode == 1)
+	{
+		printf("UI_PtzControlSetting ubTestMode return!\n");
+		return;
+	}
+	*/
 	
 	switch(pMC_Param[0])
 	{
@@ -979,7 +995,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 			MC_Start(MC_0, 42, MC_Clockwise, MC_WaitReady);
 			break;
 		
-		case 4:	// 垂直,反转
+		case 4:	//垂直,反转
 			MC_Start(MC_0, 42, MC_Counterclockwise, MC_WaitReady);
 			break;
 
@@ -1046,7 +1062,6 @@ void UI_UpdateMCStatus(void)
   	#endif
 }
 
-
 void UI_BrightnessCheck(void) //20180408
 {
 	uint16_t uwDetLvl = 0x3FF;
@@ -1064,4 +1079,74 @@ void UI_BuInit(void)
 {
 	UI_MotoControlInit();
 	pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+	GPIO->GPIO_O4	= 1; //开
+}
+
+void UI_TestSetting(void *pvMCParam)
+{
+	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
+
+	/*
+	MC_Stop(MC_1);
+	MC_Stop(MC_0);
+	ubTestMode = pMC_Param[0];
+	printf("UI_TestSetting ubTestMode: %d.\n", ubTestMode);
+	if(ubTestMode)
+	{
+		
+	}
+	*/
+}
+
+
+void UI_TestCheck(void)
+{
+	#define Motor_Count		20
+	#define Motor_Wait		10
+	static uint8_t ubTestCount = 0;
+	
+	printf("UI_TestCheck ubTestCount: %d.\n", ubTestCount);
+	if(ubTestCount == 0)
+	{
+		MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady); //水平,正转
+	}
+	else if(ubTestCount == Motor_Count)
+	{
+		MC_Stop(MC_0);
+		MC_Stop(MC_1);
+	}
+	else if(ubTestCount == Motor_Count + Motor_Wait)
+	{
+		MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//水平,反转
+	}
+	else if(ubTestCount == Motor_Count*2 + Motor_Wait)
+	{
+		MC_Stop(MC_0);
+		MC_Stop(MC_1);
+	}
+	else if(ubTestCount == Motor_Count*2 + Motor_Wait*2)
+	{
+		MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);//垂直,正转
+	}
+	else if(ubTestCount == Motor_Count*3 + Motor_Wait*2)
+	{
+		MC_Stop(MC_0);
+		MC_Stop(MC_1);
+	}
+	else if(ubTestCount == Motor_Count*3 + Motor_Wait*3)
+	{
+		MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady); //垂直,反转
+	}
+	else if(ubTestCount == Motor_Count*4 + Motor_Wait*3)
+	{
+		MC_Stop(MC_0);
+		MC_Stop(MC_1);
+	}
+	else if(ubTestCount > Motor_Count*4 + Motor_Wait*4)
+	{
+		ubTestCount = 0;
+		return;
+	}
+		
+	ubTestCount++;
 }

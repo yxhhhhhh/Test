@@ -162,6 +162,7 @@ typedef enum
 	UI_MD_SETTING,
 	UI_VOICETRIG_SETTING,
 	UI_MOTOR_SETTING,
+	UI_TEST_SETTING,
 }UI_PUReqCmdID_t;
 
 typedef enum
@@ -267,4 +268,6 @@ void UI_MCStateCheck(void);
 void UI_BrightnessCheck(void);
 
 void UI_BuInit(void);
+void UI_TestCheck(void);
+void UI_TestSetting(void *pvMCParam);
 #endif
