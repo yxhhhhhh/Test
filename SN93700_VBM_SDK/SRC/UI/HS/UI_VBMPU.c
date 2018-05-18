@@ -250,10 +250,13 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	if(ubStartUpState)
 		return;
 
-	if(tUI_PuSetting.ubDefualtFlag == TRUE) //恢复出厂设置只有上下左右,Enter键有用
+	if(tUI_PuSetting.ubDefualtFlag == TRUE) //恢复出厂设置只有上下左右,Enter,PowerKey键有用
 	{
 		if((ptKeyEvent->ubKeyID < AKEY_UP) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
-			return;
+		{
+			if(ptKeyEvent->ubKeyID != PKEY_ID0)
+				return;
+		}
 	}
 
 	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1) //20180319
