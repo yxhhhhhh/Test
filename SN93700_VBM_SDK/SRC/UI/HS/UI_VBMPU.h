@@ -824,6 +824,8 @@ void UI_AlarmmenuDisplay(void);
 void UITempSubmenuDisplay(void);
 void UISoundSubmenuDisplay(void);
 
+void UI_AlarmTriggerDisplay(uint8_t value);
+
 void UI_AlarmSubSubMenuUpKey(uint8_t SubMenuItem);
 void UI_AlarmSubSubMenuDownKey(uint8_t SubMenuItem);
 void UI_AlarmSubSubMenuEnterKey(uint8_t SubMenuItem);
@@ -911,4 +913,5 @@ void UI_VolDownKey(void);
 void UI_PuInit(void);
 
 void UI_TestCmd(uint8_t Value1, uint8_t Value2);
+UI_CamNum_t UI_GetPairSelCam(void);
 #endif

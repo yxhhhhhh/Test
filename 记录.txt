@@ -1,0 +1,38 @@
+ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+
+					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamAnrMode,  		CAMSET_OFF);
+					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCam3DNRMode, 		CAMSET_ON);
+					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamvLDCMode, 		CAMSET_OFF);
+					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamWdrMode,  		CAMSET_OFF);
+					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamDisMode,  		CAMSET_OFF);
+					
+//------------------------------------------------------------------------------
+void ISP_SetMirrorFlip(uint8_t pFlip_Param)
+{
+    switch(pFlip_Param)
+    {
+        case 0:
+            IQ_SetIspReorderPattern(0x0000003);        // Flip
+            IQ_SetMirrorFlip(0,0);
+            break;
+
+        case 1:
+            IQ_SetIspReorderPattern(0x0030000);        // Flip
+            IQ_SetMirrorFlip(0,1);
+            break;
+
+        case 2:
+            IQ_SetIspReorderPattern(0x0000300);        // Mirror
+            IQ_SetMirrorFlip(1,0);
+            break;
+
+        case 3:
+            IQ_SetIspReorderPattern(0x3000000);        // Mirror
+            IQ_SetMirrorFlip(1,1);
+            break;
+    }
+} 
+
+
+
+}

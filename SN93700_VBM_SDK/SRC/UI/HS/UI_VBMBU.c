@@ -188,10 +188,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				UI_MDTrigger();
 
-			if(((*pThreadCnt)%5) == 0)
+		/*	if(((*pThreadCnt)%5) == 0)
 			{
-				//UI_TestCheck(); //20180517
-			}
+				UI_TestCheck(); //20180517
+			}*/
 			
 			if(((*pThreadCnt)%10) == 0)
 			{
@@ -534,7 +534,7 @@ void UI_VoiceCheck (void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	printf("ulUI_AdcRpt  0x%lx \n",ulUI_AdcRpt);	
+	//printf("ulUI_AdcRpt  0x%lx \n",ulUI_AdcRpt);	
 
 	if(ulUI_AdcRpt > 0x6000)
 		voice_temp = 5;
@@ -593,8 +593,6 @@ void UI_TempCheck(void) //20180322
 		ubTemp_bak = cur_temp;
 	}
 }
-//------------------------------------------------------------------------------
-
 //------------------------------------------------------------------------------
 void UI_ANRSetting(void *pvAnrMode)
 {

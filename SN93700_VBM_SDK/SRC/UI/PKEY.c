@@ -114,7 +114,7 @@ void GKEY_Init(void)
 	#ifdef VBM_PU
 	tGKEY_LastID = GKEY_UNKNOW;
 
-#if 0
+#if 1
 	GLB->PADIO51 = 0; 	//! AUDIO+
 	GLB->PADIO52 = 0; 	//! AUDIO-	
 	
