@@ -464,8 +464,6 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 		if(tUI_SyncAppState != pAppStsRpt->tAPP_State)
 		{
 			UI_RemoveLostLinkLogo();
-			tLCD_JpegDecodeDisable(); //20180519
-			printf("UI_UpdateAppStatus tLCD_JpegDecodeDisable.....\n");
 		}
 		ubUI_ResetPeriodFlag = TRUE;
 		if(FALSE == ubUI_PuStartUpFlag)

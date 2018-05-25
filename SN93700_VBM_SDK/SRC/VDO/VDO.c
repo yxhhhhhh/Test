@@ -122,6 +122,10 @@ void VDO_KNLSysInfoSetup(KNL_ROLE tVDO_KNLRole)
 #endif
 //------------------------------------------------------------------------------
 #ifdef VBM_PU
+void VDO_SetPlayRole(KNL_ROLE tKnlRole)
+{
+	tVDO_SvPlayRole = tKnlRole;
+}
 void VDO_UpdateDisplayParameter(void)
 {
 #if	(DISPLAY_MODE != DISPLAY_1T1R)

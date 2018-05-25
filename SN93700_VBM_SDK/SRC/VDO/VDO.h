@@ -116,6 +116,7 @@ void VDO_Stop(void);
 void VDO_KNLSysInfoSetup(KNL_ROLE tVDO_KNLRole);
 #endif
 #ifdef VBM_PU
+void VDO_SetPlayRole(KNL_ROLE tKnlRole);
 void VDO_UpdateDisplayParameter(void);
 void VDO_DisplayLocationSetup(KNL_ROLE tVDO_BURole, KNL_DISP_LOCATION tVDO_DispLocation);
 void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole);

@@ -516,6 +516,7 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			}
 			tAPP_KNLInfo.tBURoleInfo[tAPP_PairRoleInfo.tPairBURole].tKNL_DispLoc = tAPP_PairRoleInfo.tPairBUDispLoc;
 			VDO_DisplayLocationSetup(tAPP_PairRoleInfo.tPairBURole, tAPP_PairRoleInfo.tPairBUDispLoc);
+			VDO_SetPlayRole(tAPP_PairRoleInfo.tPairBURole); //设置当前匹配的摄像头.20180525
 			VDO_UpdateDisplayParameter();
 		#endif
 		#ifdef VBM_BU
