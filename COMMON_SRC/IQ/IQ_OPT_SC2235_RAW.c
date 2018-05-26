@@ -11,8 +11,8 @@
 	\file		IQ_OPT_SC2235_RAW.c
 	\brief		SC2235 image quality relation function
 	\author		
-	\version	0.5
-	\date		2018-03-09
+	\version	0.7
+	\date		2018-05-11
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -21,8 +21,8 @@
 //                       INCLUDE FILES                     |
 //                                                         |
 //==========================================================
+#include <string.h>
 #include "IQ_API.h"
-
 #if (SEN_USE == SEN_SC2235)
 #include "IQ_OPT_SC2235_RAW.H"
 
@@ -33,6 +33,7 @@
 //                                                         |
 //==========================================================	
 int32_t slIQ_LscLinear[11][0x40];				//(C0)LSC Dynamic IQ  AWB B GAIN
+int32_t slIQ_SuppressLSC[11][0x40];
 int32_t slIQ_AbsyLinear[11][0x40];				//(C2)Absy Mode Dynamic IQ
 int32_t slIQ_CcmLinear[11][0x40];				//CCM Dynamic IQ  AWB B GAIN
 int32_t slIQ_CcmLowLightLinear[11][0x40];		//CCM Low Light Color Suppress IQ  AE Cur Gain
@@ -69,7 +70,7 @@ void IQ_DynamicInit_SDK(void) {
 	xtIQDnInst.xtIQJudgeInst.ulAF_W1Sum			= 0;	
 
 	IQ_SetLscLinearInf((void *)slIQ_LscLinear, (sizeof(slIQ_LscLinear) / sizeof(slIQ_LscLinear[0])), sizeof(slIQ_LscLinear[0]) / sizeof(int32_t));
-	IQ_SetAbsyLinearInf((void *)slIQ_AbsyLinear, (sizeof(slIQ_AbsyLinear) / sizeof(slIQ_AbsyLinear[0])), sizeof(slIQ_AbsyLinear[0]) / sizeof(int32_t));
+ 	IQ_SetAbsyLinearInf((void *)slIQ_AbsyLinear, (sizeof(slIQ_AbsyLinear) / sizeof(slIQ_AbsyLinear[0])), sizeof(slIQ_AbsyLinear[0]) / sizeof(int32_t));
 	IQ_SetDayNrRes1Inf((void *)slIQ_DayNrRes1Linear, (sizeof(slIQ_DayNrRes1Linear) / sizeof (slIQ_DayNrRes1Linear[0])), sizeof(slIQ_DayNrRes1Linear[0]) / sizeof(int32_t));
 	IQ_SetDayNrRes2Inf((void *)slIQ_DayNrRes2Linear, (sizeof(slIQ_DayNrRes2Linear) / sizeof (slIQ_DayNrRes2Linear[0])), sizeof(slIQ_DayNrRes2Linear[0]) / sizeof(int32_t));
 	IQ_SetDayNrRes3Inf((void *)slIQ_DayNrRes3Linear, (sizeof(slIQ_DayNrRes3Linear) / sizeof (slIQ_DayNrRes3Linear[0])), sizeof(slIQ_DayNrRes3Linear[0]) / sizeof(int32_t));
@@ -93,12 +94,57 @@ void IQ_DynamicInit_SDK(void) {
 }
 
 //------------------------------------------------------------------------------
+void IQ_SuppressLscGain(void)
+{
+	uint8_t i,j;
+	int32_t slLSC_TempValue;
+    static uint32_t ulSuppressGainOld = 128;
+    
+    if(ulIQ_GetSuppressGain() == ulSuppressGainOld)
+        return;
+    
+    //
+    memcpy(&slIQ_LscLinear, &slIQ_SuppressLSC, sizeof(slIQ_LscLinear));
+    //   
+    for (i = 0; i < slIQ_LscLinear[0][0]; i ++)
+    {
+        if((slIQ_LscLinear[1][2+i] == 0x1644) || (slIQ_LscLinear[1][2+i] == 0x1648))
+        {
+            for(j=0; j<slIQ_LscLinear[0][1]; j++)
+            {
+                if(slIQ_LscLinear[2][2+i] == 0x000007FF)
+                {
+                    slLSC_TempValue = (slIQ_LscLinear[3+j][2+i] * ulIQ_GetSuppressGain()) / 128;
+                    slIQ_LscLinear[3+j][2+i] = slLSC_TempValue;                
+                }
+                else if(slIQ_LscLinear[2][2+i] == 0x07FF0000)
+                {
+                    slLSC_TempValue = (((slIQ_LscLinear[3+j][2+i])>>16)  * ulIQ_GetSuppressGain()) / 128;
+                    slIQ_LscLinear[3+j][2+i] = slLSC_TempValue <<16;
+                }
+            }
+        }    
+    }
+    //
+    ulSuppressGainOld = ulIQ_GetSuppressGain();    
+}
+
+//------------------------------------------------------------------------------
 void IQ_DynamicLSC_4G5(void) {
+    static uint8_t ubFirstFg = 0;
 	uint8_t i;
 	int32_t slLSC_Temp[0x40];
 	
+    if(ubFirstFg == 0)
+    {
+        //protect LSC linear data
+        memcpy(&slIQ_SuppressLSC, &slIQ_LscLinear, sizeof(slIQ_LscLinear));
+        ubFirstFg = 1;
+    }
+    IQ_SuppressLscGain();
+    
 	IQ_DynamicLinearInterpolation(xtIQDnInst.xtIQJudgeInst.uwAWB_BGainX128, slIQ_LscLinear[0][1], sizeof(slIQ_LscLinear[0]) / sizeof(int32_t), &slIQ_LscLinear[3][0], slLSC_Temp);
-
+   
 	for (i = 0; i < slIQ_LscLinear[0][0]; i ++) {
 		IQ_SetBinVal(slIQ_LscLinear[0][0 + i + 2], slIQ_LscLinear[1][0 + i + 2], slIQ_LscLinear[2][0 + i + 2], slLSC_Temp[i]); 
 	}
@@ -147,61 +193,62 @@ void IQ_DynamicCCM_4G5(void) {
 //------------------------------------------------------------------------------
 void IQ_DynamicDenoise_4G5(void) {
 	uint8_t i;
-	int32_t slNrLinearTemp[0x100];;
+	int32_t slNrLinearTemp[0x100];
+
     //switch day or night mode by IR cut module    
 	if (ubSEN_GetIrMode() == 0)
     {
         //Day mode
-        if (xtIQDnInst.uwCurrPrevHSz == 1920)
+        if(slIQ_DayNrRes1Linear[1][0] == xtIQDnInst.uwCurrPrevHSz)
         {
             IQ_DynamicLinearInterpolation((uint32_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx * xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain, slIQ_DayNrRes1Linear[0][1], sizeof(slIQ_DayNrRes1Linear[0]) / sizeof(int32_t), &slIQ_DayNrRes1Linear[3][0], slNrLinearTemp);
-        
+
             for (i = 0; i < (slIQ_DayNrRes1Linear[0][0]); i ++) {
                 IQ_SetBinVal(slIQ_DayNrRes1Linear[0][0 + i + 2], slIQ_DayNrRes1Linear[1][0 + i + 2], slIQ_DayNrRes1Linear[2][0 + i + 2], slNrLinearTemp[i]); 
-            }	
+            }
         }
-        else if (xtIQDnInst.uwCurrPrevHSz == 1280)
+        if(slIQ_DayNrRes2Linear[1][0] == xtIQDnInst.uwCurrPrevHSz)
         {
             IQ_DynamicLinearInterpolation((uint32_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx * xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain, slIQ_DayNrRes2Linear[0][1], sizeof(slIQ_DayNrRes2Linear[0]) / sizeof(int32_t), &slIQ_DayNrRes2Linear[3][0], slNrLinearTemp);
 
             for (i = 0; i < (slIQ_DayNrRes2Linear[0][0]); i ++) {
                 IQ_SetBinVal(slIQ_DayNrRes2Linear[0][0 + i + 2], slIQ_DayNrRes2Linear[1][0 + i + 2], slIQ_DayNrRes2Linear[2][0 + i + 2], slNrLinearTemp[i]); 
             }
-        }     
-        else if (xtIQDnInst.uwCurrPrevHSz <= 640)
+        }
+        if(slIQ_DayNrRes3Linear[1][0] == xtIQDnInst.uwCurrPrevHSz)
         {
             IQ_DynamicLinearInterpolation((uint32_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx * xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain, slIQ_DayNrRes3Linear[0][1], sizeof(slIQ_DayNrRes3Linear[0]) / sizeof(int32_t), &slIQ_DayNrRes3Linear[3][0], slNrLinearTemp);
-            
+
             for (i = 0; i < (slIQ_DayNrRes3Linear[0][0]); i ++) {
                 IQ_SetBinVal(slIQ_DayNrRes3Linear[0][0 + i + 2], slIQ_DayNrRes3Linear[1][0 + i + 2], slIQ_DayNrRes3Linear[2][0 + i + 2], slNrLinearTemp[i]); 
             }
-        }    
+        } 
     }else if (ubSEN_GetIrMode() == 1){
         //Night mode
-        if (xtIQDnInst.uwCurrPrevHSz == 1920)
+        if(slIQ_NightNrRes1Linear[1][0] == xtIQDnInst.uwCurrPrevHSz)
         {
             IQ_DynamicLinearInterpolation((uint32_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx * xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain, slIQ_NightNrRes1Linear[0][1], sizeof(slIQ_NightNrRes1Linear[0]) / sizeof(int32_t), &slIQ_NightNrRes1Linear[3][0], slNrLinearTemp);
-        
+
             for (i = 0; i < (slIQ_NightNrRes1Linear[0][0]); i ++) {
                 IQ_SetBinVal(slIQ_NightNrRes1Linear[0][0 + i + 2], slIQ_NightNrRes1Linear[1][0 + i + 2], slIQ_NightNrRes1Linear[2][0 + i + 2], slNrLinearTemp[i]); 
-            }	
+            }
         }
-        else if (xtIQDnInst.uwCurrPrevHSz == 1280)
+        if(slIQ_NightNrRes2Linear[1][0] == xtIQDnInst.uwCurrPrevHSz)
         {
             IQ_DynamicLinearInterpolation((uint32_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx * xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain, slIQ_NightNrRes2Linear[0][1], sizeof(slIQ_NightNrRes2Linear[0]) / sizeof(int32_t), &slIQ_NightNrRes2Linear[3][0], slNrLinearTemp);
 
             for (i = 0; i < (slIQ_NightNrRes2Linear[0][0]); i ++) {
                 IQ_SetBinVal(slIQ_NightNrRes2Linear[0][0 + i + 2], slIQ_NightNrRes2Linear[1][0 + i + 2], slIQ_NightNrRes2Linear[2][0 + i + 2], slNrLinearTemp[i]); 
             }
-        }     
-        else if (xtIQDnInst.uwCurrPrevHSz <= 640)
+        }
+        if(slIQ_NightNrRes3Linear[1][0] == xtIQDnInst.uwCurrPrevHSz)
         {
             IQ_DynamicLinearInterpolation((uint32_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx * xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain, slIQ_NightNrRes3Linear[0][1], sizeof(slIQ_NightNrRes3Linear[0]) / sizeof(int32_t), &slIQ_NightNrRes3Linear[3][0], slNrLinearTemp);
-            
+
             for (i = 0; i < (slIQ_NightNrRes3Linear[0][0]); i ++) {
                 IQ_SetBinVal(slIQ_NightNrRes3Linear[0][0 + i + 2], slIQ_NightNrRes3Linear[1][0 + i + 2], slIQ_NightNrRes3Linear[2][0 + i + 2], slNrLinearTemp[i]); 
             }
-        }    
+        }
     }
 }
 #endif

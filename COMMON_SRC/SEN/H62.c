@@ -11,9 +11,9 @@
 	\file		H62.c
 	\brief		Sensor H62 relation function
 	\author		BoCun
-	\version	1
-	\date		2017-11-23
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.1
+	\date		2018-04-20
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
@@ -314,6 +314,7 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 	}	
     printd(DBG_CriticalLvl, "H62 Sensor\n");
  
+
     //stream off
     ulSEN_I2C_Read (0x74, &temp);
     temp |= (0x01<<7);
@@ -321,7 +322,8 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting,uint8_t ubFPS)
     //Please set this trigger to frame end
     ulSEN_I2C_Write(0x1F, 0x80);     
 	//wait 33ms
-    TIMER_Delay_ms(33);     
+    TIMER_Delay_ms(33);
+    
 	for (i=0; i<sizeof(ubSEN_InitTable); i+=3)
 	{
 		if (ubSEN_InitTable[i] == 0x82)	// write

@@ -11,9 +11,9 @@
 	\file		MD_API.c
 	\brief		Motion detection API function header
 	\author		BoCun
-	\version	0.3
-	\date		2017-09-22
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.4
+	\date		2018-05-15
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _MD_API_H_
@@ -59,6 +59,12 @@ enum
 
 enum
 {
+	MD_UNSTABLE = 0,
+	MD_STABLE,
+};
+
+enum
+{
 	MD_REG1_CNT_00 = 0,
 	MD_REG1_CNT_01,
 	MD_REG1_CNT_02,
@@ -77,6 +83,7 @@ enum
 	MD_REG1_CNT_15,	
 };
 
+typedef void (*pvMD_CbFunc)(uint8_t ubReport);
 //==============================================================================
 // FUNCTION
 //==============================================================================
@@ -264,4 +271,25 @@ void MD_Switch(uint8_t ubSwitch);
 \endcode
 */
 uint16_t uwMD_GetCnt(uint8_t ubIndex);
+//------------------------------------------------------------------------
+/*!
+\brief  Set motion detection threshold from user.
+\param  uwValue 	threshold value.
+\return (no)
+*/
+void MD_SetUserThreshold (uint16_t uwValue);
+//------------------------------------------------------------------------
+/*!
+\brief  Motion detection report ready call back function
+\param  pvCB     Callback function when motion detection report is ready
+\return (no)
+*/
+void MD_ReportReadyCbFunc(pvMD_CbFunc pvCB);
+//------------------------------------------------------------------------
+/*!
+\brief Set motion detection stable state for system start.
+\param ubMdFlg 	flag.
+\return(no)
+*/
+void MD_SetMdStableFg(uint8_t ubMdFlg);
 #endif

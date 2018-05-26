@@ -447,8 +447,8 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 			break;
 		case APP_VWMODESTS_RPT:
 			//tUI_PuSetting.ubScanModeEn = pAppStsRpt->ubAPP_Report[0];
-			//if(FALSE == tUI_PuSetting.ubScanModeEn)
-			//	UI_DisableScanMode();
+			if (pAppStsRpt->ubAPP_Report[0] != SCAN_VIEW)
+				UI_DisableScanMode();
 			break;
 		case APP_VOXMODESTS_RPT:
 			ubUI_StopUpdateStsBarFlag = pAppStsRpt->ubAPP_Report[0];
@@ -462,9 +462,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 	if(pAppStsRpt->tAPP_State == APP_LINK_STATE)
 	{
 		if(tUI_SyncAppState != pAppStsRpt->tAPP_State)
-		{
 			UI_RemoveLostLinkLogo();
-		}
 		ubUI_ResetPeriodFlag = TRUE;
 		if(FALSE == ubUI_PuStartUpFlag)
 		{
@@ -1211,7 +1209,7 @@ void UI_CameraSelectionKey(void)
 	}
 	if(FALSE == ubUI_UpdateCamSelFlag)
 	{
-		tUI_CamNumSel = (DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)?(UI_CamNum_t)QUAL_TYPE_ITEM:tCamViewSel.tCamViewPool[0];
+		tUI_CamNumSel = (DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)?(UI_CamNum_t)QUAL_TYPE_ITEM:(UI_CamNum_t)tUI_PuSetting.ubTotalBuNum;
 		ubUI_UpdateCamSelFlag = TRUE;
 	}
 	for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
@@ -1221,8 +1219,7 @@ void UI_CameraSelectionKey(void)
 		tOsdImgInfo[uwDisplayImgIdx].uwYStart -= uwYOffset;
 		tOSD_Img2(&tOsdImgInfo[uwDisplayImgIdx], OSD_QUEUE);
 	}
-	if(DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)
-	{
+	if (DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum) {
 		OSD_IMG_INFO tOsdImg4TInfo[4];
 
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SEL4TDUALONLINE_ICON, 4, &tOsdImg4TInfo[0]);
@@ -1232,15 +1229,18 @@ void UI_CameraSelectionKey(void)
 		tOSD_Img2(&tOsdImg4TInfo[((tUI_PuSetting.ubPairedBuNum > 1)?0:1)], OSD_QUEUE);
 		tOSD_Img2(&tOsdImg4TInfo[((tUI_PuSetting.ubPairedBuNum > 1)?2:3)], OSD_QUEUE);
 		ubSelItem = (tCamViewSel.tCamViewType == QUAL_VIEW)?QUAL_TYPE_ITEM:
-		            (TRUE == tUI_PuSetting.ubDualModeEn)?DUAL_TYPE_ITEM:tCamViewSel.tCamViewPool[0];
+		            (tCamViewSel.tCamViewType == DUAL_VIEW)?DUAL_TYPE_ITEM:
+					(tCamViewSel.tCamViewType == SCAN_VIEW)?SCAN_TYPE_ITEM:tCamViewSel.tCamViewPool[0];
 		tUI_CamNumSel = (UI_CamNum_t)ubSelItem;
-	}
-	else if(DISPLAY_2T1R == tUI_PuSetting.ubTotalBuNum)
-	{
+	} else if(DISPLAY_2T1R == tUI_PuSetting.ubTotalBuNum) {
 		uwStartIdx = OSD2IMG_SELCAM2TENABLE_ICON;
 		uwDisplayImgIdx = (uwStartIdx - OSD2IMG_SELCAM1ONLINE_ICON);
 		tOsdImgInfo[uwDisplayImgIdx].uwYStart -= 80;
 		tOSD_Img2(&tOsdImgInfo[uwDisplayImgIdx], OSD_QUEUE);
+		ubSelItem = (tCamViewSel.tCamViewType == DUAL_VIEW)?CAM_2T:tCamViewSel.tCamViewPool[0];
+		tUI_CamNumSel = (UI_CamNum_t)ubSelItem;
+	} else {
+		ubSelItem	= tCamViewSel.tCamViewPool[0];
 	}
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SELCAMHL_ICON, 1, &tOsdImgInfo[0]);
 	tOsdImgInfo[0].uwXStart += uwXOffset;
@@ -1280,7 +1280,7 @@ void UI_CameraSelection(UI_ArrowKey_t tArrowKey)
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 			break;
 		case DOWN_ARROW:
-			if(SINGLE_VIEW == tCamViewSel.tCamViewType)
+			if ((SINGLE_VIEW == tCamViewSel.tCamViewType) || (SCAN_VIEW == tCamViewSel.tCamViewType))
 			{
 				UI_DrawCameraSettingMenu(UI_CAMISP_SETUP);
 			}
@@ -1298,21 +1298,28 @@ void UI_CameraSelection(UI_ArrowKey_t tArrowKey)
 		{
 			UI_Result_t tUI_ChkResult = rUI_SUCCESS;
 
-			if((tUI_CamNumSel == SCAN_TYPE_ITEM) && (TRUE == tUI_PuSetting.ubScanModeEn))			   
+			if((tUI_CamNumSel == SCAN_TYPE_ITEM) && (tCamViewSel.tCamViewType == SCAN_VIEW))			   
 				goto EXIT_CAMSELECT_MENU;
-			tCamViewSel.tCamViewPool[0]    = ((tUI_CamNumSel == DUAL_TYPE_ITEM) && (TRUE == tUI_PuSetting.ubDualModeEn))?tCamViewSel.tCamViewPool[0]:tUI_CamNumSel;
+			tCamViewSel.tCamViewPool[0]    = (DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)?(tUI_CamNumSel == DUAL_TYPE_ITEM)?tCamViewSel.tCamViewPool[0]:tUI_CamNumSel:
+											 (DISPLAY_2T1R == tUI_PuSetting.ubTotalBuNum)?(tUI_CamNumSel == CAM_2T)?CAM1:tUI_CamNumSel:
+											 CAM1;
+			tCamViewSel.tCamViewPool[1]    = (DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)?(tUI_CamNumSel != DUAL_TYPE_ITEM)?NO_CAM:tCamViewSel.tCamViewPool[1]:
+										     (DISPLAY_2T1R == tUI_PuSetting.ubTotalBuNum)?(tUI_CamNumSel == CAM_2T)?CAM2:NO_CAM:
+											 NO_CAM;
 			tCamViewSel.tCamViewType   = (DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)?(tUI_CamNumSel == QUAL_TYPE_ITEM)?QUAL_VIEW:
-																					  (tUI_CamNumSel == DUAL_TYPE_ITEM)?DUAL_VIEW:SINGLE_VIEW:
-									     (DISPLAY_2T1R == tUI_PuSetting.ubTotalBuNum)?(tUI_CamNumSel == CAM_2T)?DUAL_VIEW:SINGLE_VIEW:SINGLE_VIEW;
-			tUI_PuSetting.ubScanModeEn = (tUI_CamNumSel == SCAN_TYPE_ITEM)?TRUE:FALSE;
-			tUI_PuSetting.ubDualModeEn = (tUI_CamNumSel == DUAL_TYPE_ITEM)?TRUE:FALSE;
-			if(TRUE == tUI_PuSetting.ubScanModeEn)
+																					  (tUI_CamNumSel == DUAL_TYPE_ITEM)?tCamPreViewSel.tCamViewType:
+																					  (tUI_CamNumSel == SCAN_TYPE_ITEM)?SCAN_VIEW:SINGLE_VIEW:
+									     (DISPLAY_2T1R == tUI_PuSetting.ubTotalBuNum)?(tUI_CamNumSel == CAM_2T)?DUAL_VIEW:SINGLE_VIEW:
+										 SINGLE_VIEW;
+			//tUI_PuSetting.ubScanModeEn = (tUI_CamNumSel == SCAN_TYPE_ITEM)?TRUE:FALSE;
+			//tUI_PuSetting.ubDualModeEn = (tUI_CamNumSel == DUAL_TYPE_ITEM)?TRUE:FALSE;
+			if(tCamViewSel.tCamViewType == SCAN_VIEW)
 			{
 				tCamViewSel.tCamViewPool[0]  = CAM1;
-				tCamViewSel.tCamViewType = SINGLE_VIEW;
+				//tCamViewSel.tCamViewType = SCAN_VIEW;
 				tUI_ChkResult = UI_CheckCameraSource4SV();
 			}
-			if(TRUE == tUI_PuSetting.ubDualModeEn)
+			if (tUI_CamNumSel == DUAL_TYPE_ITEM)
 			{
 				UI_CameraSelection4DualView(ENTER_ARROW);
 				break;
@@ -1747,6 +1754,11 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 				}
 				*/
+
+				#if 0 //test
+				UI_TestCmd(1, 0);
+				#endif
+				
 				UI_MotorControl(MC_LEFT_ON);
 				break;
 			}
@@ -1807,6 +1819,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			}
 			else
 			{
+				#if 0 //test
+				UI_TestCmd(0, 0);
+				#endif
+				
 				UI_MotorControl(MC_RIGHT_ON);
 			}
 			break;			
@@ -1815,7 +1831,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{	
-				#if 1
+				#if 0
 				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL >= VOL_LVL8)
 	  				break;
 				
@@ -1855,7 +1871,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{	
-				#if 1
+				#if 0
 				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL <= VOL_LVL0)
 	  				break;
 			
@@ -2293,6 +2309,7 @@ void UI_ShowSysVolume(uint8_t value)
 	OSD_IMG_INFO tOsdImgInfo;
 	ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n36DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 
+	printf("UI_ShowSysVolume tVOL_UpdateLvL: %d.\n", value);
 	tUI_PuSetting.VolLvL.ubVOL_UpdateCnt = UI_UPDATEVOLLVL_PERIOD*5; 
 	
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
@@ -2601,7 +2618,6 @@ void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey)
 		break;	
 
 		case RIGHT_ARROW:
-	
 		break;
 
 		case ENTER_ARROW:
@@ -2835,19 +2851,6 @@ void UI_DrawSubSubMenu_Alarm(void)
 		tOsdImgInfo.uwYStart =284;	
 		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
 	}
-	
-/*
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 270;
-	tOsdImgInfo.uwYStart =507;	
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_S, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 346;
-	tOsdImgInfo.uwYStart =480;	
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-*/	
-//---------------------------------------------------------------------------------
 }
 
 void UITempSubmenuDisplay(void)
@@ -3201,7 +3204,6 @@ void UITempSubSubSubmenuDisplay(uint8_t SubMenuItem)
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 			
 		break;
-
 
 		case 1:		
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
@@ -4879,7 +4881,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				ubSubMenuItemPreFlag =  1;
 			}	
 			UI_CamSubmenuDisplay();
-			break;	
+		break;	
 
 		case DOWN_ARROW:
 			 if(ubSubMenuItemFlag < 2)
@@ -4893,7 +4895,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				ubSubMenuItemFlag = 2;
 			}	
 			UI_CamSubmenuDisplay();
-			break;	
+		break;	
 
 		case RIGHT_ARROW:
 		case ENTER_ARROW:
@@ -4965,7 +4967,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				}
 				UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);		
 			}
-			break;	
+		break;	
 
 		case LEFT_ARROW:
 		case EXIT_ARROW:
@@ -4974,7 +4976,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				tUI_State = UI_MAINMENU_STATE;
 				UI_DrawMenuPage();
 			}		
-			break;
+		break;
 	}
 }
 
@@ -8318,7 +8320,6 @@ void UI_ReportBuConnectionStatus(void *pvConnectionSts)
 			if((pCamConnSts[(APP_GetSTANumMappingTable(tCamNum)->tKNL_StaNum) + 4]) <= tAntMap[ubIdx].ubPerValue)
 			{
 				tUI_CamStatus[tCamNum].tCamAntLvl = tAntMap[ubIdx].tAntLvl;
-				//if(tUI_CamStatus[tCamNum].tCamAntLvl < 5) printf("AAA tUI_CamStatus[%d].tCamAntLvl: %d.\n", tCamNum, tUI_CamStatus[tCamNum].tCamAntLvl);
 				break;
 			}
 		}

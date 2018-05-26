@@ -422,7 +422,7 @@ void RC_QtyAndFpsProcess1(uint8_t ubCodecIdx)
 				ubUpdateFlg = 1;
 				//printf("(-)New FPS : %d\r\n",ubRC_CurFps);
 				
-				IQ_SetDynFrameRate(ubRC_CurFps);
+				SEN_SetFrameRate(SENSOR_PATH1, ubRC_CurFps);
 				if(ubRC_CurFps <= 5)
 				{
 					IQ_SetAEPID(1);
@@ -442,7 +442,7 @@ void RC_QtyAndFpsProcess1(uint8_t ubCodecIdx)
 				ubUpdateFlg = 1;
 				//printf("(+)New FPS : %d\r\n",ubRC_CurFps);
 				
-				IQ_SetDynFrameRate(ubRC_CurFps);
+				SEN_SetFrameRate(SENSOR_PATH1, ubRC_CurFps);
 				if(ubRC_CurFps <= 5)
 				{
 					IQ_SetAEPID(1);
@@ -678,7 +678,7 @@ void RC_QtyAndFpsProcess2(uint8_t ubCodecIdx)
 					ubUpdateFlg = 1;
 					//printf("(1-)New FPS : %d\r\n",ubRC_CurFps);
 					
-					IQ_SetDynFrameRate(ubRC_CurFps);
+					SEN_SetFrameRate(SENSOR_PATH1, ubRC_CurFps);
 					if(ubRC_CurFps <= 5)
 					{
 						IQ_SetAEPID(1);
@@ -695,7 +695,7 @@ void RC_QtyAndFpsProcess2(uint8_t ubCodecIdx)
 					ubUpdateFlg = 1;
 					//printf("(1+)New FPS : %d\r\n",ubRC_CurFps);
 					
-					IQ_SetDynFrameRate(ubRC_CurFps);
+					SEN_SetFrameRate(SENSOR_PATH1, ubRC_CurFps);
 					if(ubRC_CurFps <= 5)
 					{
 						IQ_SetAEPID(1);
@@ -724,7 +724,7 @@ void RC_QtyAndFpsProcess2(uint8_t ubCodecIdx)
 					ubUpdateFlg = 1;
 					//printf("(2-)New FPS : %d\r\n",ubRC_CurFps);
 					
-					IQ_SetDynFrameRate(ubRC_CurFps);
+					SEN_SetFrameRate(SENSOR_PATH1, ubRC_CurFps);
 					if(ubRC_CurFps <= 5)
 					{
 						IQ_SetAEPID(1);
@@ -750,7 +750,7 @@ void RC_QtyAndFpsProcess2(uint8_t ubCodecIdx)
 				ubUpdateFlg = 1;
 				//printf("(2+)New FPS : %d\r\n",ubRC_CurFps);
 				
-				IQ_SetDynFrameRate(ubRC_CurFps);			
+				SEN_SetFrameRate(SENSOR_PATH1, ubRC_CurFps);			
 				if(ubRC_CurFps <= 5)
 				{
 					IQ_SetAEPID(1);
@@ -1273,7 +1273,7 @@ void RC_QtyAndBwModePreset(void)
 	}
 
 	tRcInfo.ubCodecIdx			= 0;
-	tRcInfo.ubMode				= RC_MODE_DYNAMIC_QTY_AND_BW;	
+	tRcInfo.ubMode				= RC_MODE_DYNAMIC_QTY_AND_BW;
 	tRcInfo.ulUpdateRatePerMs	= 1000;
 	tRcInfo.ubRefreshRate		= 1;
 	tRcInfo.ubKeySecRatio		= RC_RATIO_70;

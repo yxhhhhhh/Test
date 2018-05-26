@@ -247,7 +247,7 @@ void OSD_SetBufEmpty (void)
 void OSD_UpdatePattern (OSD_BUF_TYP *pOsdBuf)
 {
 	uint8_t ubi, ubPatStart, ubPatLen = 0;
-	
+
 	if (OSD_BUF_PAT_MASK & ubOSD_BufFlag)
 	{
 		ubPatStart = OSD_PAT_CR_NUM;
@@ -257,16 +257,14 @@ void OSD_UpdatePattern (OSD_BUF_TYP *pOsdBuf)
 	if (ubPatLen)
 	{
 		uint16_t *pAddr;
-		
+
 		OSD_Disable();
 		pAddr = (uint16_t*)pOsdBuf->ulBufAddr;
-		//! HW Bug
-		//LCD->TV_LCD_EN = 0;			
+		//LCD->TV_LCD_EN = 0;
 		LCD->LCD_PALETTE_A = ubPatStart;
 		LCD->LCD_AUTO_INC_PALETTE_A = 1;
 		for (ubi=0; ubi<ubPatLen; ++ubi)
-			LCD->LCD_PALETTE_D = pAddr[ubPatStart + ubi];		
-		//! HW Bug
+			LCD->LCD_PALETTE_D = pAddr[ubPatStart + ubi];
 		//LCD->TV_LCD_EN = 1;
 	}
 	OSD_Enable();
@@ -281,7 +279,7 @@ bool bOSD_UpdateAtVsync (void)
 			if (FONT_BUF_FULL <= tOSD_BufInfor.tBuf[1].tBufState)
 			{
 				OSD_UpdatePattern(&tOSD_BufInfor.tBuf[1]);
-				LCD->OSD_STR_A = (tOSD_BufInfor.tBuf[1].ulBufAddr + (OSD_PAT_NUM << 1)) >> 2;				
+				LCD->OSD_STR_A = (tOSD_BufInfor.tBuf[1].ulBufAddr + (OSD_PAT_NUM << 1)) >> 2;
 				tOSD_BufInfor.tBuf[0].tBufState = OSD_BUF_EMPTY;
 				return true;
 			}
@@ -961,7 +959,10 @@ OSD_RESULT tOSD_GetOsdImgInfor (uint8_t ubGroupNum, OSD_LAYER_TYP tOsdLayer, uin
 		uint16_t uwi, uwOsd1ImgNum, uwOsd2ImgNum;
 
 		for (uwi=1; uwi<ubGroupNum; ++uwi)
+		{
 			SF_Read(tOSD_SfAddr.ulOsdImgSfStartAddr + ulGroupSft + OSD_NEXT_GROUP_ADDR_SFT, 4, (uint8_t*)&ulGroupSft);
+			ulGroupSft -= (uwi * OSD_GROUP_TOP_LEN);
+		}
 		tOSD_PatInfor.ulOsdPatSft = OSD_PAT_SFT + ulGroupSft;
 		SF_Read(tOSD_SfAddr.ulOsdImgSfStartAddr + ulGroupSft + OSD_OSD1_IMAGE_NUM_SFT, 2, (uint8_t *)&uwOsd1ImgNum);
 		SF_Read(tOSD_SfAddr.ulOsdImgSfStartAddr + ulGroupSft + OSD_OSD2_IMAGE_NUM_SFT, 2, (uint8_t *)&uwOsd2ImgNum);

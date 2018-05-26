@@ -11,18 +11,17 @@
 	\file	    SEN.h
 	\brief		Sensor funcations header
 	\author     BoCun
-	\version    0.7
-	\date		2017-11-30
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version    0.8
+	\date		2018-05-03
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _SENSOR_H_
 #define _SENSOR_H_
-
+#include <stdbool.h>
 #include "_510PF.h"
 #include "IQ_PARSER_API.h"
 #include "USBD_API.h"
-
 //------------------------------------------------------------------------------
 /*!	\file SEN.h
 SENSOR FlowChart:
@@ -668,20 +667,6 @@ void SEN_SetClkEn(uint8_t ubEnable);
 #endif
 //------------------------------------------------------------------------------
 /*!
-\brief 	Set frame rate.	
-\return	frame rate number.
-\par [Example]
-\code		 
-	 ubSEN_SetFrameRate(30);
-\endcode
-*/
-#ifdef OP_STA
-    void SEN_SetFrameRate(uint8_t ubFPS);
-#else
-    #define SEN_SetFrameRate(ubFPS)	((void)0)
-#endif
-//------------------------------------------------------------------------------
-/*!
 \brief Set data lane0 digital power down large-scale timing
 \param ubPclkIdx		Set frame rate number.
 \return(no)
@@ -722,19 +707,11 @@ void SEN_SetUvcPathFlag(uint8_t ubFlag);
 //------------------------------------------------------------------------------
 /*!
 \brief 	Get IR cut mode state.	
-\par [Example]
-\code		 
-	 ubSEN_GetIrMode();
-\endcode
 */
 uint8_t ubSEN_GetIrMode(void);
 //------------------------------------------------------------------------------
 /*!
 \brief 	Set IR cut mode state.	
-\par [Example]
-\code		 
-	 SEN_SetIrMode(1);
-\endcode
 */
 void SEN_SetIrMode(uint8_t ubMode);
 //------------------------------------------------------------------------------
@@ -792,6 +769,70 @@ uint8_t ubSEN_GetAlgReportFg(void);
 \return (no)
 */
 void SEN_SetIspFinishCbFunc(pvSEN_CbFunc pvCB);
+//------------------------------------------------------------------------
+/*!
+\brief 	Load IQ bin file.
+\return	(no)	
+*/
+#ifdef OP_STA
+    void SEN_LoadIQData(void);
+#else
+    #define SEN_LoadIQData()	((void)0)
+#endif
+//------------------------------------------------------------------------------
+/*!
+\brief 	Set frame rate.
+\param ubPath		Frame drop path.
+\param ubFPS		Frame rate.
+\par [Example]
+\code		 
+    uint8_t ubFPS = 10;
+    SEN_SetFrameRate(SENSOR_PATH1, ubFPS)
+
+    where ubFPS maximum is 30.
+\endcode
+*/
+#ifdef OP_STA
+    void SEN_SetFrameRate(uint8_t ubPath, uint8_t ubFPS);
+#else
+    #define SEN_SetFrameRate(ubPath, ubFPS)	((void)0)
+#endif
+//------------------------------------------------------------------------------
+/*!
+\brief 	Set frame drop.
+\param ubPath		Frame drop path.
+\param ubEnable		Frame drop switch.
+\param ubN		    Set N.
+\param ubM		    Set M.
+\par [Example]
+\code		 
+	 Path1_fps = sensor_fps * (N1/M1).
+     Path2_fps = sensor_fps * (N1/M1) * (N2/M2).
+     Path3_fps = sensor_fps * (N1/M1) * (N3/M3).
+     M > N when ubEnable = 1.
+\endcode
+*/
+void SEN_SetFrameDrop(uint8_t ubPath, uint8_t ubEnable, uint8_t ubN, uint8_t ubM);
+//------------------------------------------------------------------------------
+/*!
+\brief 	Get frame drop state.	
+\param ubPath		Frame drop path.
+\return drop state. 
+\par [Example]
+\code		 
+     
+     If sensor_fps = 30, set path1 to 10fps.
+        SEN_SetFrameDrop(SENSOR_PATH1, 1, 1, 3);
+     
+	 bSEN_GetFrameDropState(SENSOR_PATH1);
+        1 0 0 1 0 0 1 0 0 1
+        0 0 1 0 0 1 0 0 1 0
+        0 1 0 0 1 0 0 1 0 0
+     1: frame isn't drop
+     0: frame is drop. 
+\endcode
+*/
+bool bSEN_GetFrameDropState(uint8_t ubPath);
 //==============================================================================
 // SENSOR extern item
 //==============================================================================

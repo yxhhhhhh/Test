@@ -11,8 +11,8 @@
 	\file		SEN.c
 	\brief		Sensor relation function
 	\author		BoCun
-	\version	1.0
-	\date		2018-01-19
+	\version	1.5
+	\date		2018-05-07
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -36,7 +36,7 @@
 
 //------------------------------------------------------------------------------
 #define SEN_MAJORVER    1        //!< Major version = 1
-#define SEN_MINORVER    0        //!< Minor version = 0
+#define SEN_MINORVER    5        //!< Minor version = 5
 //------------------------------------------------------------------------------
 osSemaphoreId 	SEM_SEN_VSyncRdy;
 osMessageQId tSEN_ExtEventQueue;
@@ -44,17 +44,115 @@ static void SEN_DoVsyncThread(void const *argument);
 static pvSEN_CbFunc pSEN_CbFunc = NULL;
 static bool bSEN_InitFlg = FALSE;
 uint8_t ubSEN_VIDEO[3]={0,0,0};
-
 uint8_t ubSEN_ActiveFlg[3] = {0,0,0};//PATH1,PATH2,PATH3
 uint8_t ubSEN_FirstOutFlg = 1;
 uint8_t ubSEN_FreeRunFlg = 1;
 uint8_t ubSEN_StateChangeFlg = 0;
 uint8_t ubSEN_AlgReportFg = 0;
-uint8_t ubSEN_FrameRate = 30;
+uint8_t ubSEN_FrameRate[3] = {30,30,30};
 uint8_t ubSEN_EventNode;
 uint8_t ubSEN_UvcPathFlag = 0;
 uint8_t ubSEN_ResChgFlg[3] = {0,0,0};
 uint8_t ubSEN_IrMode = 0;
+uint8_t ubSEN_1stVsync = 0;
+
+uint32_t ulSEN_FrameDropTable[] = {     0x00000001,		//FPS = 1 
+                                        0x00010001,		//FPS = 2 
+                                        0x00100401,		//FPS = 3 
+                                        0x00408081,		//FPS = 4 
+                                        0x01041041,		//FPS = 5 
+                                        0x02108421,		//FPS = 6 
+                                        0x04222111,		//FPS = 7 
+                                        0x04448889,		//FPS = 8 
+                                        0x08922489,		//FPS = 9 
+                                        0x09249249,		//FPS = 10
+                                        0x09492925,		//FPS = 11
+                                        0x1294a529,		//FPS = 12
+                                        0x0a54aa55,		//FPS = 13
+                                        0x0aaa9555,		//FPS = 14
+                                        0x15555555,		//FPS = 15
+                                        0x15555557,		//FPS = 16
+                                        0x1555d557,		//FPS = 17
+                                        0x15755d57,		//FPS = 18
+                                        0x17575757,		//FPS = 19
+                                        0x1b6db6db,		//FPS = 20
+                                        0x1b76ddb7,		//FPS = 21
+                                        0x1dddbbbb,		//FPS = 22
+                                        0x2eeef777,		//FPS = 23
+                                        0x1ef7bdef,		//FPS = 24
+                                        0x1f7df7df,		//FPS = 25
+                                        0x1fdfdfbf,		//FPS = 26
+                                        0x1ff7fdff,		//FPS = 27
+                                        0x1fffbfff,		//FPS = 28
+                                        0x1fffffff,     //FPS = 29
+                                        0x3fffffff      //FPS = 30
+										};
+//------------------------------------------------------------------------------
+void SEN_SetFrameRate(uint8_t ubPath, uint8_t ubFPS)
+{
+    if(ubFPS >= 30)
+        ubFPS = sensor_cfg.ulMaximumSensorFrameRate;
+    
+    if(SENSOR_PATH1 == ubPath)
+    {
+        ubSEN_FrameRate[0] = ubFPS;
+    }else if(SENSOR_PATH2 == ubPath){
+        ubSEN_FrameRate[1] = ubFPS;
+    }else if(SENSOR_PATH3 == ubPath){
+        ubSEN_FrameRate[2] = ubFPS;    
+    }
+}
+
+//------------------------------------------------------------------------------
+uint8_t SEN_FrameDrop(uint8_t ubPath ,uint8_t ubFPS)
+{
+    static uint8_t ubDropCount1 = 0, ubDropCount2 = 0, ubDropCount3 = 0;    
+    uint32_t ulSenFrm = 0;
+    uint8_t ubState = 0;
+    
+    // 50Hz, fps = 100/ExpIdex
+    // 60Hz, fps = 120/ExpIdex
+    // If ExpIdex > 5, sensor frame rate is below than 30 fps , drop function don't work.
+    if((ubFPS >= 30) || (ubFPS == 0) || (ubAE_GetExposureIndex() > 5))
+        ubFPS = sensor_cfg.ulMaximumSensorFrameRate;
+    ulSenFrm = ulSEN_FrameDropTable[ubFPS -1];
+
+    if(SENSOR_PATH1 == ubPath)
+    {
+        if(((ulSenFrm >> ubDropCount1) & 0x01) == 0)
+            SEN->VIDEO_STR_EN_1 = 0;      
+        else
+            SEN->VIDEO_STR_EN_1 = 1;
+        ubState = ((ulSenFrm >> ubDropCount1)& 0x01);
+
+        ubDropCount1++;
+        if (ubDropCount1 >= 30)
+            ubDropCount1 = 0;
+    }else if(SENSOR_PATH2 == ubPath){
+        if(((ulSenFrm >> ubDropCount2) & 0x01) == 0)
+            SEN->VIDEO_STR_EN_2 = 0;      
+        else
+            SEN->VIDEO_STR_EN_2 = 1;
+        ubState = ((ulSenFrm >> ubDropCount2)& 0x01);
+
+        ubDropCount2++;
+        if (ubDropCount2 >= 30)
+            ubDropCount2 = 0;
+    }else if(SENSOR_PATH3 == ubPath){
+        if(((ulSenFrm >> ubDropCount3) & 0x01) == 0)
+            SEN->VIDEO_STR_EN_3 = 0;      
+        else
+            SEN->VIDEO_STR_EN_3 = 1;
+        ubState = ((ulSenFrm >> ubDropCount3)& 0x01);
+
+        ubDropCount3++;
+        if (ubDropCount3 >= 30)
+            ubDropCount3 = 0;
+    }
+//    SEN->IMG_TX_EN = 1;	
+     
+    return ubState;
+}
 
 //------------------------------------------------------------------------------
 void SEN_SetOutResolution(uint8_t ubPath, uint16_t uwH, uint16_t uwV)
@@ -295,9 +393,7 @@ void SEN_HwEnd_ISR(void)
 		SEN->HW_END_INT_CLR = 1;
         //printf("Hw");
 	}
-
     SEN_ChkISPState();
-
 	SEN->HW_END_INT_CLR = 1;
 	INTC_IrqClear(INTC_ISP_WIN_END_IRQ);
 	SEN->IMG_TX_EN = 0;
@@ -329,7 +425,7 @@ void SEN_HwEnd_ISR(void)
             //Path1-Q
             if(ubSEN_GetActiveFlg(SENSOR_PATH1))
             {
-                if(!ubSEN_GetResChgFlg(SENSOR_PATH1))
+                if(!ubSEN_GetResChgFlg(SENSOR_PATH1) && SEN_FrameDrop(SENSOR_PATH1, ubSEN_FrameRate[0]))
                 {
                     ulSEN_NextYuv1Addr = ulBUF_GetSen1YuvFreeBuf();
                     if(ulSEN_NextYuv1Addr != BUF_FAIL)
@@ -362,7 +458,7 @@ void SEN_HwEnd_ISR(void)
             //Path2-Q
             if(ubSEN_GetActiveFlg(SENSOR_PATH2))
             {
-                if(!ubSEN_GetResChgFlg(SENSOR_PATH2))
+                if(!ubSEN_GetResChgFlg(SENSOR_PATH2) && SEN_FrameDrop(SENSOR_PATH2, ubSEN_FrameRate[1]))
                 {
                     ulSEN_NextYuv2Addr = ulBUF_GetSen2YuvFreeBuf();
                     if(ulSEN_NextYuv2Addr != BUF_FAIL)
@@ -395,7 +491,7 @@ void SEN_HwEnd_ISR(void)
             //Path3-Q
             if(ubSEN_GetActiveFlg(SENSOR_PATH3))
             {
-                if(!ubSEN_GetResChgFlg(SENSOR_PATH3))
+                if(!ubSEN_GetResChgFlg(SENSOR_PATH3) && SEN_FrameDrop(SENSOR_PATH3, ubSEN_FrameRate[2]))
                 {
                     ulSEN_NextYuv3Addr = ulBUF_GetSen3YuvFreeBuf();
                     if(ulSEN_NextYuv3Addr != BUF_FAIL)
@@ -470,7 +566,7 @@ void SEN_HwEnd_ISR(void)
 	if(!ubSEN_IspReadyFlg)
 	{
 		if(!(--ubSEN_ImgStabCnt))
-		{			
+		{
 			if(pSEN_CbFunc)
 				pSEN_CbFunc();
 			ubSEN_IspReadyFlg = 1;
@@ -481,6 +577,7 @@ void SEN_HwEnd_ISR(void)
 //------------------------------------------------------------------------------
 void SEN_Vsync_ISR(void)
 {
+    ubSEN_1stVsync = 1;
     // Clear VSYNC flag.
 	if( SEN->SEN_VSYNC_INT_FLAG )
 	{
@@ -488,7 +585,7 @@ void SEN_Vsync_ISR(void)
 	}
 	INTC_IrqClear(INTC_SEN_VSYNC_IRQ);
         
-	osSemaphoreRelease(SEM_SEN_VSyncRdy);		
+	osSemaphoreRelease(SEM_SEN_VSyncRdy);
 }
 
 //------------------------------------------------------------------------------
@@ -552,7 +649,7 @@ void SEN_InitProcess(void)
 	if(bSEN_InitFlg == FALSE)
 	{
 		// set&start sensor
-		if(ubSEN_Open(&sensor_cfg,ubSEN_FrameRate) != 1)
+		if(ubSEN_Open(&sensor_cfg, 30) != 1)
 		{
 			printf("Sensor startup failed! \r\n");
 		}
@@ -673,14 +770,20 @@ void SEN_ISPInitial(void)
 
 	IQ_Init();
 	IQ_ReadIQTable();
-	IQ_SetDynFrameRate(30/*sensor_cfg.ulSensorFrameRate*/);
+	IQ_SetDynFrameRate(30);
 
     // open 3DNR frame buffer compression
     ISP_Set3DNR_FBC();
     //NR Day mode
-    SEN_SetIrMode(0);
+    SEN_SetIrMode(0); // 1:sensorºÚ°×É«
 
 	ISP_SetMirrorFlip(2); //20180508 ·­×ªsensor»­Ãæ
+}
+
+//------------------------------------------------------------------------------
+void SEN_LoadIQData(void)
+{
+	IQ_LoadDataFromStorage();
 }
 
 //------------------------------------------------------------------------------
@@ -778,45 +881,48 @@ static void SEN_DoVsyncThread(void const *argument)
 	// update ISP after Vsync	
 	while(1) {
 		osSemaphoreWait(SEM_SEN_VSyncRdy ,osWaitForever);
-
-        // drop "ISP_ALG_REPORT_CNT" frame then process AE, AWB and dynamic IQ alg.
-        if(ubDropCnt >= ISP_ALG_REPORT_CNT)
+        if(ubSEN_1stVsync == 1)
         {
-            SEN_SetAlgReportFg(1);
-        }else{
-            ubDropCnt++;
-        }
-        
-        if(ubSEN_GetAlgReportFg() == 1)
-        {
-            #if (AWB_EN == 1)
-                AWB_VSync();
-            #endif	
-
-            #if(AE_EN == 1)
-                AE_VSync();
-            #endif
-            
-            #if(IQ_DN_EN == 1 && AE_EN == 1 && AWB_EN == 1 && AF_EN == 1)
-                IQ_DynamicVSync();
-            #endif            
-        }
-
-		#if(AF_EN == 1)
-            AF_VSync();
-		#endif
-
-        // using initial AE value when AE unstable.(accelerate AE stable)
-        if(ub3ACtrlTableFg == FALSE)
-        {
-            if(ub3ACtrlTableCnt > 10)
+            // using initial AE value when AE unstable.(accelerate AE stable)
+            if(ub3ACtrlTableFg == FALSE)
             {
-                AE_SetCtrlTable();
-                AWB_SetCtrlTable();                
-                ub3ACtrlTableFg = TRUE;
+                if(ub3ACtrlTableCnt > 7)
+                {
+                    AE_SetCtrlTable();
+                    AE_SetIqValue();
+                    AWB_SetCtrlTable();   
+                    AE_SetIvalue(ubAE_GetAePID_I());                    
+                    ub3ACtrlTableFg = TRUE;
+                }
+                ub3ACtrlTableCnt++;                 
             }
-            ub3ACtrlTableCnt++;                 
-        }   
+            // drop "ISP_ALG_REPORT_CNT" frame then process AE, AWB and dynamic IQ alg.
+            if(ubDropCnt >= ISP_ALG_REPORT_CNT)
+            {
+                SEN_SetAlgReportFg(1);
+            }else{
+                ubDropCnt++;
+            }
+            
+            if(ubSEN_GetAlgReportFg() == 1)
+            {
+                #if (AWB_EN == 1)
+                    AWB_VSync();
+                #endif	
+
+                #if(AE_EN == 1)
+                    AE_VSync();
+                #endif
+                
+                #if(IQ_DN_EN == 1 && AE_EN == 1 && AWB_EN == 1 && AF_EN == 1)
+                    IQ_DynamicVSync();
+                #endif            
+            }
+
+            #if(AF_EN == 1)
+                AF_VSync();
+            #endif 
+        }
 	}
 }
 
@@ -960,12 +1066,6 @@ uint32_t ulSEN_GetSenVSize(uint8_t ubType)
 		return sensor_cfg.ulVSize3;	
 	}
 	return 0;
-}
-
-//------------------------------------------------------------------------------
-void SEN_SetFrameRate(uint8_t ubFPS)
-{
-	//ubSEN_FrameRate = ubFPS;	
 }
 
 //------------------------------------------------------------------------------
@@ -1159,6 +1259,39 @@ void SEN_SetAlgReportFg(uint8_t ubFlg)
 uint8_t ubSEN_GetAlgReportFg(void)
 {
 	return ubSEN_AlgReportFg;
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetFrameDrop(uint8_t ubPath, uint8_t ubEnable, uint8_t ubN, uint8_t ubM)
+{
+    if(SENSOR_PATH1 == ubPath)
+    {
+        SEN->FRM_DROP_SCALER1_M = ubM;
+        SEN->FRM_DROP_SCALER1_N = ubN;        
+        SEN->FRM_DROP_SCALER1_EN = ubEnable;
+    }else if(SENSOR_PATH2 == ubPath){
+        SEN->FRM_DROP_SCALER2_M = ubM;
+        SEN->FRM_DROP_SCALER2_N = ubN;
+        SEN->FRM_DROP_SCALER2_EN = ubEnable;
+    }else if(SENSOR_PATH3 == ubPath){
+        SEN->FRM_DROP_SCALER3_M = ubM;
+        SEN->FRM_DROP_SCALER3_N = ubN;        
+        SEN->FRM_DROP_SCALER3_EN = ubEnable;
+    }
+}
+
+//------------------------------------------------------------------------------
+bool bSEN_GetFrameDropState(uint8_t ubPath)
+{
+    if(SENSOR_PATH1 == ubPath)
+    {
+        return SEN->FRM_DROP1_INF;
+    }else if(SENSOR_PATH2 == ubPath){
+        return SEN->FRM_DROP2_INF;
+    }else if(SENSOR_PATH3 == ubPath){
+        return SEN->FRM_DROP3_INF;
+    }
+    return 1;
 }
 
 //------------------------------------------------------------------------------

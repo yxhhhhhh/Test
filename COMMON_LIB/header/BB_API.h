@@ -11,8 +11,8 @@
 	\file		BB_API.h
 	\brief		Baseband API header
 	\author		Bing
-	\version	1.1
-	\date		2017/12/27
+	\version	1.9
+	\date		2018/05/03
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------
@@ -379,9 +379,13 @@ typedef struct
 \param tBB_SlotMode (input)	Slot mode setup
 \param pData 	(input) 	Timing By Flash 
 \param ubStatus (input) 	0:Disable RF initial, 1:Enable RF initial
+\param ubRFGIO1 (input) 	Control RF GIO1 setting
+\param ubRFGIO2 (input) 	Control RF GIO2 setting
+\param ubMode   (input) 	0:Run FCC/1:Run CE
+\param ubDetectRssi (input) Detect TX channel RSSI.RSSI >= ubDetectRssi.Do not TX.CE only
 \return(No)
 */
-void BB_Init(SET_SLOT_MODE tBB_SlotMode, uint8_t *pData, uint8_t ubStauts);
+void BB_Init(SET_SLOT_MODE tBB_SlotMode, uint8_t *pData, uint8_t ubStauts,uint8_t ubGIO1,uint8_t ubGIO2,uint8_t ubMode,uint8_t ubDetectRssi);
 //------------------------------------------------------------------------
 /*!
     \brief      Baseband Start
@@ -795,6 +799,14 @@ void BB_SetWakeUp(uint8_t ubStatus,uint8_t ubSta);
 \return	Version
 */
 uint16_t uwBB_GetVersion(void);
+//------------------------------------------------------------------------------
+/*!
+\brief  To clear TX audio buffer
+\param  ubSta    AP = 0,1,2,3,  STA = 4
+\return	(no)
+*/
+void BB_ToClearTxBuf(uint8_t ubSta);
+//------------------------------------------------------------------------------
 EN_RETURN_STATUS tEN_Start(EN_STATUS tEnStatus,EN_SET_ROLE tRole,uint8_t *pData1,uint8_t *pData2); 
 
 extern uint8_t ubTestChTable[3];

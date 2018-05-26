@@ -11,9 +11,9 @@
 	\file		KNL.c
 	\brief		Kernel Control function
 	\author		Justin Chen
-	\version	1.4
-	\date		2018/03/01
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.7
+	\date		2018/05/18
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <string.h>
@@ -173,6 +173,9 @@ uint32_t ulKNL_InVdoFpsCntTemp[KNL_SRC_NUM];	//For Input
 uint32_t ulKNL_FrmTRxNum[KNL_MAX_ROLE];			//For Output
 uint32_t ulKNL_FrmTRxNumTemp[KNL_MAX_ROLE];		//For Output
 
+//WOR
+uint8_t ubKNL_WorSts;
+
 //For FS
 FS_KNL_PARA_t tAPP_Fs;
 
@@ -210,7 +213,7 @@ pvKNL_BbFrmOkCbFunc ptKNL_BbFrmMonitCbFunc;
 //------------------------------------------------------------------------------
 
 #define KNL_MAJORVER    1        //!< Major version = 1
-#define KNL_MINORVER    4        //!< Minor version = 4
+#define KNL_MINORVER    8        //!< Minor version = 8
 uint16_t uwKNL_GetVersion (void)
 {
     return ((KNL_MAJORVER << 8) + KNL_MINORVER);
@@ -371,6 +374,7 @@ void KNL_SetAdoInfo(ADO_KNL_PARA_t tAdoInfo)
 	tKNL_AdoInfo.Audio32_De_buf_th 			= tAdoInfo.Audio32_De_buf_th;
 	tKNL_AdoInfo.AAC_En_buf_th     			= tAdoInfo.AAC_En_buf_th;
 	tKNL_AdoInfo.AAC_De_buf_th     			= tAdoInfo.AAC_De_buf_th;	 
+	tKNL_AdoInfo.ulADO_DelayRestoreTiming   = tAdoInfo.ulADO_DelayRestoreTiming;	
 }
 //------------------------------------------------------------------------
 
@@ -405,6 +409,7 @@ void KNL_Init(void)
 	ubKNL_ChgResFlg			= FALSE;
 	ubKNL_ImgBusyFlg		= FALSE;
 	ubKNL_ImgStabFlg		= FALSE;
+	ubKNL_WorSts			= 1;
 	KNL_SwDispInfo.ubSetupFlag = FALSE;
 	for(tKNLRole = KNL_STA1; tKNLRole <= KNL_STA4; tKNLRole++)
 	{
@@ -565,7 +570,7 @@ static void KNL_AdoEncMonitThread(void const *argument)
 	{
 		//Get Queue from Audio Interface
 		osMessageGet(tKNL_EncEventQue, &tAdoInfo, osWaitForever);
-		if(tAdoInfo.Type == NONE)
+		if(tAdoInfo.EncType == NONE)
 		{
 			if(tKNL_AdoInfo.Compress_method == COMPRESS_MSADPCM)
 			{
@@ -578,25 +583,17 @@ static void KNL_AdoEncMonitThread(void const *argument)
 			ulAddr = tAdoInfo.PcmAddr;
 			ulSize = tAdoInfo.PcmSize;
 		}
-		else if(tAdoInfo.Type == AUDIO32)
+		else if(tAdoInfo.EncType == AUDIO32)
 		{
 			printd(DBG_Debug3Lvl, "AdoEncQ(Audio32) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.Audio32Addr,tAdoInfo.Audio32Size);
 			ulAddr = tAdoInfo.Audio32Addr;
 			ulSize = tAdoInfo.Audio32Size;
 		}
-		else if(tAdoInfo.Type == AAC)
+		else if(tAdoInfo.EncType == AAC)
 		{	
 			printd(DBG_Debug3Lvl, "AdoEncQ(AAC) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.AACAddr,tAdoInfo.AACSize);
 			ulAddr = tAdoInfo.AACAddr;
 			ulSize = tAdoInfo.AACSize;
-		}
-		else if(tAdoInfo.Type == BOTH)
-		{
-			printd(DBG_Debug3Lvl, "----- Both -----\r\n");
-			printd(DBG_Debug3Lvl, "AdoEncQ(Audio32) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.Audio32Addr,tAdoInfo.Audio32Size);
-			printd(DBG_Debug3Lvl, "AdoEncQ(AAC) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.AACAddr,tAdoInfo.AACSize);
-			printd(DBG_ErrorLvl, "Without Support !!!!\r\n");
-			continue;//while(1);
 		}
 
 		tKNL_AdoSrcNum = KNL_SRC_NONE;
@@ -607,7 +604,7 @@ static void KNL_AdoEncMonitThread(void const *argument)
 			{
 				#ifdef OP_STA
 				if((ubSrcNum % 4) == ubKNL_GetRole())
-				{				
+				{
 					tKNL_AdoSrcNum = (KNL_SRC)ubSrcNum;
 					break;
 				}
@@ -618,7 +615,7 @@ static void KNL_AdoEncMonitThread(void const *argument)
 				#endif
 			}
 		}
-		if(KNL_SRC_NONE != tKNL_AdoSrcNum)
+		if((KNL_SRC_NONE != tKNL_AdoSrcNum) && (ubKNL_ChkAdoFlowAct(tKNL_AdoSrcNum)))
 		{
 			tProcess.ubSrcNum	 = tKNL_AdoSrcNum;
 			tProcess.ubCurNode 	 = KNL_NODE_ADC;
@@ -626,10 +623,11 @@ static void KNL_AdoEncMonitThread(void const *argument)
 			tProcess.ulDramAddr1 = 0;
 			tProcess.ulDramAddr2 = ulAddr;
 			tProcess.ulSize		 = ulSize;
-			if(osMessagePut(KNL_AdoCdoecProcQueue, &tProcess, 0) == osErrorResource)
-			{
-				printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!!\r\n");
-			}
+			KNL_AdcBufProcess(tProcess);
+//			if(osMessagePut(KNL_AdoCdoecProcQueue, &tProcess, 0) == osErrorResource)
+//			{
+//				printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!!\r\n");
+//			}
 		}
 	}
 }
@@ -637,7 +635,6 @@ static void KNL_AdoEncMonitThread(void const *argument)
 static void KNL_AdoDecMonitThread(void const *argument)
 {	
 	ADO_DEC_EVENT tKNL_DecEvent;
-	uint32_t i;	
 
 	while(1)
 	{
@@ -646,17 +643,16 @@ static void KNL_AdoDecMonitThread(void const *argument)
 		switch(tKNL_DecEvent)
 		{
 			case DAC_RDY:
+#if defined(VBM_PU) || defined(VBM_BU)
+				ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
+#endif
+#if defined(BPC_RX) || defined(BPC_CAM)
+				//ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, OFF);
+#endif
 				SPEAKER_EN(TRUE);
 				break;
 			case PLAY_BUF_EMP:
-				if(tADO_GetWavState() == ADO_WAV_IDLE)
-				{
-					for(i=0; i<ADO_AUDIO32_MAX_NUM; i++)
-					{
-						ADO_Audio32_Decoder_Init(i,ADO_GetAudio32DecFormat(i));
-					}
-				}
-				printd(DBG_ErrorLvl, "++++KNL_AdoDecMonitThread-->Aud32 dec unit/init\r\n");
+				printf("-Dac play empty-\n");
 				break;
 		}
 	}
@@ -1112,8 +1108,9 @@ void KNL_BlockInit(void)
 		uint8_t ubSrcNum = KNL_SRC_NONE;
 		SEN_RegisterEventQueue(KNL_VdoInProcQueue);
 		SEN_RegisterEventNode(KNL_NODE_SEN_YUV_BUF);
-		SEN_SetFrameRate(ubKNL_GetVdoFps());
 		SEN_SetIspFinishCbFunc(KNL_ImgStabNotifyFunc);
+        SEN_LoadIQData();
+        //osDelay(1);
 		SEN_InitProcess();
 		ubSrcNum = ubSEN_GetPathSrc(SENSOR_PATH1);
 		if((ubKNL_GetRole() <= KNL_STA4) && (KNL_SRC_NONE != ubSrcNum))
@@ -1310,7 +1307,7 @@ void KNL_BlockInit(void)
 	if(ubNodeExist && (ubKNL_InitBBFlg == 0))
 	{
 		SET_SLOT_MODE tKNL_BbSlotMode;
-		uint8_t ubKNL_PsValue = 0, ubKNL_WorSts = 1;
+		uint8_t ubKNL_PsValue = 0;
 
 		BB_VariableInit(ulBUF_GetBlkBufAddr(0,BUF_BB_IP));
 		
@@ -1327,11 +1324,11 @@ void KNL_BlockInit(void)
 		KNL_DisableWORFunc();
 		if((!ubRTC_GetKey()) && (ubKNL_PsValue == RTC_PS_WOR_TAG))
 		{			
-			BB_Init(tKNL_BbSlotMode, NULL, 0);	//Step(n)
+			BB_Init(tKNL_BbSlotMode, NULL, 0,0x2B,0x2B,0,165);	//Step(n)
 			ubKNL_WorSts = BB_ConfirmWakeUpInf();
 		}
 		else
-			BB_Init(tKNL_BbSlotMode, NULL, 1);	//Step(n)
+			BB_Init(tKNL_BbSlotMode, NULL, 1,0x2B,0x2B,0,165);	//Step(n)
 
 		osMessageQDef(KNL_QueBbFrmOk, 150, uint8_t);
 		KNL_QueBbFrmOk = osMessageCreate(osMessageQ(KNL_QueBbFrmOk), NULL);
@@ -1436,9 +1433,7 @@ void KNL_BlockInit(void)
 		// Sigma-delta ADC gain
 		//---------------------------------
        	//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_37DB, ADO_SIG_PGA_33DB);
-		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_n12DB); //20180523
-
-		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_0DB); //20180523
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_0DB); //20180524
 		
 		//---------------------------------
 		// ADC djust functions
@@ -3280,6 +3275,16 @@ void KNL_LcdDisplaySetting(void)
 #endif
 }
 //------------------------------------------------------------------------------
+void KNL_ResetLcdChannel(void)
+{
+#if KNL_LCD_FUNC_ENABLE
+	LCD_ChDisable(LCD_CH0);
+	LCD_ChDisable(LCD_CH1);
+	LCD_ChDisable(LCD_CH2);
+	LCD_ChDisable(LCD_CH3);
+#endif
+}
+//------------------------------------------------------------------------------
 void KNL_ResetDispSrc(uint8_t ubSrcNum)
 {
 	if(tKNL_Info.ubDisp1SrcNum == ubSrcNum)
@@ -3699,12 +3704,7 @@ void KNL_VdoPathNodeReset(uint8_t ubSrcNum)
 {
 	if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_LCD))
 	{
-	#if KNL_LCD_FUNC_ENABLE
-		LCD_ChDisable(LCD_CH0);
-		LCD_ChDisable(LCD_CH1);
-		LCD_ChDisable(LCD_CH2);
-		LCD_ChDisable(LCD_CH3);
-	#endif
+		KNL_ResetLcdChannel();
 	}
 }
 //------------------------------------------------------------------------------
@@ -4724,7 +4724,7 @@ void KNL_H264DecProcess(KNL_PROCESS tProc)
 			{
 				H264_SetRotationEn((H264_DECODE_INDEX)tNodeInfo.ubCodecIdx,H264_DISABLE);
 			}
-			
+
 			//Scaling
 			if((tNodeInfo.ubHScale == KNL_SCALE_X0P5) && (tNodeInfo.ubVScale == KNL_SCALE_X0P5))
 			{
@@ -5344,7 +5344,7 @@ RTYSEND_VDO:
 			{
 				tNodeInfo = tKNL_GetNodeInfo(tProc.ubSrcNum,KNL_NODE_H264_ENC);
 				if(KNL_GetTuningToolMode() == KNL_TUNINGMODE_OFF) 
-            	    ubKNL_ResetIFlg = 1;	//! H264_ResetIPCnt((H264_ENCODE_INDEX)tNodeInfo.ubCodecIdx);
+            	    H264_ResetIPCnt((H264_ENCODE_INDEX)tNodeInfo.ubCodecIdx);	//! ubKNL_ResetIFlg = 1;
 			}
 		}
 		//Case 3
@@ -5374,7 +5374,7 @@ RTYSEND_VDO:
 			{
 				tNodeInfo = tKNL_GetNodeInfo(tProc.ubSrcNum,KNL_NODE_H264_ENC);
 				if(KNL_GetTuningToolMode() == KNL_TUNINGMODE_OFF)
-					ubKNL_ResetIFlg = 1;	//! H264_ResetIPCnt((H264_ENCODE_INDEX)tNodeInfo.ubCodecIdx);
+				H264_ResetIPCnt((H264_ENCODE_INDEX)tNodeInfo.ubCodecIdx);	//! ubKNL_ResetIFlg = 1;
 			}
 		}
 	}
@@ -5395,7 +5395,7 @@ RTYSEND_VDO:
 		{
 			tNodeInfo = tKNL_GetNodeInfo(tProc.ubSrcNum,KNL_NODE_H264_ENC);
 			if(KNL_GetTuningToolMode() == KNL_TUNINGMODE_OFF)
-				ubKNL_ResetIFlg = 1;	//! H264_ResetIPCnt((H264_ENCODE_INDEX)tNodeInfo.ubCodecIdx);
+				H264_ResetIPCnt((H264_ENCODE_INDEX)tNodeInfo.ubCodecIdx);	//! ubKNL_ResetIFlg = 1;
 		}
 	}
 }
@@ -5456,12 +5456,15 @@ RTYSEND_ADO:
 	ubNextNode = ubKNL_GetNextNode(tProc.ubSrcNum,KNL_NODE_ADC_BUF);
 	if(ubNextNode == KNL_NODE_COMM_TX_ADO)
 	{
+		if(ubKNL_GetCommLinkStatus(ubLinkRole) == BB_LOST_LINK)		
+			return;
+
 		ubBufOkFlg = 0;
 		ubTotalBufNum = ubBB_GetTxTotalBufNum(BB_DATA_AUDIO,BB_TX_MASTER);
 		ubUsedBufNum  = ubBB_GetTxUsedBufNum(BB_DATA_AUDIO,BB_TX_MASTER);
 		if((ubTotalBufNum-ubUsedBufNum) >= 1)
 			ubBufOkFlg = 1;
-		if((ubBB_GetStartFlg() == BB_TASK_START) && (ubKNL_GetCommLinkStatus(ubLinkRole) == BB_LINK) && (ubBufOkFlg))
+		if((ubBB_GetStartFlg() == BB_TASK_START) && (ubBufOkFlg))
 		{
 			SET_BUF tKNL_BbStatus;
 
@@ -5469,7 +5472,7 @@ RTYSEND_ADO:
 			{
 				DMAC_RESULT tDmaResult = DMAC_OK;
 
-				ulTempAddr = ulBUF_GetAdcFreeBuf();						//Get BitStream Buffer
+				ulTempAddr = ulBUF_GetAdcFreeBuf();
 				if(BUF_FAIL == ulTempAddr)
 					return;
 				tDmaResult = tDMAC_MemCopy(tProc.ulDramAddr2,ulTempAddr,tProc.ulSize,NULL);
@@ -5507,6 +5510,10 @@ RTYSEND_ADO:
 			{
 				printd(DBG_ErrorLvl, "Release BUF_ADC Fail\r\n");
 			}
+		}
+		else
+		{
+			BB_ClearTxBuf(BB_TX_MASTER, BB_DATA_AUDIO);
 		}
 	}
 }
@@ -5610,27 +5617,27 @@ void KNL_DacBufProcess(KNL_PROCESS tProc)
 		{
 			if((tADO_GetAdo32Enable() == ADO_ON) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
-				EN_INFO.Type = AUDIO32;			
+				EN_INFO.EncType = AUDIO32;			
 				EN_INFO.Audio32Addr = tProc.ulDramAddr2;
 				EN_INFO.Audio32Size	= tProc.ulSize;
 			}
 			else if((tADO_GetAACEnable() == ADO_ON) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
-				EN_INFO.Type = AAC;			
+				EN_INFO.EncType = AAC;			
 				EN_INFO.AACAddr = tProc.ulDramAddr2;
 				EN_INFO.AACSize	= tProc.ulSize;
 			}
 			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_MSADPCM))
 			{
 				//MS-ADPCM
-				EN_INFO.Type = NONE;			
+				EN_INFO.EncType = NONE;			
 				EN_INFO.PcmAddr = tProc.ulDramAddr2;
 				EN_INFO.PcmSize	= tProc.ulSize;
 			}
 			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
 				//PCM
-				EN_INFO.Type = NONE;			
+				EN_INFO.EncType = NONE;			
 				EN_INFO.PcmAddr = tProc.ulDramAddr2;
 				EN_INFO.PcmSize	= tProc.ulSize;
 			}
@@ -6473,13 +6480,11 @@ static void KNL_CommLinkMonitThread(void const *argument)
 {
 	LINK_REPORT tLinkRpt;
 	uint8_t ubIdx;
-	uint32_t i;
-	
+
 	while(1)
-	{	
+	{
 		//(1)Wait Event
         osMessageGet(KNL_LinkQ, &tLinkRpt, osWaitForever);
-		
 		if(tLinkRpt.tStatus == BB_LOST_LINK)
 		{
 			printd(DBG_CriticalLvl, "(RT)Lost[%d]\r\n",tLinkRpt.tRole);
@@ -6540,21 +6545,13 @@ static void KNL_CommLinkMonitThread(void const *argument)
 			}			
 			ubKNL_RtLinkStatus[ubIdx] = BB_LINK;
 		}
-		
-		if(tADO_GetWavState() == ADO_WAV_IDLE)
-		{
-			for(i=0; i<ADO_AUDIO32_MAX_NUM; i++)
-			{
-				ADO_Audio32_Decoder_Init(i,ADO_GetAudio32DecFormat(i));
-			}
-		}
-		printd(DBG_ErrorLvl, "----KNL_CommLinkMonitThread-->Aud32 dec unit/init\r\n");
 	}
 }
 //------------------------------------------------------------------------------
 static void KNL_CommLinkUpdateThread(void const *argument)
 {
 	KNL_PROCESS tProc;
+	KNL_SRC tAdoSrcNum = KNL_SRC_NONE;
 	uint32_t i,j,k;
 	uint8_t ubLinkTemp[6][10];
 	uint8_t ubSampleNum 	= 10;
@@ -6562,13 +6559,14 @@ static void KNL_CommLinkUpdateThread(void const *argument)
 	uint8_t ubLinkTh    	= 1;//4;	//1;
 	uint8_t ubLinkCnt   	= 0;
 	uint8_t ubSrcNumMap1,ubSrcNumMap2,ubSrcNumMap3;
-	uint8_t ubKNL_StartUpLhFlag = FALSE;
+	uint8_t ubKNL_SetLhFlag = FALSE;
 
 	tProc = tProc;
+	tAdoSrcNum = tAdoSrcNum;
 	ubSrcNumMap1 = ubSrcNumMap1;
 	ubSrcNumMap2 = ubSrcNumMap2;
 	ubSrcNumMap3 = ubSrcNumMap3;
-	ubKNL_StartUpLhFlag	= ubKNL_StartUpLhFlag;
+	ubKNL_SetLhFlag	= ubKNL_SetLhFlag;
 	for(i=0;i<6;i++)
 	{
 		for(j=0;j<ubSampleNum;j++)
@@ -6609,17 +6607,9 @@ static void KNL_CommLinkUpdateThread(void const *argument)
 					{
 						printd(DBG_CriticalLvl, "(STB)Link[%d]\r\n",k);
 						
-						if(tADO_GetWavState() == ADO_WAV_IDLE)
-						{
-							for(i=0; i<ADO_AUDIO32_MAX_NUM; i++)
-							{
-								ADO_Audio32_Decoder_Init(i,ADO_GetAudio32DecFormat(i));
-							}
-						}
-						printd(DBG_ErrorLvl, "****KNL_CommLinkUpdateThread-->Aud32 dec unit/init\r\n");
-						
 						if(TRUE == ubKNL_WakeUpFlag[k])
 							KNL_WakeupDevice((KNL_ROLE)k, FALSE);
+
 					#ifdef VBM_BU
 						if(k == KNL_MASTER_AP)
 						{
@@ -6655,19 +6645,22 @@ static void KNL_CommLinkUpdateThread(void const *argument)
 								}
 							}
 						}
+//						if(ptKNL_AdoRoleSrcMapT)
+//						{
+//							tAdoSrcNum = ptKNL_AdoRoleSrcMapT((KNL_ROLE)ubKNL_GetRole());
+//							KNL_AdoResume(tAdoSrcNum);
+//						}
 					#endif
+					}
+					if(FALSE == ubKNL_SetLhFlag)
+					{
+						ubLinkTh		= 4;
+						ubLinkLoopCycle	= 10;
+						ubKNL_SetLhFlag = TRUE;
 					}
 					#ifdef OP_STA
 					if((ubKNL_SenStartFlg) && (ubSEN_GetFirstOutFlg()) && (TRUE == ubKNL_ImgStabFlg))
-					{
 						SEN_SetFirstOutFlg(0);
-						if(FALSE == ubKNL_StartUpLhFlag)
-						{
-							ubLinkTh			= 4;
-							ubLinkLoopCycle		= 10;
-							ubKNL_StartUpLhFlag = TRUE;
-						}
-					}
 					#endif
 					ubKNL_LinkStatus[k] = BB_LINK;
 				}
@@ -6724,30 +6717,27 @@ static void KNL_CommLinkUpdateThread(void const *argument)
 							}
 						}
 					#endif
-						printd(DBG_CriticalLvl, "(STB)Lost[%d]\r\n",k);
-						
-						if(tADO_GetWavState() == ADO_WAV_IDLE)
-						{
-							for(i=0; i<ADO_AUDIO32_MAX_NUM; i++)
-							{
-								ADO_Audio32_Decoder_Init(i,ADO_GetAudio32DecFormat(i));
-							}
-						}
-						printd(DBG_ErrorLvl, "////KNL_CommLinkUpdateThread-->Aud32 dec unit/init\r\n");
-						
 					#ifdef VBM_BU
+//						if(ptKNL_AdoRoleSrcMapT)
+//						{
+//							tAdoSrcNum = ptKNL_AdoRoleSrcMapT((KNL_ROLE)ubKNL_GetRole());
+//							KNL_AdoSuspend(tAdoSrcNum);
+//						}
+//						BB_ClearTxBuf(BB_TX_MASTER, BB_DATA_AUDIO);
 						SEN_SetFirstOutFlg(1);
-						BB_ClearTxBuf(BB_TX_MASTER,BB_DATA_VIDEO);
-						BB_ClearTxBuf(BB_TX_MASTER,BB_DATA_AUDIO);
-						if(TRUE == ubKNL_StartUpLhFlag)
+						ubKNL_ResetIFlg = 1;
+					#endif
+						if(TRUE == ubKNL_SetLhFlag)
 						{
 							for(j=0;j<ubSampleNum;j++)
 								ubLinkTemp[k][j] = BB_LOST_LINK;
-							ubLinkTh			= 1;
-							ubLinkLoopCycle		= 1;
-							ubKNL_StartUpLhFlag = FALSE;
+							ubLinkTh		= 1;
+							ubLinkLoopCycle	= 2;
+							ubKNL_SetLhFlag = FALSE;
 						}
-					#endif
+						printd(DBG_CriticalLvl, "(STB)Lost[%d]\r\n",k);
+						
+						ADO_ResetDelayPara();
 					}
 					ubKNL_LinkStatus[k] = BB_LOST_LINK;
 				}
@@ -6805,7 +6795,7 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 	{
 		//(1)Wait Event
         osMessageGet(KNL_QueRxVdo, &Don, osWaitForever);
-		if(Don.ubGetCrc != ubBB_GetCrcReport(Don.ulAddr,Don.ulCrcLen))
+		if(/*Don.ubGetCrc != ubBB_GetCrcReport(Don.ulAddr,Don.ulCrcLen)*/0)
 		{
 			ubSrcNum 	= ubKNL_GetPktSrcNum(Don.ulAddr,Don.ulSize);
 			ubSrcNumMap = ubKNL_SrcNumMap(ubSrcNum);
@@ -7146,7 +7136,7 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 					tKNLInfo.ubSrcNum     = ubSrcNum;
 					tKNLInfo.ubTargetRole = Don.tSTA;
 					tKNLInfo.ubTwcCmd	  = TWC_RESEND_I;
-					if(FALSE == ubKNL_VdoResendITwcFlg[tKNLInfo.ubTargetRole])						
+					if(FALSE == ubKNL_VdoResendITwcFlg[tKNLInfo.ubTargetRole])
 					{
 						if(osMessagePut(KNL_TwcMonitQueue, &tKNLInfo, 0) == osErrorResource)
 						{
@@ -7240,11 +7230,12 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 							tKNLInfo.ulSize		 = ulRealSz;
 							tKNLInfo.ubCurNode   = KNL_NODE_COMM_RX_ADO;
 							tKNLInfo.ubNextNode  = ubKNL_GetNextNode(ubIdx,KNL_NODE_COMM_RX_ADO);
-							if(osMessagePut(KNL_AdoCdoecProcQueue, &tKNLInfo, 0) == osErrorResource)
-							{
-								ubBUF_ReleaseDac0Buf(tKNLInfo.ulDramAddr2);
-								printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!\r\n");
-							}
+							KNL_DacBufProcess(tKNLInfo);
+//							if(osMessagePut(KNL_AdoCdoecProcQueue, &tKNLInfo, 0) == osErrorResource)
+//							{
+//								ubBUF_ReleaseDac0Buf(tKNLInfo.ulDramAddr2);
+//								printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!\r\n");
+//							}
 						}
 						else
 							ubAdoSizeErrFlag = TRUE;
@@ -8318,8 +8309,27 @@ void KNL_AdoStop(uint8_t ubSrcNum)
 	}	
 }
 //------------------------------------------------------------------------------
+void KNL_AdoResume(uint8_t ubSrcNum)
+{
+	if(ubKNL_ExistNode(ubSrcNum, KNL_NODE_ADC))
+	{
+		ubKNL_AdcFlowActiveFlg = 1;
+	}
+}
+//------------------------------------------------------------------------------
+void KNL_AdoSuspend(uint8_t ubSrcNum)
+{
+	if(ubKNL_ExistNode(ubSrcNum, KNL_NODE_ADC))
+	{
+		ubKNL_AdcFlowActiveFlg = 0;
+		BUF_Reset(BUF_ADO_ADC);
+	}
+}
+//------------------------------------------------------------------------------
 void KNL_AdcStart(void)
-{	
+{
+	if(ubKNL_AdcFlowActiveFlg)
+		return;
 	ubKNL_AdcFlowActiveFlg = 1;
 //	ADO_Reset();
 	ADO_RecStart();	
@@ -8335,7 +8345,7 @@ void KNL_AdcStop(void)
 	//Timer_Delay_ms(500);
 
 	//======== Post-Process =======
-	BUF_Reset(BUF_ADO_ADC);	
+	BUF_Reset(BUF_ADO_ADC);
 }
 //------------------------------------------------------------------------------
 void KNL_DacStart(uint8_t ubSrcNum)
@@ -8696,7 +8706,8 @@ void KNL_SenStop(uint8_t ubSrcNum)
 void KNL_ImgStabNotifyFunc(void)
 {
 #ifdef OP_STA
-	IQ_SetDynFrameRate(ubKNL_GetVdoFps());
+	//IQ_SetDynFrameRate(ubKNL_GetVdoFps());
+    SEN_SetFrameRate(SENSOR_PATH1, ubKNL_GetVdoFps());
 	ubKNL_ImgStabFlg = TRUE;
 #endif
 }
@@ -8825,7 +8836,8 @@ void KNL_EnableWORFunc(void)
 {
 	uint8_t ubKNL_PsValue = 0;
 
-	osDelay(50);
+	if(ubKNL_WorSts)
+		osDelay(50);
 	ubKNL_PsValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
 	ubKNL_PsValue &= 0xF;
 	ubKNL_PsValue |= RTC_PS_WOR_TAG;
@@ -8854,10 +8866,10 @@ uint8_t KNL_WakeupDevice(KNL_ROLE tKNL_Role, uint8_t ubMode)
 								            [KNL_STA3] = BB_STA3,
 								            [KNL_STA4] = BB_STA4,
 								            [KNL_MASTER_AP] = BB_MASTER_AP};
-#if OP_AP
+#ifdef OP_AP
 	if(tKNL_Role > KNL_STA4)
 #endif
-#if OP_STA
+#ifdef OP_STA
 	if(tKNL_Role != KNL_MASTER_AP)
 #endif
 		return FALSE;
@@ -8865,8 +8877,12 @@ uint8_t KNL_WakeupDevice(KNL_ROLE tKNL_Role, uint8_t ubMode)
 		return TRUE;
 	BB_SetWakeUp(ubMode, tBB_LinkRole[tKNL_Role]);
 	ubKNL_WakeUpFlag[tKNL_Role] = ubMode;
+#ifdef OP_STA
+	if(ubMode)
+		BB_ClearTxBuf(BB_TX_MASTER,BB_DATA_VIDEO);
+#endif
 	printd(DBG_Debug3Lvl, "  >WakeUp %s[%X]\n", (ubMode)?"?":"", tBB_LinkRole[tKNL_Role]);
-	return TRUE;	
+	return TRUE;
 }
 //------------------------------------------------------------------------------
 void KNL_TurnOnTuningTool(void)

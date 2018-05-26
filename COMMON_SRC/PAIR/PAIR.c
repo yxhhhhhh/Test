@@ -11,7 +11,7 @@
 	\file		PAIR.c
 	\brief		Pairing Function
 	\author		Bing
-	\version	2017/11/30
+	\version	2018/4/17
 	\date		0.4
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
@@ -42,11 +42,11 @@ osThreadId      PAIR_ThreadId;
 static uint32_t ulPAIR_SFAddr;
 uint8_t ubFixChTable[3] =
 {
-	10,90,150
+	20, 82, 154
 };
 uint8_t ubTestChTable[3] = 		
 {
-	10,90,150
+	20, 82, 154
 };
 //------------------------------------------------------------------------------
 static void PAIR_Thread(void const *argument)

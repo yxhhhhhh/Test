@@ -11,9 +11,9 @@
 	\file		DIS_API.h
 	\brief		Digital image stabilization API functio header
 	\author		BoCun
-	\version	0.1
-	\date		2017/09/18
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.0
+	\date		2018/05/10
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _DIS_API_H_
@@ -39,14 +39,39 @@ DIS FlowChart:
 //==============================================================================
 // STRUCT
 //==============================================================================
-typedef struct strctISP_DIS_RPTObj {
-	uint8_t ubRptRdy;						//!< DIS report ready
+typedef struct strcDIS_CumMaxTrans {
+	uint16_t uwCUM_MAX_TRANS_H_0;		    //!< Maximum of transition for path1(horizontal)
+	uint16_t uwCUM_MAX_TRANS_V_0;		    //!< Maximum of transition for path1(vertical)
+	uint16_t uwCUM_MAX_TRANS_H_1;		    //!< Maximum of transition for path2(horizontal)
+	uint16_t uwCUM_MAX_TRANS_V_1;		    //!< Maximum of transition for path2(vertical)
+	uint16_t uwCUM_MAX_TRANS_H_2;		    //!< Maximum of transition for path3(horizontal)
+	uint16_t uwCUM_MAX_TRANS_V_2;		    //!< Maximum of transition for path3(vertical)    
+}DIS_CumMaxTrans;
+
+typedef struct strcDIS_CumTransModel {
 	uint16_t uwCUM_TRANS_MODEL_H_0;		    //!< Transition for path1(horizontal)
 	uint16_t uwCUM_TRANS_MODEL_V_0;		    //!< Transition for path1(vertical)
 	uint16_t uwCUM_TRANS_MODEL_H_1;		    //!< Transition for path2(horizontal)
 	uint16_t uwCUM_TRANS_MODEL_V_1;		    //!< Transition for path2(vertical)
-	uint32_t ulME_TRANS_MODEL0_H;			//!< Horizontal global motion vector
-	uint32_t ulME_TRANS_MODEL1_V;			//!< Vertical global motion vector
+	uint16_t uwCUM_TRANS_MODEL_H_2;		    //!< Transition for path3(horizontal)
+	uint16_t uwCUM_TRANS_MODEL_V_2;		    //!< Transition for path3(vertical)    
+}DIS_CumTransModel;
+
+typedef struct strcDIS_TransModel {
+	uint32_t ulTRANS_MODEL_H_0;		        //!< Horizontal global motion vector
+	uint32_t ulTRANS_MODEL_V_0;		        //!< Vertical global motion vector
+}DIS_TransModel;
+
+typedef struct strcDIS_FE_Match {
+	uint32_t ulCUR_FE_BUF_N;
+	uint32_t ulMATCH_N;	
+}DIS_FE_Match;
+
+typedef struct strctISP_DIS_RPTObj {
+    DIS_CumMaxTrans     xtDisCumMaxTrans;
+    DIS_CumTransModel   xtDisCumTransModel;
+    DIS_TransModel      xtDisTransModel;
+    DIS_FE_Match        xtDisFEMatch;
 }ISP_DIS_RPTObj;
 
 typedef struct {
@@ -58,6 +83,11 @@ typedef struct {
 }ISP_DIS_PARA;
 
 //==============================================================================
+// EXTERN
+//==============================================================================
+extern ISP_DIS_RPTObj xtISP_DIS_RPT;
+
+//==============================================================================
 // FUNCTION
 //==============================================================================
 //------------------------------------------------------------------------
@@ -65,7 +95,6 @@ typedef struct {
 \brief DIS initial.
 \param ulHSize 		Horizontal size.
 \param ulVSize 		Vertical size.
-\param ubPercent 	Scale-up percent.
 \return(no)
 \par [Example]
 \code
@@ -82,7 +111,7 @@ typedef struct {
 		note: B is bigger than A about 15%(FOV decrease 15%)	
 \endcode
 */
-void DIS_Initial(uint32_t ulHSize, uint32_t ulVSize, uint8_t ubPercent);
+void DIS_Initial(uint32_t ulHSize, uint32_t ulVSize);
 //------------------------------------------------------------------------
 /*!
 \brief Pass cumulative motion vector(weight).
@@ -107,44 +136,4 @@ int16_t swDIS_MotionVectorW(void);
 \endcode
 */
 int16_t swDIS_MotionVectorH(void);
-//------------------------------------------------------------------------
-/*!
-\brief DIS Report ISR.
-\return(no)
-\par [Example]
-\code
-		DIS_FrmEnd_ISR();
-\endcode
-*/
-void DIS_FrmEnd_ISR(void);
-//------------------------------------------------------------------------
-/*!
-\brief Clear DIS ready.
-\return (no).
-\par [Example]
-\code
-		DIS_ClearReady();
-\endcode
-*/
-void DIS_ClearReady(void);
-//------------------------------------------------------------------------
-/*!
-\brief Get DIS ready.
-\return ready flag.
-\par [Example]
-\code
-		ubDIS_GetReady();
-\endcode
-*/
-uint8_t ubDIS_GetReady(void);
-//------------------------------------------------------------------------
-/*!
-\brief Calculate DIS motion vector.
-\return(no)
-\par [Example]
-\code
-		DIS_CalMotionVector();
-\endcode
-*/
-void DIS_CalMotionVector(void);
 #endif

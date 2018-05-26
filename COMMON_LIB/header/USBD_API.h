@@ -11,9 +11,9 @@
 	\file		USBD_API.h
 	\brief		USB Device Config header file
 	\author		Hanyi Chiu
-	\version	0.3
-	\date		2017/10/30
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.0
+	\date		2018/04/20
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _USBD_API_H_
@@ -108,4 +108,9 @@ void uvc_update_image(uint32_t *pImg_Buf, uint32_t ulImg_Size);
 \return	Version
 */
 uint16_t uwUSBD_GetVersion(void);
+
+int32_t slUSBD_GetIQFileSize(void);
+void USBD_SetIQFileSize(int32_t slSize);
+int16_t swUSBD_GetRemainTransferLength(void);
+void USBD_SetRemainTransferLength(int16_t swLength);
 #endif

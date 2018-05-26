@@ -11,9 +11,9 @@
 	\file		UI_VBMBU.c
 	\brief		User Interface of VBM Baby Unit (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.1
-	\date		2017/11/30
-	\copyright	Copyright (C) 2017 SONiX Technology Co., Ltd. All rights reserved.
+	\version	1.2
+	\date		2018/05/15
+	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <string.h>
@@ -22,11 +22,14 @@
 #include "SEN.h"
 #include "RTC_API.h"
 #include "ISP_API.h"
+#include "MD_API.h"
 #include "SF_API.h"
 #include "Buzzer.h"
 #include "FWU_API.h"
 #include "MC_API.h"
 #include "i2c.h"
+#include "IQ_API.h"
+#include "WDT.h"
 
 #define osUI_SIGNALS	0x6A
 
@@ -132,9 +135,9 @@ void UI_StateReset(void)
 	if(tTWC_RegTransCbFunc(TWC_UI_SETTING, UI_RecvPUResponse, UI_RecvPURequest) != TWC_SUCCESS)
 		printd(DBG_ErrorLvl, "UI setting 2way command fail !\n");
 	ubUI_ClearThdCntFlag = FALSE;
-	ubUI_WorModeEnFlag	 = FALSE;
-	ubUI_WorWakeUpCnt 	 = 0;	
 	UI_LoadDevStatusInfo();
+	ubUI_WorModeEnFlag	 = (PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)?TRUE:FALSE;
+	ubUI_WorWakeUpCnt 	 = 0;
 	tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
 }
 //------------------------------------------------------------------------------
@@ -185,9 +188,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				UI_VoxTrigger();
 			if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
 				UI_VoiceTrigger();
-			if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
-				UI_MDTrigger();
-
+//			if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
+//				UI_MDTrigger();
 		/*	if(((*pThreadCnt)%5) == 0)
 			{
 				UI_TestCheck(); //20180517
@@ -199,7 +201,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				//UI_BrightnessCheck();
 			}
 			
-			if(((*pThreadCnt)%10) == 0)
+			if(((*pThreadCnt)%60) == 0)
 			{
 				UI_TempCheck();
 			}
@@ -349,6 +351,20 @@ void UI_RecvPURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data)
 	}
 }
 //------------------------------------------------------------------------------
+void UI_SetMotionEvent (uint8_t ubReport)
+{       
+	if(ubReport)
+	{
+		UI_BUReqCmd_t tUI_MdMsg;
+
+		tUI_MdMsg.ubCmd[UI_TWC_TYPE]	= UI_REPORT;
+		tUI_MdMsg.ubCmd[UI_REPORT_ITEM] = UI_MD_TRIG;
+		tUI_MdMsg.ubCmd[UI_REPORT_DATA] = TRUE;
+		tUI_MdMsg.ubCmd_Len  			= 3;
+		UI_SendRequestToPU(NULL, &tUI_MdMsg);
+	}
+}
+//------------------------------------------------------------------------------
 void UI_SystemSetup(void)
 {
 	UI_IspSetup();
@@ -356,6 +372,8 @@ void UI_SystemSetup(void)
 	UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
 	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
 	UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
+    MD_ReportReadyCbFunc(UI_SetMotionEvent);
+    MD_SetMdStableFg(MD_UNSTABLE);
 }
 #define ADC_SUMRPT_VOX_THL			5000
 #define ADC_SUMRPT_VOX_THH			5000
@@ -395,6 +413,8 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
 			break;
 		case PS_WOR_MODE:
 			ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_ON);
+			if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
+				break;
 			tUI_BuStsInfo.tCamPsMode   = PS_WOR_MODE;
 			tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
 			UI_UpdateDevStatusInfo();
@@ -689,9 +709,9 @@ void UI_ImageProcSetting(void *pvImgProc)
 	UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
+#define MD_TRIG_LVL	16
 void UI_MDTrigger(void)
 {
-#define MD_TRIG_LVL	10
 	uint32_t ulUI_MdTrig = 0;
     uint32_t ulUI_MdTrig_LV = 0;
     
@@ -776,6 +796,7 @@ void UI_MDSetting(void *pvMdParam)
 	printd(DBG_InfoLvl, "3=>MD c=%d\n",ubMD_BlockCnt);
 
 	MD_Init();
+    MD_SetUserThreshold(MD_TRIG_LVL);
 	MD_Switch(MD_OFF);
 	for(i = uwMD_BlockSIdx; i <= uwMD_BlockEIdx; i++)
 	{
@@ -1083,8 +1104,10 @@ void UI_BuInit(void)
 void UI_TestSetting(void *pvMCParam)
 {
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
-
-	/*
+	uint8_t TestData0 = pMC_Param[0];
+	uint8_t TestData1 = pMC_Param[1];
+	
+	#if 0
 	MC_Stop(MC_1);
 	MC_Stop(MC_0);
 	ubTestMode = pMC_Param[0];
@@ -1093,7 +1116,16 @@ void UI_TestSetting(void *pvMCParam)
 	{
 		
 	}
-	*/
+	#endif
+	
+	#if 0
+	printf("UI_TestSetting TestData1: %d.\n", TestData0);
+	APP_SetTuningToolMode(TestData0);
+	WDT_Disable(WDT_RST);
+	WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+	while(1);
+	
+	#endif
 }
 
 

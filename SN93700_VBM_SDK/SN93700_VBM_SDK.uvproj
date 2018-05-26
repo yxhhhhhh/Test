@@ -122,7 +122,7 @@
           </OPTHX>
           <Simulator>
             <UseSimulator>0</UseSimulator>
-            <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
+            <LoadApplicationAtStartup>0</LoadApplicationAtStartup>
             <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
@@ -135,7 +135,7 @@
           <Target>
             <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>0</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
+            <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
             <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
@@ -165,14 +165,14 @@
         </DebugOption>
         <Utilities>
           <Flash1>
-            <UseTargetDll>1</UseTargetDll>
+            <UseTargetDll>0</UseTargetDll>
             <UseExternalTool>1</UseExternalTool>
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
             <DriverSelection>4096</DriverSelection>
           </Flash1>
-          <bUseTDR>1</bUseTDR>
+          <bUseTDR>0</bUseTDR>
           <Flash2>BIN\UL2ARM.DLL</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
@@ -474,6 +474,16 @@
               <FileName>UI_VBMPU.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\SRC\UI\HS\UI_VBMPU.c</FilePath>
+            </File>
+            <File>
+              <FileName>UI_UART1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\SRC\UI\HS\UI_UART1.c</FilePath>
+            </File>
+            <File>
+              <FileName>UI_CMD.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\SRC\UI\HS\UI_CMD.c</FilePath>
             </File>
             <File>
               <FileName>KEY.c</FileName>
@@ -1377,7 +1387,7 @@
           </OPTHX>
           <Simulator>
             <UseSimulator>0</UseSimulator>
-            <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
+            <LoadApplicationAtStartup>0</LoadApplicationAtStartup>
             <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
@@ -1389,8 +1399,8 @@
           </Simulator>
           <Target>
             <UseTarget>1</UseTarget>
-            <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
+            <LoadApplicationAtStartup>0</LoadApplicationAtStartup>
+            <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
             <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
@@ -1420,14 +1430,14 @@
         </DebugOption>
         <Utilities>
           <Flash1>
-            <UseTargetDll>1</UseTargetDll>
+            <UseTargetDll>0</UseTargetDll>
             <UseExternalTool>1</UseExternalTool>
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
             <DriverSelection>4096</DriverSelection>
           </Flash1>
-          <bUseTDR>1</bUseTDR>
+          <bUseTDR>0</bUseTDR>
           <Flash2>BIN\UL2ARM.DLL</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
@@ -1729,6 +1739,16 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
+            </File>
+            <File>
+              <FileName>UI_UART1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\SRC\UI\HS\UI_UART1.c</FilePath>
+            </File>
+            <File>
+              <FileName>UI_CMD.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\SRC\UI\HS\UI_CMD.c</FilePath>
             </File>
             <File>
               <FileName>KEY.c</FileName>

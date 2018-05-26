@@ -37,6 +37,10 @@
 #include "OSD.h"
 #include "UI_VBMPU.h"
 #include "TIMER.h"
+#include "WDT.h"
+#ifdef CFG_UART1_ENABLE
+#include "UI_UART1.h"
+#endif
 //------------------------------------------------------------------------------
 extern uint32_t Image$$RW_UNCACHED_HEAP$$Base;
 extern uint32_t Image$$RW_IRAM3$$Base;
@@ -127,7 +131,7 @@ void APP_Init(void)
     {
         printd(DBG_ErrorLvl, "RTOS initial fail\n");
     }
-
+
 
 	if (ubAPP_SfWpGpioPin <= 13) {
 		printd(DBG_InfoLvl, "SF_WP=GPIO%d\n",ubAPP_SfWpGpioPin);
@@ -138,6 +142,11 @@ void APP_Init(void)
 	MMU_Init();
 	TWC_Init();
 	CLI_Init();
+	
+	#ifdef CFG_UART1_ENABLE
+	UART1_RecvInit();
+	#endif
+	
 	FWU_Init();
 	UI_Init(&APP_EventQueue);
 	#if 0
@@ -533,6 +542,9 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 		default:
 			return;
 	}
+#ifdef VBM_PU
+	KNL_ResetLcdChannel();
+#endif
 	VDO_Start();
 	ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 }
@@ -578,6 +590,7 @@ uint8_t APP_UpdateLinkStatus(void)
 
 	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum] 	 = rLOSTLINK;
 	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+4] = 0;
+	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = 0;	
 	if(ubKNL_GetCommLinkStatus(ubKNL_RoleNum) == BB_LINK)
 	{
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum]   = rLINK;
@@ -585,11 +598,11 @@ uint8_t APP_UpdateLinkStatus(void)
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = KNL_GetRssiValue(ubKNL_RoleNum);
 		ubAPP_Event = APP_LINK_EVENT;
 	}
-	
 	for(ubKNL_RoleNum = KNL_STA1; ubKNL_RoleNum <= KNL_STA4; ubKNL_RoleNum++)
 	{
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum] 	 = rLOSTLINK;
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+4] = 0;
+		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = 0;
 		if(ubKNL_GetCommLinkStatus(ubKNL_RoleNum) == BB_LINK)
 		{
 			tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum]   = rLINK;

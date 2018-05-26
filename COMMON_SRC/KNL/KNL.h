@@ -11,8 +11,8 @@
 	\file		KNL.h
 	\brief		Kernel Control header file
 	\author		Justin Chen
-	\version	1.3
-	\date		2018/02/12
+	\version	1.5
+	\date		2018/04/23
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -937,6 +937,13 @@ void KNL_LcdDisplaySetting(void);
 
 //------------------------------------------------------------------------
 /*!
+\brief Reset LCD Channel
+\return (no)
+*/
+void KNL_ResetLcdChannel(void);
+
+//------------------------------------------------------------------------
+/*!
 \brief Get LCD display address
 \param ubSrcNum Source number
 \return LCD display address
@@ -1297,6 +1304,22 @@ void KNL_AdoStop(uint8_t ubSrcNum);
 
 //------------------------------------------------------------------------
 /*!
+\brief Auido resume
+\param ubSrcNum Source number
+\return (no)
+*/
+void KNL_AdoResume(uint8_t ubSrcNum);
+
+//------------------------------------------------------------------------
+/*!
+\brief Auido suspend
+\param ubSrcNum Source number
+\return (no)
+*/
+void KNL_AdoSuspend(uint8_t ubSrcNum);
+
+//------------------------------------------------------------------------
+/*!
 \brief Reset audio path
 \return(no)
 */
@@ -1431,6 +1454,7 @@ uint8_t KNL_GetPerValue(KNL_ROLE tKNL_Role);
 \return Encoder Index
 */
 H264_ENCODE_INDEX tKNL_GetEncIdx(void);
+	
 //------------------------------------------------------------------------
 /*!
 \brief Enable WOR function

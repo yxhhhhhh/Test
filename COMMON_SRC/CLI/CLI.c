@@ -25,7 +25,6 @@
 //------------------------------------------------------------------------------
 #define MAX_CMD_LENGTH			48
 #define RECV_QUEUE_SIZE			MAX_CMD_LENGTH
-#define RECV_QUEUE_STACK_SIZE	1024
 //------------------------------------------------------------------------------
 #ifdef CFG_ENABLE_LOGIN
 static int32_t login = 0;
@@ -354,7 +353,7 @@ void CLI_RecvThread(void const *argument)
     				cmdbuf[i] = 0x0;
     			}
     		} else {
-    				//printf("%c", c);
+    				//printf("%c", ch);
     				cmdbuf[i] = ch;
     				i++;
     				if (i >= MAX_CMD_LENGTH - 1) { // Over Max command length, Force excute command to avoid buffer overflow

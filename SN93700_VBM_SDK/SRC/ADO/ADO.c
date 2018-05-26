@@ -132,6 +132,8 @@ KNL_SRC ADO_GetSourceNumber(KNL_ROLE tADO_KNLRole)
 //------------------------------------------------------------------------------
 void ADO_Start(KNL_ROLE tADO_Role)
 {
+	uint32_t i;
+	
 #ifdef VBM_PU
 	KNL_ROLE tADO_KNLRole = KNL_STA1;
 #endif
@@ -142,6 +144,13 @@ void ADO_Start(KNL_ROLE tADO_Role)
 	if(KNL_NONE != tADO_TargetRole)
 		ADO_Stop();
 	tADO_TargetRole = tADO_Role;
+
+	for(i=0; i<ADO_AUDIO32_MAX_NUM; i++)
+	{
+		ADO_Audio32_Encoder_Init(i,ADO_GetAudio32EncFormat(i));
+	}
+	ADO_Noise_Process_Type(NOISE_NR, AEC_NR_16kHZ);
+
 #ifdef VBM_PU
 	KNL_AdoPathReset();
 	for(tADO_KNLRole = KNL_STA1; tADO_KNLRole < DISPLAY_MODE; tADO_KNLRole++)
@@ -169,7 +178,7 @@ void ADO_KNLParamSetup(void)
 {
 	ADO_KNL_PARA_t tADO_KNLParm;
 	uint32_t i;
-	
+
 	tADO_KNLParm.Sys_speed			 = HIGH_SPEED;
 	tADO_KNLParm.Rec_device			 = SIG_DEL_ADC;
 	tADO_KNLParm.Ply_device			 = R2R_DAC;
@@ -186,12 +195,12 @@ void ADO_KNLParamSetup(void)
 
 	tADO_KNLParm.Compress_method 	 = COMPRESS_NONE;
 
-	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;
-	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_32KB;
-	tADO_KNLParm.Audio32_En_buf_size = BUF_SIZE_16KB;
-	tADO_KNLParm.Audio32_De_buf_size = BUF_SIZE_64KB;
-	tADO_KNLParm.AAC_En_buf_size     = BUF_SIZE_16KB;
-	tADO_KNLParm.AAC_De_buf_size     = BUF_SIZE_16KB;
+	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;	
+	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_16KB;
+	tADO_KNLParm.Audio32_En_buf_size = BUF_SIZE_8KB;
+	tADO_KNLParm.Audio32_De_buf_size = BUF_SIZE_8KB;
+	tADO_KNLParm.AAC_En_buf_size     = BUF_SIZE_8KB;
+	tADO_KNLParm.AAC_De_buf_size     = BUF_SIZE_8KB;
 	tADO_KNLParm.Alarm_buf_size 	 = BUF_SIZE_1KB;
 
 	tADO_KNLParm.Rec_buf_th			 = BUF_TH_4KB;
@@ -200,6 +209,8 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.Audio32_De_buf_th 	 = BUF_TH_4KB;
 	tADO_KNLParm.AAC_En_buf_th     	 = BUF_TH_4KB;
 	tADO_KNLParm.AAC_De_buf_th     	 = BUF_TH_4KB;
+	
+	tADO_KNLParm.ulADO_DelayRestoreTiming = 250;
 
 	tADO_KNLParm.ulADO_BufStartAddr  = 0;
 	KNL_SetAdoInfo(tADO_KNLParm);

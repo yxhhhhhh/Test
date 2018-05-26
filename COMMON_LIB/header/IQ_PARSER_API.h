@@ -11,8 +11,8 @@
 	\file		IQ_PARSER_API.h
 	\brief		Sensor parser funcations API header
 	\author		BoCun
-	\version	1
-	\date		2017/03/15
+	\version	1.1
+	\date		2017/04/20
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -27,14 +27,16 @@
 //==============================================================================
 //------------------------------------------------------------------------
 /*!
-\brief  load IQ.bin to dram and start parser IQ.bin.
-\return (no)
-\par [Example]
-\code 
-		IQ_ReadIQTable();		
-\endcode	
+\brief  Parser IQ.bin file.
+\return (no)	
 */
 void IQ_ReadIQTable(void);
+//------------------------------------------------------------------------
+/*!
+\brief  Load IQ.bin to dram and start parser IQ.bin.
+\return (no)	
+*/
+void IQ_LoadDataFromStorage(void);
 //------------------------------------------------------------------------------
 /*!
 \brief Setup I2C for USB Device XU.
@@ -67,10 +69,6 @@ void IQ_SetDynFrameRate(uint8_t ubFrameRate);
 /*!
 \brief Get suppress gain.
 \return Suppress gain value.
-\par [Example]
-\code 
-		ulIQ_GetSuppressGain();
-\endcode
 */
 uint32_t ulIQ_GetSuppressGain(void);
 //------------------------------------------------------------------------

@@ -23,6 +23,10 @@
 #include "UART.h"
 #include "INTC.h"
 #include "CLI.h"
+#ifdef CFG_UART1_ENABLE
+#include "UI_UART1.h"
+#endif
+
 #define UART_MAJORVER	0
 #define UART_MINORVER	2
 //------------------------------------------------------------------------------
@@ -83,6 +87,14 @@ void UART_Uninit(UART_DEVICE_t tUART_Dev)
 //------------------------------------------------------------------------------
 void UART1_INT_Handler(void)
 {
+#ifdef CFG_UART1_ENABLE
+	uint8_t ch;
+	while(UART1->RX_RDY)
+	{
+		ch = UART1->RS_DATA & 0x0FF;
+		UART1_rtoscli_recv(ch);
+	}
+#endif
 	UART1->RS232_RX_INT_CLR = 1;
 	INTC_IrqClear(INTC_UART1_IRQ);
 #ifdef RTOS

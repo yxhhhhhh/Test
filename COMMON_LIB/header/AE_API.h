@@ -11,8 +11,8 @@
 	\file		AE_API.h
 	\brief		Auto exposure API header
 	\author			
-	\version	1
-	\date		2018-01-19
+	\version	1.2
+	\date		2018-05-07
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -61,6 +61,19 @@ void AE_Statemachine(uint8_t ubEvent);
 void AE_FrmEndIsr_Handler(void);
 //------------------------------------------------------------------------
 /*!
+\brief 	Set I value of PID.
+\param  ubI     I value.
+\return	(no)
+*/
+void AE_SetIvalue(uint8_t ubI);
+//------------------------------------------------------------------------
+/*!
+\brief 	Get I value of PID.	
+\return	I value.
+*/
+uint8_t ubAE_GetIvalue(void);
+//------------------------------------------------------------------------
+/*!
 \brief 	Get AE library version	
 \return	AE lib version.
 \par [Example]
@@ -86,6 +99,23 @@ void AE_SetPID(uint8_t ubLowFrame);
 \return(no)
 */
 void AE_SetCtrlTable(void);
+//------------------------------------------------------------------------
+/*!
+\brief Set AE table value.
+\return(no)
+*/
+void AE_SetIqValue(void);
 uint8_t* pbAE_GetAlgVerID(void);
-
+//------------------------------------------------------------------------
+/*!
+\brief 	Get AE state from AE struct.
+\return	I value.
+*/
+uint8_t ubAE_GetAePID_I(void);
+//------------------------------------------------------------------------
+/*!
+\brief 	Get exposure index from AE struct.
+\return	exposure index value.
+*/
+uint8_t ubAE_GetExposureIndex(void);
 #endif

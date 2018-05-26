@@ -76,27 +76,9 @@ void BUZ_PlayStart(uint8_t ubChCnt, uint8_t ubWeight, BUZ_ToneParam_t *pTonePara
 }
 
 void BUZ_PlayThread(void const *argument) {
-	
-	uint8_t ubFlag;
-	ADO_IP_READY_t AdoIpRdyFlg;
-	
-	ubFlag = 0;
-    while(1) {
-		
-#if defined(VBM_PU)
-		if( ubFlag==0 )
-			AdoIpRdyFlg = ADO_IP_READY_FOR_STARTUP_SOUND;
-		else if( ubFlag==1 )
-			AdoIpRdyFlg = ADO_IP_READY;
-#endif
-#if defined(VBM_BU)
-			AdoIpRdyFlg = ADO_IP_READY;
-#endif
-		
-		if( ADO_GetIpReadyStatus() == AdoIpRdyFlg ) {
+    while(1) {		
+		if( ADO_GetIpReadyStatus() == ADO_IP_READY ) {
 			uint8_t ubLoop;
-			
-			ubFlag = 1;
 			
 			ADO_SetDacAutoMute(ADO_OFF);					// Automute
 			ADO->BUZ_EN = 1;
@@ -200,6 +182,12 @@ void BUZ_PlayLowBatSound(void) {
 		{30,	M_DO_1, 3,		0,		63},
 		{50,	M_DO_1, 3,		15,		63},
 		{150,	ZERO_0,	3,		0,		63},
+		{30,	H_DO_1, 3,		0,		63},
+		{50,	H_DO_1, 3,		15,		63},
+		{20,	ZERO_0, 3,		0,		63},
+		{30,	M_DO_1, 3,		0,		63},
+		{50,	M_DO_1, 3,		15,		63},
+		{150,	ZERO_0, 3,		0,		63},
 		{30,	H_DO_1, 3,		0,		63},
 		{50,	H_DO_1, 3,		15,		63},
 		{20,	ZERO_0, 3,		0,		63},

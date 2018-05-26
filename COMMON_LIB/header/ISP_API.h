@@ -11,9 +11,9 @@
 	\file		ISP_API.h
 	\brief		ISP API header
 	\author			
-	\version	0.3
-	\date		2017-08-31
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.4
+	\date		2018-05-09
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _ISP_API_H_
@@ -344,6 +344,13 @@ void ISP_DRCSwitch(uint8_t ubFlag);
 void ISP_VLDCSwitch(uint8_t ubFlag);
 //------------------------------------------------------------------------
 /*!
+\brief Lens shading compensation switch.
+\param ubFlag 	LSC switch.
+\return(no)
+*/
+void ISP_LscSwitch(uint8_t ubFlag);
+//------------------------------------------------------------------------
+/*!
 \brief Noise reduce 2D switch.
 \param ubFlag 	NR2D switch.
 \return(no)
@@ -547,10 +554,6 @@ void ISP_SetIQBrightness(uint8_t ubBri);
 \brief Set AE power frequency.
 \param ubPwrFreq 		set 50/60Hz.
 \return(no)
-\par [Example]
-\code 
-		ISP_SetAePwrFreq(ubPowFreq);
-\endcode
 */
 void ISP_SetAePwrFreq(uint8_t ubPwrFreq);
 //------------------------------------------------------------------------
@@ -585,6 +588,32 @@ void ISP_SetPath3ImgFormat(uint8_t ubType);
 \endcode
 */
 void ISP_Set3DNR_FBC(void);
+//------------------------------------------------------------------------
+/*!
+\brief Get LSC block gain table.
+\return(no)
+\par [Example]
+\code 
+		ISP_GetBlockGainTable();
+\endcode
+*/
+void ISP_GetBlockGainTable(void);
+//------------------------------------------------------------------------
+/*!
+\brief Set LSC block gain table.
+\return(no)
+\par [Example]
+\code 
+        uint8_t ubType;
+        
+		ISP_SetBlockGainTable(ubType);
+        where ubType =  0, Normal
+                        1, Flip 
+                        2, Mirror
+                        3, Mirror+Flip.
+\endcode
+*/
+void ISP_SetBlockGainTable(uint8_t ubType);
 //------------------------------------------------------------------------------
 /*!
 \brief 	Get ISP function version	
