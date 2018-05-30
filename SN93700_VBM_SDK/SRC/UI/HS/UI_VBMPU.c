@@ -237,6 +237,8 @@ uint8_t ubSetViewCam = 0;
 
 uint8_t ubGetBatValue = 0;
 extern uint8_t ubStartUpState;
+
+uint8_t ubFactorySettingFLag ;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -1972,7 +1974,8 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						UI_LoadDevStatusInfo();
 						tUI_PuSetting.ubDefualtFlag = FALSE;
 						UI_TimeSetSystemTime();
-						UI_UpdateDevStatusInfo();						
+						UI_UpdateDevStatusInfo();
+						tUI_PuSetting.ubLangageFlag = ubLangageFlag;
 					}
 				}
 			}
@@ -1980,7 +1983,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			{
 				//if(UI_CheckStopAlarm() == 1)
 					//return;
-		
 			}
 			break;
 		}
@@ -3486,7 +3488,6 @@ void UI_SetAlarm(uint8_t SubMenuItem)
 void UI_AlarmTriggerDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARM_BG, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 167;
@@ -3495,17 +3496,17 @@ void UI_AlarmTriggerDisplay(uint8_t value)
 	
 	switch(value)
 	{
-		case 0:   // sound
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON_TITLE+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		case 0:	//high temp
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_TITLE+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 167+263;
 			tOsdImgInfo.uwYStart =282+157;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+78;
-			tOsdImgInfo.uwYStart =282+284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);							
-		break;
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 167+79;
+			tOsdImgInfo.uwYStart =282+301;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		break;	
 
 		case 1:	// low temp
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_TITLE+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
@@ -3519,17 +3520,17 @@ void UI_AlarmTriggerDisplay(uint8_t value)
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		break;
 
-		case 2:	//high temp
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_TITLE+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		case 2:   // sound
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON_TITLE+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 167+263;
 			tOsdImgInfo.uwYStart =282+157;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+79;
-			tOsdImgInfo.uwYStart =282+301;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-		break;		
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 167+78;
+			tOsdImgInfo.uwYStart =282+284;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);							
+		break;
 	}
 }
 
@@ -3838,11 +3839,12 @@ void UI_SetAlert(uint8_t time)
 void UI_ShowAlarm(uint8_t type)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-	
+
+	printf("UI_ShowAlarm type: %d.\n", type);
 	switch(type)
 	{
 		case 0:
-			UI_AlarmTriggerDisplay(1);
+			UI_AlarmTriggerDisplay(0);
 
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10)*2), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 340;
@@ -3861,7 +3863,7 @@ void UI_ShowAlarm(uint8_t type)
 			break;
 
 		case 1:
-			UI_AlarmTriggerDisplay(2);
+			UI_AlarmTriggerDisplay(1);
 			
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 167;
@@ -3877,7 +3879,6 @@ void UI_ShowAlarm(uint8_t type)
 			tOsdImgInfo.uwXStart= 340;
 			tOsdImgInfo.uwYStart =600-24;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
 			
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 334;
@@ -3886,7 +3887,7 @@ void UI_ShowAlarm(uint8_t type)
 			break;
 
 		case 2:
-			UI_AlarmTriggerDisplay(0);
+			UI_AlarmTriggerDisplay(2);
 			break;
 	}
 
@@ -4855,7 +4856,6 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 		return;
 	}
 
-	printf("UI_CameraSettingSubMenuPage tUI_SyncAppState: %d, tArrowKey: %d.\n", tUI_SyncAppState, tArrowKey);
 	if(tUI_SyncAppState == APP_PAIRING_STATE) //if(tPairInfo.ubDrawFlag == TRUE)
 	{
 		if((tArrowKey == UP_ARROW) || (tArrowKey == DOWN_ARROW) || (tArrowKey == RIGHT_ARROW) || (tArrowKey == ENTER_ARROW))
@@ -6281,14 +6281,14 @@ void UI_FS_SetTimeMenuDisplay(uint8_t value)
 			tOsdImgInfo.uwYStart =646;	
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_BACK1, 1, &tOsdImgInfo);
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_BACK1+ (23*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 434;
 			tOsdImgInfo.uwYStart =679;	
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;	
 
 		case 4:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_FINISH1, 1, &tOsdImgInfo);
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_FINISH1+ (23*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 434;
 			tOsdImgInfo.uwYStart =217;	
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
@@ -8176,6 +8176,7 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 		}
 		else
 		{
+			VDO_Stop();
 			tOsdImgInfo.uwHSize  = 1280;
 			tOsdImgInfo.uwVSize  = 720;
 			tOsdImgInfo.uwXStart = 48;
@@ -8186,8 +8187,8 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 			//tOSD_GetOsdImgInfor(1, OSD_IMG1, OSD1IMG_ANKER_LOGO28, 1, &tOsdImgInfo);
 			//tOsdImgInfo.uwXStart= 0;
 			//tOsdImgInfo.uwYStart =0;	
-			//tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);
-			VDO_Stop();
+			//tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);	
+			
 					
 			UI_FS_LangageMenuDisplay(0);
 
@@ -8719,6 +8720,8 @@ void UI_LoadDevStatusInfo(void)
 
 	tCamViewSel.tCamViewPool[0] = tUI_PuSetting.ubCamViewNum;
 	printf("tCamViewSel.tCamViewNum  %d \n",tCamViewSel.tCamViewPool[0]);
+
+	ubFactorySettingFLag = tUI_PuSetting.ubDefualtFlag;
 
 	//tUI_PuSetting.ubLangageFlag 			= 2;
 	//printf("tUI_PuSetting.ubScanModeEn   %d \n",tUI_PuSetting.ubScanModeEn );

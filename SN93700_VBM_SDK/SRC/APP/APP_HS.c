@@ -49,6 +49,7 @@ extern uint8_t ubDisplaymodeFlag;
 extern uint8_t ubSetViewCam;
 uint8_t ubStartUpState = 1;
 
+extern uint8_t ubFactorySettingFLag ;
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
 static uint8_t osHeap[osHeapSize] __attribute__((aligned (8)));
@@ -961,8 +962,18 @@ void APP_Start(void)
 	//! Kernel Setup
 	KNL_BlockInit();
 
+	#if VBM_BU
 	//! Video Start
 	VDO_Start();
+	#endif
+
+	#if VBM_PU
+	//! Video Start
+	if(ubFactorySettingFLag == 0)	
+		VDO_Start();
+	else
+		VDO_Stop();
+	#endif
 
 	//! Audio Start
 	ADO_Start(tAPP_KNLInfo.tAdoSrcRole);

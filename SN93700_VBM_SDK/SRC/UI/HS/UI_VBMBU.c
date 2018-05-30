@@ -608,7 +608,7 @@ void UI_TempCheck(void) //20180322
 
 	cur_temp = tem;
 	
-	if(ubTemp_bak != cur_temp)
+	//if(ubTemp_bak != cur_temp)
 	{
 		tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] = UI_TEMP_CHECK;
