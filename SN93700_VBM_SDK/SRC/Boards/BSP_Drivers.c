@@ -101,8 +101,7 @@ void BSP_DriversInit(void)
 #endif
 	
 	//! RTC GPIO1
-	RTC_SetGPO_1(1, RTC_PullDownDisable);	
-	
+	RTC_SetGPO_1(1, RTC_PullDownDisable);		
 	printd(DBG_CriticalLvl, "SONiX SN9370X High Speed Mode Start!\n");
 }
 #endif

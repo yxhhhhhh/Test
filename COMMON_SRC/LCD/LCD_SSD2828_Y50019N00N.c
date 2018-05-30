@@ -791,6 +791,7 @@ void LCD_CODE(void)
 
 bool bLCD_MIPI_SSD2828_Init (void)
 {
+	#if 1
 	uint16_t uwId;
     SPI_Setup_t spi_setup;
 
@@ -1114,6 +1115,9 @@ bool bLCD_MIPI_SSD2828_Init (void)
 	LCD_SSD2828_RegWr(0xBC,0x0001);
 	LCD_SSD2828_RegWr(0xBF,0x0011);
 	TIMER_Delay_ms(120);
+
+	LCD_SSD2828_RegWr(0xBC, 0x0002);
+	LCD_SSD2828_RegWr(0xBF, 0x0336);
 	
 	//! mipi_0data(0xCC);	
 	LCD_SSD2828_RegWr(0xBC,0x0002);
@@ -1148,6 +1152,493 @@ bool bLCD_MIPI_SSD2828_Init (void)
 //										//!< CKE[1]: Clock Lane Enable
 //										//!< HS[0]: HS mode
 	return true;
+#else
+	uint16_t uwId;
+    SPI_Setup_t spi_setup;
+
+	printf("MIPI SSD2828 Init\n");
+
+    spi_setup.ubSPI_CPOL    = 0;
+    spi_setup.ubSPI_CPHA    = 0;
+    spi_setup.tSPI_Mode     = SPI_MASTER;
+    spi_setup.uwClkDiv      = ((float)160 / GLB->APBC_RATE) + 0.99 - 1;         // SPI Clock <= 1.5MHz
+    
+    plLCD_SpiData = osUncachedMalloc(4);
+    if(plLCD_SpiData == NULL)
+    {
+        printd(DBG_CriticalLvl, "LCD: osUncachedMalloc fail!!\n");
+        while(1);
+    }
+	SPI_Init(&spi_setup);
+	if (0x2828 != (uwId = LCD_SSD2828_RegRd(0xB0)))
+	{
+		printd(DBG_ErrorLvl, "LCD: SSD2828 Fail %X\n", uwId);
+		return false;
+	}
+	LCD_SSD2828_RegWr(0xB1, 0x040A);   // VSA = 4,HSA = 10           
+	LCD_SSD2828_RegWr(0xB2, 0x103C);   // VBP = 16,HBP = 60         
+	LCD_SSD2828_RegWr(0xB3, 0x103C);   // VFP = 16,HFP = 60         
+	LCD_SSD2828_RegWr(0xB4, 0x02D0);   // HACT = 720                
+	LCD_SSD2828_RegWr(0xB5, 0x0500);   // VACT = 1280               
+	LCD_SSD2828_RegWr(0xB6, 0x003B);   // Vsync Pulse is active low,
+									   // Hsync Pulse is active low,Data is launch at falling edge,SSD2828 latch data at rising edge
+									   // Video with blanking packet.
+									   // Non video data will be transmitted during any BLLP period.
+									   // Non video data will be transmitted using HS mode.
+									   // LP mode will be used during BLLP period.
+									   // The clock lane enters LP mode when there is no data to transmit.
+									   // Burst mode
+									   // 24bpp
+	LCD_SSD2828_RegWr(0xB8,0x0000);
+	LCD_SSD2828_RegWr(0xB9,0x0000);	  // Divide by 1,Enable Sys_clk output,PLL power down                                                
+	LCD_SSD2828_RegWr(0xBA,0xc02c);   // 10-251<Fout<500,MS=1,NS=22                                                                    
+	LCD_SSD2828_RegWr(0xBB,0x0006);   // LP mode clock, Divide by 6                                                                    
+	LCD_SSD2828_RegWr(0xD5,0x1860);                                                                                                      
+	LCD_SSD2828_RegWr(0xC9,0x1604);   // HS Zero Delay = HZD * nibble_clk ; HS Prepare Delay =  4 nibble_clk + HPD * nibble_clk        
+	LCD_SSD2828_RegWr(0xCA,0x2303);   // CLK Zero Delay = CZD * nibble_clk ; CLK Prepare Delay =  3 nibble_clk + CPD * nibble_clk      
+	LCD_SSD2828_RegWr(0xCB,0x0626);   // CLK Pre Delay = CPED * nibble_clk + 0-1 * lp_clk(min,max) ; CLK Post Delay = CPTD * nibble_clk
+	LCD_SSD2828_RegWr(0xCC,0x0a0c);   // CLK Trail Delay = CTD * nibble_clk ; HS Trail Delay = HTD * nibble_clk                        
+	LCD_SSD2828_RegWr(0xDE,0x0003);   // 4 lane mode                                                                                   
+	LCD_SSD2828_RegWr(0xB9,0x0001);   // Divide by 1,Enable Sys_clk output,PLL enable                                                  	
+	LCD_SSD2828_RegWr(0xD6,0x0005);	  // RGB,R is in the higher portion of the pixel.	
+	LCD_SSD2828_RegWr(0xB8,0x0000);
+
+	//! Driver IC Initial Code
+	TIMER_Delay_ms(5);
+
+	//! Driver IC Initial Code
+
+GPIO->GPIO_O0 = 1;
+
+	LCD_SSD2828_RegWr(0xB7,0x0250); //!< TXD[11]: Transmit on
+									//!< LPE[10]: Short Packet
+									//!< EOT[9]: Send EOT Packet at the end of HS transmission
+									//!< ECD[8]: Disable ECC CRC Check
+									//!< REN[7]: Write operation
+									//!< DCS[6]: Generic packet
+									//!< CSS[5]: The clock source is tx_clk
+									//!< HCLK[4]: HS clock is enabled
+									//!< VEN[3]: Video mode is disabled
+									//!< SLP[2]: Sleep mode is disabled
+									//!< CKE[1]: Clock Lane Enable
+									//!< HS[0]: LP mode 
+
+	#if 0 //20180118
+	LCD_CODE();
+	#else
+	LCD_SSD2828_RegWr(0xBC,0x0006);	//!< Transmit Data Count
+	LCD_SSD2828_RegWr(0xBF,0x55F0);	//!< Data
+	LCD_SSD2828_DatWr(0x52AA);		//!< Data
+	LCD_SSD2828_DatWr(0x0108);		//!< Data
+	
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x00C0);
+		
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x08B5);
+	LCD_SSD2828_DatWr(0x0008);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0006);	//!< Transmit Data Count
+	LCD_SSD2828_RegWr(0xBF,0x55F0);	//!< Data
+	LCD_SSD2828_DatWr(0x52AA);		//!< Data
+	LCD_SSD2828_DatWr(0x0008);		//!< Data
+	
+	LCD_SSD2828_RegWr(0xBC,0x000A);
+	LCD_SSD2828_RegWr(0xBF,0x00C0);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x0300);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x0200);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x80C8);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0xE8B1);
+	LCD_SSD2828_DatWr(0x0021);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x05B5);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x93BB);
+	LCD_SSD2828_DatWr(0x0093);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x0FBC);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0x11BD);
+	LCD_SSD2828_DatWr(0x1030);
+	LCD_SSD2828_DatWr(0x0010);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x55F0);
+	LCD_SSD2828_DatWr(0x52AA);
+	LCD_SSD2828_DatWr(0x0108);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x00D7);
+	LCD_SSD2828_DatWr(0x00FF);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x00B7);
+	LCD_SSD2828_DatWr(0x006C);
+
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x00CE);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x03CA);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x23B3);
+	LCD_SSD2828_DatWr(0x0023);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x23B4);
+	LCD_SSD2828_DatWr(0x0023);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x5AC3);
+	LCD_SSD2828_DatWr(0x005A);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x5AC4);
+	LCD_SSD2828_DatWr(0x005A);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x5AC2);
+	LCD_SSD2828_DatWr(0x005A);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x34B9);
+	LCD_SSD2828_DatWr(0x0034);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x34BA);
+	LCD_SSD2828_DatWr(0x0034);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x50BC);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x50BD);
+	LCD_SSD2828_DatWr(0x0000);
+
+//	LCD_SSD2828_RegWr(0xBC,0x0003);
+//	LCD_SSD2828_RegWr(0xBF,0x00BE);
+//	LCD_SSD2828_DatWr(0x0071);
+
+//	LCD_SSD2828_RegWr(0xBC,0x0003);
+//	LCD_SSD2828_RegWr(0xBF,0x00BF);
+//	LCD_SSD2828_DatWr(0x0071);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x55F0);
+	LCD_SSD2828_DatWr(0x52AA);
+	LCD_SSD2828_DatWr(0x0308);
+
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0x00B0);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0x00B1);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0008);
+	LCD_SSD2828_RegWr(0xBF,0x00B2);
+	LCD_SSD2828_DatWr(0x0A00);
+	LCD_SSD2828_DatWr(0x0006);
+	LCD_SSD2828_DatWr(0x5BF0);
+
+	LCD_SSD2828_RegWr(0xBC,0x0008);
+	LCD_SSD2828_RegWr(0xBF,0x00B3);
+	LCD_SSD2828_DatWr(0x0900);
+	LCD_SSD2828_DatWr(0x0006);
+	LCD_SSD2828_DatWr(0x5BF0);
+
+	LCD_SSD2828_RegWr(0xBC,0x000B);
+	LCD_SSD2828_RegWr(0xBF,0xF0B6);
+	LCD_SSD2828_DatWr(0x0605);
+	LCD_SSD2828_DatWr(0x0003);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x1000);
+	LCD_SSD2828_DatWr(0x0010);
+
+	LCD_SSD2828_RegWr(0xBC,0x000B);
+	LCD_SSD2828_RegWr(0xBF,0xF0B7);
+	LCD_SSD2828_DatWr(0x0705);
+	LCD_SSD2828_DatWr(0x0003);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x1000);
+	LCD_SSD2828_DatWr(0x0010);
+
+	LCD_SSD2828_RegWr(0xBC,0x0008);
+	LCD_SSD2828_RegWr(0xBF,0xC5BC);
+	LCD_SSD2828_DatWr(0x0003);
+	LCD_SSD2828_DatWr(0x0008);
+	LCD_SSD2828_DatWr(0x5BF0);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x00C4);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x55F0);
+	LCD_SSD2828_DatWr(0x52AA);
+	LCD_SSD2828_DatWr(0x0508);
+
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0x33B0);
+	LCD_SSD2828_DatWr(0x0004);
+	LCD_SSD2828_DatWr(0x0001);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x40B1);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0004);
+	LCD_SSD2828_RegWr(0xBF,0x03B2);
+	LCD_SSD2828_DatWr(0x0202);
+
+//	LCD_SSD2828_RegWr(0xBC,0x0005);
+//	LCD_SSD2828_RegWr(0xBF,0x83B3);
+//	LCD_SSD2828_DatWr(0x4223);
+//	LCD_SSD2828_DatWr(0x0097);
+
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0xC5B4);
+	LCD_SSD2828_DatWr(0x7735);
+	LCD_SSD2828_DatWr(0x0053);
+
+	LCD_SSD2828_RegWr(0xBC,0x0008);
+	LCD_SSD2828_RegWr(0xBF,0x4CB5);
+	LCD_SSD2828_DatWr(0x31E5);
+	LCD_SSD2828_DatWr(0x3333);
+	LCD_SSD2828_DatWr(0x0AA3);
+
+	LCD_SSD2828_RegWr(0xBC,0x0007);
+	LCD_SSD2828_RegWr(0xBF,0x00B6);
+	LCD_SSD2828_DatWr(0xD500);
+	LCD_SSD2828_DatWr(0x7731);
+	LCD_SSD2828_DatWr(0x0053);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x00B9);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x0005);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x35C0);
+	LCD_SSD2828_DatWr(0x3333);
+	LCD_SSD2828_DatWr(0x0550);
+
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0x00C6);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0xF0CE);
+	LCD_SSD2828_DatWr(0x001F);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x00D2);
+	LCD_SSD2828_DatWr(0x0225);
+	LCD_SSD2828_DatWr(0x0000);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0xE8E7);
+	LCD_SSD2828_DatWr(0x00FF);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0xFFE8);
+	LCD_SSD2828_DatWr(0x00FF);
+
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x00E9);
+
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0xAAEA);
+
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0xAAEB);
+
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0xAAEC);
+
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0xAAEE);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x55F0);
+	LCD_SSD2828_DatWr(0x52AA);
+	LCD_SSD2828_DatWr(0x0608);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x7DB0);
+	LCD_SSD2828_DatWr(0x7D4A);
+	LCD_SSD2828_DatWr(0x7D7D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x7DB1);
+	LCD_SSD2828_DatWr(0x427D);
+	LCD_SSD2828_DatWr(0x7D5D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x7DB2);
+	LCD_SSD2828_DatWr(0x6163);
+	LCD_SSD2828_DatWr(0x7D7D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x5FB3);
+	LCD_SSD2828_DatWr(0x7D72);
+	LCD_SSD2828_DatWr(0x7D7D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x7DB4);
+	LCD_SSD2828_DatWr(0x007D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x7DB5);
+	LCD_SSD2828_DatWr(0x7D48);
+	LCD_SSD2828_DatWr(0x7D7D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x7DB6);
+	LCD_SSD2828_DatWr(0x407D);
+	LCD_SSD2828_DatWr(0x7D5C);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x7DB7);
+	LCD_SSD2828_DatWr(0x6062);
+	LCD_SSD2828_DatWr(0x7D7D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x5EB8);
+	LCD_SSD2828_DatWr(0x7D72);
+	LCD_SSD2828_DatWr(0x7D7D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0003);
+	LCD_SSD2828_RegWr(0xBF,0x7DB9);
+	LCD_SSD2828_DatWr(0x007D);
+
+	LCD_SSD2828_RegWr(0xBC,0x0006);
+	LCD_SSD2828_RegWr(0xBF,0x55F0);
+	LCD_SSD2828_DatWr(0x52AA);
+	LCD_SSD2828_DatWr(0x0208);
+
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x42B0);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0011);
+	LCD_SSD2828_RegWr(0xBF,0x00D1);
+	LCD_SSD2828_DatWr(0x0000);
+	LCD_SSD2828_DatWr(0x001B);
+	LCD_SSD2828_DatWr(0x003F);
+	LCD_SSD2828_DatWr(0x005B);
+	LCD_SSD2828_DatWr(0x0071);
+	LCD_SSD2828_DatWr(0x0097);
+	LCD_SSD2828_DatWr(0x00B5);
+	LCD_SSD2828_DatWr(0x00E6);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0011);
+	LCD_SSD2828_RegWr(0xBF,0x01D2);
+	LCD_SSD2828_DatWr(0x010D);
+	LCD_SSD2828_DatWr(0x014A);
+	LCD_SSD2828_DatWr(0x017B);
+	LCD_SSD2828_DatWr(0x02C7);
+	LCD_SSD2828_DatWr(0x0203);
+	LCD_SSD2828_DatWr(0x0205);
+	LCD_SSD2828_DatWr(0x023A);
+	LCD_SSD2828_DatWr(0x0073);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0011);
+	LCD_SSD2828_RegWr(0xBF,0x02D3);
+	LCD_SSD2828_DatWr(0x0297);
+	LCD_SSD2828_DatWr(0x02CB);
+	LCD_SSD2828_DatWr(0x03EE);
+	LCD_SSD2828_DatWr(0x0320);
+	LCD_SSD2828_DatWr(0x0341);
+	LCD_SSD2828_DatWr(0x036D);
+	LCD_SSD2828_DatWr(0x038C);
+	LCD_SSD2828_DatWr(0x00AB);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0x03D4);
+	LCD_SSD2828_DatWr(0x03BC);
+	LCD_SSD2828_DatWr(0x00BE);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0005);
+	LCD_SSD2828_RegWr(0xBF,0xAAFF);
+	LCD_SSD2828_DatWr(0xA555);
+	LCD_SSD2828_DatWr(0x0080);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0xC0F3);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x0035);
+	
+	LCD_SSD2828_RegWr(0xBC,0x0002);
+	LCD_SSD2828_RegWr(0xBF,0x0162);
+	#endif
+	
+	//! mipi_0data(0x11);	
+	LCD_SSD2828_RegWr(0xBC,0x0001);
+	LCD_SSD2828_RegWr(0xBF,0x0011);
+	TIMER_Delay_ms(120);
+
+	LCD_SSD2828_RegWr(0xBC, 0x0002);
+	LCD_SSD2828_RegWr(0xBF, 0x0036);
+	
+	//! mipi_0data(0xCC);	
+//	LCD_SSD2828_RegWr(0xBC,0x0002);
+//	LCD_SSD2828_RegWr(0xBF,0x05CC);		//1001 1101 0101 0001
+//	TIMER_Delay_ms(1);
+	
+	//! mipi_0data(0x29);	
+	LCD_SSD2828_RegWr(0xBC,0x0001);
+	LCD_SSD2828_RegWr(0xBF,0x0029);
+	TIMER_Delay_ms(20);
+
+	GPIO->GPIO_O1 	= 1;
+	GPIO->GPIO_O0 	= 1;
+	GPIO->GPIO_O3 	= 1;
+	GPIO->GPIO_O2  	= 1;
+
+//	//! mipi_0data(0x29);	
+//	LCD_SSD2828_RegWr(0xBC,0x0001);
+//	LCD_SSD2828_RegWr(0xBF,0x0029);
+//	TIMER_Delay_ms(600);
+
+//	//! mipi_0data(0x29);	
+//	LCD_SSD2828_RegWr(0xBC,0x0002);
+//	LCD_SSD2828_RegWr(0xBF,0x05CC);		//1001 1101 0101 0001
+//	TIMER_Delay_ms(50);
+
+//	LCD_SSD2828_RegWr(0xB7,0x0349);		//!< TXD[11]: Transmit on
+//										//!< LPE[10]: Short Packet
+//										//!< EOT[9]: Send EOT Packet at the end of HS transmission
+//										//!< ECD[8]: Disable ECC CRC Check
+//										//!< REN[7]: Write operation
+//										//!< DCS[6]: DCS packet
+//										//!< CSS[5]: The clock source is tx_clk
+//										//!< HCLK[4]: HS clock is enabled
+//										//!< VEN[3]: Video mode is enabled
+//										//!< SLP[2]: Sleep mode is disabled
+//										//!< CKE[1]: Clock Lane Enable
+//										//!< HS[0]: HS mode
+	return true;
+
+	#endif
 }
 //------------------------------------------------------------------------------
 void LCD_MIPI_SSD2828_Sleep (void)

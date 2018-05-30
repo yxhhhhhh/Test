@@ -47,6 +47,8 @@ extern uint32_t Image$$RW_IRAM3$$Base;
 
 extern uint8_t ubDisplaymodeFlag;
 extern uint8_t ubSetViewCam;
+uint8_t ubStartUpState = 1;
+
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
 static uint8_t osHeap[osHeapSize] __attribute__((aligned (8)));
@@ -81,6 +83,79 @@ APP_PairRoleInfo_t tAPP_PairRoleInfo;
 #endif
 static void APP_StartThread(void const *argument);
 static void APP_WatchDogThread(void const *argument);
+
+void RTC_PowerOff(void)
+{
+	printd(DBG_Debug1Lvl, "RTC_PowerOff Power OFF!\n");
+	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
+	RTC_PowerDisable();
+	while(1);
+}
+
+uint8_t APP_GetBatteryValue(void)
+{
+	return 50;
+}
+
+uint8_t APP_CkeckBootStatus(void)
+{
+	#ifdef VBM_PU //20180330
+	#define CHECK_COUNT		10
+	uint16_t checkCount = 0;
+	printf("APP_CkeckBootStatus USB: %d.\n", GPIO->GPIO_I3);
+
+	while(1)
+	{
+		if(GPIO->GPIO_I3 == 1) //Usb On
+		{
+			if(ubRTC_GetKey() == 1)
+			{
+				checkCount++;
+				if(checkCount >= CHECK_COUNT)
+				{
+					printf("break###\n");
+					break;
+				}
+			}
+			else
+			{
+				checkCount = 0;
+				if(APP_GetBatteryValue() == 100)
+				{
+					//Charge Full
+				}
+			}
+		}
+		else
+		{
+			if(APP_GetBatteryValue() <= 10)
+			{
+				break;
+			}
+			
+			if(ubRTC_GetKey() == 1)
+			{
+				checkCount++;
+				if(checkCount >= CHECK_COUNT)
+				{
+					printf("break@@@\n");
+					break;
+				}
+			}
+			else
+			{
+				printf("PowerOff!!!\n");
+				RTC_PowerOff();
+			}
+		}
+		TIMER_Delay_ms(200);
+	}
+
+	printf("APP_CkeckBootStatus USB: %d, checkCount: %d.\n", GPIO->GPIO_I3, checkCount);
+	LCDBL_ENABLE(UI_ENABLE);
+	#endif
+}
+
 uint8_t CheckPowerKey(void) //20180330
 {
 	static uint16_t checkCount = 10;
@@ -148,13 +223,19 @@ void APP_Init(void)
 	#endif
 	
 	FWU_Init();
+
+	#if 0 //20180526
+	APP_CkeckBootStatus();
+	//TIMER_Delay_ms(3000);
+	#endif
+	
 	UI_Init(&APP_EventQueue);
 	#if 0
 	if(CheckPowerKey() == 0)
 	{
 		printf( "APP_PowerOnFunc Power OFF!\n");
 		//printd(DBG_Debug1Lvl, "APP_PowerOnFunc Power OFF!\n");
-	}
+	}	
 	#endif
 	
 	tAPP_StsReport.tAPP_State  	= APP_POWER_OFF_STATE;
@@ -208,21 +289,7 @@ void APP_WatchDogThread(void const *argument)
 	}
 }
 
-void RTC_PowerOff(void)
-{
-	printd(DBG_Debug1Lvl, "RTC_PowerOff Power OFF!\n");
-	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
-	RTC_PowerDisable();
-	while(1);
-}
-
-uint8_t APP_GetBatteryValue(void)
-{
-	return 50;
-}
-
 //------------------------------------------------------------------------------
-uint8_t ubStartUpState = 1;
 //------------------------------------------------------------------------------
 void APP_PowerOnFunc(void)
 {

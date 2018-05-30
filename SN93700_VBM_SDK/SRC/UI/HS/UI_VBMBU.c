@@ -87,6 +87,10 @@ static uint8_t ubUI_Mc3RunFlag;
 static uint8_t ubUI_Mc4RunFlag;
 static uint8_t ubUI_Mc1RunCnt;
 static uint8_t ubUI_Mc2RunCnt;
+static uint16_t ubUI_McHandshake;
+static uint16_t ubUI_McPreHandshake;
+static uint8_t ubMcHandshakeLost = 0;
+
 
 uint8_t ubVoicetemp_bak = 0xff;
 uint8_t ubTemp_bak = 25;
@@ -179,6 +183,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
 	osMutexWait(UI_BUMutex, osWaitForever);
 	UI_CLEAR_THREADCNT(ubUI_ClearThdCntFlag, *pThreadCnt);
+	UI_MCStateCheck(); //20180529
 	switch(tUI_SyncAppState)
 	{
 		case APP_LINK_STATE:
@@ -188,12 +193,13 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				UI_VoxTrigger();
 			if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
 				UI_VoiceTrigger();
-//			if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
-//				UI_MDTrigger();
-		/*	if(((*pThreadCnt)%5) == 0)
+			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
+				//UI_MDTrigger();
+
+			if(((*pThreadCnt)%5) == 0)
 			{
-				UI_TestCheck(); //20180517
-			}*/
+				//UI_TestCheck(); //20180517
+			}
 			
 			if(((*pThreadCnt)%10) == 0)
 			{
@@ -201,7 +207,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				//UI_BrightnessCheck();
 			}
 			
-			if(((*pThreadCnt)%60) == 0)
+			if(((*pThreadCnt)%10) == 0)
 			{
 				UI_TempCheck();
 			}
@@ -554,7 +560,7 @@ void UI_VoiceCheck (void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	//printf("ulUI_AdcRpt  0x%lx \n",ulUI_AdcRpt);	
+	printf("ulUI_AdcRpt  0x%lx \n",ulUI_AdcRpt);	
 
 	if(ulUI_AdcRpt > 0x6000)
 		voice_temp = 5;
@@ -982,40 +988,79 @@ void UI_MotoControlInit(void)
 //------------------------------------------------------------------------------
 //NOTE: 收到Rx端信息
 //------------------------------------------------------------------------------
+void UI_StopMotor(void)
+{
+	if((ubUI_Mc1RunFlag == 1) || (ubUI_Mc2RunFlag == 1))
+	{
+		MC_Stop(MC_1);
+		ubUI_Mc1RunFlag = 0;
+		ubUI_Mc2RunFlag = 0;
+		printf("UI_StopMotor MC_1!!!\n");
+	}
+	if((ubUI_Mc3RunFlag == 1) || (ubUI_Mc4RunFlag == 1))
+	{
+		MC_Stop(MC_0);
+		ubUI_Mc3RunFlag = 0;
+		ubUI_Mc4RunFlag = 0;
+		printf("UI_StopMotor MC_0!!!\n");
+	}
+
+	ubUI_McHandshake = 0;
+	ubUI_McPreHandshake = 0;
+	ubMcHandshakeLost = 0;
+}
+
 void UI_PtzControlSetting(void *pvMCParam)
 {
   	#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
 
-	/*
-	if(ubTestMode == 1)
-	{
-		printf("UI_PtzControlSetting ubTestMode return!\n");
-		return;
-	}
-	*/
-	
+	//printf("UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
 	switch(pMC_Param[0])
 	{
 		case 0:
-			MC_Stop(MC_1);
-			MC_Stop(MC_0);
+			UI_StopMotor();
+			ubUI_McHandshake = 0;
 			break;
 			
 		case 1:	//水平,正转
-			MC_Start(MC_1, 42, MC_Clockwise, MC_WaitReady);
+			ubUI_Mc1RunCnt = 2;
+			if(ubUI_Mc1RunFlag == 0)
+			{
+				ubUI_Mc1RunFlag = 1;
+				MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);
+			}
+			ubUI_McHandshake++;
 			break;
 		
 		case 2:	//水平,反转
-			MC_Start(MC_1, 42, MC_Counterclockwise, MC_WaitReady);
+			ubUI_Mc1RunCnt = 2;
+			if(ubUI_Mc2RunFlag == 0)
+			{
+				ubUI_Mc2RunFlag = 1;
+				MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);
+			}
+			ubUI_McHandshake++;
 			break;
 		
 		case 3:	//垂直,正转
-			MC_Start(MC_0, 42, MC_Clockwise, MC_WaitReady);
+			ubUI_Mc2RunCnt = 2;
+			if(ubUI_Mc3RunFlag == 0)
+			{
+				ubUI_Mc3RunFlag = 1;
+				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
+			}
+			ubUI_McHandshake++;
 			break;
 		
 		case 4:	//垂直,反转
-			MC_Start(MC_0, 42, MC_Counterclockwise, MC_WaitReady);
+			ubUI_Mc2RunCnt = 2;
+			if(ubUI_Mc4RunFlag == 0)
+			{
+				ubUI_Mc4RunFlag = 1;
+				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);
+			}
+			ubUI_McHandshake++;
 			break;
 
 		default:
@@ -1027,24 +1072,26 @@ void UI_PtzControlSetting(void *pvMCParam)
 //------------------------------------------------------------------------------
 void UI_MCStateCheck(void)
 {
-	printf(">> MC tUI_SyncAppState: %d\r\n", tUI_SyncAppState);
-	if(tUI_SyncAppState != APP_LINK_STATE)
+	//printf(">> MC ubUI_McPreHandshake: %d, ubUI_McHandshake: %d, ubMcHandshakeLost: %d.\r\n", ubUI_McPreHandshake, ubUI_McHandshake, ubMcHandshakeLost);
+	if(tUI_SyncAppState == APP_LINK_STATE)
 	{
-		if((ubUI_Mc1RunFlag == 1)||(ubUI_Mc2RunFlag == 1))
+		if((ubUI_McPreHandshake == ubUI_McHandshake) && (ubUI_McHandshake > 0))
 		{
-			ubUI_Mc1RunFlag = 0;
-			ubUI_Mc2RunFlag = 0;
-			MC_Stop(MC_1);
-			printf(">> MC1 Stop!!\r\n");
+			ubMcHandshakeLost++;
+			if(ubMcHandshakeLost >= 3)
+			{
+				UI_StopMotor();
+			}
 		}
-
-		if((ubUI_Mc3RunFlag == 1)||(ubUI_Mc4RunFlag == 1))
+		else
 		{
-			ubUI_Mc3RunFlag = 0;
-			ubUI_Mc4RunFlag = 0;
-			MC_Stop(MC_0);
-			printf(">> MC0 Stop!!\r\n");
+			ubMcHandshakeLost = 0;
+			ubUI_McPreHandshake = ubUI_McHandshake;
 		}
+	}
+	else
+	{
+		UI_StopMotor();
 	}
 }
 //------------------------------------------------------------------------------

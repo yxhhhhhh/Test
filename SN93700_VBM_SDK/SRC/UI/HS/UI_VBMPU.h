@@ -863,7 +863,7 @@ void UI_LangageDisplay(uint8_t value);
 void UI_FlickerDisplay(uint8_t value);
 void UI_DefualtDisplay(uint8_t value);
 void UI_TempUnitDisplay(uint8_t value);
-void UI_DrawSettingSubMenuPage_NoSel(void);
+void UI_DrawSettingSubMenuPage_NoSel(uint8_t type);
 
 void UI_NightModeSubSubSubmenuDisplay(uint8_t value);
 void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
