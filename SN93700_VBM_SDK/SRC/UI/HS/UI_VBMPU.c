@@ -110,7 +110,7 @@ UI_ReportFuncPtr_t tUiReportMap2Func[] =
 ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 
 //uint32_t ulUI_BLTable[] = {0x100, 0x118, 0x200, 0x400, 0x600, 0x700, 0x800, 0x0900, 0xA00};
-uint32_t ulUI_BLTable[] = {0, 0, 20, 30, 40, 50, 60, 70, 80, 90};
+uint32_t ulUI_BLTable[] = {0, 1, 20, 30, 40, 50, 60, 70, 80, 90};
 
 
 static UI_SubMenuCamNum_t tCamSelect;
@@ -609,6 +609,15 @@ extern uint8_t ubStartUpState;
 void UI_PuInit(void)
 {
 	ubStartUpState = 0;
+
+	UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
+	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
+		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
+	else
+    	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+	
+	LCD_BACKLIGHT_CTRL(ulUI_BLTable[tUI_PuSetting.BriLvL.tBL_UpdateLvL]);
+	
 	printf("UI_PuInit.\n");
 }
 //------------------------------------------------------------------------------
@@ -1976,6 +1985,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						UI_TimeSetSystemTime();
 						UI_UpdateDevStatusInfo();
 						tUI_PuSetting.ubLangageFlag = ubLangageFlag;
+						UI_PuInit();
 					}
 				}
 			}
@@ -3205,8 +3215,7 @@ void UITempSubSubSubmenuDisplay(uint8_t SubMenuItem)
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 227 +(tUI_PuSetting.ubHighTempSetting*76);
 			tOsdImgInfo.uwYStart =188;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
-			
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
 		break;
 
 		case 1:		
@@ -3245,7 +3254,6 @@ void UITempSubSubSubmenuDisplay(uint8_t SubMenuItem)
 		break;	
 
 		case 2:
-			
 			for(i = 0; i < 4; i++)
 			{	
 				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S+(i*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
@@ -3894,9 +3902,25 @@ void UI_ShowAlarm(uint8_t type)
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
-void UI_PlayAlarmSound(void)
+void UI_PlayAlarmSound(uint8_t type)
 {
-	if(++ubPlayAlarmCount > (ubAlertTime[tUI_PuSetting.ubTempAlertSetting] * 5))
+	uint8_t ubAlertSetting = 0;
+	switch(type)
+	{
+		case 0:
+		case 1:
+			ubAlertSetting = tUI_PuSetting.ubTempAlertSetting;
+			break;
+
+		case 2:
+			ubAlertSetting = tUI_PuSetting.ubSoundAlertSetting;
+			break;
+
+		default:
+			break;
+	}
+	
+	if(++ubPlayAlarmCount > (ubAlertTime[ubAlertSetting] * 5))
 	{
 		ubPlayAlarmCount = 200;
 		ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
@@ -3971,7 +3995,7 @@ void UI_TempAlarmCheck(void)
 	}
 	else if(ubTempAlarmState == HIGH_TEMP_ALARM_ING)
 	{
-		UI_PlayAlarmSound();
+		UI_PlayAlarmSound(0);
 	}
 	else if(ubTempAlarmState == LOW_TEMP_ALARM_ON)
 	{
@@ -3980,7 +4004,7 @@ void UI_TempAlarmCheck(void)
 	}
 	else if(ubTempAlarmState == LOW_TEMP_ALARM_ING)
 	{
-		UI_PlayAlarmSound();
+		UI_PlayAlarmSound(1);
 	}
 	else if(ubTempAlarmState == TEMP_ALARM_OFF)
 	{
@@ -4033,7 +4057,7 @@ void UI_PickupAlarmCheck(void)
 	}
 	else if(ubPickupAlarmState == PICKUP_ALARM_ING)
 	{
-		UI_PlayAlarmSound();
+		UI_PlayAlarmSound(2);
 	}
 	else if(ubPickupAlarmState == PICKUP_ALARM_OFF)
 	{
@@ -4467,85 +4491,50 @@ void UI_TimeSubMenuDisplay(uint8_t value)
 	}
 }	
 
-void UI_Zoom_SetScaleParam(UI_ArrowKey_t tArrowKey) //add by wjb
+void UI_Zoom_SetScaleParam(uint8_t tZoomScale)
 {
-	#define PT_STEP		10
-	OSD_IMG_INFO tOsdImgInfo;
-	uint8_t ubArrowNum;
 	uint32_t ulLcd_HSize = uwLCD_GetLcdHoSize();
 	uint32_t ulLcd_VSize = uwLCD_GetLcdVoSize();
 
-	printf("UI_Zoom_SetScaleParam tArrowKey: %d, ubSubMenuItemFlag: %d.\r\n", tArrowKey, ubSubMenuItemFlag);
-	switch(tArrowKey)
+	printf("UI_Zoom_SetScaleParam tZoomScale: %d, tUI_PuSetting.ubZoomScale: %d.\r\n", tZoomScale, tUI_PuSetting.ubZoomScale);
+
+	if(tZoomScale == 0) //off
 	{
-		case UP_ARROW:
-			break;
-		case DOWN_ARROW:
-			break;
-		case LEFT_ARROW:
-			break;
-		case RIGHT_ARROW:
-			break;
-			
-		case ENTER_ARROW:
-			if(ubSubMenuItemFlag == 0) //off
-			{
-				tUI_DptzParam.tScaleParam							 = UI_SCALEUP_2X;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputHsize = ulLcd_HSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputVsize = ulLcd_VSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize    = ulLcd_HSize*2/tUI_DptzParam.tScaleParam;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize    = ulLcd_VSize*2/tUI_DptzParam.tScaleParam;
-				tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputHsize	   	 = ulLcd_HSize;
-				tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputVsize	   	 = ulLcd_VSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart   = (ulLcd_HSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize)/2;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart   = (ulLcd_VSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize)/2;
-			}
-			else if(ubSubMenuItemFlag == 1) //1.5X
-			{
-				tUI_DptzParam.tScaleParam							 = UI_SCALEUP_3X;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputHsize = ulLcd_HSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputVsize = ulLcd_VSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize    = ulLcd_HSize*2/tUI_DptzParam.tScaleParam;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize    = ulLcd_VSize*2/tUI_DptzParam.tScaleParam;
-				tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputHsize	   	 = ulLcd_HSize;
-				tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputVsize	   	 = ulLcd_VSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart   = (ulLcd_HSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize)/2;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart   = (ulLcd_VSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize)/2;
-			}
-			else if(ubSubMenuItemFlag == 2) //2X
-			{
-				tUI_DptzParam.tScaleParam							 = UI_SCALEUP_4X;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputHsize = ulLcd_HSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputVsize = ulLcd_VSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize    = ulLcd_HSize*2/tUI_DptzParam.tScaleParam;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize    = ulLcd_VSize*2/tUI_DptzParam.tScaleParam;
-				tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputHsize	   	 = ulLcd_HSize;
-				tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputVsize	   	 = ulLcd_VSize;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart   = (ulLcd_HSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize)/2;
-				tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart   = (ulLcd_VSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize)/2;
-			}
-			break;
-		case EXIT_ARROW:
-		{
-			//UI_MenuKeyExitFunc();
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 1184;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);
-			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_S, 1 , &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 48 + (4*96);
-			tOsdImgInfo.uwYStart = 1173;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			
-			tUI_State = UI_DISPLAY_STATE;
-			return;
-		}
-		default:
-			return;
+		tUI_DptzParam.tScaleParam							 = UI_SCALEUP_2X;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputHsize = ulLcd_HSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputVsize = ulLcd_VSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize    = ulLcd_HSize*2/tUI_DptzParam.tScaleParam;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize    = ulLcd_VSize*2/tUI_DptzParam.tScaleParam;
+		tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputHsize	   	 = ulLcd_HSize;
+		tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputVsize	   	 = ulLcd_VSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart   = (ulLcd_HSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize)/2;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart   = (ulLcd_VSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize)/2;
 	}
-	
+	else if(tZoomScale == 1) //1.5X
+	{
+		tUI_DptzParam.tScaleParam							 = UI_SCALEUP_3X;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputHsize = ulLcd_HSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputVsize = ulLcd_VSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize    = ulLcd_HSize*2/tUI_DptzParam.tScaleParam;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize    = ulLcd_VSize*2/tUI_DptzParam.tScaleParam;
+		tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputHsize	   	 = ulLcd_HSize;
+		tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputVsize	   	 = ulLcd_VSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart   = (ulLcd_HSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize)/2;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart   = (ulLcd_VSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize)/2;
+	}
+	else if(tZoomScale == 2) //2X
+	{
+		tUI_DptzParam.tScaleParam							 = UI_SCALEUP_4X;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputHsize = ulLcd_HSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwChInputVsize = ulLcd_VSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize    = ulLcd_HSize*2/tUI_DptzParam.tScaleParam;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize    = ulLcd_VSize*2/tUI_DptzParam.tScaleParam;
+		tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputHsize	   	 = ulLcd_HSize;
+		tUI_DptzParam.tUI_LcdCropParam.uwLcdOutputVsize	   	 = ulLcd_VSize;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart   = (ulLcd_HSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize)/2;
+		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart   = (ulLcd_VSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize)/2;
+	}
+			
 	tLCD_DynamicOneChCropScale(&tUI_DptzParam.tUI_LcdCropParam);
 }
 
@@ -4637,8 +4626,9 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 		case ENTER_ARROW:
 			tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
-			UI_Zoom_SetScaleParam(ENTER_ARROW);
+			UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
 			UI_ZoomDisplay();
+			UI_UpdateDevStatusInfo();
 		break;	
 
 		case LEFT_ARROW:
@@ -5751,6 +5741,35 @@ void UI_NightModeSubSubSubmenuDisplay(uint8_t value)
 void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
 	OSD_IMG_INFO tOsdImgInfo;
+
+	switch(ubSubMenuItemFlag)
+	{
+		case NIGHTMODE_ITEM:
+			break;
+	
+		case LANGUAGESET_ITEM:	
+			ubLangageFlag = ubSubSubMenuItemFlag;
+			break;
+
+		case FLICKER_ITEM:
+			break;
+			
+		case DEFAULT_ITEM:
+			break;
+			
+		case TEMPUNIT_ITEM:
+			break;
+
+		case PRODUCT_INFO_ITEM:
+			break;
+			
+		case CONTACT_ITEM:
+			break;
+
+		default:
+			break;
+	}
+
 	
 	switch(tArrowKey)
 	{
@@ -5776,6 +5795,7 @@ void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			OSD_EraserImg2(&tOsdImgInfo);			
 		break;
 	}
+
 }
 
 void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
@@ -5805,14 +5825,10 @@ void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
 			break;
 	
 		case LANGUAGESET_ITEM:	
-			if(ubLangageFlag >=1)
-			{
-				ubLangageFlag  -=  1;
-			}	
-			else
-			{
-				ubLangageFlag = 0 ;
-			}		
+			if(ubSubSubMenuItemFlag < 1)
+				break;
+			ubSubSubMenuItemFlag -= 1;
+			ubLangageFlag = ubSubSubMenuItemFlag;
 			UI_LangageDisplay(ubLangageFlag);
 			break;
 
@@ -5876,14 +5892,11 @@ void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem)
 			break;
 	
 		case LANGUAGESET_ITEM:	
-			if(ubLangageFlag < 3)
-			{
-				ubLangageFlag += 1;
-			}	
-			else
-			{
-				ubLangageFlag = 3;
-			}	
+			if(ubSubSubMenuItemFlag >= 3)
+				break;
+			ubSubSubMenuItemFlag += 1;
+
+			ubLangageFlag = ubSubSubMenuItemFlag;
 			UI_LangageDisplay(ubLangageFlag);
 			break;
 
@@ -5951,7 +5964,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 			{
 				tUI_CamStatus[tSelCamNum].tCamFlicker = CAMFLICKER_60HZ;					
 			}
-			tUI_PuSetting.ubFlickerFlag = ubFlickerFlag;
+			tUI_PuSetting.ubFlickerFlag = ubSubSubMenuItemFlag; //ubFlickerFlag;
 			UI_UpdateDevStatusInfo();
 			break;
 			
@@ -5960,9 +5973,25 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 			{
 				tUI_PuSetting.ubDefualtFlag = TRUE;
 
+				tUI_PuSetting.ubZoomScale				= 0;
+				tUI_PuSetting.VolLvL.tVOL_UpdateLvL		= VOL_LVL6;
+				//tUI_PuSetting.NightmodeFlag				= 0x00; //
+				tUI_PuSetting.ubHighTempSetting 		= 0;
+				tUI_PuSetting.ubLowTempSetting 			= 0;
+				tUI_PuSetting.ubTempAlertSetting 		= 1;
+				tUI_PuSetting.ubSoundLevelSetting 		= 0;
+				tUI_PuSetting.ubSoundAlertSetting 		= 1;	
+				tUI_PuSetting.ubTempunitFlag 			= 0;
+				tUI_PuSetting.ubFlickerFlag 			= 1;
+				tUI_PuSetting.ubSleepMode				= 1;
+				tUI_PuSetting.BriLvL.tBL_UpdateLvL		= BL_LVL8;
+				tUI_PuSetting.ubScanTime 				= 1;
+
 				tUI_PuSetting.ubFeatCode0			= 0x00;
 				tUI_PuSetting.ubFeatCode1			= 0x00;
 				tUI_PuSetting.ubFeatCode2			= 0x00;	
+
+				UI_GetPairCamInfo(); //tUI_PuSetting.NightmodeFlag on
 				printf("defulat ~~~\n");			
 				UI_UpdateDevStatusInfo();	
 				ubFactorySettingFlag = 0;
@@ -8170,7 +8199,6 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 
 				if((TRUE == tUI_PuSetting.ubScanModeEn) && (FALSE == ubUI_ScanStartFlag))
 					UI_EnableScanMode();
-				
 			}
 			
 		}
@@ -8637,8 +8665,8 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.ubTotalBuNum 				 = DISPLAY_MODE;
 			tUI_PuSetting.ubCamViewNum	  =    		CAM1;
 			tUI_PuSetting.tAdoSrcCamNum				 = (tUI_PuSetting.tAdoSrcCamNum > CAM4)?CAM1:tUI_PuSetting.tAdoSrcCamNum;
-			tUI_PuSetting.BriLvL.tBL_UpdateLvL		 = BL_LVL5;
-			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL4;
+			tUI_PuSetting.BriLvL.tBL_UpdateLvL		 = BL_LVL8; //BL_LVL5
+			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL6; //VOL_LVL4
 			ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 			
 			tUI_PuSetting.IconSts.ubDrawStsIconFlag  = FALSE;
@@ -8664,7 +8692,7 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.ubTempunitFlag 			= 0;
 			tUI_PuSetting.ubSleepMode				= 1;
 			tUI_PuSetting.ubZoomScale				= 0;
-			tUI_PuSetting.ubFlickerFlag 			= 0;
+			tUI_PuSetting.ubFlickerFlag 			= 1;
 			tUI_PuSetting.ubLangageFlag 			= 0;
 			tUI_PuSetting.NightmodeFlag				= 0x00;
 	}
@@ -8725,9 +8753,9 @@ void UI_LoadDevStatusInfo(void)
 
 	//tUI_PuSetting.ubLangageFlag 			= 2;
 	//printf("tUI_PuSetting.ubScanModeEn   %d \n",tUI_PuSetting.ubScanModeEn );
-	UI_CamvLDCModeCmd(CAMSET_ON); //20180517
-	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+	//ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 	
+	UI_CamvLDCModeCmd(CAMSET_ON); //20180517
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)

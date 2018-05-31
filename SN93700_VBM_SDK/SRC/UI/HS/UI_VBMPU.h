@@ -596,7 +596,7 @@ typedef struct
 	uint8_t				ubFlickerFlag;
 	uint8_t				ubLangageFlag;
 	uint8_t				ubTempunitFlag;
-	uint8_t 				NightmodeFlag;
+	uint8_t 			NightmodeFlag;
 	uint8_t				ubCamViewNum;	
 	uint8_t				ubReserved[220];
 }UI_PUSetting_t;
@@ -840,6 +840,7 @@ void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_TimeSubMenuDisplay(uint8_t value);
 void UI_DrawTimeSubMenuPage_NoSel(void);
 
+void UI_Zoom_SetScaleParam(uint8_t tZoomScale);
 void UI_DrawZoomSubMenuPage(void);
 void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_ZoomDisplay(void);
