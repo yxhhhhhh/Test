@@ -150,7 +150,7 @@ typedef enum
 #define RTC_RECORD_VIEW_MODE_ADDR		1
 #define RTC_RECORD_VIEW_CAM_ADDR		2
 
-#define WDT_TIMEOUT_CNT					3	// unit: 1 second
+#define WDT_TIMEOUT_CNT					8	// unit: 1 second / 3
 
 
 //! SF Write protect use GPIO
