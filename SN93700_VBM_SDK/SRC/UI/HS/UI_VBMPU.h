@@ -793,6 +793,7 @@ void UI_RecvBURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data);
 void UI_ResetDevSetting(UI_CamNum_t tCamNum);
 void UI_LoadDevStatusInfo(void);
 void UI_UpdateDevStatusInfo(void);
+void UI_SetupScanModeTimer(uint8_t ubTimerEn);
 void UI_EnableScanMode(void);
 void UI_DisableScanMode(void);
 void UI_ScanModeExec(void);
@@ -851,7 +852,7 @@ void UI_CamSubSubmenuDisplay(uint8_t SubMenuItem);
 void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_DrawCamsSubMenuPage_NoSel(void);
 
-void UI_DelatemenuDisplay(void);
+void UI_DeletemenuDisplay(void);
 
 void UI_DrawSelectMenuPage(void);
 
