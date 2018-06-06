@@ -916,4 +916,8 @@ void UI_PuInit(void);
 
 void UI_TestCmd(uint8_t Value1, uint8_t Value2);
 UI_CamNum_t UI_GetPairSelCam(void);
+
+void UI_FactoryStatusDisplay(void);
+void UI_ClearOSDMenu( );
+void UI_FactorymodeKeyDisplay(uint8_t Value);
 #endif

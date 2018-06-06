@@ -555,12 +555,15 @@ void UI_VoiceCheck (void)
 {
 	UI_BUReqCmd_t tUI_VoiceReqCmd;
 	uint32_t ulUI_AdcRpt = 0;
-	uint8_t voice_temp;
+	uint8_t voice_temp,  ir_temp1,ir_temp2;
+
+	uint16_t uwDetLvl = 0x3FF;
+	uwDetLvl = uwSADC_GetReport(1);
 
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	printf("ulUI_AdcRpt  0x%lx \n",ulUI_AdcRpt);	
+	printf("ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);	
 
 	if(ulUI_AdcRpt > 0x6000)
 		voice_temp = 5;
@@ -575,18 +578,23 @@ void UI_VoiceCheck (void)
 	else
 		voice_temp = 0;	
 
-	if(ubVoicetemp_bak != voice_temp)
-	{
-		printf("voice_temp: %d \n",voice_temp);
+	ir_temp1 = uwDetLvl >>8;
+	ir_temp2 = uwDetLvl & 0xff;
+
+	//if(ubVoicetemp_bak != voice_temp)
+	//{
+	//	printf("voice_temp: %d \n",voice_temp);
 	
 		tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_CHECK;
 		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] = voice_temp;
-		tUI_VoiceReqCmd.ubCmd_Len  			  = 3;
+		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+1] = ir_temp1;
+		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;		
+		tUI_VoiceReqCmd.ubCmd_Len  			  = 5;
 		UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
 
-		ubVoicetemp_bak = voice_temp;
-	}
+	//	ubVoicetemp_bak = voice_temp;
+	//}
 	
 }
 //------------------------------------------------------------------------------

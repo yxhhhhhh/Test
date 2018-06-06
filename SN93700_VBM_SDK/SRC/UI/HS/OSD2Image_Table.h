@@ -1138,7 +1138,22 @@ OSD2IMGPOOL(MENU_CONTACT_INFO_SP,		0x3000,	       0,        0)
 
 OSD2IMGPOOL(SUBMENU_BLANK_SP,			0x3000,	       0,        0)
 OSD2IMGPOOL(FSMENU_BLANK_SP,			0x3000,	       0,        0)
-
+//----------------------------------------------------------------------------
+OSD2IMGPOOL(MENU_FACTORY_TITLE,			0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_PER,			0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_TEMP,			0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_MENUKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_ENTERKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_PKEY,			0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_UPKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_DOWNKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_LEFTKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_RIGHTKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_PTTKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_VOLUKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_VOLDKEY,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_MICSPK,		0x3000,	       0,        0)
+OSD2IMGPOOL(MENU_FACTORY_IRAD,			0x3000,	       0,        0)
 //----------------------------------------------------------------------------
 
 OSD2IMGPOOL(PU_STSICON,  				0x3000,        10,         0)

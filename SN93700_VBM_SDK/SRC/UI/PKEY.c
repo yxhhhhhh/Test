@@ -124,7 +124,7 @@ void GKEY_Init(void)
 
 	#endif
 	
-	tGKEY_Scan.uwGKEY_KeyScanTime	=GKEY_DET_TIME;
+	tGKEY_Scan.uwGKEY_KeyScanTime = GKEY_DET_TIME;
 	tGKEY_Scan.ubGKEY_KeyScanState = KEY_DET_STATE;
 }
 

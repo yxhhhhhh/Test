@@ -24,6 +24,8 @@
 #include "UI_VBMBU.h"
 
 
+extern uint8_t ubFactoryModeFLag ;
+
 osThreadId osUI_ThreadId;
 osMessageQId UI_EventQueue;
 osMessageQId *pAPP_MessageQH;
@@ -41,6 +43,20 @@ void UI_Init(osMessageQId *pvMsgQId)
 	#ifdef VBM_BU
 	UI_BuInit();
 	#endif
+
+	#ifdef VBM_PU
+	if((GPIO->GPIO_I9 == 0)&&(ubRTC_GetKey() == 1))
+	{
+		ubFactoryModeFLag = 1;
+		printf("enter factorymode\n");
+	}
+	else
+	{
+		ubFactoryModeFLag = 0;
+		printf("no factorymode\n");
+	}
+	#endif
+
 	osThreadDef(UI_EventThread, UI_EventThread, THREAD_PRIO_UIEVENT_HANDLER, 1, THREAD_STACK_UIEVENT_HANDLER);
 	osThreadCreate(osThread(UI_EventThread), NULL);
 	KNL_SetBbFrmMonitCbFunc(UI_FrameTRXFinish);
