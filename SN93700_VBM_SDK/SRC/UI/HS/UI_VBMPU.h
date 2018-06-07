@@ -23,6 +23,7 @@
 #include "APP_HS.h"
 #include "OSD.h"
 #include "RTC_API.h"
+#include "TIMER.h"
 
 #define	INVALID_ID 					0xFFFFFFFF
 #define INVAILD_ACT					0xFFFFFFFE
@@ -811,6 +812,7 @@ void UI_DrawBrightnessSubMenuPage_NoSel(void);
 
 void UI_DrawAutoLcdSubMenuPage(void);
 uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction);
+void UI_AutoLcdSetSleepTime(uint8_t SleepMode);
 void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_AutoLcdSubMenuDisplay(uint8_t value);
 void UI_DrawAutoLcdSubMenuPage_NoSel(void);
@@ -920,4 +922,7 @@ UI_CamNum_t UI_GetPairSelCam(void);
 void UI_FactoryStatusDisplay(void);
 void UI_ClearOSDMenu( );
 void UI_FactorymodeKeyDisplay(uint8_t Value);
+
+void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb);
+void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice);
 #endif

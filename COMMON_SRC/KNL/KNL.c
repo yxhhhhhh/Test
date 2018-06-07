@@ -649,6 +649,12 @@ static void KNL_AdoDecMonitThread(void const *argument)
 #if defined(BPC_RX) || defined(BPC_CAM)
 				//ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, OFF);
 #endif
+				SPEAKER_EN(FALSE);
+				TIMER_Delay_us(1000);
+				SPEAKER_EN(TRUE);
+				TIMER_Delay_us(2);
+				SPEAKER_EN(FALSE);
+				TIMER_Delay_us(2);
 				SPEAKER_EN(TRUE);
 				break;
 			case PLAY_BUF_EMP:
@@ -1100,6 +1106,7 @@ void KNL_BlockInit(void)
     REC_EXTFUNC_CTRL sRecExtFunc;
 #endif
 
+	
 	//For Sensor
 	//=======================================================================
 	if(ubKNL_ChkExistNode(KNL_NODE_SEN))
@@ -1433,7 +1440,10 @@ void KNL_BlockInit(void)
 		// Sigma-delta ADC gain
 		//---------------------------------
        	//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_37DB, ADO_SIG_PGA_33DB);
-		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_0DB); //20180524
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_20DB, ADO_SIG_PGA_n9DB); //20180524
+
+		//SDADC->AGC_OFF = 1;
+		//ADO_SetAdcMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
 		
 		//---------------------------------
 		// ADC djust functions
