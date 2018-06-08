@@ -508,54 +508,6 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 	osMutexRelease(UI_PUMutex);
 }
 
-void UI_SwitchCameraScan(void)
-{
-	int i, j;
-	uint8_t ubCamOnlineNum = 0;
-	UI_CamNum_t tCamSwtichNum = 0xFF;
-	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
-
-	for(i = 0; i < 4; i++)
-		printf("### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
-
-	if(tUI_PuSetting.ubScanTime <= 0)
-		return;
-
-	for(i = 0; i < 4; i++)
-	{
-		if((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
-		{
-			ubCamOnlineNum++;
-		}
-	}
-
-	printf("UI_SwitchCameraScan ubCamOnlineNum: %d.\n", ubCamOnlineNum);
-	if(ubCamOnlineNum < 2)
-		return;
-
-	i = tSearchCam+1;
-	for(j = 0; j < 4; j++)
-	{
-		if((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
-		{
-			tCamSwtichNum = i;
-			break;
-		}
-		i++;
-		if(i > 3) i = 0;
-	}
-
-	printf("UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
-	if(0xFF == tCamSwtichNum)
-		return;
-	
-	tCamViewSel.tCamViewType	= SINGLE_VIEW;
-	tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
-	tUI_PuSetting.tAdoSrcCamNum = tCamSwtichNum;
-	UI_SwitchCameraSource();
-	UI_ClearBuConnectStatusFlag();
-}
-
 //------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
 {
@@ -566,6 +518,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	osMutexWait(UI_PUMutex, osWaitForever);
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
 
+	//printf("UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	switch(tUI_SyncAppState)
 	{
@@ -9332,6 +9285,55 @@ void UI_UpdateDevStatusInfo(void)
 	osMutexRelease(APP_UpdateMutex);
 }
 //------------------------------------------------------------------------------
+void UI_SwitchCameraScan(void)
+{
+	int i, j;
+	uint8_t ubCamOnlineNum = 0;
+	UI_CamNum_t tCamSwtichNum = 0xFF;
+	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
+
+	for(i = 0; i < 4; i++)
+		printf("### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
+
+	if(tUI_PuSetting.ubScanTime <= 0)
+		return;
+
+	for(i = 0; i < 4; i++)
+	{
+		if((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+		{
+			ubCamOnlineNum++;
+		}
+	}
+
+	printf("UI_SwitchCameraScan ubCamOnlineNum: %d.\n", ubCamOnlineNum);
+	if(ubCamOnlineNum < 2)
+		return;
+
+	i = tSearchCam+1;
+	for(j = 0; j < 4; j++)
+	{
+		if((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+		{
+			tCamSwtichNum = i;
+			break;
+		}
+		i++;
+		if(i > 3) i = 0;
+	}
+
+	printf("UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
+	if(0xFF == tCamSwtichNum)
+		return;
+	
+	tCamViewSel.tCamViewType	= SINGLE_VIEW;
+	tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
+	tUI_PuSetting.tAdoSrcCamNum = tCamSwtichNum;
+	ubSetViewCam = tCamViewSel.tCamViewPool[0];
+	UI_SwitchCameraSource();
+	UI_ClearBuConnectStatusFlag();
+}
+//------------------------------------------------------------------------------
 void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb)
 {
 	TIMER_SETUP_t tUI_TimerParam;
@@ -9402,7 +9404,7 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 //------------------------------------------------------------------------------
 void UI_EnableScanMode(void)
 {
-	printf("UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
+	//printf("UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
 	if(tUI_PuSetting.ubScanTime == 0)
 	{
 		UI_DisableScanMode();
@@ -9415,7 +9417,7 @@ void UI_EnableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_DisableScanMode(void)
 {
-	printf("UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
+	//printf("UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
 	if(FALSE == ubUI_ScanStartFlag)
 		return;
 	UI_SetupScanModeTimer(FALSE);
@@ -9567,8 +9569,13 @@ void UI_PairingControl(UI_ArrowKey_t tArrowKey)
 	UI_SendMessageToAPP(&tUI_PairMessage);
 }
 
-UI_CamNum_t UI_GetPairSelCam(void) //20180519
+UI_CamNum_t UI_GetPairSelCam(void)
 {
 	return tPairInfo.tPairSelCam;
+}
+
+UI_CamNum_t UI_GetCamViewPoolID(void)
+{
+	return tCamViewSel.tCamViewPool[0];
 }
 //------------------------------------------------------------------------------
