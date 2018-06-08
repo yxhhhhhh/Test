@@ -658,7 +658,7 @@ uint8_t APP_UpdateLinkStatus(void)
 	//ubKNL_RoleNum =(KNL_ROLE) ubSetViewCam;
 	ubKNL_RoleNum =(KNL_ROLE) UI_GetCamViewPoolID();
 
-	//printf("APP_UpdateLinkStatus ubKNL_RoleNum: %d, ubSetViewCam: %d.\n", ubKNL_RoleNum, ubSetViewCam);
+	//printf("APP_UpdateLinkStatus ubKNL_RoleNum: %d, ubSetViewCam: %d, tAPP_StsReport.tAPP_State: %d.\n", ubKNL_RoleNum, ubSetViewCam, tAPP_StsReport.tAPP_State);
 	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum] 	 = rLOSTLINK;
 	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+4] = 0;
 	tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = 0;	
@@ -667,6 +667,7 @@ uint8_t APP_UpdateLinkStatus(void)
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum]   = rLINK;
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+4] = KNL_GetPerValue(ubKNL_RoleNum);
 		tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = KNL_GetRssiValue(ubKNL_RoleNum);
+		//printf("AAAAA\n");
 		ubAPP_Event = APP_LINK_EVENT;
 	}
 	for(ubKNL_RoleNum = KNL_STA1; ubKNL_RoleNum <= KNL_STA4; ubKNL_RoleNum++)
@@ -681,7 +682,7 @@ uint8_t APP_UpdateLinkStatus(void)
 			tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = KNL_GetRssiValue(ubKNL_RoleNum);
 			if(UI_GetCamViewPoolID() == ubKNL_RoleNum)
 			{
-				//printf("APP_UpdateLinkStatus LINK ubKNL_RoleNum: %d.\n", ubKNL_RoleNum);
+				//printf("BBBBB LINK ubKNL_RoleNum: %d, UI_GetPairSelCam(): %d.\n", ubKNL_RoleNum, UI_GetPairSelCam());
 				ubAPP_Event = APP_LINK_EVENT; //当前是无信号状态,匹配成功以后状态未更新,一直无法进入LINK状态.20180519
 				break;
 			}

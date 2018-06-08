@@ -1440,7 +1440,14 @@ void KNL_BlockInit(void)
 		// Sigma-delta ADC gain
 		//---------------------------------
        	//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_37DB, ADO_SIG_PGA_33DB);
-		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_20DB, ADO_SIG_PGA_n9DB); //20180524
+       	#ifdef VBM_PU
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_3DB); //20180524
+		#endif
+
+		#ifdef VBM_BU
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_16p5DB); //20180524
+		#endif
+
 
 		//SDADC->AGC_OFF = 1;
 		//ADO_SetAdcMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
