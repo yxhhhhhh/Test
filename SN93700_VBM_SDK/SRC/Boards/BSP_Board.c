@@ -62,7 +62,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO21 = 0;
 
 	//! SD
-	GLB->PADIO0  = 4;
+	//GLB->PADIO0  = 4;
 	GLB->PADIO1  = 4;
 	GLB->PADIO2  = 4;
 	GLB->PADIO3  = 4;
@@ -79,7 +79,7 @@ void BSP_BoardInit(void)
 	//! LED
 	GLB->PADIO17 = 0;
 	GLB->PADIO55 = 0;
-	GLB->PADIO56 = 0;
+	//GLB->PADIO56 = 0;
 	GLB->PADIO57 = 0;
 	
 	//! BackLight
@@ -92,7 +92,21 @@ void BSP_BoardInit(void)
 	GLB->PADIO52 = 0;
 
 	//! USB_DET
-	GLB->PADIO17 = 0;
+	GLB->PADIO53 = 0;
+
+	//! FCHG_ON
+	GLB->PADIO54 = 0;
+
+	//! CHG_ON
+	GLB->PADIO55 = 0;
+	
+	//! CHG_FULL
+	GLB->PADIO0 = 3;
+	GLB->PADIO14 = 3;
+	//GLB->PADIO28 = 3;
+	GLB->PADIO42 = 3;
+	GLB->PADIO56 = 0;
+
 	#else //DEMO
 	//! UART
 	GLB->PADIO22 = 2;

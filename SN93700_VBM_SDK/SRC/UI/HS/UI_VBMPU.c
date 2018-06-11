@@ -31,6 +31,8 @@
 
 #define osUI_SIGNALS	0x66
 
+#define UI_TEST_MODE	0
+
 /**
  * Key event mapping table
  *
@@ -521,6 +523,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
 
 	//printf("UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
+	printf("UI_UpdateStatus GPIO->GPIO_I0: %d, GPIO->GPIO_I11: %d.\n", GPIO->GPIO_I0, GPIO->GPIO_I11);
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	switch(tUI_SyncAppState)
 	{
@@ -577,11 +580,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				{
 					UI_MotorStateCheck();
 				}
-				
-				if(((*pThreadCnt)%10) == 0)
-				{
-					UI_GetBatLevel();
-				}
 			
 				UI_RedrawStatusBar(pThreadCnt);
 				(*pThreadCnt)++;
@@ -629,6 +627,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 END_UPDATESTS:
 	//UI_UpdateBriLvlIcon();
 	UI_UpdateVolLvlIcon();
+	if(((*pThreadCnt)%10) == 0)
+	{
+		UI_GetBatLevel();
+	}
 	tUI_PuSetting.IconSts.ubRdPairIconFlag 	= FALSE;
 	if(ubUI_SendMsg2AppFlag == TRUE)
 	{
@@ -656,6 +658,9 @@ void UI_PuInit(void)
 	{
 		UI_EnableScanMode();
 	}
+
+	GPIO->GPIO_O12 = 0;
+	//GPIO->GPIO_O13 = 1;
 	
 	printf("UI_PuInit ok.\n");
 }
@@ -5127,7 +5132,12 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIRING+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart= 200;
 					tOsdImgInfo.uwYStart =284;	
-					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);		
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_PAIR_SEC+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 145;
+					tOsdImgInfo.uwYStart =450;	
+					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 				}
 				else
 				{
@@ -5518,12 +5528,12 @@ void UI_DrawPairingStatusIcon(void)
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_PAIR_0+(ubPairDisplayTime%10), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 144;
-	tOsdImgInfo.uwYStart =486; //488
+	tOsdImgInfo.uwYStart =520; //488
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_PAIR_0+(ubPairDisplayTime/10), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 144;
-	tOsdImgInfo.uwYStart =507;	
+	tOsdImgInfo.uwYStart =541;	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);		
 }
 
@@ -6992,6 +7002,28 @@ void UI_GetBatLevel(void)
 {
 	ubGetBatValue  = uwSADC_GetReport(SADC_CH3);
 	printf("UI_GetBatLevel ubGetBatValue: 0x%x.\n", ubGetBatValue);
+	#if UI_TEST_MODE
+	OSD_IMG_INFO tOsdImgInfo;
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 410;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/100), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 390;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 370;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 350;	
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	#endif
 }
 
 void UI_PTNDisplay(uint8_t value)
@@ -9589,4 +9621,5 @@ UI_CamNum_t UI_GetCamViewPoolID(void)
 {
 	return tCamViewSel.tCamViewPool[0];
 }
+
 //------------------------------------------------------------------------------

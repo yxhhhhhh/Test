@@ -911,6 +911,7 @@ void UI_LoadDevStatusInfo(void)
 			UI_CHK_CAMPARAM(tUI_BuStsInfo.MdParam.ubMD_Param[i], 0);
 	}
 
+	//tUI_BuStsInfo.tCamUVCMode = 1;
 	ADO_SetDacR2RVol(R2R_VOL_n0DB);
 }
 //------------------------------------------------------------------------------
@@ -1179,7 +1180,6 @@ void UI_TestSetting(void *pvMCParam)
 	WDT_Disable(WDT_RST);
 	WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
 	while(1);
-	
 	#endif
 }
 
@@ -1234,4 +1234,9 @@ void UI_TestCheck(void)
 	}
 		
 	ubTestCount++;
+}
+
+uint8_t UI_GetCamUVCMode(void)
+{
+	return tUI_BuStsInfo.tCamUVCMode;
 }

@@ -47,8 +47,8 @@ void BSP_DriversInit(void)
 	//! LED
 	//GPIO->GPIO_OE3 	= 1;
 	//GPIO->GPIO_O3 	= 0;
-	GPIO->GPIO_OE13	= 1;
-	GPIO->GPIO_OE0	= 1;
+	//GPIO->GPIO_OE13	= 1;
+	//GPIO->GPIO_OE0	= 0;
 	GPIO->GPIO_OE1	= 1;
 
 	//! BackLight Control
@@ -70,7 +70,16 @@ void BSP_DriversInit(void)
 	GPIO->GPIO_OE10 = 0;
 
 	//! USB_DET	
-	GPIO->GPIO_OE3 = 0;
+	GPIO->GPIO_OE11 = 0;
+
+	//! FCHG_ON
+	GPIO->GPIO_OE12 = 1;
+
+	//! CHG_ON
+	GPIO->GPIO_OE13 = 1;
+
+	//! CHG_FULL
+	GPIO->GPIO_OE0	= 0;
 	
 	#else //DEMO
 	//! LED

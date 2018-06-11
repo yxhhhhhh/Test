@@ -132,7 +132,8 @@ typedef struct
 	}MdParam;
 	UI_PowerSaveMode_t	  tCamPsMode;
 	UI_CamsSetMode_t	  tCamScanMode;
-	uint8_t				  ubReserved[211];
+	uint8_t	  			  tCamUVCMode;
+	uint8_t				  ubReserved[210];
 }UI_BUStatus_t;
 
 typedef enum
@@ -270,4 +271,5 @@ void UI_BrightnessCheck(void);
 void UI_BuInit(void);
 void UI_TestCheck(void);
 void UI_TestSetting(void *pvMCParam);
+uint8_t UI_GetCamUVCMode(void);
 #endif

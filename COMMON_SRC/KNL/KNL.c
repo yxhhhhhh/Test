@@ -1448,7 +1448,6 @@ void KNL_BlockInit(void)
 		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_16p5DB); //20180524
 		#endif
 
-
 		//SDADC->AGC_OFF = 1;
 		//ADO_SetAdcMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
 		

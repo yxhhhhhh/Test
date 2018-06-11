@@ -22,9 +22,10 @@
 #include "OSD.h"
 #include "BUF.h"
 #include "UI_VBMBU.h"
+#include "WDT.h"
 
 
-extern uint8_t ubFactoryModeFLag ;
+extern uint8_t ubFactoryModeFLag;
 
 osThreadId osUI_ThreadId;
 osMessageQId UI_EventQueue;
@@ -54,6 +55,18 @@ void UI_Init(osMessageQId *pvMsgQId)
 	{
 		ubFactoryModeFLag = 0;
 		printf("no factorymode\n");
+	}
+	#endif
+
+	#if 0//def VBM_BU
+	if(GPIO->GPIO_I6 == 1)
+	{
+		uint8_t ubCamUVCMode = UI_GetCamUVCMode();
+		printf("UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
+		APP_SetTuningToolMode(ubCamUVCMode);
+		WDT_Disable(WDT_RST);
+		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+		while(1);
 	}
 	#endif
 
