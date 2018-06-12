@@ -518,6 +518,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	APP_EventMsg_t tUI_GetLinkStsMsg = {0};
 	uint8_t ubUI_SendMsg2AppFlag = FALSE;
 	OSD_IMG_INFO tOsdImgInfo;
+	static uint8_t ubSanModeState = 0;
 	
 	osMutexWait(UI_PUMutex, osWaitForever);
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
@@ -531,7 +532,24 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			ubUI_SendMsg2AppFlag = ((tUI_State == UI_DISPLAY_STATE)||(tUI_State == UI_SUBSUBMENU_STATE))?TRUE:FALSE;
 			break;
 		case APP_LOSTLINK_STATE:
-			UI_DisableScanMode();
+			if((tUI_PuSetting.ubScanTime > 0) && (UI_GetCamOnLineNum(0) != 0))
+			{
+				if(tUI_PuSetting.ubDefualtFlag == FALSE)
+				{
+					if(ubSanModeState == 0)
+					{
+						ubSanModeState = 1;
+						UI_SwitchCameraScan();
+						//UI_SetupScanModeTimer(TRUE);
+					}
+				}
+			}
+			else
+			{
+				ubSanModeState = 0;
+				UI_DisableScanMode();
+			}
+			
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{
 				UI_ShowLostLinkLogo(pThreadCnt);
@@ -1571,6 +1589,7 @@ UI_Result_t UI_SetupBuEcoMode(UI_CamNum_t tECO_CamNum)
 
 	tUI_PsMessage.ubAPP_Event 	    = APP_POWERSAVE_EVENT;
 	tUI_PsMessage.ubAPP_Message[0]  = 4;		//! Message Length
+	printf("UI_SetupBuEcoMode###\n");
 	tUI_PsMessage.ubAPP_Message[1]  = PS_ECO_MODE;
 	if((POWER_NORMAL_MODE == tUI_CamStatus[tECO_CamNum].tCamPsMode) &&
 	   (FALSE == ulUI_MonitorPsFlag[tECO_CamNum]))
@@ -9501,6 +9520,22 @@ void UI_UpdateDevStatusInfo(void)
 	osMutexRelease(APP_UpdateMutex);
 }
 //------------------------------------------------------------------------------
+uint8_t UI_GetCamOnLineNum(uint8_t type)
+{
+	int i = 0;
+	uint8_t ubCamOnlineNum = 0;
+	
+	for(i = 0; i < 4; i++)
+	{
+		if((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+		{
+			ubCamOnlineNum++;
+		}
+	}
+
+	return ubCamOnlineNum;
+}
+
 void UI_SwitchCameraScan(void)
 {
 	int i, j;
@@ -9514,17 +9549,24 @@ void UI_SwitchCameraScan(void)
 	if(tUI_PuSetting.ubScanTime <= 0)
 		return;
 
-	for(i = 0; i < 4; i++)
+	ubCamOnlineNum = UI_GetCamOnLineNum(0);
+
+	printf("UI_SwitchCameraScan ubCamOnlineNum: %d, tCamViewSel.tCamViewPool[0]: %d.\n", ubCamOnlineNum, tCamViewSel.tCamViewPool[0]);
+	if(ubCamOnlineNum == 0)
+		return;
+
+	if(ubCamOnlineNum == 1)
 	{
-		if((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+		for(i = 0; i < 4; i++)
 		{
-			ubCamOnlineNum++;
+			if((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+			{
+				if(tCamViewSel.tCamViewPool[0] == i)
+					return;
+				break;
+			}
 		}
 	}
-
-	printf("UI_SwitchCameraScan ubCamOnlineNum: %d.\n", ubCamOnlineNum);
-	if(ubCamOnlineNum < 2)
-		return;
 
 	i = tSearchCam+1;
 	for(j = 0; j < 4; j++)

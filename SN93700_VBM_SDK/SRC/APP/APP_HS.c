@@ -551,6 +551,9 @@ void APP_LostLinkStateFunc(APP_EventMsg_t *ptEventMsg)
 		case APP_UNBIND_BU_EVENT:
 			APP_doUnbindBU(ptEventMsg);
 			break;
+		case APP_VIEWTYPECHG_EVENT:
+			APP_SwitchViewTypeExec(ptEventMsg);
+			break;
 	#endif
 		case APP_POWERSAVE_EVENT:
 			APP_PowerSaveExec(ptEventMsg);
@@ -684,7 +687,6 @@ uint8_t APP_UpdateLinkStatus(void)
 			{
 				//printf("BBBBB LINK ubKNL_RoleNum: %d, UI_GetPairSelCam(): %d.\n", ubKNL_RoleNum, UI_GetPairSelCam());
 				ubAPP_Event = APP_LINK_EVENT; //当前是无信号状态,匹配成功以后状态未更新,一直无法进入LINK状态.20180519
-				break;
 			}
 		}
 	}
