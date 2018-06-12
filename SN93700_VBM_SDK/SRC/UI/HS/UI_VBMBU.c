@@ -46,6 +46,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 {
 	{NULL,				0,					NULL},
 	{GKEY_ID0, 			0,					UI_PairingKey},
+	{GKEY_ID0, 			50,					UI_PairingLongKey},	
 	{PKEY_ID0, 			0,					UI_PairingKey},	
 	{PKEY_ID0, 			20,					UI_PowerKey},
 };
@@ -271,9 +272,21 @@ void UI_PowerKey(void)
 void UI_PairingKey(void)
 {
 	APP_EventMsg_t tUI_PairMessage = {0};
+	printf("UI_PairingKey###\n");
+	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
+	UI_SendMessageToAPP(&tUI_PairMessage);
+	BUZ_PlaySingleSound();
+}
+
+void UI_PairingLongKey(void)
+{
+	/*
+	APP_EventMsg_t tUI_PairMessage = {0};
 
 	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
 	UI_SendMessageToAPP(&tUI_PairMessage);
+	*/
+	printf("UI_PairingLongKey###\n");
 	BUZ_PlaySingleSound();
 }
 //------------------------------------------------------------------------------
@@ -885,9 +898,11 @@ void UI_LoadDevStatusInfo(void)
 	printd(DBG_InfoLvl, "UI VER:%s\n",tUI_BuStsInfo.cbUI_FwVersion);
 	if ((strncmp(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1) == 0)
 	&& (strncmp(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1) == 0)) {
+		printf("UI_LoadDevStatusInfo AAAAA\n");
 
 	} else {
 		printd(DBG_ErrorLvl, "TAG no match, Reset UI\n");
+		printf("UI_LoadDevStatusInfo BBBBB\n");
 	}
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_ON);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
@@ -1236,7 +1251,13 @@ void UI_TestCheck(void)
 	ubTestCount++;
 }
 
+void UI_SetCamUVCMode(uint8_t Value)
+{
+	tUI_BuStsInfo.tCamUVCMode = Value;
+}
+
 uint8_t UI_GetCamUVCMode(void)
 {
 	return tUI_BuStsInfo.tCamUVCMode;
 }
+

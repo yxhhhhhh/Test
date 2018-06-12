@@ -58,15 +58,34 @@ void UI_Init(osMessageQId *pvMsgQId)
 	}
 	#endif
 
-	#if 0//def VBM_BU
+	#if 0//def VBM_BU //test
+	uint8_t ubCamUVCMode = UI_GetCamUVCMode();
+	printf("UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
 	if(GPIO->GPIO_I6 == 1)
 	{
-		uint8_t ubCamUVCMode = UI_GetCamUVCMode();
-		printf("UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
-		APP_SetTuningToolMode(ubCamUVCMode);
-		WDT_Disable(WDT_RST);
-		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
-		while(1);
+		if(ubCamUVCMode == 0)
+		{
+			UI_SetCamUVCMode(1);
+			UI_ResetDevSetting();
+			osDelay(20);
+			APP_SetTuningToolMode(ubCamUVCMode);
+			WDT_Disable(WDT_RST);
+			WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+			while(1);
+		}
+	}
+	else
+	{
+		if(ubCamUVCMode == 1)
+		{
+			UI_SetCamUVCMode(0);
+			UI_ResetDevSetting();
+			osDelay(20);
+			APP_SetTuningToolMode(ubCamUVCMode);
+			WDT_Disable(WDT_RST);
+			WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+			while(1);
+		}
 	}
 	#endif
 

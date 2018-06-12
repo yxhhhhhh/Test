@@ -791,7 +791,7 @@ void LCD_CODE(void)
 
 bool bLCD_MIPI_SSD2828_Init (void)
 {
-	#if 1
+	#if 0
 	uint16_t uwId;
     SPI_Setup_t spi_setup;
 

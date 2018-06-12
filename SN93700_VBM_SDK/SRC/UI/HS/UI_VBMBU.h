@@ -271,5 +271,8 @@ void UI_BrightnessCheck(void);
 void UI_BuInit(void);
 void UI_TestCheck(void);
 void UI_TestSetting(void *pvMCParam);
+void UI_SetCamUVCMode(uint8_t Value);
 uint8_t UI_GetCamUVCMode(void);
+void UI_PairingLongKey(void);
+
 #endif
