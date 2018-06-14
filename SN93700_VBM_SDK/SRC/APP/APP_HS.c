@@ -690,6 +690,14 @@ uint8_t APP_UpdateLinkStatus(void)
 			}
 		}
 	}
+
+	/*
+	if(ubAPP_Event == APP_LINK_EVENT)
+	{
+		UI_PowerOnSet();
+	}
+	*/
+	
 	return ubAPP_Event;
 #endif
 #ifdef VBM_BU
