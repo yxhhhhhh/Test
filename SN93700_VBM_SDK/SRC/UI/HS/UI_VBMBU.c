@@ -11,8 +11,8 @@
 	\file		UI_VBMBU.c
 	\brief		User Interface of VBM Baby Unit (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.2
-	\date		2018/05/15
+	\version	1.3
+	\date		2018/05/21
 	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 	{NULL,				0,					NULL},
 	{GKEY_ID0, 			0,					UI_PairingKey},
 	{GKEY_ID0, 			50,					UI_PairingLongKey},	
-	{PKEY_ID0, 			0,					UI_PairingKey},	
+	{PKEY_ID0, 			0,					UI_PairingKey},
 	{PKEY_ID0, 			20,					UI_PowerKey},
 };
 UI_SettingFuncPtr_t tUiSettingMap2Func[] =
@@ -80,6 +80,7 @@ static UI_ThreadNotify_t tosUI_Notify;
 static uint8_t ubUI_ClearThdCntFlag;
 static uint8_t ubUI_WorModeEnFlag;
 static uint8_t ubUI_WorWakeUpCnt;
+static uint8_t ubUI_SyncDisVoxFlag;
 osMutexId UI_BUMutex;
 
 static uint8_t ubUI_Mc1RunFlag;
@@ -140,6 +141,7 @@ void UI_StateReset(void)
 	if(tTWC_RegTransCbFunc(TWC_UI_SETTING, UI_RecvPUResponse, UI_RecvPURequest) != TWC_SUCCESS)
 		printd(DBG_ErrorLvl, "UI setting 2way command fail !\n");
 	ubUI_ClearThdCntFlag = FALSE;
+	ubUI_SyncDisVoxFlag  = FALSE;
 	UI_LoadDevStatusInfo();
 	ubUI_WorModeEnFlag	 = (PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)?TRUE:FALSE;
 	ubUI_WorWakeUpCnt 	 = 0;
@@ -214,7 +216,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			}
 			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
-				UI_UpdateBUStatusToPU();			
+				UI_UpdateBUStatusToPU();
 			(*pThreadCnt)++;
 			break;
 		case APP_LOSTLINK_STATE:
@@ -262,7 +264,7 @@ void UI_PowerKey(void)
 	//POWER_LED_IO   = 0;
 	//PAIRING_LED_IO = 0;
 	//SIGNAL_LED_IO  = 0;
-	RTC_WriteUserRam(0, 0);
+	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
 	RTC_SetGPO_1(0, RTC_PullDownEnable);
 	printd(DBG_Debug1Lvl, "Power OFF !\n");
 	RTC_PowerDisable();
@@ -390,9 +392,12 @@ void UI_SystemSetup(void)
 	ADO_Noise_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
 	UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
 	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
-	UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
+	if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
+		ubUI_SyncDisVoxFlag = TRUE;
+	else
+		UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
     MD_ReportReadyCbFunc(UI_SetMotionEvent);
-    MD_SetMdStableFg(MD_UNSTABLE);
+    MD_SetMdState(MD_UNSTABLE);
 }
 #define ADC_SUMRPT_VOX_THL			5000
 #define ADC_SUMRPT_VOX_THH			5000
@@ -505,13 +510,21 @@ void UI_VoxTrigger(void)
 	UI_BUReqCmd_t tUI_VoxReqCmd;
 	uint32_t ulUI_AdcRpt = 0;
 
+	tUI_VoxReqCmd.ubCmd[UI_TWC_TYPE]	= UI_REPORT;
+	tUI_VoxReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOX_TRIG;
+	tUI_VoxReqCmd.ubCmd[UI_REPORT_DATA] = FALSE;
+	tUI_VoxReqCmd.ubCmd_Len  			= 3;
+	if(TRUE == ubUI_SyncDisVoxFlag)
+	{
+		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
+		tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
+		UI_UpdateDevStatusInfo();
+		ubUI_SyncDisVoxFlag = FALSE;
+		return;
+	}
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 	if(ulUI_AdcRpt > ADC_SUMRPT_VOX_THH)
 	{
-		tUI_VoxReqCmd.ubCmd[UI_TWC_TYPE]	= UI_REPORT;
-		tUI_VoxReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOX_TRIG;
-		tUI_VoxReqCmd.ubCmd[UI_REPORT_DATA] = FALSE;
-		tUI_VoxReqCmd.ubCmd_Len  			= 3;
 		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
 		UI_DisableVox();
 	}
@@ -845,7 +858,7 @@ void UI_MDSetting(void *pvMdParam)
 	}
 	MD_SetROIindex((uint32_t *)pMD_BlockValue);
 	MD_SetROIweight((uint32_t *)pMD_BlockGroup);
-	MD_SetThreshold(80);
+	MD_SetSensitivity(80);
 	tUI_BuStsInfo.MdParam.ubMD_Mode = MD_ON;
 	MD_Switch(tUI_BuStsInfo.MdParam.ubMD_Mode);
 	free(pMD_BlockValue);
@@ -898,11 +911,9 @@ void UI_LoadDevStatusInfo(void)
 	printd(DBG_InfoLvl, "UI VER:%s\n",tUI_BuStsInfo.cbUI_FwVersion);
 	if ((strncmp(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1) == 0)
 	&& (strncmp(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1) == 0)) {
-		printf("UI_LoadDevStatusInfo AAAAA\n");
 
 	} else {
 		printd(DBG_ErrorLvl, "TAG no match, Reset UI\n");
-		printf("UI_LoadDevStatusInfo BBBBB\n");
 	}
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_ON);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
@@ -926,7 +937,6 @@ void UI_LoadDevStatusInfo(void)
 			UI_CHK_CAMPARAM(tUI_BuStsInfo.MdParam.ubMD_Param[i], 0);
 	}
 
-	//tUI_BuStsInfo.tCamUVCMode = 1;
 	ADO_SetDacR2RVol(R2R_VOL_n0DB);
 }
 //------------------------------------------------------------------------------

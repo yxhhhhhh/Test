@@ -33,12 +33,13 @@
 
 uint32_t        ulPAIR_Timeout,ulPAIR_TimeCnt;
 uint8_t         ubPAIR_State,ubPAIR_Number,ubPAIR_PaapCnt;
+osThreadId      PAIR_ThreadId;
 osMessageQId    *xAppEventQueue;
 PAIR_RRP_Hdr    PAIR_PrpPket;
 PAIR_RAP_Hdr    PAIR_PapPket;
 PAIR_ID_TABLE   PAIR_IdTable;
 PAIR_Info_t 	tPAIR_Info;
-osThreadId      PAIR_ThreadId;
+PAIR_TAG		tPAIR_DelStaNum;
 static uint32_t ulPAIR_SFAddr;
 uint8_t ubFixChTable[3] =
 {
@@ -133,9 +134,16 @@ static void PAIR_Thread(void const *argument)
 			tTWC_StopTwcSend(TWC_STA1, TWC_PRP);
 			BB_HoppingPairingEnd();
 			tPair_EvtMsg.ubPAIR_Event = APP_PAIRING_SUCCESS_EVENT;
+			if(tPAIR_DelStaNum <= PAIR_STA4)
+			{
+				tPair_EvtMsg.ubPAIR_Message[0] = 1;		//! Message Length
+				tPair_EvtMsg.ubPAIR_Message[1] = tPAIR_DelStaNum;
+				tPair_EvtMsg.ubPAIR_Message[2] = APP_UNBIND_BU_EVENT;
+			}
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
 			printf("PAIR_END\n");
-			ulPAIR_TimeCnt = 0;			
+			ulPAIR_TimeCnt = 0;
+			tPair_EvtMsg.ubPAIR_Message[2] = APP_REFRESH_EVENT;
 			osThreadSuspend(PAIR_ThreadId);
 		}
 		ulPAIR_TimeCnt += uwDelayMs;
@@ -170,8 +178,9 @@ void PAIR_Init(osMessageQId *pvMsgQId)
     if(tTWC_RegTransCbFunc(TWC_PAAP,NULL,PAIR_Paap) == TWC_FAIL)
 	{
 	}
+	tPAIR_DelStaNum = PAIR_AP_ASSIGN;
 #endif
-    ubPAIR_State  = PAIR_NULL;
+    ubPAIR_State  = PAIR_NULL;	
 	PAIR_LoadId();
 	osThreadDef(PAIR_Thread, PAIR_Thread, THREAD_PRIO_PAIRING_HANDLER, 1, THREAD_STACK_PAIRING_HANDLER);
     PAIR_ThreadId = osThreadCreate(osThread(PAIR_Thread), NULL);
@@ -209,28 +218,23 @@ void PAIR_SetDevInvaildId(PAIR_TAG tTag)
 	switch(tTag)
 	{
 		case PAIR_AP_ASSIGN:
-			PAIR_IdTable.ulAp_ID = 0xFEFFFFFE;	
+			PAIR_IdTable.ulAp_ID = PAIR_INVAILD_ID;	
 			break;
 		default:
 			if(tTag <= PAIR_STA4)
-				PAIR_IdTable.ulSTA_ID[tTag] = 0xFEFFFFFE;
+				PAIR_IdTable.ulSTA_ID[tTag] = PAIR_INVAILD_ID;
 			break;
 	}
 }
 //------------------------------------------------------------------------------
 uint8_t *PAIR_GetId(PAIR_TAG tPair_StaNum)
 {
-	static uint8_t ubPAIR_InvaildID[4] = {0xFE, 0xFF, 0xFF, 0xFE};
+	static uint8_t ubPAIR_InvaildID[4] = {0xFB, 0xFA, 0xFC, 0xFE};
 
     if((tPair_StaNum == PAIR_AP_ASSIGN) || (tPair_StaNum == PAIR_AP_SLAVE))
         return (uint8_t *)&(PAIR_IdTable.ulAp_ID);
     else
         return (tPair_StaNum <= PAIR_STA4)?(uint8_t *)&(PAIR_IdTable.ulSTA_ID[tPair_StaNum]):(uint8_t *)&ubPAIR_InvaildID;
-//    #if OP_STA	
-//    return (uint8_t*)&(PAIR_IdTable.ulAp_ID);
-//    #else
-//    return (uint8_t*) &(PAIR_IdTable.ulSTA_ID[tPair_StaNum]);
-//    #endif
 }
 //------------------------------------------------------------------------------
 void PAIR_Start(PAIR_TAG tPair_StaNum, uint32_t ulPair_Timeout)
@@ -268,8 +272,12 @@ PAIR_STATE ubPAIR_GetPairState(void)
 #if (OP_STA||OP_AP_SLAVE)
 void PAIR_PreparePrp(void)
 {
+	PAIR_TAG tPAIR_Tag = PAIR_GetStaNumber();
+
     PAIR_PrpPket.ubTxNumber   = ubPAIR_Number;
     PAIR_PrpPket.ubIdCheckKey = Timer3->TM3_COUNTER;
+	if(tPAIR_Tag <= PAIR_STA4)
+		PAIR_PrpPket.ulSTA_ID = PAIR_IdTable.ulSTA_ID[tPAIR_Tag];
 }
 //------------------------------------------------------------------------------
 void PAIR_Pap(TWC_TAG GetSta,uint8_t *pData)
@@ -328,7 +336,7 @@ void PAIR_PreparePap(void)
 #endif
     if(tPAIR_Info.ulPAIR_Sign != PAIR_SIGN)	//!< if(PAIR_PapPket.ubTxNumber != 0x0F)
     {
-        ulTemp  = Timer3->TM3_COUNTER<<8;
+        ulTemp  = Timer3->TM3_COUNTER << 8;
         ulTemp &= 0x00FFFF00;
         PAIR_PapPket.ulAp_ID 	 = ulTemp + 0x0F000000;
         PAIR_PapPket.ulSTA_ID[0] = ulTemp + 0x01000000;
@@ -361,7 +369,22 @@ void PAIR_Prp(TWC_TAG GetSta,uint8_t *pData)
 
     if(ubPAIR_State == PAIR_START)
     {
+		PAIR_TAG tPAIR_Tag;
+
         memcpy(&PAIR_PrpPket, pData, sizeof(PAIR_RRP_Hdr));
+		tPAIR_DelStaNum = PAIR_AP_ASSIGN;
+		for(tPAIR_Tag = PAIR_STA1; tPAIR_Tag <= PAIR_STA4; tPAIR_Tag++)
+		{
+			if((PAIR_PrpPket.ulSTA_ID != PAIR_INVAILD_ID) &&
+			   (PAIR_PrpPket.ulSTA_ID == PAIR_IdTable.ulSTA_ID[tPAIR_Tag]))
+			{
+				if(tPAIR_Tag != ubPAIR_Number)
+				{
+					tPAIR_DelStaNum = tPAIR_Tag;
+					PAIR_IdTable.ulSTA_ID[tPAIR_Tag] = PAIR_INVAILD_ID;
+				}
+			}
+		}
         PAIR_PreparePap();
         ubPAIR_State = PAIR_PAP;
     }
@@ -394,7 +417,7 @@ void PAIR_CheckIdTable(void)
 	uint8_t i;
 
 	for(i = DISPLAY_MODE; i < 4; i++)
-		PAIR_IdTable.ulSTA_ID[i] = 0xFEFFFFFE;
+		PAIR_IdTable.ulSTA_ID[i] = PAIR_INVAILD_ID;
 	PAIR_SaveId();
 #endif
 }
@@ -402,15 +425,15 @@ void PAIR_CheckIdTable(void)
 //------------------------------------------------------------------------------
 void PAIR_ShowDeviceID(void)
 {
-	uint8_t i;
+	PAIR_TAG tPAIR_Tag;
 
     printf("ID Table: 0x%X\n", PAIR_IdTable.ubTxNumber);
 	printf("    [%X] : %02X.%02X.%02X.%02X\n", 0xF, *((uint8_t *)&PAIR_IdTable.ulAp_ID), *((uint8_t *)&PAIR_IdTable.ulAp_ID + 1),
 	                                                *((uint8_t *)&PAIR_IdTable.ulAp_ID + 2), *((uint8_t *)&PAIR_IdTable.ulAp_ID + 3));
-	for(i = 0; i < 4; i++)
+	for(tPAIR_Tag = PAIR_STA1; tPAIR_Tag <= PAIR_STA4; tPAIR_Tag++)
 	{
-		printf("    [%X] : %02X.%02X.%02X.%02X\n", i, *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i]), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 1),
-	                                                  *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 2), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[i] + 3));
+		printf("    [%X] : %02X.%02X.%02X.%02X\n", tPAIR_Tag, *((uint8_t *)&PAIR_IdTable.ulSTA_ID[tPAIR_Tag]), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[tPAIR_Tag] + 1),
+															  *((uint8_t *)&PAIR_IdTable.ulSTA_ID[tPAIR_Tag] + 2), *((uint8_t *)&PAIR_IdTable.ulSTA_ID[tPAIR_Tag] + 3));
 	}
 	printf("\n");
 }

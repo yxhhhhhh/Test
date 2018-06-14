@@ -83,22 +83,22 @@ static void sf_ctrl_usage() {
 	printf("###################################\n");
 	printf(" Usage : sf_ctrl <OPT> <addr> <offset> <length> <data 0>.... <data N>\n");
 	printf(" OPT:\n");
-	printf("	1: SF Sector erase\n");
-	printf("	2: SF Read\n");
-	printf("	3: SF Write\n");
-	printf("	4: SF Chip Erase\n");
+	printf("	1: SF Sector Erase\n");
+    printf("	2: SF Chip Erase\n");
+	printf("	3: SF Read\n");
+	printf("	4: SF Write\n");
 	printf(" addr: SF address\n");
 	printf(" offset: SF buffer offset\n");
 	printf(" length: data length\n");
 	printf(" data 0~N: wtite data\n");
 	printf(" Example 1: erase sector, address = 0x1000\n");
 	printf("	sf_ctrl 1 0x1000\n");
-	printf(" Example 2: read flash, address = 0x1100, length = 5\n");
-	printf("	sf_ctrl 2 0x1000 0x100 5\n");
-	printf(" Example 3: write flash, address = 0x1100, length = 5\n");
-	printf("	sf_ctrl 3 0x1000 0x100 5 0x11 0x22 0x33 0x44 0x55\n");
-	printf(" Example 4: SF chip erase\n");
-	printf("	sf_ctrl 4\n");
+    printf(" Example 2: chip erase\n");
+    printf("	sf_ctrl 2\n");
+	printf(" Example 3: read flash, address = 0x1100, length = 5\n");
+	printf("	sf_ctrl 3 0x1000 0x100 5\n");
+	printf(" Example 4: write flash, address = 0x1100, length = 5\n");
+	printf("	sf_ctrl 4 0x1000 0x100 5 0x11 0x22 0x33 0x44 0x55\n");
 	printf("###################################\n");
 }  
 
@@ -128,6 +128,14 @@ int32_t cmd_sf_ctrl(int argc, char* argv[])
 		printf("SF Sector erase ok: addr=0x%x\n", addr);
 		printf("===================================\n");
 	} else if (opt == 2) {
+		printf("===================================\n");
+		printf("SF Chip Erase...\n");
+		SF_DisableWrProtect();
+		SF_Erase(SF_CE, 0, 0);
+		SF_EnableWrProtect();
+		printf("SF Chip Erase ok\n");
+		printf("===================================\n");
+	} else if (opt == 3) {
 		offset = strtoul(argv[3], NULL, 0);
 		length = strtoul(argv[4], NULL, 0);
 		SF_Read(addr + offset, length, ubBuf);
@@ -169,7 +177,7 @@ int32_t cmd_sf_ctrl(int argc, char* argv[])
 		}
 
 		printf("===================================\n");
-	} else if (opt == 3) {
+	} else if (opt == 4) {
 		offset = strtoul(argv[3], NULL, 0);
 		length = strtoul(argv[4], NULL, 0);
 		ulSectorAddr = addr / 4096 * 4096;
@@ -188,14 +196,6 @@ int32_t cmd_sf_ctrl(int argc, char* argv[])
 		SF_Erase(SF_SE, ulSectorAddr, pSF_Info->ulSecSize);
 		SF_Write(ulSectorAddr, pSF_Info->ulSecSize, ubBuf);
 		SF_EnableWrProtect();
-		printf("===================================\n");
-	} else if (opt == 4) {
-		printf("===================================\n");
-		printf("SF Chip Erase...\n");
-		SF_DisableWrProtect();
-		SF_Erase(SF_CE, 0, 0);
-		SF_EnableWrProtect();
-		printf("SF Chip Erase ok\n");
 		printf("===================================\n");
 	} else {
 		sf_ctrl_usage();

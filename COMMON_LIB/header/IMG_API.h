@@ -11,9 +11,9 @@
 	\file		IMG_API.h
 	\brief		Image Control header file
 	\author		Bruce Hsu	
-	\version	0.5
-	\date		2017/12/19
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.6
+	\date		2018/05/18
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef __IMG_API__
@@ -89,17 +89,62 @@
 	}
 	\enddot
 */
-//------------------------------------------------------------------------
-#define IMG_DS_MENU0_ADDR		(0x1000)	//!< OSD menu SF address
-#define IMG_DS_IMG10_ADDR		(0x10000)	//!< OSD image 1_0 SF address
-#define IMG_DS_FONT_ADDR		(0x23230)	//!< OSD font SF address
+
+////------------------------------------------------------------------------
+//#define IMG_DS_MENU0_ADDR		(0x1000)	//!< OSD menu SF address
+//#define IMG_DS_IMG10_ADDR		(0x10000)	//!< OSD image 1_0 SF address
+//#define IMG_DS_FONT_ADDR		(0x23230)	//!< OSD font SF address
 #define IMG_DS_PAT_LEN			(0x100)		//!< OSD HW palette length
-#define IMG_DS_FONT_PAT_LEN	(8)				//!< OSD font palette length
-#define IMG_DS_IMG1_PAT_SFT	(1)				//!< OSD image 1 palette index shift
-#define IMG_DS_IMG2_PAT_SFT	(0xA0)		//!< OSD image 2 palette index shift
-#define IMG_DS_FONT_PAT_SFT	(0xF8)		//!< OSD font palette index shift
-#define IMG_DS_FONT_SIZE		(16)			//!< OSD font size nxn
-//------------------------------------------------------------------------
+//#define IMG_DS_FONT_PAT_LEN	(8)				//!< OSD font palette length
+//#define IMG_DS_IMG1_PAT_SFT	(1)				//!< OSD image 1 palette index shift
+//#define IMG_DS_IMG2_PAT_SFT	(0xA0)		//!< OSD image 2 palette index shift
+//#define IMG_DS_FONT_PAT_SFT	(0xF8)		//!< OSD font palette index shift
+#define IMG_DS_FONT_SIZE		(64)			//!< OSD font size nxn
+////------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/*!
+	\brief For OSD HW
+*/
+//#define OSD_PAT_NUM							(0x100)		//!< OSD HW palette length
+#define OSD_PAT_CR_NUM						(1)			//!< OSD palette Transparent color length
+#define OSD_PAT_BG_NUM						(1)			//!< OSD palette background color length
+
+//------------------------------------------------------------------------------
+#define OSD_PAT_SFT							(0x20)		//!< Palette table offset 
+//! OSD Image Bin File Offset
+#define OSD_GROUP_TOP_LEN					(0x10)
+#define OSD_GROUP_COUNT_SFT					(0xA)
+#define OSD_NEXT_GROUP_ADDR_SFT				(0x1)
+#define OSD_OSD1_PAT_NUM_SFT				(0xC)
+#define OSD_OSD1_IMAGE_NUM_SFT				(0xD)
+#define OSD_OSD2_IMAGE_NUM_SFT				(0xF)
+#define OSD_GROUP_HEADER_SFT				(0x220)
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/*!
+	\brief OSD Font File Offset by ConfigGen
+*/
+#define OSD_FONT_PT_SFT						(0x200)
+#define OSD_FONT_H_SFT						(1)
+#define OSD_FONT_V_SFT						(3)
+#define OSD_FONT_LANG_MAX_SFT				(OSD_FONT_PT_SFT + 0x6)
+#define OSD_FONT_NEXT_LANG_OFFSET_SFT		(0x8)
+#define OSD_FONT_NUM_MAX_SFT				(0xC)
+#define OSD_FONT_PAT_NUM_SFT				(OSD_FONT_PT_SFT + 0xE)
+#define OSD_FONT_NEXT_ROTATION_OFFSET_SFT	(0x12)
+#define OSD_FONT_NEXT_COLOR_OFFSET_SFT		(0x16)
+
+#define OSD_FONT_HEADER_LEN					(0x30)
+//------------------------------------------------------------------------------
+#define IMG_DS1_FHD_Width 					(1920)
+#define IMG_DS1_FHD_Height					(64)
+#define IMG_DS1_HD_Width 					(1280)
+#define IMG_DS1_HD_Height					(32)
+#define IMG_DS2_Width 						(640)
+#define IMG_DS2_Height						(32)
+
 typedef enum
 {
 	IMG_SUCESS,
@@ -227,7 +272,7 @@ typedef struct
 */
 typedef enum
 {
-	IMG_DS_FONT_BLACK = IMG_DS_FONT_PAT_SFT,		//!< OSD font black color index
+	IMG_DS_FONT_BLACK = 0,		//!< OSD font black color index
 	IMG_DS_FONT_WHITE,						//!< DS font white color index
 	IMG_DS_FONT_RED,							//!< DS font red color index
 	IMG_DS_FONT_GREEN,						//!< DS font green color index
@@ -245,11 +290,282 @@ typedef enum
 
 typedef enum
 {
+	DS_IMG1,								//!< OSD image layer1
+	DS_IMG2								//!< OSD image layer2
+}IMG_DS_LAYER_TYP;
+
+typedef enum
+{
 	IMG_DS_BUF_EMPTY,							//!< DS buffer empty
 	IMG_DS_BUF_CUR,								//!< DS buffer used with LCD controller
 	IMG_DS_BUF_READY
 }IMG_DS_BUF_STA_TYP;
 
+typedef enum
+{
+  IMG_DS_NULL=0,
+	IMG_DS_A=1,
+	IMG_DS_B,
+	IMG_DS_C,
+	IMG_DS_D,
+	IMG_DS_E,
+	IMG_DS_F,
+	IMG_DS_G,
+	IMG_DS_H,
+	IMG_DS_I,
+	IMG_DS_J,
+	IMG_DS_K,
+	IMG_DS_L,
+	IMG_DS_M,
+	IMG_DS_N,
+	IMG_DS_O,
+	IMG_DS_P,
+	IMG_DS_Q,
+	IMG_DS_R,
+	IMG_DS_S,
+	IMG_DS_T,
+	IMG_DS_U,
+	IMG_DS_V,
+	IMG_DS_W,
+	IMG_DS_X,
+	IMG_DS_Y,
+	IMG_DS_Z,
+	IMG_DS_a=27,
+	IMG_DS_b,
+	IMG_DS_c,
+	IMG_DS_d,
+	IMG_DS_e,
+	IMG_DS_f,
+	IMG_DS_g,
+	IMG_DS_h,
+	IMG_DS_i,
+	IMG_DS_j,
+	IMG_DS_k,
+	IMG_DS_l,
+	IMG_DS_m,
+	IMG_DS_n,
+	IMG_DS_o,
+	IMG_DS_p,
+	IMG_DS_q,
+	IMG_DS_r,
+	IMG_DS_s,
+	IMG_DS_t,
+	IMG_DS_u,
+	IMG_DS_v,
+	IMG_DS_w,
+	IMG_DS_x,
+	IMG_DS_y,
+	IMG_DS_z,
+	IMG_DS_0=53,
+	IMG_DS_1,
+	IMG_DS_2,
+	IMG_DS_3,
+	IMG_DS_4,
+	IMG_DS_5,
+	IMG_DS_6,
+	IMG_DS_7,
+	IMG_DS_8,
+	IMG_DS_9,
+	IMG_DS_SLASH,
+	IMG_DS_COLON,
+	IMG_DS_PCT,
+	IMG_DS_Battery0,
+	IMG_DS_Battery1,
+	IMG_DS_Battery2,
+	IMG_DS_Battery3,
+	IMG_DS_Battery4,
+	IMG_DS_Battery5,
+	IMG_DS_Charge,
+	IMG_DS_SkyLine0,
+	IMG_DS_SkyLine1,
+	IMG_DS_SkyLine2,
+	IMG_DS_SkyLine3,
+	IMG_DS_SkyLine4,
+	IMG_DS_SkyLine5=78,
+	IMG_DS_HD_A,
+	IMG_DS_HD_B,
+	IMG_DS_HD_C,
+	IMG_DS_HD_D,
+	IMG_DS_HD_E,
+	IMG_DS_HD_F,
+	IMG_DS_HD_G,
+	IMG_DS_HD_H,
+	IMG_DS_HD_I,
+	IMG_DS_HD_J,
+	IMG_DS_HD_K,
+	IMG_DS_HD_L,
+	IMG_DS_HD_M,
+	IMG_DS_HD_N,
+	IMG_DS_HD_O,
+	IMG_DS_HD_P,
+	IMG_DS_HD_Q,
+	IMG_DS_HD_R,
+	IMG_DS_HD_S,
+	IMG_DS_HD_T,
+	IMG_DS_HD_U,
+	IMG_DS_HD_V,
+	IMG_DS_HD_W,
+	IMG_DS_HD_X,
+	IMG_DS_HD_Y,
+	IMG_DS_HD_Z,
+	IMG_DS_HD_a,
+	IMG_DS_HD_b,
+	IMG_DS_HD_c,
+	IMG_DS_HD_d,
+	IMG_DS_HD_e,
+	IMG_DS_HD_f,
+	IMG_DS_HD_g,
+	IMG_DS_HD_h,
+	IMG_DS_HD_i,
+	IMG_DS_HD_j,
+	IMG_DS_HD_k,
+	IMG_DS_HD_l,
+	IMG_DS_HD_m,
+	IMG_DS_HD_n,
+	IMG_DS_HD_o,
+	IMG_DS_HD_p,
+	IMG_DS_HD_q,
+	IMG_DS_HD_r,
+	IMG_DS_HD_s,
+	IMG_DS_HD_t,
+	IMG_DS_HD_u,
+	IMG_DS_HD_v,
+	IMG_DS_HD_w,
+	IMG_DS_HD_x,
+	IMG_DS_HD_y,
+	IMG_DS_HD_z,
+	IMG_DS_HD_0,
+	IMG_DS_HD_1,
+	IMG_DS_HD_2,
+	IMG_DS_HD_3,
+	IMG_DS_HD_4,
+	IMG_DS_HD_5,
+	IMG_DS_HD_6,
+	IMG_DS_HD_7,
+	IMG_DS_HD_8,
+	IMG_DS_HD_9,
+	IMG_DS_HD_SLASH,
+	IMG_DS_HD_COLON,
+	IMG_DS_HD_PCT,
+	IMG_DS_HD_Battery0,
+	IMG_DS_HD_Battery1,
+	IMG_DS_HD_Battery2,
+	IMG_DS_HD_Battery3,
+	IMG_DS_HD_Battery4,
+	IMG_DS_HD_Battery5,
+	IMG_DS_HD_Charge,
+	IMG_DS_HD_SkyLine0,
+	IMG_DS_HD_SkyLine1,
+	IMG_DS_HD_SkyLine2,
+	IMG_DS_HD_SkyLine3,
+	IMG_DS_HD_SkyLine4,
+	IMG_DS_HD_SkyLine5,
+	IMG_DS_VGA_A,
+	IMG_DS_VGA_B,
+	IMG_DS_VGA_C,
+	IMG_DS_VGA_D,
+	IMG_DS_VGA_E,
+	IMG_DS_VGA_F,
+	IMG_DS_VGA_G,
+	IMG_DS_VGA_H,
+	IMG_DS_VGA_I,
+	IMG_DS_VGA_J,
+	IMG_DS_VGA_K,
+	IMG_DS_VGA_L,
+	IMG_DS_VGA_M,
+	IMG_DS_VGA_N,
+	IMG_DS_VGA_O,
+	IMG_DS_VGA_P,
+	IMG_DS_VGA_Q,
+	IMG_DS_VGA_R,
+	IMG_DS_VGA_S,
+	IMG_DS_VGA_T,
+	IMG_DS_VGA_U,
+	IMG_DS_VGA_V,
+	IMG_DS_VGA_W,
+	IMG_DS_VGA_X,
+	IMG_DS_VGA_Y,
+	IMG_DS_VGA_Z,
+	IMG_DS_VGA_a,
+	IMG_DS_VGA_b,
+	IMG_DS_VGA_c,
+	IMG_DS_VGA_d,
+	IMG_DS_VGA_e,
+	IMG_DS_VGA_f,
+	IMG_DS_VGA_g,
+	IMG_DS_VGA_h,
+	IMG_DS_VGA_i,
+	IMG_DS_VGA_j,
+	IMG_DS_VGA_k,
+	IMG_DS_VGA_l,
+	IMG_DS_VGA_m,
+	IMG_DS_VGA_n,
+	IMG_DS_VGA_o,
+	IMG_DS_VGA_p,
+	IMG_DS_VGA_q,
+	IMG_DS_VGA_r,
+	IMG_DS_VGA_s,
+	IMG_DS_VGA_t,
+	IMG_DS_VGA_u,
+	IMG_DS_VGA_v,
+	IMG_DS_VGA_w,
+	IMG_DS_VGA_x,
+	IMG_DS_VGA_y,
+	IMG_DS_VGA_z,
+	IMG_DS_VGA_0,
+	IMG_DS_VGA_1,
+	IMG_DS_VGA_2,
+	IMG_DS_VGA_3,
+	IMG_DS_VGA_4,
+	IMG_DS_VGA_5,
+	IMG_DS_VGA_6,
+	IMG_DS_VGA_7,
+	IMG_DS_VGA_8,
+	IMG_DS_VGA_9,
+	IMG_DS_VGA_SLASH,
+	IMG_DS_VGA_COLON,
+	IMG_DS_VGA_PCT,
+	IMG_DS_VGA_Battery0,
+	IMG_DS_VGA_Battery1,
+	IMG_DS_VGA_Battery2,
+	IMG_DS_VGA_Battery3,
+	IMG_DS_VGA_Battery4,
+	IMG_DS_VGA_Battery5,
+	IMG_DS_VGA_Charge,
+	IMG_DS_VGA_SkyLine0,
+	IMG_DS_VGA_SkyLine1,
+	IMG_DS_VGA_SkyLine2,
+	IMG_DS_VGA_SkyLine3,
+	IMG_DS_VGA_SkyLine4,
+	IMG_DS_VGA_SkyLine5,
+}IMG_UI_FONT;
+
+//------------------------------------------------------------------------------
+typedef struct
+{
+	uint32_t ulAddrSft;						//!< OSD image item shift address at SF
+	uint16_t uwHSize;							//!< OSD image item horizontal size
+	uint16_t uwVSize;							//!< OSD image item vertical size
+	uint16_t uwXStart;						//!< OSD image item horizontal start point
+	uint16_t uwYStart;						//!< OSD image item vertical start point
+	uint32_t ulReserved;
+}IMG_DS_IMG_INFO;
+//------------------------------------------------------------------------------
+typedef struct
+{
+	uint32_t ulOsdFontSfStartAddr;
+	uint32_t ulOsdMenuStringSfStartAddr;
+	uint32_t ulOsdImgSfStartAddr;			
+}IMG_DS_SFADDR_INFOR_TYP;
+//------------------------------------------------------------------------------
+typedef struct
+{
+	uint32_t ulOsdPatSft;
+	uint8_t  ubOsdImgPatNum;				
+	uint8_t  ubOsdFontPatNum;
+	uint8_t  ubPatUpdateFlag;	
+}IMG_DS_PAT_INFOR_TYP;
+//------------------------------------------------------------------------------
 typedef struct
 {
 	uint32_t 		ulBufAddr;				//!< DS buffer address
@@ -260,7 +576,11 @@ typedef struct
 {
 	uint16_t uwWidht;							//!< DS width
 	uint16_t uwHeight;						//!< DS height
-	IMG_DS_BUF_TYP Buffer[2];			//!< DS ping pong buffer
+	uint32_t 		ulBufAddr;
+//	IMG_DS_BUF_TYP Buffer[2];			//!< DS ping pong buffer
+	uint32_t	ulDSFontBufAddr;			//!< DS font buffer address
+	uint32_t	ulDSMenuStringBufAddr;		//!< DS menu string buffer address
+	IMG_DS_SFADDR_INFOR_TYP tDS_SfAddr;			//!< DS Serial Flash Addr Structure
 }IMG_DS_INFO;
 
 /*!
@@ -390,6 +710,20 @@ IMG_BOOL_RESULT IMG_MergeSetup(IMG_MERGE_SETUP *MergeSetup);
 \endcode
 */
 void IMG_StartUp(IMG_IMAGE_TASK Task);
+//------------------------------------------------------------------------
+/*!
+\brief Wait H264 Encode/Decode and JPEG and Scalling Down Result 
+\param ulTimeToWaitMs		TimeOut(unit:ms)			
+\param ReceiveResult	Result Structure Pointer	
+\return ReceiveResult
+\par [Example]
+\code 
+		IMG_RESULT ReceiveResult;
+		ReceiveResult = H264_IMGWaitResult(2000 ,&ReceiveResult);
+\endcode
+*/
+void IMG_WaitResult(uint32_t ulTimeToWaitMs ,struct IMG_RESULT *ReceiveResult);
+//------------------------------------------------------------------------
 //------------------------------------------------------------------------
 /*!
 \brief Get Adequate Buffer Size 
@@ -559,4 +893,10 @@ uint16_t uwIMG_GetVersion(void);
 //------------------------------------------------------------------------
 extern osMessageQId IMG_EventQueue;
 
+
+IMG_BOOL_RESULT tIMG_DS_Img1 (IMG_DS_NUM DS_NUM, IMG_DS_IMG_INFO *pInfor, IMG_DS_UPDATE_TYP tMode);
+IMG_BOOL_RESULT tIMG_DS_GetOsdImgInfor (IMG_DS_NUM DS_NUM, uint8_t ubGroupNum, IMG_DS_LAYER_TYP tOsdLayer, uint16_t uwStartImageIdx, uint16_t uwTotalImage, void *pbOsdImgData);
+IMG_BOOL_RESULT IMG_DS_Setup(IMG_DS_NUM DS_NUM, uint32_t uwDS_HStart, uint32_t uwDS_VStart, uint32_t uwDS_HSize, uint32_t uwDS_VSize);
+void IMG_DSEnable(IMG_DS_NUM DS_NUM);
+void IMG_DSDisable(IMG_DS_NUM DS_NUM);
 #endif

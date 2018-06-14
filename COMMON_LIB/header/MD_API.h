@@ -11,8 +11,8 @@
 	\file		MD_API.c
 	\brief		Motion detection API function header
 	\author		BoCun
-	\version	0.4
-	\date		2018-05-15
+	\version	0.5
+	\date		2018-05-21
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -183,46 +183,6 @@ Ex: Set block0 to block59 is weight[1] and other is weight[4].
 void MD_SetROIweight(uint32_t *ulGroupData);
 //------------------------------------------------------------------------
 /*!
-\brief Set motion detection ROI mask of report.
-\param ulMaskData 	point of mask data array.
-\return(no)
-\par [Example]
-\code 
-    [Note]
-        If image window size is 1280x720, 
-            division of 120x90 blocks in image and each block size is {1280/120, 720/90}.
-        Each block can be assigned one mask. 
-        One mask is 1 bits data.
-    
-    [Initial]
-    Write 0 for all Foreground mask data.
-    (word data of Foreground mask x (Data) is 32'h0000_0000)
-    
-    [Illustration]
-                        120
- 				---------------------
- 				|  0|  1|... ...|119| 
- 				|120|121|... ...|239|
-              90|				    |
- 			 	|...   ...   | 10799|		
-				---------------------	
-
-Ex: Set block0 to block59 is mask[1] and other is mask[0].
-    ulMD_Mask[337] = {  0x11111111,
-                        ...,
-                        0x00001111,                  
-                        ...,
-                        0x00000000,};
-    MD_SetROImask(&ulMD_Mask[0]);
-    
-                    MSB                   LSB
-    block number:   | 7| 6| 5| 4| 3| 2| 1| 0|  
-    ulMD_Mask[0]:   0x1  1  1  1  1  1  1  1 
-\endcode
-*/
-void MD_SetROImask(uint32_t *ulMaskData);
-//------------------------------------------------------------------------
-/*!
 \brief Set motion detection threshold.
 \param ubThd 	threshold.
 \return(no)
@@ -235,11 +195,25 @@ void MD_SetROImask(uint32_t *ulMaskData);
     
     uint8_t ubMDthreshold = 80;
     
-    MD_SetThreshold(ubMDthreshold);
+    MD_SetSensitivity(ubMDthreshold);
         where ubMDthreshold is 0-255.
 \endcode
 */
-void MD_SetThreshold(uint8_t ubThd);
+void MD_SetSensitivity(uint8_t ubThd);
+//------------------------------------------------------------------------
+/*!
+\brief  Set motion detection threshold from user.
+\param  uwValue 	threshold value.
+\return (no)
+\par [Example]
+\code 
+    uint16_t uwValue = 50;
+    
+    MD_SetUserThreshold (uwValue);
+        where uwValue limit is 0-10800.
+\endcode
+*/
+void MD_SetUserThreshold (uint16_t uwValue);
 //------------------------------------------------------------------------
 /*!
 \brief Motion detection switch.
@@ -253,6 +227,13 @@ void MD_SetThreshold(uint8_t ubThd);
 \endcode
 */
 void MD_Switch(uint8_t ubSwitch);
+//------------------------------------------------------------------------
+/*!
+\brief Set motion detection stable state for system start.
+\param ubMdState 	flag.
+\return(no)
+*/
+void MD_SetMdState(uint8_t ubMdState);
 //------------------------------------------------------------------------
 /*!
 \brief Get motion detection count.
@@ -273,11 +254,21 @@ void MD_Switch(uint8_t ubSwitch);
 uint16_t uwMD_GetCnt(uint8_t ubIndex);
 //------------------------------------------------------------------------
 /*!
-\brief  Set motion detection threshold from user.
-\param  uwValue 	threshold value.
-\return (no)
+\brief Get motion detection address.
+\return address.
+\par [Example]
+\code 
+        [Note]
+            Set MD_SetROIindex select interesting area finish, 
+                then use uwMD_GetCnt get motion count report.
+        
+        uint16_t uwMDcount;
+        
+		uwMDcount = uwMD_GetCnt(ubIndex);
+		where ubIndex equal 0~15, could get index-motion count report.      
+\endcode
 */
-void MD_SetUserThreshold (uint16_t uwValue);
+uint32_t ulMD_GetMdAddr(void);
 //------------------------------------------------------------------------
 /*!
 \brief  Motion detection report ready call back function
@@ -285,11 +276,4 @@ void MD_SetUserThreshold (uint16_t uwValue);
 \return (no)
 */
 void MD_ReportReadyCbFunc(pvMD_CbFunc pvCB);
-//------------------------------------------------------------------------
-/*!
-\brief Set motion detection stable state for system start.
-\param ubMdFlg 	flag.
-\return(no)
-*/
-void MD_SetMdStableFg(uint8_t ubMdFlg);
 #endif

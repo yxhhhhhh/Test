@@ -135,13 +135,13 @@ IF EXIST .\BIN\FW_SN93700_IQ.bin (
 del .\BIN\FW_SN93700_IQ.bin
 )
 del .\BIN\temp1.hex
-copy /b .\BIN\temp2.bin+.\SYSTEM\OSD\OSDFont.pat+.\SYSTEM\OSD\OSDImage.dat .\BIN\temp1.bin
+copy /b .\BIN\temp2.bin+.\SYSTEM\OSD\OSD_Font_HD_90¢X.pat+.\SYSTEM\OSD\OSD_Image_HD_90¢X.dat .\BIN\temp1.bin
 SET /a LOGOADDR=PROFADDR+12
 .\UTILITY\binConverter -gs .\BIN\temp1 %LOGOADDR%
 SET FILESZ=0
 SET /A FILESZ=%errorlevel%-40960
 .\UTILITY\binModify .\BIN\temp1 %LOGOADDR% %FILESZ%
-copy /b .\BIN\temp1.bin+.\SYSTEM\OSD\OSDLogo.dat .\BIN\FW_SN93700_OSD.bin
+copy /b .\BIN\temp1.bin+.\SYSTEM\OSD\OSD_Logo_HD_90¢X.dat .\BIN\FW_SN93700_OSD.bin
 .\UTILITY\binConverter -gs .\BIN\FW_SN93700_OSD 41156
 .\UTILITY\binModify .\BIN\FW_SN93700_OSD 41156 %errorlevel%
 .\UTILITY\binModify .\BIN\FW_SN93700_OSD 41160 %6

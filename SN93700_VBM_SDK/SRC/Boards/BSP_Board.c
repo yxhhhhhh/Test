@@ -194,7 +194,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO36 = 5;
 
 	//! SDIO Wi-Fi
-	//GLB->PADIO52 = 4;
+	GLB->PADIO52 = 4;
 	GLB->PADIO53 = 4;
 	GLB->PADIO54 = 4;
 	GLB->PADIO55 = 4;
@@ -291,7 +291,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO7 = 4;
 
 	//! SDIO Wi-Fi
-	//GLB->PADIO52 = 4;
+	GLB->PADIO52 = 4;
 	GLB->PADIO53 = 4;
 	GLB->PADIO54 = 4;
 	GLB->PADIO55 = 4;

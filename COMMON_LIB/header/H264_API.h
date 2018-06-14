@@ -11,8 +11,8 @@
 	\file		IMG.c
 	\brief		Image Control
 	\author		Bruce Hsu	
-	\version	0.8
-	\date		2017/12/19
+	\version	0.9
+	\date		2018/05/18
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -529,6 +529,18 @@ uint8_t H264_GetCurrentQP(void);
 \endcode
 */
 void H264_ResetRateControl(uint8_t ubInitQp);
+
+
+//------------------------------------------------------------------------
+/*!
+\brief Reset Rate Control
+\return(no)
+\code 
+		H264_ResetRateControl();
+\endcode
+*/
+void H264_ResetRateControl2(uint8_t ubCodecIdx,uint8_t ubInitQp);
+
 //------------------------------------------------------------------------
 /*!
 \brief Get H264 Encode Stream Size
@@ -585,4 +597,14 @@ uint16_t uwH264_GetVersion(void);
 \endcode
 */
 void SetH264Rate(Resolution res,FPS fps);
+//------------------------------------------------------------------------
+/*!
+\brief Get Current Period
+\param EncodeIndex 						Index of eecoder object
+\return current period
+\code 
+		period = H264_GetPeriod(ENCODE_0);
+\endcode
+*/
+uint32_t H264_GetPeriod(H264_ENCODE_INDEX EncodeIndex);
 #endif

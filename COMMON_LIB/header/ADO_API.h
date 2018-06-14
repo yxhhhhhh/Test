@@ -10,9 +10,9 @@
 
 	\file		ADO_API.h
 	\brief		Audio header file
-	\author		Chinwei Hsu/Brouce Hsu
-	\version	2.19
-	\date		2018/05/17
+	\author		Chinwei Hsu/Bruce Hsu
+	\version	2.23
+	\date		2018/06/11
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -23,6 +23,7 @@
 
 #define ADO_AUDIO32 	1
 #define ADO_AUDIO32_MAX_NUM 	7
+#define ADO_SRC_NUM		4
 
 extern osMessageQId tADO_EncodeQueue;       //!< Audio event queue for external
 extern osMessageQId tADO_EncodeQueueHandle;
@@ -52,6 +53,7 @@ typedef struct ADO_Queue_Info
 	uint32_t AACAddr;
 	uint32_t AACSize;
 	uint8_t HighPriority;
+	uint8_t ubSrcNum;
 }ADO_Queue_INFO;
 //------------------------------------------------------------------------------
 typedef struct ADO_Aud32_Enc_Info
@@ -492,14 +494,27 @@ typedef struct KNL_ADO_PARAMETER
 	ADO_BUFFERTH AAC_De_buf_th;
 	
 	uint32_t ulADO_BufStartAddr;        //!< Audio buffer start address(4-byte alingment!!)
-	
-	uint32_t ulADO_DelayRestoreTiming;		//!< unit: ms => ex: ulADO_DelayRestoreTiming = 250;
 }ADO_KNL_PARA_t;
 //------------------------------------------------------------------------------
 typedef struct WavPlayInfo{
 	uint8_t ubSongIndex;
 	uint32_t ubOffsetIndex;
 }WavPlayInfo;
+//------------------------------------------------------------------------------
+typedef struct AdoSelfTestInfo{
+	uint32_t ulInitFlag;
+	uint32_t ulTestLength;	//unit:seconds
+	uint32_t ulOneSecDataSize;	//unit:bytes
+	uint32_t ulRecDelayCycle;	//unit:ms
+	uint32_t ulPlyDelayCycle;	//unit:ms
+	uint32_t ulRecordSize;	//unit:bytes
+	uint32_t ulRecordStarAddr;
+	uint32_t ulPlaySize;	//unit:bytes
+	uint32_t ulOriginAdcEnStatus;
+	uint32_t ulOriginSigDelAdcBootGainStatus;
+	uint32_t ulOriginSigDelAdcPgaGainStatus;
+	uint32_t ulOriginR2RVol;
+}AdoSelfTest_t;
 //------------------------------------------------------------------------------
 // Audio meta data
 typedef struct AUDIO_METADATA
@@ -571,10 +586,11 @@ typedef struct AUDIO_METADATA
 	ADO_SNX_AUD32_FORMAT ADO_Aud32EncFmt[ADO_AUDIO32_MAX_NUM];
 	ADO_SNX_AUD32_FORMAT ADO_Aud32DecFmt[ADO_AUDIO32_MAX_NUM];
 	
-	uint32_t ulADO_Encode_Timestamp;		//!< unit: 10ms => ex: ulADO_Encode_Timestamp=2 means 20ms;
-//	uint32_t ulADO_Decode_Timestamp;		//!< unit: 10ms => ex: ulADO_Decode_Timestamp=2 means 20ms;
-	uint32_t ulADO_DelayRestoreTiming;		//!< unit: 1ms => ex: ulADO_DelayRestoreTiming = 250;
-	uint8_t ubADO_ResetDelayParameter;
+	uint32_t ulADO_LatencyTiming[ADO_SRC_NUM];		//!< unit: 1ms => ex: ulADO_LatencyTiming = 250;
+	
+	uint32_t ulADO_WavplayVolCompGain;				//!< wav play compensation gain
+	
+	AdoSelfTest_t ADO_SelfTestInfo;
 }ADO_METADATA_t;
 
 typedef enum 
@@ -1091,27 +1107,44 @@ void ADO_WavResume(void);
 ADO_WAV_STATE tADO_GetWavState(void);
 //------------------------------------------------------------------------------
 /*!
-\brief Compensate input gain
-\param ulGainValue		gain value: 1/2/3/4...
-\param ulStartAddr		buffer start address
-\param ulSize			total size of data
-\return ADO_SUCCESS/ADO_FAIL
-\par [Example]
-\code 
-        ADO_NrCompensationGain(4, 0x1D00000, 4096);
-\endcode
-*/
-ADO_RETURN_FLAG ADO_NrCompensationGain(uint32_t ulGainValue, uint32_t ulStartAddr, uint32_t ulSize);
-//------------------------------------------------------------------------------
-/*!
-\brief reset delay parameter when Tx/Rx startup
+\brief Restore the audio delay from any transmit problem
+\param ulSrcNum				source number, value=0,1,...,(ADO_SRC_NUM-1)
+\param ulTargetLatency		latency timing, unit:ms
 \return(no)
 \par [Example]
 \code 
-        ADO_ResetDelayPara();
+        ADO_LatencySetting(0, 250);	// control latency of source=0 in 250ms
 \endcode
 */
-void ADO_ResetDelayPara(void);
+void ADO_LatencySetting(uint8_t ulSrcNum, uint32_t ulTargetLatency);
+//------------------------------------------------------------------------------
+/*!
+\brief test self sigma-delta adc and r2r dac loopback function
+\param ulSeconds		if ulSeconds is 5, it will record 5 seconds sound and play 5 seconds sound
+\return(no)
+\par [Example]
+\code 
+		//control flow
+        ADO_SelfTest_Init(5);
+		ADO_SelfTest_Record();
+		ADO_SelfTest_Play();
+		ADO_SelfTest_Close();
+\endcode
+*/
+void ADO_SelfTest_Init(uint8_t ulSeconds);
+void ADO_SelfTest_Record(void);
+void ADO_SelfTest_Play(void);
+void ADO_SelfTest_Close(void);
+//------------------------------------------------------------------------------
+/*!
+\brief Compensate wav play volume gain
+\param ulGainValue		gain value: 1/2/3/4...
+\par [Example]
+\code 
+        ADO_WavplayVolCompensation(4);
+\endcode
+*/
+void ADO_WavplayVolCompensation(uint32_t ulGainValue);
 //------------------------------------------------------------------------------
 extern const uint32_t ulADO_BufTh[];
 extern ADO_METADATA_t GlobalAudioMeta;

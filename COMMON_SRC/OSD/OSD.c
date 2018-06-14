@@ -427,6 +427,7 @@ void OSD_LogoJpeg (uint32_t ulLogo_Index)
 	uint32_t	   ulImgSize;
 	LCD_BUF_TYP   *pLcdCh0Buf;
 	LCD_INFOR_TYP  sLcdInfor;
+	uint16_t 		uwLogoH,uwLogoW;
 
 	osMutexWait(OSD_Mutex, osWaitForever);
 	if(LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus())
@@ -436,27 +437,6 @@ void OSD_LogoJpeg (uint32_t ulLogo_Index)
 		LCD_ChDisable(LCD_CH2);
 		LCD_ChDisable(LCD_CH3);
 		tLCD_JpegDecodeDisable();
-
-		sLcdInfor.tDispType = LCD_DISP_1T;
-		sLcdInfor.ubChNum = 1;	
-		sLcdInfor.tChRes[0].uwCropHstart = 0;
-		sLcdInfor.tChRes[0].uwCropVstart = 0;
-#if 0
-		sLcdInfor.uwLcdOutputHsize = 640;
-		sLcdInfor.uwLcdOutputVsize = 480;
-		sLcdInfor.tChRes[0].uwChInputHsize = 640;
-		sLcdInfor.tChRes[0].uwChInputVsize = 480;
-		sLcdInfor.tChRes[0].uwCropHsize = 640;
-		sLcdInfor.tChRes[0].uwCropVsize = 480;
-#else
-		sLcdInfor.uwLcdOutputHsize = uwLCD_GetLcdHoSize();
-		sLcdInfor.uwLcdOutputVsize = uwLCD_GetLcdVoSize();
-		sLcdInfor.tChRes[0].uwChInputHsize = uwLCD_GetLcdHoSize();
-		sLcdInfor.tChRes[0].uwChInputVsize = uwLCD_GetLcdVoSize();
-		sLcdInfor.tChRes[0].uwCropHsize = uwLCD_GetLcdHoSize();
-		sLcdInfor.tChRes[0].uwCropVsize = uwLCD_GetLcdVoSize();
-#endif
-		tLCD_CropScale(&sLcdInfor);
 		LCD_SetOsdLogoJpegBufAddr();
 	}
 	pLcdCh0Buf   = pLCD_GetLcdChBufInfor(LCD_CH0);
@@ -476,6 +456,23 @@ void OSD_LogoJpeg (uint32_t ulLogo_Index)
 		ulQTableSFAddr += OSD_LOGO_JPEG_Q0_LEN;
 		OSD_SfUpdateData(ulQTableSFAddr, pLcdCh0Buf->ulBufAddr + OSD_LOGO_JPEG_Q0_LEN, OSD_LOGO_JPEG_Q1_LEN);
 		LCD_JpegRwQTab(LCD_JPEG_QW, OSD_LOGO_JPEG_QADDR, OSD_LOGO_JPEG_QLEN, (uint8_t*)pLcdCh0Buf->ulBufAddr);
+
+		SF_Read(ulQTableSFAddr+OSD_LOGO_JPEG_Q1_LEN+5, 2, (uint8_t*)&uwLogoW);
+		SF_Read(ulQTableSFAddr+OSD_LOGO_JPEG_Q1_LEN+7, 2, (uint8_t*)&uwLogoH);
+		uwLogoW = SWAP16(uwLogoW);
+		uwLogoH = SWAP16(uwLogoH);
+
+		sLcdInfor.tDispType = LCD_DISP_1T;
+		sLcdInfor.ubChNum = 1;	
+		sLcdInfor.tChRes[0].uwCropHstart = 0;
+		sLcdInfor.tChRes[0].uwCropVstart = 0;
+		sLcdInfor.uwLcdOutputHsize = uwLCD_GetLcdHoSize();
+		sLcdInfor.uwLcdOutputVsize = uwLCD_GetLcdVoSize();
+		sLcdInfor.tChRes[0].uwChInputHsize = uwLogoW;
+		sLcdInfor.tChRes[0].uwChInputVsize = uwLogoH;
+		sLcdInfor.tChRes[0].uwCropHsize = sLcdInfor.tChRes[0].uwChInputHsize;
+		sLcdInfor.tChRes[0].uwCropVsize = sLcdInfor.tChRes[0].uwChInputVsize;
+		tLCD_CropScale(&sLcdInfor);
 	}
 	ulImgAddr = ulLogoSFAddr + (ulLogo_Index * ulImgMaxSize) + OSD_LOGO_HEADER_LEN;
 	SF_Read(ulLogoSFAddr + ((ulLogo_Index * 4) + OSD_LOGO_BSLEN_SFT), OSD_LOGO_JPEG_FILESIZE_LEN, (uint8_t*)&ulImgSize);
@@ -1033,7 +1030,7 @@ void OSD_ImagePrintf(OSD_IMG_RA_TYP tRotType, uint16_t uwXStart, uint16_t uwYSta
 			{
 				case OSD_IMG_ROTATION_90:
 					tOsdImgInfo.uwXStart = uwTmpXStart;
-					uwTmpYStart			-= ((uwi)?tOsdImgInfo.uwVSize:0);
+					uwTmpYStart			-= tOsdImgInfo.uwVSize;	//!< ((uwi)?tOsdImgInfo.uwVSize:0);
 					tOsdImgInfo.uwYStart = uwTmpYStart;
 					if(uwTmpYStart < tOsdImgInfo.uwVSize)
 					{

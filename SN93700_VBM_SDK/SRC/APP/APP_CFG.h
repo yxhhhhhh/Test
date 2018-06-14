@@ -152,10 +152,7 @@ typedef enum
 
 #define WDT_TIMEOUT_CNT					8	// unit: 1 second / 3
 
-
 //! SF Write protect use GPIO
 #define SF_WP_GPIN				14		//0~13, >=14 is no wp pin
 
-
 #endif
-

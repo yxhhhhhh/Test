@@ -11,8 +11,8 @@
 	\file		FWU_API.h
 	\brief		Firmware upgrade function header file
 	\author		Hanyi Chiu
-	\version	1.0
-	\date		2017/12/27
+	\version	1.1
+	\date		2018/06/12
 	\copyright	Copyright (C) 2017 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -22,7 +22,7 @@
 #include <stdint.h>
 
 //! SN937XX Firmware Version
-#define SN937XX_FW_VERSION				"01.00.01.025"
+#define SN937XX_FW_VERSION				"01.00.01.027"
 
 typedef enum
 {

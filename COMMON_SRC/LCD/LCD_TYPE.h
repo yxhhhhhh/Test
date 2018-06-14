@@ -40,6 +40,7 @@
 #define	LCD_TM023KDH03_8080_8Bit2Byte	 (22)	//!< LCD TM023KDH03 8080 Series 8-Bit 2-Byte
 #define LCD_TM023KDH03_8080_8Bit3Byte	 (23)	//!< LCD TM023KDH03 8080 Series 8-Bit 3-Byte
 #define	LCD_TM023KDH03_8080_16Bit		 (24)	//!< LCD TM023KDH03 8080 Series 16-Bit
+#define LCD_HSD070IDW1_24DE				 (25)	//!< LCD_HSD070IDW1 RGB 24-bit DE
 
 //! Add New LCD Panel Type	
 
@@ -94,5 +95,8 @@
 #endif
 #if (LCD_HDMI_OUT == LCD_HDMI_IT66121)
 #include "LCD_HDMI_IT66121_API.h"
+#endif
+#if (LCD_PANEL == LCD_HSD070IDW1_24DE)
+#include "LCD_HSD070IDW1.h"
 #endif
 #endif

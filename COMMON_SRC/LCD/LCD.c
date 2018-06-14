@@ -251,7 +251,7 @@ void LCD_VsyncIsr (void)
 {
 	uint8_t ubi, ubIndex;
 	bool    bUpdate = false;
-	
+
 	LCD->CLR_LCD_INT = 1;
 	INTC_IrqClear(INTC_LCD_IRQ);
 	if((LCD_JPEG_ENABLE == tLCD_JpegEn) && (!LCD->LCD_JPEG_DEC_EN))
@@ -314,9 +314,9 @@ void LCD_Start (void)
 	INTC_IrqSetup(INTC_LCD_IRQ, INTC_LEVEL_TRIG, LCD_VsyncIsr);
 	INTC_IrqEnable(INTC_LCD_IRQ);
 	LCD->CLR_LCD_INT = 1;
-	LCD->LCD_INT_EN = 1;
-	LCD->TV_LCD_EN = 1;
-#if (LCD_PANEL == LCD_SSD2828_Y50019N00N)	
+	LCD->LCD_INT_EN  = 1;
+	LCD->TV_LCD_EN   = 1;
+#if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
 	LCD_MIPI_SSD2828_Start();
 #endif
 	ubLCD_StartFlag = 1;
@@ -328,7 +328,7 @@ void LCD_Stop(void)
 	
 	bLCD_IsrEnable = false;
 	LCD->TV_LCD_EN = 0;
-	INTC_IrqDisable(INTC_LCD_IRQ);	
+	INTC_IrqDisable(INTC_LCD_IRQ);
 	LCD->LCD_INT_EN = 0;
 	LCD->CLR_LCD_INT = 1;
 	for (ubi=0; ubi<LCD_MAX_CH; ++ubi)
@@ -589,12 +589,12 @@ void LCD_LcdPanelInit (void)
 #elif (LCD_PANEL == LCD_TM023KDH03_8080_16Bit)
 	LCD_TM023KDH03_CPU(LCD_8080_16);
 	LCD_TM023KDH03_Init(0x55);	
-	
 //! Add New LCD Panel Initial
-
 #elif (LCD_PANEL == LCD_TEST_PANEL)
 	if (true == bLCD_MIPI_SSD2828_Init())
 		LCD_MIPI_SSD2828();		
+#elif (LCD_PANEL == LCD_HSD070IDW1_24DE)
+	LCD_HSD070IDW1_Init();	
 #endif	
 }
 //------------------------------------------------------------------------------
@@ -1222,75 +1222,4 @@ osMessageQId* pLCD_SwitchModeInit(uint32_t ulStackSize, osPriority priority)
 //	GPIO->GPIO_INTR_EN6 = 1;
 	return &LCD_SwitchModeQueue;
 }
-//------------------------------------------------------------------------------
-void LCD_PixelPllSetting(void)
-{
-	float fPixelClock;
-	uint8_t ubFps;
-	float fFVCO;
 
-#if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
-	ubFps = 60;
-#endif
-	//! Calculation Pixel Clock
-	switch (LCD->LCD_MODE)
-	{
-		case LCD_AU_UPS051_8:
-		case LCD_AU_UPS051_6:
-		case LCD_DE:
-			fPixelClock = ((float)ubFps) * (LCD->LCD_HO_SIZE + LCD->LCD_HT_DM_SIZE + LCD->LCD_HT_START) *
-								   (LCD->LCD_VO_SIZE + LCD->LCD_VT_DM_SIZE + LCD->LCD_VT_START) / 1000000;
-			break;
-		case LCD_RGB_DUMMY:
-			fPixelClock = ((float)ubFps) * ((LCD->LCD_HO_SIZE << 2) + LCD->LCD_HT_DM_SIZE + LCD->LCD_HT_START) *
-								            (LCD->LCD_VO_SIZE + LCD->LCD_VT_DM_SIZE + LCD->LCD_VT_START) / 1000000;
-			break;
-		case LCD_AU:
-			fPixelClock = ((float)ubFps) * (LCD->LCD_HO_SIZE * 3 + LCD->LCD_HT_DM_SIZE + LCD->LCD_HT_START) *
-											(LCD->LCD_VO_SIZE + LCD->LCD_VT_DM_SIZE + LCD->LCD_VT_START) / 1000000;
-			break;
-		case LCD_YUV422:
-			fPixelClock = ((float)ubFps) * ((LCD->LCD_HO_SIZE << 1) + LCD->LCD_HT_DM_SIZE + LCD->LCD_HT_START) *
-											(LCD->LCD_VO_SIZE + LCD->LCD_VT_DM_SIZE + LCD->LCD_VT_START) / 1000000;
-			break;
-		case LCD_BT656_BT601:
-			fPixelClock = ((float)ubFps) * LCD->LCD_VO_SIZE * ((LCD->LCD_HO_SIZE << 1) + 
-								           LCD->LCD_HT_START + (LCD->LCD_HS_WIDTH << 1) + 8) / 1000000;
-			break;
-		default:
-			return;
-	}
-	
-	printd(DBG_InfoLvl, "LCD Pixel Clock = %f MHz\n", fPixelClock);					
-#if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
-	LCD->LCD_PCK_SPEED = 2;//2;
-	GLB->LCDPLL_CK_SEL = 2;
-	//! LCD PLL
-	if (!GLB->LCDPLL_PD_N)
-	{
-		GLB->LCDPLL_LDO_EN = 1;
-		GLB->LCDPLL_PD_N = 1;
-		TIMER_Delay_us(400);
-		GLB->LCDPLL_SDM_EN = 1;
-		TIMER_Delay_us(1);
-	}	
-	GLB->LCDPLL_INT = 12;
-	GLB->LCDPLL_FRA = 0xb0c34;
-	TIMER_Delay_us(1);
-	GLB->LCDPLL_INT_FRA_VLD = 1;
-	TIMER_Delay_us(1);	
-	//! LCD Controller rate
-	GLB->LCD_RATE = 1;
-#endif
-	if (GLB->LCDPLL_CK_SEL == 0)
-		fFVCO = fPixelClock * LCD->LCD_PCK_SPEED * 6;
-	else if (GLB->LCDPLL_CK_SEL == 1)
-		fFVCO = fPixelClock * LCD->LCD_PCK_SPEED * 2;
-	else
-		fFVCO = fPixelClock * LCD->LCD_PCK_SPEED * 1;
-	
-	if ((fFVCO < 148.3) || (fFVCO > 165)) { //range:148.3M ~ 165M
-		printd(DBG_ErrorLvl, "fFVCO=%f MHz,Change PLL pls!\n", fFVCO);
-		while(1);
-	}
-}

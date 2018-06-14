@@ -599,7 +599,7 @@ typedef struct
 	uint8_t				ubTempunitFlag;
 	uint8_t 			NightmodeFlag;
 	uint8_t				ubCamViewNum;	
-	uint8_t				ubReserved[220];
+	uint8_t				ubReserved[210];
 }UI_PUSetting_t;
 
 typedef struct
@@ -783,6 +783,7 @@ void UI_ReportBuConnectionStatus(void *pvConnectionSts);
 void UI_UpdateBuStatus(UI_CamNum_t tCamNum, void *pvStatus);
 void UI_RightArrowLongKey(void);
 void UI_ShowSysTime(void);
+void UI_UnBindBu(UI_CamNum_t tUI_DelCam);
 void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig);
 void UI_EnableVox(void);
 void UI_DisableVox(void);

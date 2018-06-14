@@ -89,6 +89,18 @@ typedef enum
 	POWER_NORMAL_MODE = 8,
 }UI_PowerSaveMode_t;
 
+/*
+typedef enum
+{
+	VOL_LVL0,
+	VOL_LVL1,
+	VOL_LVL2,
+	VOL_LVL3,
+	VOL_LVL4,
+	VOL_LVL5,
+}UI_VolumeLvl_t;
+*/
+
 typedef enum
 {
 	PTZ_UP = 1,

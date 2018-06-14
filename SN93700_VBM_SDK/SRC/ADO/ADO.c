@@ -209,11 +209,15 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.Audio32_De_buf_th 	 = BUF_TH_4KB;
 	tADO_KNLParm.AAC_En_buf_th     	 = BUF_TH_4KB;
 	tADO_KNLParm.AAC_De_buf_th     	 = BUF_TH_4KB;
-	
-	tADO_KNLParm.ulADO_DelayRestoreTiming = 250;
 
 	tADO_KNLParm.ulADO_BufStartAddr  = 0;
 	KNL_SetAdoInfo(tADO_KNLParm);
+
+	//! Latency Setting
+	for(i=0; i<ADO_SRC_NUM; i++)
+	{
+		ADO_LatencySetting(i, 250);
+	}
 
 	//! Audio32 Setting
 	for(i=0; i<7; i++)
@@ -227,6 +231,9 @@ void ADO_KNLParamSetup(void)
 	ADO_Noise_Process_Type(NOISE_NR,AEC_NR_16kHZ);
 
 	ADO_Set_DeHowling_Enable(ADO_OFF);
+	
+	//! wav play volume compensation
+	ADO_WavplayVolCompensation(20);
 }
 //------------------------------------------------------------------------------
 #endif

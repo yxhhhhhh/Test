@@ -41,7 +41,8 @@ static VDO_KNLRoleInfo_t tVDO_KNLRoleInfo[] =
 #ifdef VBM_PU
 static VDO_Status_t tVDO_Status;
 static KNL_ROLE tVDO_SvPlayRole;
-static uint8_t ubVDO_PathRstFlag; 
+static KNL_ROLE tKNL_DualBURole[2];
+static uint8_t ubVDO_PathRstFlag;
 #endif
 #ifdef VBM_BU
 static uint8_t ubVDO_SysSetupFlag;
@@ -66,8 +67,8 @@ void VDO_Init(void)
 	KNL_SetVdoFps(15);
 #endif
 #ifdef VBM_PU
-	ubVDO_PathRstFlag = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
-	tVDO_SvPlayRole = (tKNL_GetDispType() == KNL_DISP_SINGLE)?KNL_STA1:KNL_NONE;
+	ubVDO_PathRstFlag  = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
+	tVDO_SvPlayRole    = (tKNL_GetDispType() == KNL_DISP_SINGLE)?KNL_STA1:KNL_NONE;
 	//! Display Setting
 	tVDO_Status.tVdoDispType = tKNL_GetDispType();
 	KNL_VdoDisplaySetting();
@@ -114,6 +115,8 @@ void VDO_KNLSysInfoSetup(KNL_ROLE tVDO_KNLRole)
 	KNL_SetVdoResolution(tVDO_KNLSubSrcNum, VDO_SUB_H_SIZE, VDO_SUB_V_SIZE);
 	VDO_DataPathSetup(tVDO_KNLRole, VDO_MAIN_SRC);
 	VDO_DataPathSetup(tVDO_KNLRole, VDO_SUB_SRC);
+	KNL_ImageEncodeSetup(tVDO_KNLMainSrcNum);
+	KNL_ImageEncodeSetup(tVDO_KNLSubSrcNum);
 	KNL_SenorSetup(tVDO_KNLMainSrcNum, tVDO_KNLSubSrcNum);
 	if((KNL_SRC_NONE != tVDO_KNLMainSrcNum) || (KNL_SRC_NONE != tVDO_KNLSubSrcNum))
 		KNL_SensorStartProcess();
@@ -128,14 +131,32 @@ void VDO_SetPlayRole(KNL_ROLE tKnlRole)
 }
 void VDO_UpdateDisplayParameter(void)
 {
-#if	(DISPLAY_MODE != DISPLAY_1T1R)
+#if	(DISPLAY_MODE == DISPLAY_2T1R)
 	KNL_ROLE tKNL_Role = tVDO_SvPlayRole;
 	KNL_DISP_TYPE tVDO_DisplayType = tVDO_Status.tVdoDispType;
 
 	tVDO_SvPlayRole = KNL_NONE;
 	tVDO_Status.tVdoDispType = KNL_DISP_NONSUP;
+	if(KNL_NONE == tKNL_Role)
+		return;
 	VDO_SwitchDisplayType(tVDO_DisplayType, &tKNL_Role);
 #endif
+#if	(DISPLAY_MODE == DISPLAY_4T1R)
+	KNL_ROLE tKNL_Role[2] = {tKNL_DualBURole[0], tKNL_DualBURole[1]};
+	KNL_DISP_TYPE tVDO_DisplayType = tVDO_Status.tVdoDispType;
+
+	if(KNL_DISP_SINGLE == tVDO_DisplayType)
+	{
+		tKNL_Role[0] = tVDO_SvPlayRole;
+		tKNL_Role[1] = KNL_STA2;
+	}
+	tKNL_DualBURole[0] = tKNL_DualBURole[1] = KNL_NONE;
+	tVDO_Status.tVdoDispType = KNL_DISP_NONSUP;
+	if((KNL_NONE == tKNL_Role[0]) ||
+	   (KNL_NONE == tKNL_Role[1]))
+		return;
+	VDO_SwitchDisplayType(tVDO_DisplayType, tKNL_Role);
+#endif	
 }
 //------------------------------------------------------------------------------
 void VDO_DisplayLocationSetup(KNL_ROLE tVDO_BURole, KNL_DISP_LOCATION tVDO_DispLocation)
@@ -158,7 +179,6 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 	uint16_t uwHSize = 0, uwVSize = 0;
 	uint8_t ubVDO_ResChgFlag = FALSE;
 	static uint8_t ubVDO_DualPathFlag = FALSE;
-	static KNL_ROLE tKNL_DualBURole[2] = {KNL_NONE, KNL_NONE};
 
 	uwHSize = (KNL_DISP_QUAD == tVDO_DisplayType)?VGA_WIDTH:HD_WIDTH;
 	uwVSize = (KNL_DISP_QUAD == tVDO_DisplayType)?VGA_HEIGHT:HD_HEIGHT;
@@ -235,7 +255,7 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 				VDO_Stop();
 				KNL_VdoPathReset();
 				for(ubRoleIdx = 0; ubRoleIdx < 2; ubRoleIdx++)
-				{					
+				{
 					tVDO_KNLSrcNum = tVDO_KNLRoleInfo[tKNL_DualBURole[ubRoleIdx]].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum;
 					KNL_SetVdoResolution(tVDO_KNLSrcNum, uwVDO_HSIZE, uwVDO_VSIZE);
 					VDO_DataPathSetup(tKNL_DualBURole[ubRoleIdx], VDO_MAIN_SRC);
@@ -282,11 +302,10 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 				tVDO_KNLSrcLocate.tSrcNum[0] = KNL_SRC_1_MAIN;
 				tVDO_KNLSrcLocate.tSrcNum[1] = KNL_SRC_2_MAIN;
 				tVDO_KNLSrcLocate.tSrcLocate[0] = KNL_DISP_LOCATION2;
-				tVDO_KNLSrcLocate.tSrcLocate[1] = KNL_DISP_LOCATION1;			
+				tVDO_KNLSrcLocate.tSrcLocate[1] = KNL_DISP_LOCATION1;
 			} else {
 				tVDO_KNLSrcLocate.ubSetupFlag = FALSE;
 			}
-
 			if((TRUE == ubVDO_ResChgFlag) || (TRUE == ubVDO_PathRstFlag))
 			{
 				VDO_Stop();

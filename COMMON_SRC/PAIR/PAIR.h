@@ -25,6 +25,7 @@
 /*_____ I N C L U D E S ____________________________________________________*/
 
 #define PAIR_SIGN				0x5105046
+#define PAIR_INVAILD_ID			0xFBFAFCFE
 
 typedef enum
 {
@@ -51,6 +52,7 @@ typedef struct
 {
 	uint8_t						ubTxNumber; 
 	uint8_t						ubIdCheckKey;
+	uint32_t					ulSTA_ID;
 }PAIR_RRP_Hdr;
 
 typedef struct

@@ -106,8 +106,7 @@ void BSP_DriversInit(void)
 	//! LCD POWER	
 	GPIO->GPIO_OE10 = 1;
 	GPIO->GPIO_O10  = 0;
-
-#endif
+	#endif
 	
 	//! RTC GPIO1
 	RTC_SetGPO_1(1, RTC_PullDownDisable);		

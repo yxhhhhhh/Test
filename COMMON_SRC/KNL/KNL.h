@@ -1226,11 +1226,19 @@ void KNL_ImgDecInit(H264_DECODE_INDEX CodecIdx,uint16_t uwVdoH,uint16_t uwVdoV);
 
 //------------------------------------------------------------------------
 /*!
-\brief Image decode setup
+\brief Image decoder setup
 \param ubSrcNum Source number
 \return (no)
 */
 void KNL_ImageDecodeSetup(uint8_t ubSrcNum);
+
+//------------------------------------------------------------------------
+/*!
+\brief Image encoder setup
+\param ubSrcNum Source number
+\return (no)
+*/
+void KNL_ImageEncodeSetup(uint8_t ubSrcNum);
 
 //------------------------------------------------------------------------
 /*!

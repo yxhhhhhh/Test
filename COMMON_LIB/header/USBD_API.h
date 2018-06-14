@@ -11,8 +11,8 @@
 	\file		USBD_API.h
 	\brief		USB Device Config header file
 	\author		Hanyi Chiu
-	\version	1.0
-	\date		2018/04/20
+	\version	1.1
+	\date		2018/06/12
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -71,6 +71,15 @@ void USBD_Init(USBD_ClassMode_t tClassMode);
 void USBD_Start(void);
 //------------------------------------------------------------------------------
 /*!
+\brief Get USB device config status
+\return Config result
+\par Note:
+		USBD_SUCCESS: USB device enumeration success.
+		USBD_FAIL   : USB device enumeration fail.
+*/
+USBD_STATUS tUSBD_GetConfigStatus(void);
+//------------------------------------------------------------------------------
+/*!
 \brief Get USB Class Mode
 \return Class mode
 */
@@ -108,7 +117,6 @@ void uvc_update_image(uint32_t *pImg_Buf, uint32_t ulImg_Size);
 \return	Version
 */
 uint16_t uwUSBD_GetVersion(void);
-
 int32_t slUSBD_GetIQFileSize(void);
 void USBD_SetIQFileSize(int32_t slSize);
 int16_t swUSBD_GetRemainTransferLength(void);
