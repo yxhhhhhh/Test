@@ -239,6 +239,7 @@ uint8_t ubPairOK_SwitchCam = 0;
 uint8_t ubSetViewCam = 0;
 
 uint16_t ubGetBatValue = 0;
+uint16_t uwBatLvLIdx = BAT_LVL0;
 extern uint8_t ubStartUpState;
 
 uint8_t ubFactorySettingFLag ;
@@ -533,7 +534,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
 
 	//printf("UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
-	//printf("UI_UpdateStatus GPIO->GPIO_I0: %d, GPIO->GPIO_I11: %d.\n", GPIO->GPIO_I0, GPIO->GPIO_I11);
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	switch(tUI_SyncAppState)
 	{
@@ -658,6 +658,7 @@ END_UPDATESTS:
 	{
 		UI_GetBatLevel();
 	}
+	UI_CheckUsbCharge();
 	tUI_PuSetting.IconSts.ubRdPairIconFlag 	= FALSE;
 	if(ubUI_SendMsg2AppFlag == TRUE)
 	{
@@ -684,9 +685,6 @@ void UI_PuInit(void)
 	{
 		UI_EnableScanMode();
 	}
-
-	GPIO->GPIO_O12 = 0;
-	//GPIO->GPIO_O13 = 1;
 	
 	printf("UI_PuInit ok.\n");
 }
@@ -728,6 +726,13 @@ void UI_PowerKeyShort(void)
 		LCDBL_ENABLE(UI_DISABLE);
 	}
 	printf("UI_PowerKeyShort###\n");
+}
+void UI_PowerOff(void)
+{
+	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
+	printf("UI_PowerOff Power OFF!\n");
+	RTC_PowerDisable();
+	while(1);
 }
 //------------------------------------------------------------------------------
 void UI_PowerKey(void)
@@ -2494,7 +2499,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 	 			tUI_PuSetting.VolLvL.tVOL_UpdateLvL--;
 				UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
 				#endif
-				
+
 				UI_MotorControl(MC_DOWN_ON);
 				break;
 			}
@@ -5412,7 +5417,7 @@ void UI_Zoom_SetScaleParam(uint8_t tZoomScale)
 	uint32_t ulLcd_HSize = uwLCD_GetLcdHoSize();
 	uint32_t ulLcd_VSize = uwLCD_GetLcdVoSize();
 
-	printf("UI_Zoom_SetScaleParam tZoomScale: %d, tUI_PuSetting.ubZoomScale: %d.\r\n", tZoomScale, tUI_PuSetting.ubZoomScale);
+	//printf("UI_Zoom_SetScaleParam tZoomScale: %d, tUI_PuSetting.ubZoomScale: %d.\r\n", tZoomScale, tUI_PuSetting.ubZoomScale);
 
 	if(tZoomScale == 0) //off
 	{
@@ -7727,10 +7732,50 @@ void UI_MotorStateCheck(void)
 
 void UI_GetBatLevel(void)
 {
-	ubGetBatValue  = uwSADC_GetReport(SADC_CH4);
-	printf("UI_GetBatLevel ubGetBatValue: 0x%x.\n", ubGetBatValue);
-	#if UI_TEST_MODE
+	int i;
+	uint16_t ubBatAdc;
+	uint16_t ubAdjustAdc;
 	OSD_IMG_INFO tOsdImgInfo;
+	
+	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
+	ubAdjustAdc = uwSADC_GetReport(SADC_CH3);
+	ubGetBatValue = ubBatAdc*33*2*100/1024;
+	printf("UI_GetBatLevel ubBatAdc: %d, ubAdjustAdc: %d, ubGetBatValue: %d.\n", ubBatAdc, ubAdjustAdc, ubGetBatValue);
+
+	if(ubGetBatValue < 3500)
+	{
+		UI_PowerOff();
+	}
+
+  	if(ubGetBatValue > 4250)
+  	{
+		
+  	}
+
+	BatteryMap_t tBatMap[] =
+	{
+		{3500, 		3590, 	BAT_LVL0},
+		{3590, 	 	3660, 	BAT_LVL1},
+		{3660, 	 	3760,	BAT_LVL2},
+		{3760, 		3860, 	BAT_LVL3},
+		{3860, 	 	4250, 	BAT_LVL4},
+	};
+
+	for(i = 0; i <= BAT_LVL4; i++)
+	{
+		if((ubGetBatValue >= tBatMap[i].ubMinBat) && (ubGetBatValue < tBatMap[i].ubMaxBat))
+		{
+			uwBatLvLIdx = tBatMap[i].ubBatLev;
+			break;
+		}
+	}
+
+	if(ubGetBatValue > 4250)
+		uwBatLvLIdx = BAT_LVL4;
+
+	printf("UI_GetBatLevel uwBatLvLIdx: %d, ubGetBatValue: %d.\n", uwBatLvLIdx, ubGetBatValue);
+	
+	#if UI_TEST_MODE
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 410;	
@@ -7751,6 +7796,62 @@ void UI_GetBatLevel(void)
 	tOsdImgInfo.uwYStart = 350;	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 	#endif
+}
+
+uint8_t UI_GetUsbDet(void)
+{
+	return GPIO->GPIO_I11;
+}
+
+uint8_t UI_GetBatChgFull(void)
+{
+	return GPIO->GPIO_I0;
+}
+
+void UI_CheckUsbCharge(void)
+{
+	static uint8_t ubUsbStatus = 0;
+	
+	if(UI_GetUsbDet() == 1) //USB_DET
+	{
+		if(tUSBD_GetConfigStatus() == 1) //充电器
+		{
+			if(GPIO->GPIO_O12 == 1)
+			{
+				printf("UI_CheckUsbCharge AC Charge!\n");
+				GPIO->GPIO_O12 = 0; //大电流快充
+			}
+		}
+		else
+		{
+			if(GPIO->GPIO_O12 == 0)
+			{
+				printf("UI_CheckUsbCharge USB Charge!\n");
+				GPIO->GPIO_O12 = 1;
+			}
+		}
+
+		if(UI_GetBatChgFull() == 0) //电池充满
+		{
+			
+		}
+	}
+	else
+	{
+		if(GPIO->GPIO_O12 == 0)
+			GPIO->GPIO_O12 = 1;
+	}
+
+	if((UI_GetUsbDet() == 1) && (ubUsbStatus == 0))
+	{
+		if(PWM->PWM_EN8 == 0)
+		{
+			LCDBL_ENABLE(UI_ENABLE);
+			printf("UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
+		}
+	}
+	
+	ubUsbStatus = UI_GetUsbDet();
 }
 
 void UI_PTNDisplay(uint8_t value)
@@ -9929,12 +10030,12 @@ void UI_ClearBuConnectStatusFlag(void)
 void UI_UpdateBarIcon_Part1(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-	uint16_t uwAntLvLIdx = ANT_NOSIGNAL, uwBatLvLIdx = BAT_LVL0;
+	uint16_t uwAntLvLIdx = ANT_NOSIGNAL;
 
 	UI_CamNum_t tSelCamNum = tCamViewSel.tCamViewPool[0]; 
 			
 	uwAntLvLIdx = 6 - tUI_CamStatus[tSelCamNum].tCamAntLvl;
-	uwBatLvLIdx = 4;// BAT_LVL4;	
+	//uwBatLvLIdx = 4;// BAT_LVL4;	
 
 	if(ubEnterTimeMenuFlag == 0)		
 		UI_TimeShowSystemTime(1);
@@ -9957,11 +10058,22 @@ void UI_UpdateBarIcon_Part1(void)
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_ANT0+uwAntLvLIdx, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 1190;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT0+uwBatLvLIdx, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 10;
-	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	if(UI_GetBatChgFull() == 0) //battery charge full
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT4, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 10;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	}
+	else
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT0+uwBatLvLIdx+5*UI_GetUsbDet(), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 10;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	}
 }
 
 void UI_UpdateBarIcon_Part2(void)
@@ -10275,7 +10387,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 
 			UI_ClearStatusBarOsdIcon();
 			tLCD_JpegDecodeDisable();
-				OSD_LogoJpeg(OSDLOGO_LOGO_BG);
+			OSD_LogoJpeg(OSDLOGO_LOGO_BG);
 
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TITLE, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 60;
@@ -11497,9 +11609,5 @@ UI_CamNum_t UI_GetCamViewPoolID(void)
 	return tCamViewSel.tCamViewPool[0];
 }
 
-void UI_CheckUsbCharge(void)
-{
-	printf("UI_UpdateStatus GPIO->GPIO_I0: %d, GPIO->GPIO_I11: %d.\n", GPIO->GPIO_I0, GPIO->GPIO_I11);
-}
 
 //------------------------------------------------------------------------------

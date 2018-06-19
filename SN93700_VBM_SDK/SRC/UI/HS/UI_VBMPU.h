@@ -405,11 +405,11 @@ typedef enum
 
 typedef enum
 {
-	BAT_LVL4,
-	BAT_LVL3,
-	BAT_LVL2,
-	BAT_LVL1,
 	BAT_LVL0,
+	BAT_LVL1,
+	BAT_LVL2,
+	BAT_LVL3,
+	BAT_LVL4,
 	BAT_CHARGE,
 }UI_BatLvl_t;
 
@@ -515,6 +515,13 @@ typedef struct
 	uint16_t 	  ubMax;
 	uint8_t 	  ubValue;
 }LightSenseAdjust_t;
+
+typedef struct
+{
+	uint16_t ubMinBat;
+	uint16_t ubMaxBat;
+	uint8_t  ubBatLev;
+}BatteryMap_t;
 
 #pragma pack(push) /* push current alignment to stack */
 #pragma pack(1) /* set alignment to 1 byte boundary */
@@ -930,4 +937,7 @@ void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice);
 uint8_t UI_GetCamOnLineNum(uint8_t type);
 void UI_SwitchCameraScan(void);
 void UI_PowerOnSet(void);
+void UI_CheckUsbCharge(void);
+uint8_t UI_GetUsbDet(void);
+uint8_t UI_GetBatChgFull(void);
 #endif

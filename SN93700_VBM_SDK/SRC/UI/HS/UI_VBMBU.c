@@ -99,7 +99,7 @@ uint8_t ubTemp_bak = 25;
 
 I2C1_Type *pTempI2C;
 
-uint8_t ubTestMode = 0;
+uint8_t ubTestMode = 1;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -1199,7 +1199,7 @@ void UI_TestSetting(void *pvMCParam)
 	}
 	#endif
 	
-	#if 0
+	#if 1
 	printf("UI_TestSetting TestData1: %d.\n", TestData0);
 	APP_SetTuningToolMode(TestData0);
 	WDT_Disable(WDT_RST);

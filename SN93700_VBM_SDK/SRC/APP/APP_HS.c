@@ -99,16 +99,15 @@ uint8_t APP_GetBatteryValue(void)
 	return 50;
 }
 
-uint8_t APP_CkeckBootStatus(void)
+uint8_t APP_CheckBootStatus(void)
 {
-	#ifdef VBM_PU //20180330
 	#define CHECK_COUNT		10
 	uint16_t checkCount = 0;
-	printf("APP_CkeckBootStatus USB: %d.\n", GPIO->GPIO_I3);
+	printf("APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
 
 	while(1)
 	{
-		if(GPIO->GPIO_I3 == 1) //Usb On
+		if(UI_GetUsbDet() == 1) //Usb On
 		{
 			if(ubRTC_GetKey() == 1)
 			{
@@ -122,7 +121,7 @@ uint8_t APP_CkeckBootStatus(void)
 			else
 			{
 				checkCount = 0;
-				if(APP_GetBatteryValue() == 100)
+				if(UI_GetBatChgFull() == 0)//µç³Ø³äÂú(APP_GetBatteryValue() == 100)
 				{
 					//Charge Full
 				}
@@ -151,43 +150,10 @@ uint8_t APP_CkeckBootStatus(void)
 			}
 		}
 		TIMER_Delay_ms(200);
+		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
 
-	printf("APP_CkeckBootStatus USB: %d, checkCount: %d.\n", GPIO->GPIO_I3, checkCount);
-	LCDBL_ENABLE(UI_ENABLE);
-	#endif
-}
-
-uint8_t CheckPowerKey(void) //20180330
-{
-	static uint16_t checkCount = 10;
-	static uint8_t PkeyFlag = 0;
-	
-	while(checkCount)
-	{
-		//printf("ubRTC_GetKey: %d.\n", ubRTC_GetKey());
-		if(ubRTC_GetKey() == 1)
-		{
-			checkCount--;
-			if(checkCount == 0)
-			{
-				PkeyFlag = 1;
-				break;
-			}
-		}	
-		else
-		{
-			PkeyFlag = 0;
-			break;
-		}
-		//osDelay(20);
-		TIMER_Delay_ms(200);
-		
-	}
-	//printf("CheckPowerKey checkCount: %d.\n", checkCount);
-	//printf("PkeyFlag: %d.\n", PkeyFlag);
-	return (PkeyFlag);
-	//return (!checkCount);
+	printf("APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
 }
 //------------------------------------------------------------------------------
 void APP_Init(void)
@@ -225,19 +191,12 @@ void APP_Init(void)
 	
 	FWU_Init();
 
-	#if 0 //20180526
-	APP_CkeckBootStatus();
-	//TIMER_Delay_ms(3000);
+	#ifdef VBM_PU //20180526
+	APP_CheckBootStatus();
+	LCDBL_ENABLE(UI_ENABLE);
 	#endif
 	
 	UI_Init(&APP_EventQueue);
-	#if 0
-	if(CheckPowerKey() == 0)
-	{
-		printf( "APP_PowerOnFunc Power OFF!\n");
-		//printd(DBG_Debug1Lvl, "APP_PowerOnFunc Power OFF!\n");
-	}	
-	#endif
 	
 	tAPP_StsReport.tAPP_State  	= APP_POWER_OFF_STATE;
 	ulAPP_WaitTickTime      	= 0;	//!< osWaitForever;
@@ -294,75 +253,7 @@ void APP_PowerOnFunc(void)
 {
 	uint32_t ulBUF_StartAddr = 0;
 
-	/*
-	#ifdef VBM_PU //20180330
-	if(CheckPowerKey() == 0)
-	{
-		printd(DBG_Debug1Lvl, "APP_PowerOnFunc Power OFF!\n");
-		RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
-		RTC_PowerDisable();
-		while(1);
-	}
-	LCDBL_ENABLE(UI_ENABLE);
-	#endif
-	*/
-	
 	APP_LoadKNLSetupInfo();
-
-	#ifdef VBM_PU //20180330
-	uint16_t checkCount = 0;
-	printf("APP_PowerOnFunc GPIO->GPIO_I3: %d.\n", GPIO->GPIO_I3);
-
-	#if 0
-	while(1)
-	{
-		if(GPIO->GPIO_I3 == 1) //Usb On
-		{
-			if(ubRTC_GetKey() == 1)
-			{
-				checkCount++;
-				if(checkCount >= 80)
-				{
-					printf("break######\n");
-					break;
-				}
-			}
-			else
-			{
-				checkCount = 0;
-				if(APP_GetBatteryValue() == 100)
-				{
-					//Charge Full
-				}
-			}
-		}
-		else
-		{
-			if(APP_GetBatteryValue() <= 10)
-			{
-				break; //RTC_PowerOff();
-			}
-			
-			if(ubRTC_GetKey() == 1)
-			{
-				checkCount++;
-				if(checkCount >= 80)
-				{
-					printf("break@@@@@@\n");
-					break;
-				}
-			}
-			else
-			{
-				RTC_PowerOff();
-			}
-		}
-		osDelay(20);
-	}
-	#endif
-	LCDBL_ENABLE(UI_ENABLE);
-	printf("APP_PowerOnFunc LCDBL_ENABLE###\n");
-	#endif
 
 #if USBD_ENABLE
 	//! USB Device initialization
