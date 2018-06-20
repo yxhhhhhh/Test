@@ -133,6 +133,7 @@ typedef struct
 	UI_PowerSaveMode_t	  tCamPsMode;
 	UI_CamsSetMode_t	  tCamScanMode;
 	uint8_t	  			  tCamUVCMode;
+	uint8_t	  			  tNightModeFlag;
 	uint8_t				  ubReserved[210];
 }UI_BUStatus_t;
 
@@ -163,6 +164,7 @@ typedef enum
 	UI_MD_SETTING,
 	UI_VOICETRIG_SETTING,
 	UI_MOTOR_SETTING,
+	UI_NIGHTMODE_SETTING,
 	UI_TEST_SETTING,
 }UI_PUReqCmdID_t;
 
@@ -270,9 +272,10 @@ void UI_BrightnessCheck(void);
 
 void UI_BuInit(void);
 void UI_TestCheck(void);
-void UI_TestSetting(void *pvMCParam);
+void UI_TestSetting(void *pvTSParam);
 void UI_SetCamUVCMode(uint8_t Value);
 uint8_t UI_GetCamUVCMode(void);
 void UI_PairingLongKey(void);
+void UI_NightModeSetting(void *pvNMParam);
 
 #endif

@@ -596,16 +596,14 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			break;
 		case APP_LINK_STATE:
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
-			{				
-				//if(((*pThreadCnt)%5) == 0)
+			{
+				UI_TempAlarmCheck();
+				UI_PickupAlarmCheck();
+				UI_MotorStateCheck();
+
+				if(((*pThreadCnt)%3) == 0)
 				{
-					UI_TempAlarmCheck();
-					UI_PickupAlarmCheck();
-				}
-				
-				//if(((*pThreadCnt)%2) == 0)
-				{
-					UI_MotorStateCheck();
+					UI_SendNightModeToBu();
 				}
 			
 				UI_RedrawStatusBar(pThreadCnt);
@@ -685,7 +683,9 @@ void UI_PuInit(void)
 	{
 		UI_EnableScanMode();
 	}
-	
+
+	UI_CamvLDCModeCmd(CAMSET_ON);
+
 	printf("UI_PuInit ok.\n");
 }
 
@@ -2377,7 +2377,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			{
 
 				#if UI_TEST_MODE //test
-				UI_TestCmd(1, 0);
+				UI_TestCmd(0x11, 1);
 				#endif
 				
 				UI_MotorControl(MC_LEFT_ON);
@@ -2441,7 +2441,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			else
 			{
 				#if UI_TEST_MODE //test
-				UI_TestCmd(0, 0);
+				UI_TestCmd(0x11, 0);
 				#endif
 				
 				UI_MotorControl(MC_RIGHT_ON);
@@ -5714,7 +5714,7 @@ void UI_GetPairCamInfo(void)
 		else
 		{
 			ubCamPairFlag[i] = 0;
-			//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< i)) ;
+			//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< i));
 		}
 		printf("ubCamPairFlag[%d]= %d \n",i,ubCamPairFlag[i] );
 	}
@@ -6067,7 +6067,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 				UI_SendMessageToAPP(&tUI_UnindBuMsg);
 				ubCamPairFlag[CameraId] = 0;
 				//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< i));
-				osDelay(100);
+				osDelay(500);
 			}
 		}
 	}
@@ -6085,6 +6085,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 		UI_SendMessageToAPP(&tUI_UnindBuMsg);
 		ubCamPairFlag[CameraId] = 0;
 		//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< CameraId));
+		osDelay(500);
 	}
 }
 
@@ -6727,7 +6728,6 @@ void UI_NightModeSubSubSubmenuDisplay(uint8_t value)
 	tOsdImgInfo.uwXStart= 338+(ubSubSubSubMenuItemFlag*76);
 	tOsdImgInfo.uwYStart =167;	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
-	
 }
 
 //------------------------------------------------------------------------------
@@ -7468,6 +7468,29 @@ void UI_EnableMotor(uint8_t value)
 	}
 }
 
+void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
+{
+	UI_PUReqCmd_t tUI_NightModeReqCmd;
+
+	printf("UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
+	tUI_NightModeReqCmd.tDS_CamNum 					= tCamViewSel.tCamViewPool[0];
+	tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_SETTING;
+	tUI_NightModeReqCmd.ubCmd[UI_SETTING_ITEM] 		= UI_NIGHTMODE_SETTING;
+	tUI_NightModeReqCmd.ubCmd[UI_SETTING_DATA] 		= CameraId;
+	tUI_NightModeReqCmd.ubCmd[UI_SETTING_DATA+1] 	= NightMode;
+	tUI_NightModeReqCmd.ubCmd_Len  			  		= 4;
+	
+	if(UI_SendRequestToBU(osThreadGetId(), &tUI_NightModeReqCmd) != rUI_SUCCESS)
+	{
+		printd(DBG_ErrorLvl, "UI_CamNightModeCmd Fail!\n");
+	}
+}
+
+void UI_SendNightModeToBu(void)
+{
+	UI_CamNightModeCmd(tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
+}
+
 void UI_CamvLDCModeCmd(uint8_t value)
 {
 	UI_PUReqCmd_t tUI_CamvLDCModeCmd;
@@ -7744,7 +7767,7 @@ void UI_GetBatLevel(void)
 
 	if(ubGetBatValue < 3500)
 	{
-		UI_PowerOff();
+		//UI_PowerOff();
 	}
 
   	if(ubGetBatValue > 4250)
@@ -11261,8 +11284,7 @@ void UI_LoadDevStatusInfo(void)
 	//tUI_PuSetting.ubLangageFlag 			= 2;
 	//printf("tUI_PuSetting.ubScanModeEn   %d \n",tUI_PuSetting.ubScanModeEn );
 	//ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
-	
-	UI_CamvLDCModeCmd(CAMSET_ON); //20180517
+	//UI_CamvLDCModeCmd(CAMSET_ON);
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)

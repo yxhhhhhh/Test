@@ -101,6 +101,9 @@ uint8_t APP_GetBatteryValue(void)
 
 uint8_t APP_CheckBootStatus(void)
 {
+	#ifdef VBM_PU
+	
+	#if 0
 	#define CHECK_COUNT		10
 	uint16_t checkCount = 0;
 	printf("APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
@@ -152,8 +155,11 @@ uint8_t APP_CheckBootStatus(void)
 		TIMER_Delay_ms(200);
 		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
-
 	printf("APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
+	#endif
+	
+	LCDBL_ENABLE(UI_ENABLE);
+	#endif
 }
 //------------------------------------------------------------------------------
 void APP_Init(void)
@@ -191,11 +197,8 @@ void APP_Init(void)
 	
 	FWU_Init();
 
-	#ifdef VBM_PU //20180526
 	APP_CheckBootStatus();
-	LCDBL_ENABLE(UI_ENABLE);
-	#endif
-	
+		
 	UI_Init(&APP_EventQueue);
 	
 	tAPP_StsReport.tAPP_State  	= APP_POWER_OFF_STATE;

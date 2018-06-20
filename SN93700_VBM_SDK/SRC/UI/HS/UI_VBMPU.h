@@ -671,6 +671,7 @@ typedef enum
 	UI_MD_SETTING,
 	UI_VOICETRIG_SETTING,
 	UI_MOTOR_SETTING,
+	UI_NIGHTMODE_SETTING,
 	UI_TEST_SETTING,
 }UI_PUReqCmdID_t;
 
@@ -940,4 +941,7 @@ void UI_PowerOnSet(void);
 void UI_CheckUsbCharge(void);
 uint8_t UI_GetUsbDet(void);
 uint8_t UI_GetBatChgFull(void);
+void UI_CamvLDCModeCmd(uint8_t value);
+void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode);
+void UI_SendNightModeToBu(void);
 #endif

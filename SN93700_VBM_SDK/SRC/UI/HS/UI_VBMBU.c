@@ -67,6 +67,7 @@ UI_SettingFuncPtr_t tUiSettingMap2Func[] =
 	[UI_MD_SETTING]				= UI_MDSetting,
 	[UI_VOICETRIG_SETTING]		= UI_VoiceTrigSetting,
 	[UI_MOTOR_SETTING]		    = UI_PtzControlSetting,
+	[UI_NIGHTMODE_SETTING]		= UI_NightModeSetting,
 	[UI_TEST_SETTING]		    = UI_TestSetting,
 };
 
@@ -207,14 +208,11 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			if(((*pThreadCnt)%10) == 0)
 			{
 				UI_VoiceCheck();
-				//UI_BrightnessCheck();
-			}
-			
-			if(((*pThreadCnt)%10) == 0)
-			{
 				UI_TempCheck();
 			}
 			
+			UI_BrightnessCheck();
+
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
 			(*pThreadCnt)++;
@@ -1162,16 +1160,79 @@ void UI_UpdateMCStatus(void)
   	#endif
 }
 
+void UI_NightModeSetting(void *pvNMParam)
+{
+	uint8_t *pNM_Param = (uint8_t *)pvNMParam;
+	uint8_t CameraId = pNM_Param[0];
+	uint8_t NightMode = pNM_Param[1];
+
+	tUI_BuStsInfo.tNightModeFlag = NightMode;
+}
+
+void UI_SetIRLed(uint8_t LedState)
+{
+	if((GPIO->GPIO_O4 == 0) && (LedState == 1))
+	{
+		GPIO->GPIO_O4 = 1;
+		//SEN_SetIrMode(1); //开IR, 黑白色
+		//UI_PowerKey();
+		printf("UI_SetIRLed On###\n");
+	}
+
+	if((GPIO->GPIO_O4 == 1) && (LedState == 0))
+	{
+		GPIO->GPIO_O4 = 0;
+		//SEN_SetIrMode(0); //关IR, 彩色
+		//UI_PowerKey();
+		printf("UI_SetIRLed Off###\n");
+	}
+}
+
 void UI_BrightnessCheck(void) //20180408
 {
+	#define IR_CHECK_CNT	3
+	int i;
+	static uint16_t ubCheckMinIrCnt = 0;
+	static uint16_t ubCheckMaxIrCnt = 0;
 	uint16_t uwDetLvl = 0x3FF;
-	uwDetLvl = uwSADC_GetReport(1);
-	//printf("uwDetLvl  0x%x \n",uwDetLvl);
 	
-	if(uwDetLvl < 10)
+	uwDetLvl = uwSADC_GetReport(1);
+
+	if(uwDetLvl < 0x10)
 	{
-		GPIO->GPIO_O4	= 0; //关
-		//GPIO->GPIO_O4	= 1; //开
+		ubCheckMinIrCnt++;
+		ubCheckMaxIrCnt = 0;
+	}
+	else if(uwDetLvl > 0x20)
+	{
+		ubCheckMaxIrCnt++;
+		ubCheckMinIrCnt = 0;
+	}
+	else if(uwDetLvl > 0x3FF)
+	{
+		ubCheckMaxIrCnt = 0;
+		ubCheckMinIrCnt = 0;
+	}
+	
+	//printf("UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+	if(tUI_BuStsInfo.tNightModeFlag)
+	{
+		if(ubCheckMinIrCnt >= IR_CHECK_CNT)
+		{
+			UI_SetIRLed(1);
+			ubCheckMinIrCnt = 0;
+		}
+		
+		if(ubCheckMaxIrCnt >= IR_CHECK_CNT)
+		{
+			UI_SetIRLed(0);
+			ubCheckMaxIrCnt = 0;
+		}
+	}
+	else
+	{
+		UI_SetIRLed(0);
+		ubCheckMaxIrCnt = 0;
 	}
 }
 
@@ -1182,11 +1243,11 @@ void UI_BuInit(void)
 	GPIO->GPIO_O4	= 1; //开
 }
 
-void UI_TestSetting(void *pvMCParam)
+void UI_TestSetting(void *pvTSParam)
 {
-	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
-	uint8_t TestData0 = pMC_Param[0];
-	uint8_t TestData1 = pMC_Param[1];
+	uint8_t *pTS_Param = (uint8_t *)pvTSParam;
+	uint8_t TestData0 = pTS_Param[0];
+	uint8_t TestData1 = pTS_Param[1];
 	
 	#if 0
 	MC_Stop(MC_1);
@@ -1199,13 +1260,14 @@ void UI_TestSetting(void *pvMCParam)
 	}
 	#endif
 	
-	#if 1
-	printf("UI_TestSetting TestData1: %d.\n", TestData0);
-	APP_SetTuningToolMode(TestData0);
-	WDT_Disable(WDT_RST);
-	WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
-	while(1);
-	#endif
+	if(TestData0 == 0x11)
+	{
+		printf("UI_TestSetting TestData1: %d.\n", TestData1);
+		APP_SetTuningToolMode(TestData1);
+		WDT_Disable(WDT_RST);
+		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+		while(1);
+	}
 }
 
 
