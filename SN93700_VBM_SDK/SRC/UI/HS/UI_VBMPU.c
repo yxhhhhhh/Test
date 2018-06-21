@@ -380,10 +380,10 @@ void UI_OnInitDialog(void)
 	*/
 	//OSD_LogoJpeg(OSDLOGO_LOGOFINISH);
 	
-	GPIO->GPIO_O1 	= 0;
-	GPIO->GPIO_O0 	= 0;
+	//GPIO->GPIO_O1 	= 0;
+	//GPIO->GPIO_O0 	= 0;
 	//GPIO->GPIO_O13 	= 0;
-	BUZ_PlayPowerOnSound();
+	//BUZ_PlayPowerOnSound();
 
 	ubStartUpState = 0;
 }
@@ -6104,7 +6104,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 
 void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	int i = 0;
+	int i = 0, j = 0;
 	OSD_IMG_INFO tOsdImgInfo;
 
 	switch(tArrowKey)
@@ -7485,7 +7485,7 @@ void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
 {
 	UI_PUReqCmd_t tUI_NightModeReqCmd;
 
-	printf("UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
+	//printf("UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
 	tUI_NightModeReqCmd.tDS_CamNum 					= tCamViewSel.tCamViewPool[0];
 	tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_SETTING;
 	tUI_NightModeReqCmd.ubCmd[UI_SETTING_ITEM] 		= UI_NIGHTMODE_SETTING;
@@ -7809,7 +7809,7 @@ void UI_GetBatLevel(void)
 	if(ubGetBatValue > 4250)
 		uwBatLvLIdx = BAT_LVL4;
 
-	printf("UI_GetBatLevel uwBatLvLIdx: %d, ubGetBatValue: %d.\n", uwBatLvLIdx, ubGetBatValue);
+	//printf("UI_GetBatLevel uwBatLvLIdx: %d, ubGetBatValue: %d.\n", uwBatLvLIdx, ubGetBatValue);
 	
 	#if UI_TEST_MODE
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
@@ -7847,7 +7847,8 @@ uint8_t UI_GetBatChgFull(void)
 void UI_CheckUsbCharge(void)
 {
 	static uint8_t ubUsbStatus = 0;
-	
+
+	//printf("### USB: %d, ChgFull: %d, USB_Config: %d.\n", UI_GetUsbDet(), UI_GetBatChgFull(), tUSBD_GetConfigStatus());
 	if(UI_GetUsbDet() == 1) //USB_DET
 	{
 		if(tUSBD_GetConfigStatus() == 1) //³äµçÆ÷
@@ -10096,7 +10097,7 @@ void UI_UpdateBarIcon_Part1(void)
 	tOsdImgInfo.uwYStart = 1190;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-	if(UI_GetBatChgFull() == 0) //battery charge full
+	if((UI_GetUsbDet() == 1) && (UI_GetBatChgFull() == 0)) //battery charge full
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT4, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
@@ -11481,7 +11482,7 @@ void UI_EnableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_DisableScanMode(void)
 {
-	//printf("UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
+	printf("UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
 	if(FALSE == ubUI_ScanStartFlag)
 		return;
 	UI_SetupScanModeTimer(FALSE);

@@ -589,15 +589,15 @@ void UI_VoiceCheck (void)
 
 	printf("ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);	
 
-	if(ulUI_AdcRpt > 0x6000)
+	if(ulUI_AdcRpt > 0x3000)
 		voice_temp = 5;
-	else if(ulUI_AdcRpt > 0x5500)
+	else if(ulUI_AdcRpt > 0x1800)
 		voice_temp = 4;	
-	else if(ulUI_AdcRpt > 0x3500)
+	else if(ulUI_AdcRpt > 0x1000)
 		voice_temp = 3;	
-	else if(ulUI_AdcRpt > 0x1500)
+	else if(ulUI_AdcRpt > 0x700)
 		voice_temp = 2;	
-	else if(ulUI_AdcRpt > 0x0700)
+	else if(ulUI_AdcRpt > 0x300)
 		voice_temp = 1;	
 	else
 		voice_temp = 0;	

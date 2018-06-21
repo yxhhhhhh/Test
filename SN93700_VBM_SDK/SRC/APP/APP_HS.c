@@ -574,7 +574,7 @@ uint8_t APP_UpdateLinkStatus(void)
 			tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = KNL_GetRssiValue(ubKNL_RoleNum);
 			if(UI_GetCamViewPoolID() == ubKNL_RoleNum)
 			{
-				//printf("BBBBB LINK ubKNL_RoleNum: %d, UI_GetPairSelCam(): %d.\n", ubKNL_RoleNum, UI_GetPairSelCam());
+				//printf("### LinkStatus ubKNL_RoleNum: %d, UI_GetCamViewPoolID(): %d.\n", ubKNL_RoleNum, UI_GetCamViewPoolID());
 				ubAPP_Event = APP_LINK_EVENT; //当前是无信号状态,匹配成功以后状态未更新,一直无法进入LINK状态.20180519
 			}
 		}

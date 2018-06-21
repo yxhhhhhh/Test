@@ -7498,6 +7498,7 @@ void KNL_RestartImgCodec(void)
 	}
 	for(tKNL_Role = KNL_STA1; tKNL_Role <= KNL_STA4; tKNL_Role++)
 		KNL_VdoStart((KNL_SRC_1_MAIN + tKNL_Role));
+	printf("KNL_VdoStart 1\n");
 }
 
 //------------------------------------------------------------------------------
@@ -7516,6 +7517,7 @@ void KNL_RestartDataPath(uint8_t ubRole)
 		osDelay(200);
 //		BUF_Reset((BUF_VDO_MAIN_BS0 + ubRole));
 		KNL_VdoStart(tSrcNum);
+printf("KNL_VdoStart 2\n");
 	}
 }
 
@@ -8529,7 +8531,7 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 	uint8_t ubTxAdo_Path;
 #endif
 
-	printf("KNL_VdoStart ubSrcNum: %d.\n", ubSrcNum);
+	printf("KNL_VdoStart ubSrcNum: %d ###.\n", ubSrcNum);
 	ubSrcNumMap = ubKNL_SrcNumMap(ubSrcNum);
 	if(ubSrcNumMap <= KNL_STA4)
 	{
