@@ -1055,7 +1055,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 			ubUI_McHandshake = 0;
 			break;
 			
-		case 1:	//水平,正转
+		case 1:	//垂直,正转 /Up
 			ubUI_Mc1RunCnt = 2;
 			if(ubUI_Mc1RunFlag == 0)
 			{
@@ -1065,7 +1065,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 			ubUI_McHandshake++;
 			break;
 		
-		case 2:	//水平,反转
+		case 2:	//垂直,反转 /Down
 			ubUI_Mc1RunCnt = 2;
 			if(ubUI_Mc2RunFlag == 0)
 			{
@@ -1075,20 +1075,32 @@ void UI_PtzControlSetting(void *pvMCParam)
 			ubUI_McHandshake++;
 			break;
 		
-		case 3:	//垂直,正转
+		case 3:	//水平,正转 /Left
 			ubUI_Mc2RunCnt = 2;
 			if(ubUI_Mc3RunFlag == 0)
 			{
+				#if 0
+				APP_SetTuningToolMode(1);
+				WDT_Disable(WDT_RST);
+				WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+				while(1);
+				#endif
 				ubUI_Mc3RunFlag = 1;
 				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
 			}
 			ubUI_McHandshake++;
 			break;
 		
-		case 4:	//垂直,反转
+		case 4:	//水平,反转 /Right
 			ubUI_Mc2RunCnt = 2;
 			if(ubUI_Mc4RunFlag == 0)
 			{
+				#if 0
+				APP_SetTuningToolMode(0);
+				WDT_Disable(WDT_RST);
+				WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+				while(1);
+				#endif
 				ubUI_Mc4RunFlag = 1;
 				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);
 			}
@@ -1240,7 +1252,6 @@ void UI_BuInit(void)
 {
 	UI_MotoControlInit();
 	pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
-	GPIO->GPIO_O4	= 1; //开
 }
 
 void UI_TestSetting(void *pvTSParam)
@@ -1259,7 +1270,8 @@ void UI_TestSetting(void *pvTSParam)
 		
 	}
 	#endif
-	
+
+	#if 0
 	if(TestData0 == 0x11)
 	{
 		printf("UI_TestSetting TestData1: %d.\n", TestData1);
@@ -1268,6 +1280,7 @@ void UI_TestSetting(void *pvTSParam)
 		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
 		while(1);
 	}
+	#endif
 }
 
 

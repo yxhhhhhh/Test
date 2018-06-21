@@ -5642,8 +5642,22 @@ void UI_CamSubSubmenuDisplay(uint8_t SubMenuItem)
 				tOsdImgInfo.uwXStart= 233+(i*76);
 				tOsdImgInfo.uwYStart =284;	
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}	
+			}
 
+			i = ubSubSubMenuItemFlag;
+			for(j = 0; j < 4; j++)
+			{
+				if(ubCamPairFlag[i] == 1)
+				{
+					ubSubSubMenuItemFlag = i;
+					break;
+				}
+				if(i == 3)
+					i = 0;
+				else
+					i++;
+			}
+			
 			if(ubNoAddCamFlag == 0)
 			{
 				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_CAM1_PAIR_S+(ubSubSubMenuItemFlag*3)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
@@ -5662,8 +5676,7 @@ void UI_CamSubSubmenuDisplay(uint8_t SubMenuItem)
 				tOsdImgInfo.uwXStart= 194+(i*76);
 				tOsdImgInfo.uwYStart =284;	
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}	
-
+			}
 			
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SCAN_OFF_S+(ubSubSubMenuItemFlag*2)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 194+(ubSubSubMenuItemFlag*76);
@@ -5892,7 +5905,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				
 				if(ubSubMenuItemFlag == 2)
 				{
-					ubSubSubMenuItemFlag = 0; //tUI_PuSetting.ubScanModeEn
+					ubSubSubMenuItemFlag = 0;
 					ubUI_ScanStartFlag = FALSE;
 					ubSubSubMenuItemPreFlag = 1;
 				}

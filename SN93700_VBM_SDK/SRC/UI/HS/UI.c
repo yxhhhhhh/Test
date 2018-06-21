@@ -92,7 +92,7 @@ void UI_Init(osMessageQId *pvMsgQId)
 	/*
 	uint8_t ubCamUVCMode = UI_GetCamUVCMode();
 	printf("UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
-	if(ubCamUVCMode != 1)
+	if(ubCamUVCMode == 0)
 	{
 		UI_SetCamUVCMode(1);
 		UI_UpdateDevStatusInfo();
@@ -101,6 +101,28 @@ void UI_Init(osMessageQId *pvMsgQId)
 		WDT_Disable(WDT_RST);
 		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
 		while(1);
+	}
+	else if(ubCamUVCMode == 1)
+	{
+		UI_SetCamUVCMode(2);
+		UI_UpdateDevStatusInfo();
+		osDelay(50);
+	}
+	else if(ubCamUVCMode == 2)
+	{
+		UI_SetCamUVCMode(3);
+		UI_UpdateDevStatusInfo();
+		osDelay(50);
+		APP_SetTuningToolMode(ubCamUVCMode);
+		WDT_Disable(WDT_RST);
+		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
+		while(1);
+	}
+	else if(ubCamUVCMode >= 3)
+	{
+		UI_SetCamUVCMode(0);
+		UI_UpdateDevStatusInfo();
+		osDelay(50);
 	}
 	*/
 	#endif
