@@ -545,18 +545,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			{
 				if(tUI_PuSetting.ubDefualtFlag == FALSE)
 				{
-					/*
-					if(ubSanModeState == 0)
-					{
-						ubSanModeState = 1;
-						UI_SwitchCameraScan();
-						//UI_SetupScanModeTimer(TRUE);
-					}
-					*/
 					ubSanModeState++;
 					if(ubSanModeState == 10)
 					{
-						UI_SwitchCameraScan();
+						UI_SwitchCameraScan(0);
 						ubSanModeState = 0;
 					}
 				}
@@ -564,7 +556,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			else
 			{
 				ubSanModeState = 0;
-				//UI_DisableScanMode();
+				UI_DisableScanMode();
 			}
 			
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
@@ -2340,7 +2332,8 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 	{
 		if(TRUE == tUI_PuSetting.ubScanModeEn)
 			return;
-				
+
+		#if 0
 		tSelCam = tCamViewSel.tCamViewPool[0] ;
 
 		if(tSelCam < (ubPairSelCam - 1))
@@ -2366,6 +2359,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						
 			UI_UpdateDevStatusInfo();
 		}
+		#else
+		UI_SwitchCameraScan(1); //20180622
+		UI_UpdateDevStatusInfo();
+		#endif
 	}
 	
 	if(tUI_PuSetting.ubDefualtFlag == FALSE)
@@ -11079,7 +11076,7 @@ uint8_t UI_GetCamOnLineNum(uint8_t type)
 	return ubCamOnlineNum;
 }
 
-void UI_SwitchCameraScan(void)
+void UI_SwitchCameraScan(uint8_t type)
 {
 	int i, j;
 	uint8_t ubCamPairNum = 0;
@@ -11090,8 +11087,11 @@ void UI_SwitchCameraScan(void)
 	for(i = 0; i < 4; i++)
 		printf("### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
-	if(tUI_PuSetting.ubScanTime <= 0)
-		return;
+	if(type == 0)
+	{
+		if(tUI_PuSetting.ubScanTime <= 0)
+			return;
+	}
 
 	ubCamOnlineNum = UI_GetCamOnLineNum(0);
 
@@ -11271,7 +11271,7 @@ void UI_ScanModeExec(void)
 	}
 	UI_SetupScanModeTimer(TRUE);
 	#else
-	UI_SwitchCameraScan();
+	UI_SwitchCameraScan(0);
 	UI_SetupScanModeTimer(TRUE);
 	#endif
 }

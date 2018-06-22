@@ -934,7 +934,7 @@ void UI_FactorymodeKeyDisplay(uint8_t Value);
 void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb);
 void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice);
 uint8_t UI_GetCamOnLineNum(uint8_t type);
-void UI_SwitchCameraScan(void);
+void UI_SwitchCameraScan(uint8_t type);
 void UI_PowerOnSet(void);
 void UI_CheckUsbCharge(void);
 uint8_t UI_GetUsbDet(void);
