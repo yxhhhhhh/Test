@@ -4380,23 +4380,23 @@ void UI_SetAlarm(uint8_t SubMenuItem)
 	switch(SubMenuItem)
 	{
 		case 0:
-			tUI_PuSetting.ubHighTempSetting 		= ubSubSubSubMenuItemFlag;			
+			tUI_PuSetting.ubHighTempSetting = ubSubSubSubMenuItemFlag;			
 		break;	
 
 		case 1:
-			tUI_PuSetting.ubLowTempSetting 		= ubSubSubSubMenuItemFlag;
+			tUI_PuSetting.ubLowTempSetting = ubSubSubSubMenuItemFlag;
 		break;	
 
 		case 2:
-			tUI_PuSetting.ubTempAlertSetting 		= ubSubSubSubMenuItemFlag;
+			tUI_PuSetting.ubTempAlertSetting = ubSubSubSubMenuItemFlag;
 		break;	
 
 		case 3:
-			tUI_PuSetting.ubSoundLevelSetting 		= ubSubSubSubMenuItemFlag;
+			tUI_PuSetting.ubSoundLevelSetting = ubSubSubSubMenuItemFlag;
 		break;	
 
 		case 4:
-			tUI_PuSetting.ubSoundAlertSetting 		= ubSubSubSubMenuItemFlag;	
+			tUI_PuSetting.ubSoundAlertSetting = ubSubSubSubMenuItemFlag;	
 		break;
 
 		default:
@@ -4452,287 +4452,6 @@ void UI_AlarmTriggerDisplay(uint8_t value)
 			tOsdImgInfo.uwYStart =282+284;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);							
 		break;
-	}
-}
-
-void UI_CheckTempAlarm(void)
-{
-	uint8_t ubHightempMax,ubLowtempMin;
-	OSD_IMG_INFO tOsdImgInfo;
-
-	if(ubAlarmSoundShowFlag == 1) 
-		return;
-
-	if(tUI_State == UI_DISPLAY_STATE)
-	{
-		
-		if(tUI_PuSetting.ubTempunitFlag == 1)
-		{
-			ubHightempMax = ubHighTempC[tUI_PuSetting.ubHighTempSetting];
-			ubLowtempMin = ubLowTempC[tUI_PuSetting.ubHighTempSetting];
-		}
-		else
-		{
-			ubHightempMax = ubHighTempF[tUI_PuSetting.ubHighTempSetting];
-			ubLowtempMin = ubLowTempF[tUI_PuSetting.ubHighTempSetting];
-		}
-		
-		if(tUI_PuSetting.ubHighTempSetting != 0)
-		{
-			if(ubRealTemp >= ubHightempMax)	
-			{
-				if(ubTempAlarmcheck == 0)
-					ubHighAlarmOn =1;
-			}
-			else 
-			{
-				ubHighAlarmOn =0;
-			}
-		}
-		else
-		{
-			ubHighAlarmOn =0;
-			ubHighAlarmTriggerFlag =0;
-			ubAlarmClearFlag = 0;
-			
-			if(tUI_PuSetting.ubLowTempSetting  == 0)
-				ubAlarmDisplayFlag =0;		
-		}
-
-		//printf("RTC: %d \n",RTC->RTC_TIMER0);
-
-		if(tUI_PuSetting.ubLowTempSetting != 0)
-		{
-			if(ubRealTemp <= ubLowtempMin)
-			{
-			   if(ubTempAlarmcheck == 0)
-				ubLowAlarmOn = 1;
-			}
-			else
-			{
-				ubLowAlarmOn = 0;
-			}
-		}
-		else
-		{
-			ubLowAlarmOn =0;
-			ubLowAlarmTriggerFlag =0;
-			ubAlarmClearFlag = 0;
-
-			if(tUI_PuSetting.ubHighTempSetting  == 0)		
-				ubAlarmDisplayFlag =0;
-		}
-
-		if((ubHighAlarmOn == 1)&&(ubHighAlarmTriggerFlag == 0)&&(ubAlarmDisplayFlag == 0))
-		{
-			ubTempAlarmcheck = 1;
-			
-			if(tUI_State == UI_DISPLAY_STATE)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 167;
-				tOsdImgInfo.uwYStart =282;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 340;
-				tOsdImgInfo.uwYStart =600;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 340;
-				tOsdImgInfo.uwYStart =600-24;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-				if(tUI_PuSetting.ubTempunitFlag == 1)
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_C, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 334;
-					tOsdImgInfo.uwYStart =600-72;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);			
-				}
-				else
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_F, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 334;
-					tOsdImgInfo.uwYStart =600-72;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-				}
-				ubAlertCnt =0;
-				ubAlarmDisplayFlag =1;
-			
-			}
-		}
-
-		if((ubLowAlarmOn == 1)&&(ubLowAlarmTriggerFlag == 0)&&(ubAlarmDisplayFlag == 0))
-		{
-			ubTempAlarmcheck = 1;
-		
-			if(tUI_State == UI_DISPLAY_STATE)
-			{	
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 167;
-				tOsdImgInfo.uwYStart =282;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_0+((ubRealTemp/10)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 340;
-				tOsdImgInfo.uwYStart =600;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 340;
-				tOsdImgInfo.uwYStart =600-24;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-				if(tUI_PuSetting.ubTempunitFlag == 1)
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_C, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 334;
-					tOsdImgInfo.uwYStart =600-72;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);			
-				}
-				else
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_F, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 334;
-					tOsdImgInfo.uwYStart =600-72;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-				}
-				ubAlertCnt = 0;
-				ubAlarmDisplayFlag = 1;
-			
-			}
-		}	
-
-		if(ubAlarmDisplayFlag == 1)
-		{
-			UI_SetAlert(ubAlertTime[tUI_PuSetting.ubTempAlertSetting]);
-		}
-
-		if((ubHighAlarmOn == 0)&&(ubLowAlarmOn == 0)&&(ubAlarmClearFlag == 0))
-		{
-			if(ubAlarmSoundPickupOn == 0)
-			{
-				if(tUI_State == UI_DISPLAY_STATE)
-				{
-					tOsdImgInfo.uwHSize  = 387;
-					tOsdImgInfo.uwVSize  = 717;
-					tOsdImgInfo.uwXStart = 167;
-					tOsdImgInfo.uwYStart = 282;
-					OSD_EraserImg2(&tOsdImgInfo);	
-				}
-			}
-			ubAlarmClearFlag = 1;
-		}
-	}
-	
-	if(ubHighAlarmTriggerFlag == 1) //ubTempAlarmcheck == 1
-	{
-		//printf("ubAlarmIdleCnt %d \n",ubAlarmIdleCnt);
-		if(ubAlarmIdleCnt < 300) //180
-		{
-			ubAlarmIdleCnt++;
-		}
-		else
-		{
-			ubTempAlarmcheck = 0;	
-			ubAlarmIdleCnt =0;
-			ubLowAlarmTriggerFlag = 0;
-			ubHighAlarmTriggerFlag = 0;
-			ubAlarmDisplayFlag = 0;
-			ubAlertCnt =0;
-		}
-	}	
-}
-
-void UI_CheckSoundAlarm(void)
-{
-	uint8_t ubBuMaxSoundLevel;
-	OSD_IMG_INFO tOsdImgInfo;
-
-	if(ubAlarmDisplayFlag == 1)
-		return;
-
-	if(tUI_State == UI_DISPLAY_STATE)
-	{
-		if(tUI_PuSetting.ubSoundLevelSetting != 0)
-		{
-			if(ubGetVoiceTemp >= tUI_PuSetting.ubSoundLevelSetting)	
-			{
-				if(ubAlarmSoundDisplay == 0)
-					ubAlarmSoundPickupOn = 1;
-			}
-			else 
-			{
-				ubAlarmSoundPickupOn = 0;
-			}
-		}
-		else
-		{
-			ubAlarmSoundPickupOn = 0;	
-		}
-
-		if((ubAlarmSoundPickupOn == 1)&&(ubAlarmSoundTriggerFlag == 0)&&(ubAlarmSoundDisplay == 0))
-		{		
-			if(ubAlarmDisplayFlag == 0)
-			{
-				if(tUI_State == UI_DISPLAY_STATE)
-				{
-					if(ubAlarmSoundShowFlag == 0)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart = 167;
-						tOsdImgInfo.uwYStart = 282;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						ubAlarmSoundShowFlag = 1;
-						ubAlertCnt =0;
-					}
-				}
-				ubAlarmSoundDisplay =1;
-				printf("UI_CheckTempAlarm Sound ubAlarmDisplayFlag = 1 @@@@@@\n");
-			}	
-		}
-
-		if(ubAlarmSoundDisplay == 1)
-		{
-			UI_SetAlert(ubAlertTime[tUI_PuSetting.ubTempAlertSetting]);
-		}
-
-		/*
-		if((ubAlarmSoundPickupOn == 0)&&(ubAlarmDisplayFlag == 0))
-		{
-			if(tUI_State == UI_DISPLAY_STATE)
-			{
-				if(ubAlarmSoundShowFlag == 1)
-				{
-					tOsdImgInfo.uwHSize  = 387;
-					tOsdImgInfo.uwVSize  = 717;
-					tOsdImgInfo.uwXStart = 167;
-					tOsdImgInfo.uwYStart = 282;
-					OSD_EraserImg2(&tOsdImgInfo);	
-				}
-			}
-			ubAlarmSoundShowFlag = 0;
-		}
-		*/
-	}
-	
-	if(ubAlarmSoundTriggerFlag == 1) //ubAlarmSoundDisplay == 1
-	{
-		printf("ubAlarmSoundIdleCnt %d \n",ubAlarmSoundIdleCnt);
-		if(ubAlarmSoundIdleCnt < 300) //180
-		{
-			ubAlarmSoundIdleCnt++;
-		}
-		else
-		{
-			ubAlarmSoundDisplay = 0;	
-			ubAlarmSoundIdleCnt =0;
-			ubAlarmSoundTriggerFlag =0;
-			ubAlertCnt =0;
-			ubAlarmSoundShowFlag = 0;
-		}		
 	}
 }
 
@@ -7677,8 +7396,10 @@ void UI_MotorControl(uint8_t Value)
 
 void UI_MotorStateCheck(void)
 {
-	#define MC_MAX_CNT	30 //10s /40
-	
+	#define MC_MAX_CNT	40
+	#define MC0_MAX_CNT	100 //left - right /80
+	#define MC1_MAX_CNT	40 //up - down
+
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
 
@@ -7689,7 +7410,7 @@ void UI_MotorStateCheck(void)
 	if(ubMotor1State == MC_UP_ON)
 	{
 		ubMC1OnCount++;
-		if(ubMC1OnCount >= MC_MAX_CNT)
+		if(ubMC1OnCount >= MC1_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_UP_TOP);
 			UI_EnableMotor(0);
@@ -7706,7 +7427,7 @@ void UI_MotorStateCheck(void)
 	else if(ubMotor1State == MC_DOWN_ON)
 	{
 		ubMC1OnCount++;
-		if(ubMC1OnCount >= MC_MAX_CNT)
+		if(ubMC1OnCount >= MC1_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_DOWN_TOP);
 			UI_EnableMotor(0);
@@ -7729,7 +7450,7 @@ void UI_MotorStateCheck(void)
 	if(ubMotor0State == MC_LEFT_ON)
 	{
 		ubMC0OnCount++;
-		if(ubMC0OnCount >= MC_MAX_CNT)
+		if(ubMC0OnCount >= MC0_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_LEFT_TOP);
 			UI_EnableMotor(0);
@@ -7746,7 +7467,7 @@ void UI_MotorStateCheck(void)
 	else if(ubMotor0State == MC_RIGHT_ON)
 	{
 		ubMC0OnCount++;
-		if(ubMC0OnCount >= MC_MAX_CNT)
+		if(ubMC0OnCount >= MC0_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_RIGHT_TOP);
 			UI_EnableMotor(0);

@@ -30,10 +30,13 @@
 #include "i2c.h"
 #include "IQ_API.h"
 #include "WDT.h"
+#include "AWB_API.h"
 
 #define osUI_SIGNALS	0x6A
 
 #define MC_ENABLE  1
+
+#define TEST_MODE  0
 
 /**
  * Key event mapping table
@@ -99,8 +102,6 @@ uint8_t ubVoicetemp_bak = 0xff;
 uint8_t ubTemp_bak = 25;
 
 I2C1_Type *pTempI2C;
-
-uint8_t ubTestMode = 1;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -199,11 +200,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				UI_VoiceTrigger();
 			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				//UI_MDTrigger();
-
-			if(((*pThreadCnt)%5) == 0)
-			{
-				//UI_TestCheck(); //20180517
-			}
 			
 			if(((*pThreadCnt)%10) == 0)
 			{
@@ -238,6 +234,11 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			break;
 	}
 	//PAIRING_LED_IO = 0;
+	
+	#if TEST_MODE
+	//UI_TestCheck(); //20180517
+	#endif
+	
 	tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
 	UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
 	osMutexRelease(UI_BUMutex);
@@ -1086,7 +1087,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 				while(1);
 				#endif
 				ubUI_Mc3RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
+				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);
 			}
 			ubUI_McHandshake++;
 			break;
@@ -1102,7 +1103,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 				while(1);
 				#endif
 				ubUI_Mc4RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);
+				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
 			}
 			ubUI_McHandshake++;
 			break;
@@ -1181,21 +1182,38 @@ void UI_NightModeSetting(void *pvNMParam)
 	tUI_BuStsInfo.tNightModeFlag = NightMode;
 }
 
+void UI_SetIrMode(uint8_t mode)
+{
+	if(mode == 1)
+	{
+		AWB_Stop();
+		osDelay(500);
+		SEN_SetIrMode(1);
+		ISP_SetIQSaturation(0);
+	}
+	else
+	{
+		//osDelay(500);
+		AWB_Start();
+		SEN_SetIrMode(0);
+		ISP_SetIQSaturation(128);
+	}
+}
+
 void UI_SetIRLed(uint8_t LedState)
 {
+	//printf("UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
 	if((GPIO->GPIO_O4 == 0) && (LedState == 1))
 	{
 		GPIO->GPIO_O4 = 1;
-		//SEN_SetIrMode(1); //开IR, 黑白色
-		//UI_PowerKey();
+		UI_SetIrMode(1); //开IR, 黑白色
 		printf("UI_SetIRLed On###\n");
 	}
 
 	if((GPIO->GPIO_O4 == 1) && (LedState == 0))
 	{
 		GPIO->GPIO_O4 = 0;
-		//SEN_SetIrMode(0); //关IR, 彩色
-		//UI_PowerKey();
+		UI_SetIrMode(0); //关IR, 彩色
 		printf("UI_SetIRLed Off###\n");
 	}
 }
@@ -1245,6 +1263,7 @@ void UI_BrightnessCheck(void) //20180408
 	{
 		UI_SetIRLed(0);
 		ubCheckMaxIrCnt = 0;
+		ubCheckMinIrCnt = 0;
 	}
 }
 
@@ -1261,17 +1280,6 @@ void UI_TestSetting(void *pvTSParam)
 	uint8_t TestData1 = pTS_Param[1];
 	
 	#if 0
-	MC_Stop(MC_1);
-	MC_Stop(MC_0);
-	ubTestMode = pMC_Param[0];
-	printf("UI_TestSetting ubTestMode: %d.\n", ubTestMode);
-	if(ubTestMode)
-	{
-		
-	}
-	#endif
-
-	#if 0
 	if(TestData0 == 0x11)
 	{
 		printf("UI_TestSetting TestData1: %d.\n", TestData1);
@@ -1283,51 +1291,48 @@ void UI_TestSetting(void *pvTSParam)
 	#endif
 }
 
-
 void UI_TestCheck(void)
 {
-	#define Motor_Count		20
-	#define Motor_Wait		10
-	static uint8_t ubTestCount = 0;
+	#define Motor0_Count	200
+	#define Motor1_Count	80
+	#define Motor0_Wait		100
+	#define Motor1_Wait		40
+	static uint16_t ubTestCount = 0;
 	
 	printf("UI_TestCheck ubTestCount: %d.\n", ubTestCount);
 	if(ubTestCount == 0)
 	{
-		MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady); //水平,正转
+		MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
 	}
-	else if(ubTestCount == Motor_Count)
+	else if(ubTestCount == Motor0_Count)
 	{
 		MC_Stop(MC_0);
-		MC_Stop(MC_1);
 	}
-	else if(ubTestCount == Motor_Count + Motor_Wait)
+	else if(ubTestCount == (Motor0_Count + Motor0_Wait))
 	{
-		MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//水平,反转
+		MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);//水平,反转
 	}
-	else if(ubTestCount == Motor_Count*2 + Motor_Wait)
-	{
-		MC_Stop(MC_0);
-		MC_Stop(MC_1);
-	}
-	else if(ubTestCount == Motor_Count*2 + Motor_Wait*2)
-	{
-		MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);//垂直,正转
-	}
-	else if(ubTestCount == Motor_Count*3 + Motor_Wait*2)
+	else if(ubTestCount == (Motor0_Count*2 + Motor0_Wait))
 	{
 		MC_Stop(MC_0);
+	}
+	else if(ubTestCount == (Motor0_Count*2 + Motor0_Wait*2))
+	{
+		MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);//垂直,正转
+	}
+	else if(ubTestCount == (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count))
+	{
 		MC_Stop(MC_1);
 	}
-	else if(ubTestCount == Motor_Count*3 + Motor_Wait*3)
+	else if(ubTestCount == (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count + Motor1_Wait))
 	{
-		MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady); //垂直,反转
+		MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady); //垂直,反转
 	}
-	else if(ubTestCount == Motor_Count*4 + Motor_Wait*3)
+	else if(ubTestCount == (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count*2 + Motor1_Wait))
 	{
-		MC_Stop(MC_0);
 		MC_Stop(MC_1);
 	}
-	else if(ubTestCount > Motor_Count*4 + Motor_Wait*4)
+	else if(ubTestCount > (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count*2 + Motor1_Wait*2))
 	{
 		ubTestCount = 0;
 		return;

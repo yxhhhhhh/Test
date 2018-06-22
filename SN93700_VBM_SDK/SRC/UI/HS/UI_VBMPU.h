@@ -903,8 +903,6 @@ void UI_TimeShowSystemTime(uint8_t type);
 void UI_TimeSetSystemTime(void);
 void UI_SetScanMenu(uint8_t value);
 
-void UI_CheckTempAlarm(void);
-void UI_CheckSoundAlarm(void);
 void UI_TimerEventStop(void);
 void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb);
 void UI_AutoBrightnessAdjust(void);
