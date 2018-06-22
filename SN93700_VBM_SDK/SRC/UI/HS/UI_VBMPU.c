@@ -545,11 +545,19 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			{
 				if(tUI_PuSetting.ubDefualtFlag == FALSE)
 				{
+					/*
 					if(ubSanModeState == 0)
 					{
 						ubSanModeState = 1;
 						UI_SwitchCameraScan();
 						//UI_SetupScanModeTimer(TRUE);
+					}
+					*/
+					ubSanModeState++;
+					if(ubSanModeState == 10)
+					{
+						UI_SwitchCameraScan();
+						ubSanModeState = 0;
 					}
 				}
 			}
@@ -6081,20 +6089,21 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 
 			UI_GetPairCamInfo();
 
+			#if 0
 			if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
 			{
 				ubPairOK_SwitchCam = 1;
-				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam; //20180608
+				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
 			}
-			/*
+			#else
 			if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
 			{
 				tCamViewSel.tCamViewType	= SINGLE_VIEW;
-				tCamViewSel.tCamViewPool[0] 	= tPairInfo.tPairSelCam;
+				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
 				tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
 				UI_SwitchCameraSource();
 			}	
-			*/
+			#endif
 			break;
 		case rUI_FAIL:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
@@ -7677,8 +7686,18 @@ void UI_PTNDisplay(uint8_t value)
 	
 }
 
+void UI_CheckFunc(void)
+{
+	static uint16_t ubCheckCount = 0;
+	
+}
+
+void UI_CheckLinkFunc(void)
+{
+	
+}
 //------------------------------------------------------------------------------
-#define CAMS_SET_ITEM_OFFSET	50\
+#define CAMS_SET_ITEM_OFFSET	50
 /*
 void UI_DrawCamsSubMenuPage(void)
 {
@@ -9823,15 +9842,16 @@ void UI_UpdateBarIcon_Part1(void)
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT4, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 10;
-		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
 	else
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT0+uwBatLvLIdx+5*UI_GetUsbDet(), 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 10;
-		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
 void UI_UpdateBarIcon_Part2(void)
@@ -9840,8 +9860,9 @@ void UI_UpdateBarIcon_Part2(void)
 
 	UI_CamNum_t tSelCamNum; 
 
-	tSelCamNum = tCamViewSel.tCamViewPool[0] ;
+	tSelCamNum = tCamViewSel.tCamViewPool[0];
 
+	printf("UI_UpdateBarIcon_Part2 tSelCamNum: %d.\n", tSelCamNum);
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_CAM1+tSelCamNum, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 1070;
@@ -9896,6 +9917,7 @@ void UI_UpdateBarIcon_Part2(void)
 		tOsdImgInfo.uwYStart = 950;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 //------------------------------------------------------------------------------
 void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
@@ -11060,6 +11082,7 @@ uint8_t UI_GetCamOnLineNum(uint8_t type)
 void UI_SwitchCameraScan(void)
 {
 	int i, j;
+	uint8_t ubCamPairNum = 0;
 	uint8_t ubCamOnlineNum = 0;
 	UI_CamNum_t tCamSwtichNum = 0xFF;
 	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
@@ -11073,6 +11096,10 @@ void UI_SwitchCameraScan(void)
 	ubCamOnlineNum = UI_GetCamOnLineNum(0);
 
 	printf("UI_SwitchCameraScan ubCamOnlineNum: %d, tCamViewSel.tCamViewPool[0]: %d.\n", ubCamOnlineNum, tCamViewSel.tCamViewPool[0]);
+	#if 0
+	if(ubCamOnlineNum < 2)
+		return;
+	#else
 	if(ubCamOnlineNum == 0)
 		return;
 
@@ -11084,10 +11111,16 @@ void UI_SwitchCameraScan(void)
 			{
 				if(tCamViewSel.tCamViewPool[0] == i)
 					return;
-				break;
+				else
+				{
+					tCamSwtichNum = i;
+					goto SWITCH_CAMERA;
+				}
 			}
 		}
+		return;
 	}
+	#endif
 
 	i = tSearchCam+1;
 	for(j = 0; j < 4; j++)
@@ -11101,6 +11134,7 @@ void UI_SwitchCameraScan(void)
 		if(i > 3) i = 0;
 	}
 
+SWITCH_CAMERA:	
 	printf("UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
 	if(0xFF == tCamSwtichNum)
 		return;
