@@ -239,12 +239,12 @@ uint8_t ubPairOK_SwitchCam = 0;
 uint8_t ubSetViewCam = 0;
 
 uint16_t ubGetBatValue = 0;
-uint16_t uwBatLvLIdx = BAT_LVL0;
+uint16_t ubBatLvLIdx = BAT_LVL0;
 extern uint8_t ubStartUpState;
 
 uint8_t ubFactorySettingFLag ;
 uint8_t ubClearOsdFlag_2 =0;
-uint8_t ubFactoryModeFLag ;
+uint8_t ubFactoryModeFLag = 0;
 
 uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
@@ -310,7 +310,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 				ubUI_PttStartFlag = FALSE;
 			if(UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr)
 			{
-				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr(); //按键弹起
+				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
 			}
 		}
 		ubUI_KeyEventIdx = 0;
@@ -331,7 +331,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			{
 				if(ptKeyEvent->ubKeyAction == KEY_DOWN_ACT)
 				{
-					UiKeyEventMap[uwIdx].KeyEventFuncPtr(); //短按
+					UiKeyEventMap[uwIdx].KeyEventFuncPtr();
 				}
 			}	
 			ubUI_KeyEventIdx = 0;
@@ -347,7 +347,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			{
 				if(ptKeyEvent->ubKeyID == AKEY_PTT)
 					ubUI_PttStartFlag = TRUE;
-				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr(); //长按
+				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
 				ubUI_KeyEventIdx = (ptKeyEvent->ubKeyID == AKEY_PTT)?ubUI_KeyEventIdx:0;
 			}
 		}
@@ -7183,7 +7183,6 @@ void UI_VolBarDisplay(uint8_t value)
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_VOL0, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 0;
 			tOsdImgInfo.uwYStart = 832 - 30*i;
-
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 		}
 	}
@@ -7402,7 +7401,6 @@ void UI_MotorControl(uint8_t Value)
 
 void UI_MotorStateCheck(void)
 {
-	#define MC_MAX_CNT	40
 	#define MC0_MAX_CNT	100 //left - right /80
 	#define MC1_MAX_CNT	40 //up - down
 
@@ -7499,21 +7497,6 @@ void UI_GetBatLevel(void)
 	uint16_t ubBatAdc;
 	uint16_t ubAdjustAdc;
 	OSD_IMG_INFO tOsdImgInfo;
-	
-	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
-	ubAdjustAdc = uwSADC_GetReport(SADC_CH3);
-	ubGetBatValue = ubBatAdc*33*2*100/1024;
-	printf("UI_GetBatLevel ubBatAdc: %d, ubAdjustAdc: %d, ubGetBatValue: %d.\n", ubBatAdc, ubAdjustAdc, ubGetBatValue);
-
-	if(ubGetBatValue < 3500)
-	{
-		//UI_PowerOff();
-	}
-
-  	if(ubGetBatValue > 4250)
-  	{
-		
-  	}
 
 	BatteryMap_t tBatMap[] =
 	{
@@ -7523,20 +7506,30 @@ void UI_GetBatLevel(void)
 		{3760, 		3860, 	BAT_LVL3},
 		{3860, 	 	4250, 	BAT_LVL4},
 	};
+	
+	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
+	ubAdjustAdc = uwSADC_GetReport(SADC_CH3);
+	ubGetBatValue = ubBatAdc*33*2*100/1024;
+	//printf("UI_GetBatLevel ubBatAdc: %d, ubAdjustAdc: %d, ubGetBatValue: %d.\n", ubBatAdc, ubAdjustAdc, ubGetBatValue);
 
-	for(i = 0; i <= BAT_LVL4; i++)
+	if(ubGetBatValue < 3500)
+	{
+		UI_PowerOff();
+	}
+	
+	for(i = BAT_LVL0; i <= BAT_LVL4; i++)
 	{
 		if((ubGetBatValue >= tBatMap[i].ubMinBat) && (ubGetBatValue < tBatMap[i].ubMaxBat))
 		{
-			uwBatLvLIdx = tBatMap[i].ubBatLev;
+			ubBatLvLIdx = tBatMap[i].ubBatLev;
 			break;
 		}
 	}
 
-	if(ubGetBatValue > 4250)
-		uwBatLvLIdx = BAT_LVL4;
+	if(ubGetBatValue >= 4250)
+		ubBatLvLIdx = BAT_LVL4;
 
-	//printf("UI_GetBatLevel uwBatLvLIdx: %d, ubGetBatValue: %d.\n", uwBatLvLIdx, ubGetBatValue);
+	//printf("UI_GetBatLevel ubBatLvLIdx: %d, ubGetBatValue: %d.\n", ubBatLvLIdx, ubGetBatValue);
 	
 	#if UI_TEST_MODE
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
@@ -9809,7 +9802,7 @@ void UI_UpdateBarIcon_Part1(void)
 	UI_CamNum_t tSelCamNum = tCamViewSel.tCamViewPool[0]; 
 			
 	uwAntLvLIdx = 6 - tUI_CamStatus[tSelCamNum].tCamAntLvl;
-	//uwBatLvLIdx = 4;// BAT_LVL4;	
+	//ubBatLvLIdx = 4;// BAT_LVL4;	
 
 	if(ubEnterTimeMenuFlag == 0)		
 		UI_TimeShowSystemTime(1);
@@ -9843,7 +9836,7 @@ void UI_UpdateBarIcon_Part1(void)
 	}
 	else
 	{
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT0+uwBatLvLIdx+5*UI_GetUsbDet(), 1, &tOsdImgInfo);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT0+ubBatLvLIdx+5*UI_GetUsbDet(), 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 10;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);

@@ -80,11 +80,11 @@ typedef enum
 
 typedef enum
 {
-	BAT_LVL4,
-	BAT_LVL3,
-	BAT_LVL2,
-	BAT_LVL1,
 	BAT_LVL0,
+	BAT_LVL1,
+	BAT_LVL2,
+	BAT_LVL3,
+	BAT_LVL4,
 	BAT_CHARGE,
 }UI_BatLvl_t;
 
