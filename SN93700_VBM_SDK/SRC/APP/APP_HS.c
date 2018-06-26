@@ -51,6 +51,8 @@ uint8_t ubStartUpState = 1;
 
 extern uint8_t ubFactorySettingFLag;
 extern uint8_t ubClearOsdFlag_2;
+
+uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
 static uint8_t osHeap[osHeapSize] __attribute__((aligned (8)));
@@ -156,9 +158,47 @@ uint8_t APP_CheckBootStatus(void)
 		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
 	printf("APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
+	#else
+	#define CHECK_COUNT		10
+	uint16_t checkCount = 0;
+	printf("APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
+
+	while(1)
+	{
+		if(UI_GetUsbDet() == 1) //Usb On
+		{
+			TIMER_Delay_ms(1000);
+			break;
+		}
+		else
+		{
+			if(APP_GetBatteryValue() <= 10)
+			{
+				break;
+			}
+			
+			if(ubRTC_GetKey() == 1)
+			{
+				checkCount++;
+				if(checkCount >= CHECK_COUNT)
+				{
+					printf("break@@@\n");
+					break;
+				}
+			}
+			else
+			{
+				printf("PowerOff!!!\n");
+				RTC_PowerOff();
+			}
+		}
+		TIMER_Delay_ms(200);
+		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
+	}
+	printf("APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
 	#endif
 	
-	LCDBL_ENABLE(UI_ENABLE);
+	//LCDBL_ENABLE(UI_ENABLE);
 	#endif
 }
 //------------------------------------------------------------------------------
@@ -174,14 +214,29 @@ void APP_Init(void)
 #else
 	RTC_Init(RTC_TimerDisable);
 #endif
+
+#ifdef VBM_PU //20180330
+/*
+	if(ubRTC_GetKey() == 0)
+	{
+		RTC_PowerOff();
+	}
+	else
+	{
+
+	}
+	*/
+	APP_CheckBootStatus();
+#endif
+
 	BSP_Init();
 	//printd(DBG_InfoLvl, "%s\n", osKernelSystemId);	// Move to CLI VCS command
     if(APP_OsStatus != osOK)
     {
         printd(DBG_ErrorLvl, "RTOS initial fail\n");
     }
-	if(ubAPP_SfWpGpioPin <= 13)
-	{
+
+	if (ubAPP_SfWpGpioPin <= 13) {
 		printd(DBG_InfoLvl, "SF_WP=GPIO%d\n",ubAPP_SfWpGpioPin);
 	}
 	SF_SetWpPin(ubAPP_SfWpGpioPin);
@@ -196,9 +251,7 @@ void APP_Init(void)
 	#endif
 	
 	FWU_Init();
-
-	APP_CheckBootStatus();
-		
+	
 	UI_Init(&APP_EventQueue);
 	
 	tAPP_StsReport.tAPP_State  	= APP_POWER_OFF_STATE;
@@ -257,6 +310,61 @@ void APP_PowerOnFunc(void)
 	uint32_t ulBUF_StartAddr = 0;
 
 	APP_LoadKNLSetupInfo();
+
+	#ifdef VBM_PU //20180330
+	uint16_t checkCount = 0;
+	printf("APP_PowerOnFunc GPIO->GPIO_I3: %d.\n", GPIO->GPIO_I3);
+
+	#if 0
+	while(1)
+	{
+		if(GPIO->GPIO_I3 == 1) //Usb On
+		{
+			if(ubRTC_GetKey() == 1)
+			{
+				checkCount++; 
+				if(checkCount >= 10)   // 80
+				{
+					printf("break######\n");
+					break;
+				}
+			}
+			else
+			{
+				checkCount = 0;
+				if(APP_GetBatteryValue() == 100)
+				{
+					//Charge Full
+				}
+			}
+		}
+		else
+		{
+			if(APP_GetBatteryValue() <= 10)
+			{
+				break; //RTC_PowerOff();
+			}
+			
+			if(ubRTC_GetKey() == 1)
+			{
+				checkCount++;
+				if(checkCount >= 10)   // 80
+				{
+					printf("break@@@@@@\n");
+					break;
+				}
+			}
+			else
+			{
+				RTC_PowerOff();
+			}
+		}
+		osDelay(20);
+	}
+	#endif
+	LCDBL_ENABLE(UI_ENABLE);
+	printf("APP_PowerOnFunc LCDBL_ENABLE###\n");
+	#endif
 
 #if USBD_ENABLE
 	//! USB Device initialization
@@ -579,12 +687,15 @@ uint8_t APP_UpdateLinkStatus(void)
 			}
 		}
 	}
+	if(ubAPP_Event == APP_LOSTLINK_EVENT)
+		ubLinkonceflag = 0;
 
-	if(ubAPP_Event == APP_LINK_EVENT)
+	if((ubAPP_Event == APP_LINK_EVENT)&&(ubLinkonceflag == 0))
 	{
 		UI_PowerOnSet();
+		ubLinkonceflag = 1;
 	}
-
+	
 	return ubAPP_Event;
 #endif
 #ifdef VBM_BU

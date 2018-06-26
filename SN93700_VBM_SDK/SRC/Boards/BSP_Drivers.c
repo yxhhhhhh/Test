@@ -54,7 +54,7 @@ void BSP_DriversInit(void)
 	//! BackLight Control
 	PWM->PWM8_RATE  	= 120;
 	PWM->PWM8_PERIOD 	= 100;
-	PWM->PWM8_HIGH_CNT 	= 80;
+	PWM->PWM8_HIGH_CNT 	= 0; //80
 	
 	//! BL Enable
 	//GPIO->GPIO_OE11 = 1;

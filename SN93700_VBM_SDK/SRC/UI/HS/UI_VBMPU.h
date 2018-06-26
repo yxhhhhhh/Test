@@ -931,6 +931,9 @@ void UI_FactoryStatusDisplay(void);
 void UI_ClearOSDMenu( );
 void UI_FactorymodeKeyDisplay(uint8_t Value);
 
+void UI_EnterLocalAdoTest_RX(void);
+void UI_SendCMDAdoTest_TX(void);
+
 void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb);
 void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice);
 uint8_t UI_GetCamOnLineNum(uint8_t type);

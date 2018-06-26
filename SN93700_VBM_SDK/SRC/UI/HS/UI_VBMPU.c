@@ -245,6 +245,7 @@ extern uint8_t ubStartUpState;
 uint8_t ubFactorySettingFLag ;
 uint8_t ubClearOsdFlag_2 =0;
 uint8_t ubFactoryModeFLag = 0;
+uint8_t ubEnterAdotestFLag = 0;
 
 uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
@@ -276,17 +277,38 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	
 	if(ubFactoryModeFLag == 1)
 	{
+		if((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I9 == 0))
+		{
+			if(ubEnterAdotestFLag == 0)
+			{
+				UI_EnterLocalAdoTest_RX();
+				ubEnterAdotestFLag = 1;
+			}
+		}
+
+		if((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
+		{
+			if(ubEnterAdotestFLag == 0)
+			{
+				UI_SendCMDAdoTest_TX();
+				ubEnterAdotestFLag = 1;
+			}
+		}
+	
 		if(ptKeyEvent->ubKeyAction == KEY_DOWN_ACT)
 		{
 			UI_FactorymodeKeyDisplay(ptKeyEvent->ubKeyID);
 		}		
 		if(ptKeyEvent->ubKeyAction == KEY_UP_ACT)
 		{
+			/*
 			tOsdImgInfo.uwHSize  = 76;
 			tOsdImgInfo.uwVSize  = 300;
 			tOsdImgInfo.uwXStart = 60;
 			tOsdImgInfo.uwYStart = 50;
 			OSD_EraserImg2(&tOsdImgInfo);
+			*/
+			ubEnterAdotestFLag  = 0;
 		}
 	}
 	
@@ -310,7 +332,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 				ubUI_PttStartFlag = FALSE;
 			if(UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr)
 			{
-				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
+				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr(); 
 			}
 		}
 		ubUI_KeyEventIdx = 0;
@@ -331,7 +353,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			{
 				if(ptKeyEvent->ubKeyAction == KEY_DOWN_ACT)
 				{
-					UiKeyEventMap[uwIdx].KeyEventFuncPtr();
+					UiKeyEventMap[uwIdx].KeyEventFuncPtr(); 
 				}
 			}	
 			ubUI_KeyEventIdx = 0;
@@ -678,6 +700,7 @@ void UI_PuInit(void)
     	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 	
 	LCD_BACKLIGHT_CTRL(ulUI_BLTable[tUI_PuSetting.BriLvL.tBL_UpdateLvL]);
+	LCDBL_ENABLE(UI_ENABLE);
 
 	if((TRUE == tUI_PuSetting.ubScanModeEn) && (tUI_PuSetting.ubDefualtFlag == FALSE))
 	{
@@ -685,6 +708,7 @@ void UI_PuInit(void)
 	}
 
 	UI_CamvLDCModeCmd(CAMSET_ON);
+
 
 	printf("UI_PuInit ok.\n");
 }
@@ -747,7 +771,8 @@ void UI_PowerKey(void)
 	LCDBL_ENABLE(UI_DISABLE);
 	//POWER_LED_IO  = 0;
 	//SIGNAL_LED_IO = 0;
-	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
+
+	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
 	printf("UI_PowerKey Power OFF!\n");
 	RTC_PowerDisable();
 	while(1);
@@ -2330,10 +2355,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 	if((tArrowKey == ENTER_ARROW)&&(tUI_PuSetting.ubDefualtFlag == FALSE))
 	{
-		if(TRUE == tUI_PuSetting.ubScanModeEn)
-			return;
+		//if(TRUE == tUI_PuSetting.ubScanModeEn)
+		//	return;
 
-		#if 0
+		#if 0				
 		tSelCam = tCamViewSel.tCamViewPool[0] ;
 
 		if(tSelCam < (ubPairSelCam - 1))
@@ -10160,8 +10185,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 			OSD_LogoJpeg(OSDLOGO_LOGO_BG);
 
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TITLE, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 60;
-			tOsdImgInfo.uwYStart =450;	
+			tOsdImgInfo.uwXStart= 51;
+			tOsdImgInfo.uwYStart =462;	
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		}
 		ubClearOsdFlag =0;
@@ -10304,8 +10329,8 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 			UI_UpdateBarIcon_Part2();	
 			
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TITLE, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 60;
-			tOsdImgInfo.uwYStart =450;	
+			tOsdImgInfo.uwXStart= 51;
+			tOsdImgInfo.uwYStart =462;	
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 
 			UI_FactoryStatusDisplay();
@@ -10328,20 +10353,29 @@ void UI_FactoryStatusDisplay(void)
 	uint16_t  ubir_temp;
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PER, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 200;
-	tOsdImgInfo.uwYStart = 900;
+	tOsdImgInfo.uwXStart = 142;
+	tOsdImgInfo.uwYStart = 1055;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TEMP, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 380;
-	tOsdImgInfo.uwYStart = 900;
+	tOsdImgInfo.uwXStart = 206;
+	tOsdImgInfo.uwYStart = 1055;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_IRAD, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 560;
-	tOsdImgInfo.uwYStart = 900;
+	tOsdImgInfo.uwXStart = 272;
+	tOsdImgInfo.uwYStart = 1055;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TXSW, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 334;
+	tOsdImgInfo.uwYStart = 1055;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXSW, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 399;
+	tOsdImgInfo.uwYStart = 1055;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 //-----------------------------------------------------------------
 	ubper_temp = 100 -KNL_GetPerValue(0);
 
@@ -10350,19 +10384,19 @@ void UI_FactoryStatusDisplay(void)
 	if( ubper_temp < 100)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubper_temp/10)*2), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 220;
-		tOsdImgInfo.uwYStart = 750;
+		tOsdImgInfo.uwXStart = 160;
+		tOsdImgInfo.uwYStart = 900;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubper_temp%10)*2), 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 220;
-		tOsdImgInfo.uwYStart = 718;
+		tOsdImgInfo.uwYStart = 868;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 	}
 	else
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 220;
-		tOsdImgInfo.uwYStart = 750;
+		tOsdImgInfo.uwYStart = 900;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
 
@@ -10372,16 +10406,16 @@ void UI_FactoryStatusDisplay(void)
 	if( ubper_temp < 100)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubRealTemp/10)*2), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 400;
-		tOsdImgInfo.uwYStart = 750;
+		tOsdImgInfo.uwXStart = 220;
+		tOsdImgInfo.uwYStart = 900;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 400;
-		tOsdImgInfo.uwYStart = 718;
+		tOsdImgInfo.uwXStart = 220;
+		tOsdImgInfo.uwYStart = 868;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 	}
 
-//-----------------------------
+//---------------------------------------------
 	ubir_temp  = ubGetIR1Temp*256+ubGetIR2Temp;
 
 	ubir_temp1 = ubir_temp/100;
@@ -10389,23 +10423,27 @@ void UI_FactoryStatusDisplay(void)
 
 
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubir_temp1/10)*2), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 580;
-		tOsdImgInfo.uwYStart = 750;
+		tOsdImgInfo.uwXStart = 280;
+		tOsdImgInfo.uwYStart = 900;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubir_temp1%10)*2), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 580;
-		tOsdImgInfo.uwYStart = 718;
+		tOsdImgInfo.uwXStart = 280;
+		tOsdImgInfo.uwYStart = 868;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubir_temp2/10)*2), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 580;
-		tOsdImgInfo.uwYStart = 686;
+		tOsdImgInfo.uwXStart = 280;
+		tOsdImgInfo.uwYStart = 836;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubir_temp2%10)*2), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 580;
-		tOsdImgInfo.uwYStart = 654;
+		tOsdImgInfo.uwXStart = 280;
+		tOsdImgInfo.uwYStart = 804;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-		
+
+//---------------------------------------------
+
+
+//---------------------------------------------		
 }
 
 void UI_FactorymodeKeyDisplay(uint8_t Value)
@@ -10416,57 +10454,57 @@ void UI_FactorymodeKeyDisplay(uint8_t Value)
 	{
 		case AKEY_MENU:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_MENUKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 238;
+			tOsdImgInfo.uwYStart = 254;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 
 		case AKEY_ENTER:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_ENTERKEY,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 431;
+			tOsdImgInfo.uwYStart = 254;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
 		case AKEY_UP:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_UPKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 336;
+			tOsdImgInfo.uwYStart = 254;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 
 		case AKEY_DOWN:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_DOWNKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 527;
+			tOsdImgInfo.uwYStart = 254;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 		
 		case AKEY_RIGHT:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_LEFTKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 431;
+			tOsdImgInfo.uwYStart = 30;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 
 		case AKEY_LEFT:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RIGHTKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 431;
+			tOsdImgInfo.uwYStart = 477;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
 		case AKEY_PTT:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PTTKEY,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 623;
+			tOsdImgInfo.uwYStart = 254;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
 		case PKEY_ID0:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 143;
+			tOsdImgInfo.uwYStart = 30;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
@@ -10479,11 +10517,39 @@ void UI_FactorymodeKeyDisplay(uint8_t Value)
 		
 		case GKEY_ID1:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_VOLDKEY,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 60;
-			tOsdImgInfo.uwYStart = 50;
+			tOsdImgInfo.uwXStart = 143;
+			tOsdImgInfo.uwYStart = 477;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;					
 	}	
+}
+
+void UI_EnterLocalAdoTest_RX(void)
+{
+	OSD_IMG_INFO tOsdImgInfo;
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXSW, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 590;
+	tOsdImgInfo.uwYStart = 863;
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+
+	ADO_SelfTest_Init(10);
+	ADO_SelfTest_Record();
+	ADO_SelfTest_Play();
+	ADO_SelfTest_Close();	
+	
+}
+
+void UI_SendCMDAdoTest_TX(void)
+{
+	OSD_IMG_INFO tOsdImgInfo;
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TXSW, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 527;
+	tOsdImgInfo.uwYStart = 862;
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	
+	UI_TestCmd(1,1);
 }
 
 //------------------------------------------------------------------------------

@@ -182,8 +182,8 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.Sys_speed			 = HIGH_SPEED;
 	tADO_KNLParm.Rec_device			 = SIG_DEL_ADC;
 	tADO_KNLParm.Ply_device			 = R2R_DAC;
-	//tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_SINGLE_END;
-	tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_DIFFERENTIAL;		
+    	tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_DIFFERENTIAL;
+    	//tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_SINGLE_END;
 	tADO_KNLParm.Rec_fmt.sign_flag   = SIGNED;
 	tADO_KNLParm.Rec_fmt.channel     = MONO;
 	tADO_KNLParm.Rec_fmt.sample_size = SAMPLESIZE_16_BIT;
@@ -233,7 +233,7 @@ void ADO_KNLParamSetup(void)
 	ADO_Set_DeHowling_Enable(ADO_OFF);
 	
 	//! wav play volume compensation
-	ADO_WavplayVolCompensation(20);
+	ADO_WavplayVolCompensation(20 );
 }
 //------------------------------------------------------------------------------
 #endif
