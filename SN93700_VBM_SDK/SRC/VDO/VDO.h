@@ -25,8 +25,8 @@
 #include "SEN.h"
 
 // Default video mode setting
-//#define VDO_DISP_TYPE					((DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_QUAD:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE)
-#define VDO_DISP_TYPE					((DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_SINGLE:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE)
+#define VDO_DISP_TYPE					((DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_QUAD:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE)
+//#define VDO_DISP_TYPE					((DISPLAY_MODE == DISPLAY_4T1R)?KNL_DISP_SINGLE:(DISPLAY_MODE == DISPLAY_2T1R)?KNL_DISP_DUAL_C:KNL_DISP_SINGLE)
 #define VDO_DISP_SCAN					((VDO_DISP_TYPE == KNL_DISP_SINGLE)?FALSE:FALSE)
 
 #ifdef VBM_PU
@@ -56,6 +56,7 @@
 #define LCD_V_SIZE						HD_HEIGHT
 #define KNL_VdoDisplaySetting()																				\
 										{																	\
+											KNL_SetDispType(VDO_DISP_TYPE);									\
 											KNL_SetDispHV(LCD_H_SIZE, LCD_V_SIZE);							\
 											KNL_SetDispRotate(KNL_DISP_ROTATE_90);							\
 										}

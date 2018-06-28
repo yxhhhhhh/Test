@@ -31,7 +31,7 @@
 #define THREAD_PRIO_KNL_AVG_PLY			osPriorityAboveNormal
 #define THREAD_PRIO_KNL_TWC_MONIT		osPriorityNormal
 #define THREAD_PRIO_KNL_VDOIN_PROC		osPriorityAboveNormal
-#define THREAD_PRIO_ADO_ENC_PROC		osPriorityNormal
+#define THREAD_PRIO_ADO_ENC_PROC		osPriorityAboveNormal	//osPriorityNormal
 #define THREAD_PRIO_ADO_DEC_PROC		osPriorityHigh
 #define THREAD_PRIO_COMM_TX_VDO			osPriorityHigh
 #define THREAD_PRIO_COMM_RX_VDO			osPriorityNormal

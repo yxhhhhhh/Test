@@ -161,7 +161,7 @@ uint8_t APP_CheckBootStatus(void)
 	#else
 	#define CHECK_COUNT		10
 	uint16_t checkCount = 0;
-	printf("APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
+	printf("APP_CheckBootStatus USB: %d, ubRTC_GetKey(): %d.\n", UI_GetUsbDet(), ubRTC_GetKey());
 
 	while(1)
 	{
@@ -216,7 +216,7 @@ void APP_Init(void)
 #endif
 
 #ifdef VBM_PU //20180330
-/*
+	/*
 	if(ubRTC_GetKey() == 0)
 	{
 		RTC_PowerOff();
@@ -226,10 +226,10 @@ void APP_Init(void)
 
 	}
 	*/
-	APP_CheckBootStatus();
 #endif
 
 	BSP_Init();
+	APP_CheckBootStatus();
 	//printd(DBG_InfoLvl, "%s\n", osKernelSystemId);	// Move to CLI VCS command
     if(APP_OsStatus != osOK)
     {
@@ -837,9 +837,10 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 	tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
 
 	if ((tAPP_CamView == SINGLE_VIEW) || (tAPP_CamView == SCAN_VIEW)) {
+		if(tAPP_KNLInfo.tAdoSrcRole != tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum)
+			APP_UpdateKNLSetupInfo();
 		tAPP_KNLInfo.tAdoSrcRole = tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum;
 		ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
-		APP_UpdateKNLSetupInfo();
 	}
 	VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
 }

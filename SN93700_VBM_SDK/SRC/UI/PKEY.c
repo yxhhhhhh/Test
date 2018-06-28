@@ -124,8 +124,9 @@ void GKEY_Init(void)
 
 	#endif
 	
-	tGKEY_Scan.uwGKEY_KeyScanTime = GKEY_DET_TIME;
+	tGKEY_Scan.uwGKEY_KeyScanTime  = GKEY_DET_TIME;
 	tGKEY_Scan.ubGKEY_KeyScanState = KEY_DET_STATE;
+	tGKEY_Scan.uwGKEY_KeyScanCnt   = 0;
 }
 
 void GKEY_Thread(void)
@@ -178,7 +179,7 @@ void GKEY_Thread(void)
 					tGKEY_Event.ubKeyAction = KEY_CNT_ACT;
 					tGKEY_Event.ubKeyID	  	= GKEY_ID0;
 					tGKEY_Event.uwKeyCnt  	= ++tGKEY_Scan.uwGKEY_KeyScanCnt;
-					KEY_QueueSend(GKEY, &tPKEY_Event);
+					KEY_QueueSend(GKEY, &tGKEY_Event);
 				}
 				else
 				{

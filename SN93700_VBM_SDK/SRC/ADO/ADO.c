@@ -220,7 +220,7 @@ void ADO_KNLParamSetup(void)
 	}
 
 	//! Audio32 Setting
-	for(i=0; i<7; i++)
+	for(i=0; i<ADO_AUDIO32_MAX_NUM; i++)
 	{
 		ADO_Audio32_Encoder_Init(i,SNX_AUD32_FMT16_16K_16KBPS);
 		ADO_Audio32_Decoder_Init(i,SNX_AUD32_FMT16_16K_16KBPS);
@@ -233,7 +233,7 @@ void ADO_KNLParamSetup(void)
 	ADO_Set_DeHowling_Enable(ADO_OFF);
 	
 	//! wav play volume compensation
-	ADO_WavplayVolCompensation(20 );
+	ADO_WavplayVolCompensation(1);
 }
 //------------------------------------------------------------------------------
 #endif

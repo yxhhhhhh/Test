@@ -59,17 +59,17 @@ void UI_Init(osMessageQId *pvMsgQId)
 	#endif
 
 	#ifdef VBM_BU //test
-	#if 0
 	uint8_t ubCamUVCMode = UI_GetCamUVCMode();
 	printf("UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
-	if(GPIO->GPIO_I6 == 1)
+	if(GPIO->GPIO_I6 == 0)
 	{
-		if(ubCamUVCMode == 0)
+		if(ubCamUVCMode != 0xCC)
 		{
-			UI_SetCamUVCMode(1);
+			UI_SetCamUVCMode(0xCC);
 			UI_UpdateDevStatusInfo();
-			osDelay(200);
-			APP_SetTuningToolMode(ubCamUVCMode);
+			TIMER_Delay_ms(100);
+			printf("Enter UVC.\n");
+			APP_SetTuningToolMode(1);
 			WDT_Disable(WDT_RST);
 			WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
 			while(1);
@@ -77,55 +77,18 @@ void UI_Init(osMessageQId *pvMsgQId)
 	}
 	else
 	{
-		if(ubCamUVCMode == 1)
+		if(ubCamUVCMode == 0xCC)
 		{
 			UI_SetCamUVCMode(0);
 			UI_UpdateDevStatusInfo();
-			osDelay(20);
-			APP_SetTuningToolMode(ubCamUVCMode);
+			TIMER_Delay_ms(100);
+			printf("Exit UVC.\n");
+			APP_SetTuningToolMode(0);
 			WDT_Disable(WDT_RST);
 			WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
 			while(1);
 		}
 	}
-	#else
-	/*
-	uint8_t ubCamUVCMode = UI_GetCamUVCMode();
-	printf("UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
-	if(ubCamUVCMode == 0)
-	{
-		UI_SetCamUVCMode(1);
-		UI_UpdateDevStatusInfo();
-		osDelay(50);
-		APP_SetTuningToolMode(ubCamUVCMode);
-		WDT_Disable(WDT_RST);
-		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
-		while(1);
-	}
-	else if(ubCamUVCMode == 1)
-	{
-		UI_SetCamUVCMode(2);
-		UI_UpdateDevStatusInfo();
-		osDelay(50);
-	}
-	else if(ubCamUVCMode == 2)
-	{
-		UI_SetCamUVCMode(3);
-		UI_UpdateDevStatusInfo();
-		osDelay(50);
-		APP_SetTuningToolMode(ubCamUVCMode);
-		WDT_Disable(WDT_RST);
-		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
-		while(1);
-	}
-	else if(ubCamUVCMode >= 3)
-	{
-		UI_SetCamUVCMode(0);
-		UI_UpdateDevStatusInfo();
-		osDelay(50);
-	}
-	*/
-	#endif
 	#endif
 
 	osThreadDef(UI_EventThread, UI_EventThread, THREAD_PRIO_UIEVENT_HANDLER, 1, THREAD_STACK_UIEVENT_HANDLER);

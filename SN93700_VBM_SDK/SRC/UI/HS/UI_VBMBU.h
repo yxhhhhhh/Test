@@ -139,13 +139,26 @@ typedef struct
 
 typedef enum
 {
+	UI_BU_CMD_VERSION = 0x20,
+	
+}UI_BUTOPUCmdID_t;
+
+typedef enum
+{
 	UI_UPDATE_BUSTS = 0x20,
 	UI_VOX_TRIG,
 	UI_MD_TRIG,
 	UI_VOICE_TRIG,
 	UI_VOICE_CHECK,	
 	UI_TEMP_CHECK,
+	UI_BU_TO_PU_CMD,
 }UI_BUReqCmdID_t;
+
+typedef enum
+{
+	UI_GET_BU_VERSION_CMD = 0x20,
+	UI_SET_BU_ADO_TEST_CMD,
+}UI_PUTOBUCmdID_t;
 
 typedef enum
 {
@@ -165,6 +178,7 @@ typedef enum
 	UI_VOICETRIG_SETTING,
 	UI_MOTOR_SETTING,
 	UI_NIGHTMODE_SETTING,
+	UI_PU_TO_BU_CMD_SETTING,
 	UI_TEST_SETTING,
 }UI_PUReqCmdID_t;
 
@@ -239,6 +253,14 @@ typedef struct
 	uint8_t *pImgParam;
 }UI_IspSettingFuncPtr_t;
 
+typedef enum
+{
+	UI_SYSVOICELVL_CHK = 1,
+	UI_SYSTEMPDATA_CHK,
+	UI_SYSIRLEDDATA_CHK,
+	UI_SYSCHKSTS_MAX,
+}UI_SysChkType_t;
+
 void UI_PowerKey(void);
 void UI_PairingKey(void);
 void UI_UpdateBUStatusToPU(void);
@@ -277,5 +299,7 @@ void UI_SetCamUVCMode(uint8_t Value);
 uint8_t UI_GetCamUVCMode(void);
 void UI_PairingLongKey(void);
 void UI_NightModeSetting(void *pvNMParam);
+uint8_t UI_SendVersionToPu(void);
+void UI_RecvPUCmdSetting(void *pvRecvPuParam);
 
 #endif

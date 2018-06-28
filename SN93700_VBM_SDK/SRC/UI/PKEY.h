@@ -63,7 +63,7 @@ typedef enum
 #ifdef VBM_BU
 typedef enum
 {
-	GKEY_ID0,	
+	GKEY_ID0 = 0x11,	
 }GKEY_ID_t;
 #endif
 

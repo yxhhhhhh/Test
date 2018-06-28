@@ -646,13 +646,26 @@ typedef enum
 
 typedef enum
 {
+	UI_BU_CMD_VERSION = 0x20,
+	
+}UI_BUTOPUCmdID_t;
+
+typedef enum
+{
 	UI_UPDATE_BUSTS = 0x20,
 	UI_VOX_TRIG,
 	UI_MD_TRIG,
 	UI_VOICE_TRIG,
 	UI_VOICE_CHECK,
 	UI_TEMP_CHECK,
+	UI_BU_TO_PU_CMD,
 }UI_BUReqCmdID_t;
+
+typedef enum
+{
+	UI_GET_BU_VERSION_CMD = 0x20,
+	UI_SET_BU_ADO_TEST_CMD,
+}UI_PUTOBUCmdID_t;
 
 typedef enum
 {
@@ -672,6 +685,7 @@ typedef enum
 	UI_VOICETRIG_SETTING,
 	UI_MOTOR_SETTING,
 	UI_NIGHTMODE_SETTING,
+	UI_PU_TO_BU_CMD_SETTING,
 	UI_TEST_SETTING,
 }UI_PUReqCmdID_t;
 
@@ -895,6 +909,7 @@ void UI_UpdateBarIcon_Part2(void);
 void UI_Update(void);
 void UI_GetVolData(UI_CamNum_t tCamNum, void *pvTrig);
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig);
+void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig);
 void UI_TempBarDisplay(uint8_t value);
 
 void UI_VolBarDisplay(uint8_t value);
@@ -928,7 +943,7 @@ UI_CamNum_t UI_GetPairSelCam(void);
 UI_CamNum_t UI_GetCamViewPoolID(void);
 
 void UI_FactoryStatusDisplay(void);
-void UI_ClearOSDMenu( );
+void UI_ClearOSDMenu(void);
 void UI_FactorymodeKeyDisplay(uint8_t Value);
 
 void UI_EnterLocalAdoTest_RX(void);
@@ -945,4 +960,7 @@ uint8_t UI_GetBatChgFull(void);
 void UI_CamvLDCModeCmd(uint8_t value);
 void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode);
 void UI_SendNightModeToBu(void);
+uint8_t UI_GetBuVersion(void);
+void UI_FactoryStatusDisplay(void);
+uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len);
 #endif

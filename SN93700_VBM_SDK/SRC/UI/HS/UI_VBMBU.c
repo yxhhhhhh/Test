@@ -71,6 +71,7 @@ UI_SettingFuncPtr_t tUiSettingMap2Func[] =
 	[UI_VOICETRIG_SETTING]		= UI_VoiceTrigSetting,
 	[UI_MOTOR_SETTING]		    = UI_PtzControlSetting,
 	[UI_NIGHTMODE_SETTING]		= UI_NightModeSetting,
+	[UI_PU_TO_BU_CMD_SETTING]	= UI_RecvPUCmdSetting,
 	[UI_TEST_SETTING]		    = UI_TestSetting,
 };
 
@@ -86,6 +87,10 @@ static uint8_t ubUI_WorModeEnFlag;
 static uint8_t ubUI_WorWakeUpCnt;
 static uint8_t ubUI_SyncDisVoxFlag;
 osMutexId UI_BUMutex;
+#define THREAD_PRIO_UISYSCHK_HANDLER		osPriorityNormal
+#define THREAD_STACK_UISYSCHK_HANDLER		512
+static void UI_SysCheckStatus(void const *argument);
+osMessageQId osUI_SysChkQue;
 
 static uint8_t ubUI_Mc1RunFlag;
 static uint8_t ubUI_Mc2RunFlag;
@@ -102,6 +107,9 @@ uint8_t ubVoicetemp_bak = 0xff;
 uint8_t ubTemp_bak = 25;
 
 I2C1_Type *pTempI2C;
+
+uint8_t ubBuHWVersion = 1;
+uint32_t ubBuSWVersion = 180627;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -140,6 +148,10 @@ void UI_StateReset(void)
 {
 	osMutexDef(UI_BUMutex);
 	UI_BUMutex = osMutexCreate(osMutex(UI_BUMutex));
+	osMessageQDef(UiSysChkSts, 10, uint16_t);
+	osUI_SysChkQue = osMessageCreate(osMessageQ(UiSysChkSts), NULL);
+	osThreadDef(UiSysChkThd, UI_SysCheckStatus, THREAD_PRIO_UISYSCHK_HANDLER, 1, THREAD_STACK_UISYSCHK_HANDLER);
+	osThreadCreate(osThread(UiSysChkThd), NULL);
 	if(tTWC_RegTransCbFunc(TWC_UI_SETTING, UI_RecvPUResponse, UI_RecvPURequest) != TWC_SUCCESS)
 		printd(DBG_ErrorLvl, "UI setting 2way command fail !\n");
 	ubUI_ClearThdCntFlag = FALSE;
@@ -200,7 +212,15 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				UI_VoiceTrigger();
 			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				//UI_MDTrigger();
-			
+
+			#if 1
+			if(((*pThreadCnt)%10) == 0)
+			{
+				uint16_t uwChkType = UI_SYSVOICELVL_CHK | UI_SYSTEMPDATA_CHK | UI_SYSIRLEDDATA_CHK;
+
+				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
+			}
+			#else
 			if(((*pThreadCnt)%10) == 0)
 			{
 				UI_VoiceCheck();
@@ -208,7 +228,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			}
 			
 			UI_BrightnessCheck();
-
+			#endif
+			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
 			(*pThreadCnt)++;
@@ -258,6 +279,32 @@ void UI_EventHandles(UI_Event_t *ptEventPtr)
 	}
 }
 //------------------------------------------------------------------------------
+static void UI_SysCheckStatus(void const *argument)
+{
+	uint16_t uwUI_ChkType = 0;
+
+	while(1)
+	{
+		osMessageGet(osUI_SysChkQue, &uwUI_ChkType, osWaitForever);
+		if(uwUI_ChkType & UI_SYSVOICELVL_CHK)
+		{
+			UI_VoiceCheck();
+			uwUI_ChkType &= ~UI_SYSVOICELVL_CHK;
+		}
+		if(uwUI_ChkType & UI_SYSTEMPDATA_CHK)
+		{
+			UI_TempCheck();
+			uwUI_ChkType &= ~UI_SYSTEMPDATA_CHK;
+		}
+
+		if(uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
+		{
+			UI_BrightnessCheck();
+			uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
+		}
+	}
+}
+//------------------------------------------------------------------------------
 void UI_PowerKey(void)
 {
 	//POWER_LED_IO   = 0;
@@ -272,6 +319,9 @@ void UI_PowerKey(void)
 //------------------------------------------------------------------------------
 void UI_PairingKey(void)
 {
+	if((UI_GetCamUVCMode()) && (GPIO->GPIO_I6 == 0))
+		return;
+	
 	APP_EventMsg_t tUI_PairMessage = {0};
 	printf("UI_PairingKey###\n");
 	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
@@ -293,13 +343,21 @@ void UI_PairingLongKey(void)
 //------------------------------------------------------------------------------
 void UI_UpdateBUStatusToPU(void)
 {
-//	UI_BUReqCmd_t tUI_BuSts;
+	//	UI_BUReqCmd_t tUI_BuSts;
 
-//	tUI_BuSts.ubCmd[UI_TWC_TYPE]		= UI_REPORT;
-//	tUI_BuSts.ubCmd[UI_REPORT_ITEM] 	= UI_UPDATE_BUSTS;
-//	tUI_BuSts.ubCmd[UI_REPORT_DATA] 	= 100;
-//	tUI_BuSts.ubCmd_Len  				= 3;
-//	UI_SendRequestToPU(NULL, &tUI_BuSts);
+	//	tUI_BuSts.ubCmd[UI_TWC_TYPE]		= UI_REPORT;
+	//	tUI_BuSts.ubCmd[UI_REPORT_ITEM] 	= UI_UPDATE_BUSTS;
+	//	tUI_BuSts.ubCmd[UI_REPORT_DATA] 	= 100;
+	//	tUI_BuSts.ubCmd_Len  				= 3;
+	//	UI_SendRequestToPU(NULL, &tUI_BuSts);
+
+	static uint8_t ubVersionResut = rUI_FAIL;
+	if(ubVersionResut == rUI_FAIL)
+	{
+		ubVersionResut = UI_SendVersionToPu();
+	}
+
+	
 }
 //------------------------------------------------------------------------------
 UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
@@ -391,10 +449,7 @@ void UI_SystemSetup(void)
 	ADO_Noise_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
 	UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
 	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
-	if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
-		ubUI_SyncDisVoxFlag = TRUE;
-	else
-		UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
+	UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
     MD_ReportReadyCbFunc(UI_SetMotionEvent);
     MD_SetMdState(MD_UNSTABLE);
 }
@@ -1012,10 +1067,14 @@ void UI_MotoControlInit(void)
 	tMC_SettingApp.ubMC_HighPeriod = 24;//48/24/18
 	tMC_SettingApp.ubMC_PeriodPerStep = 18;//36/18/16
 	tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
-	
 	tMC_Setup(MC_0,&tMC_SettingApp);
+
+	tMC_SettingApp.ubMC_ClockDivider = 63;
+	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	tMC_SettingApp.ubMC_HighPeriod = 64;	//18
+	tMC_SettingApp.ubMC_PeriodPerStep = 48;	//16
 	tMC_Setup(MC_1,&tMC_SettingApp);
-  	#endif
+	#endif
 }
 
 //------------------------------------------------------------------------------
@@ -1182,6 +1241,28 @@ void UI_NightModeSetting(void *pvNMParam)
 	tUI_BuStsInfo.tNightModeFlag = NightMode;
 }
 
+void UI_RecvPUCmdSetting(void *pvRecvPuParam)
+{
+	uint8_t *pRecvPuParam = (uint8_t *)pvRecvPuParam;
+	uint8_t ubPuCmd = pRecvPuParam[0];
+
+	switch(ubPuCmd)
+	{
+		case UI_GET_BU_VERSION_CMD:
+			UI_SendVersionToPu();
+			break;
+
+		case UI_SET_BU_ADO_TEST_CMD:
+			ADO_SelfTest_Init(10);
+			ADO_SelfTest_Record();
+			ADO_SelfTest_Play();
+			ADO_SelfTest_Close();
+			break;
+
+		default:
+			break;
+	}
+}
 void UI_SetIrMode(uint8_t mode)
 {
 	if(mode == 1)
@@ -1228,12 +1309,12 @@ void UI_BrightnessCheck(void) //20180408
 	
 	uwDetLvl = uwSADC_GetReport(1);
 
-	if(uwDetLvl < 0x10)
+	if(uwDetLvl < 0x01)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
 	}
-	else if(uwDetLvl > 0x20)
+	else if(uwDetLvl > 0x03)
 	{
 		ubCheckMaxIrCnt++;
 		ubCheckMinIrCnt = 0;
@@ -1349,5 +1430,27 @@ void UI_SetCamUVCMode(uint8_t Value)
 uint8_t UI_GetCamUVCMode(void)
 {
 	return tUI_BuStsInfo.tCamUVCMode;
+}
+
+uint8_t UI_SendVersionToPu(void)
+{
+	UI_BUReqCmd_t tUI_VersionReqCmd;
+	
+	tUI_VersionReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_REPORT;
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_ITEM] 	= UI_BU_TO_PU_CMD;
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA] 	= UI_BU_CMD_VERSION;
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+1] 	= ubBuSWVersion;
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubBuSWVersion/10000;
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+3] 	= ubBuSWVersion/100%100;		
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+4] 	= ubBuSWVersion%100;		
+	tUI_VersionReqCmd.ubCmd_Len  			  	= 7;
+
+	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_VersionReqCmd))
+	{
+		printd(DBG_ErrorLvl, "UI_SendVersionToPu Fail!\n");
+		return rUI_FAIL;
+	}
+
+	return rUI_SUCCESS;
 }
 

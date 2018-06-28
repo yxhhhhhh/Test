@@ -67,10 +67,12 @@ void VDO_Init(void)
 	KNL_SetVdoFps(15);
 #endif
 #ifdef VBM_PU
-	ubVDO_PathRstFlag  = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
-	tVDO_SvPlayRole    = (tKNL_GetDispType() == KNL_DISP_SINGLE)?KNL_STA1:KNL_NONE;
+	ubVDO_PathRstFlag = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
+	tVDO_SvPlayRole = (VDO_DISP_TYPE/*tKNL_GetDispType()*/ == KNL_DISP_SINGLE)?KNL_STA1:KNL_NONE;
 	//! Display Setting
-	tVDO_Status.tVdoDispType = tKNL_GetDispType();
+	tVDO_Status.tVdoDispType = VDO_DISP_TYPE;//tKNL_GetDispType();
+	tKNL_DualBURole[0] = KNL_NONE;
+	tKNL_DualBURole[1] = KNL_NONE;
 	KNL_VdoDisplaySetting();
 	KNL_SetPlyMode(KNL_NORMAL_PLY);				//!< Normal Play
 	KNL_SetVdoFps(15);
@@ -129,15 +131,34 @@ void VDO_SetPlayRole(KNL_ROLE tKnlRole)
 {
 	tVDO_SvPlayRole = tKnlRole;
 }
+//------------------------------------------------------------------------------
 void VDO_UpdateDisplayParameter(void)
 {
-#if	(DISPLAY_MODE != DISPLAY_1T1R)
+#if	(DISPLAY_MODE == DISPLAY_2T1R)
 	KNL_ROLE tKNL_Role = tVDO_SvPlayRole;
 	KNL_DISP_TYPE tVDO_DisplayType = tVDO_Status.tVdoDispType;
 
 	tVDO_SvPlayRole = KNL_NONE;
 	tVDO_Status.tVdoDispType = KNL_DISP_NONSUP;
+	if(KNL_NONE == tKNL_Role)
+		return;
 	VDO_SwitchDisplayType(tVDO_DisplayType, &tKNL_Role);
+#endif
+#if	(DISPLAY_MODE == DISPLAY_4T1R)
+	KNL_ROLE tKNL_Role[2] = {tKNL_DualBURole[0], tKNL_DualBURole[1]};
+	KNL_DISP_TYPE tVDO_DisplayType = tVDO_Status.tVdoDispType;
+
+	if(KNL_DISP_SINGLE == tVDO_DisplayType)
+	{
+		tKNL_Role[0] = tVDO_SvPlayRole;
+		tKNL_Role[1] = KNL_STA2;
+	}
+	tKNL_DualBURole[0] = tKNL_DualBURole[1] = KNL_NONE;
+	tVDO_Status.tVdoDispType = KNL_DISP_NONSUP;
+	if((KNL_NONE == tKNL_Role[0]) ||
+	   (KNL_NONE == tKNL_Role[1]))
+		return;
+	VDO_SwitchDisplayType(tVDO_DisplayType, tKNL_Role);
 #endif	
 }
 //------------------------------------------------------------------------------

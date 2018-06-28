@@ -648,7 +648,7 @@ static void KNL_AdoDecMonitThread(void const *argument)
 #if defined(BPC_RX) || defined(BPC_CAM)
 				//ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, OFF);
 #endif
-				#ifdef VBM_PU
+				#ifdef VBM_PU //20180627
 				SPEAKER_EN(FALSE);
 				TIMER_Delay_us(1000);
 				SPEAKER_EN(TRUE);
@@ -3763,10 +3763,182 @@ uint8_t ubKNL_SetAdoPathNode(uint8_t ubSrcNum,uint8_t ubNodeIdx,KNL_NODE_INFO tN
 //------------------------------------------------------------------------------
 void KNL_VdoPathNodeReset(uint8_t ubSrcNum)
 {
+#if KNL_LCD_FUNC_ENABLE
+	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
+		return;
+
 	if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_LCD))
 	{
-		KNL_ResetLcdChannel();
+		KNL_DISP_LOCATION tDispLocate;
+
+		if((tKNL_GetDispType() == KNL_DISP_H) && (tKNL_GetDispRotate() == KNL_DISP_ROTATE_0))
+		{
+			tDispLocate = tKNL_GetDispLocation(ubSrcNum);
+
+			if(tDispLocate == KNL_DISP_LOCATION2)
+			{
+				LCD_ChDisable(LCD_CH0);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION3)
+			{
+				LCD_ChDisable(LCD_CH2);
+			}
+			else if((tDispLocate == KNL_DISP_LOCATION1)||(tDispLocate == KNL_DISP_LOCATION4))
+			{
+				LCD_ChDisable(LCD_CH1);
+			}
+		}
+		else if(tKNL_GetDispType() == KNL_DISP_SINGLE)
+		{
+			LCD_ChDisable(LCD_CH0);
+		}
+		else if((tKNL_GetDispType() == KNL_DISP_DUAL_U)||(tKNL_GetDispType() == KNL_DISP_QUAD))
+		{
+			if(TRUE == KNL_SwDispInfo.ubSetupFlag)
+				tDispLocate = tKNL_SearchSrcLocation(ubSrcNum);
+			else
+				tDispLocate = tKNL_GetDispLocation(ubSrcNum);
+			if(tDispLocate == KNL_DISP_LOCATION1)
+			{
+				LCD_ChDisable(LCD_CH0);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION2)
+			{
+				LCD_ChDisable(LCD_CH1);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION3)
+			{
+				LCD_ChDisable(LCD_CH2);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION4)
+			{
+				LCD_ChDisable(LCD_CH3);
+			}		
+		}
+		else if(tKNL_GetDispType() == KNL_DISP_3T_1T2B)
+		{
+			tDispLocate = tKNL_GetDispLocation(ubSrcNum);
+			if(tDispLocate == KNL_DISP_LOCATION1)
+			{
+				LCD_ChDisable(LCD_CH0);
+			}
+			else if((tDispLocate == KNL_DISP_LOCATION2)||(tDispLocate == KNL_DISP_LOCATION3))
+			{
+				LCD_ChDisable(LCD_CH1);
+			}
+		}
+		else if(tKNL_GetDispType() == KNL_DISP_3T_2T1B)
+		{
+			tDispLocate = tKNL_GetDispLocation(ubSrcNum);
+			if((tDispLocate == KNL_DISP_LOCATION1)||(tDispLocate == KNL_DISP_LOCATION2))
+			{
+				LCD_ChDisable(LCD_CH0);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION3)
+			{
+				LCD_ChDisable(LCD_CH1);
+			}
+		}
+		else if(tKNL_GetDispType() == KNL_DISP_3T_2L1R)
+		{	
+			// For Kernel
+			// -----------------
+			// | Disp1 |       |
+			// |  F(2) |       |
+			// |-------| Disp3 |
+			// | Disp2 |  R(4) |
+			// |  B(3) |	   |
+			// -----------------	
+			
+			// For LCD IP
+			// -----------------
+			// |  CH0  |       |
+			// | 	   |       |
+			// |-------|  CH1  |
+			// |       |       |
+			// |  CH2  |	   |
+			// -----------------
+			tDispLocate = tKNL_GetDispLocation(ubSrcNum);
+			if(tDispLocate == KNL_DISP_LOCATION1)
+			{
+				LCD_ChDisable(LCD_CH0);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION2)
+			{
+				LCD_ChDisable(LCD_CH2);
+			}		
+			else if(tDispLocate == KNL_DISP_LOCATION3)
+			{
+				LCD_ChDisable(LCD_CH1);
+			}
+		}
+		else if(tKNL_GetDispType() == KNL_DISP_3T_1L2R)
+		{	
+			// For Kernel	
+			// -----------------
+			// |   	   | Disp2 |
+			// | 	   |  F(2) |
+			// |  L(1) |-------|
+			// | Disp1 |  B(3) |
+			// |   	   | Disp3 |
+			// -----------------
+			
+			// For LCD IP	
+			// -----------------
+			// |   	   |  CH0  |
+			// | 	   |       |
+			// |  CH1  |-------|
+			// |       |       |
+			// |       |  CH2  |
+			// -----------------
+			tDispLocate = tKNL_GetDispLocation(ubSrcNum);
+			if(tDispLocate == KNL_DISP_LOCATION1)
+			{
+				LCD_ChDisable(LCD_CH1);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION2)
+			{
+				LCD_ChDisable(LCD_CH0);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION3)
+			{
+				LCD_ChDisable(LCD_CH2);
+			}
+		}
+		else if(tKNL_GetDispType() == KNL_DISP_DUAL_C)
+		{
+			// For Kernel	
+			// -----------------
+			// |   	 Disp1     |
+			// | 	  F(2)     |
+			// |---------------|
+			// |      B(3)     |
+			// |   	 Disp2     |
+			// -----------------
+			
+			// For LCD IP	
+			// -----------------
+			// |	  CH0      |
+			// | 	           |
+			// |---------------|
+			// |               |
+			// |	  CH1	   |
+			// -----------------
+			if(TRUE == KNL_SwDispInfo.ubSetupFlag)
+				tDispLocate = tKNL_SearchSrcLocation(ubSrcNum);
+			else
+				tDispLocate = tKNL_GetDispLocation(ubSrcNum);
+			if(tDispLocate == KNL_DISP_LOCATION1)
+			{
+				LCD_ChDisable(LCD_CH0);
+			}
+			else if(tDispLocate == KNL_DISP_LOCATION2)
+			{
+				LCD_ChDisable(LCD_CH1);
+			}
+		}
 	}
+#endif
 }
 //------------------------------------------------------------------------------
 uint8_t ubKNL_GetNextNode(uint8_t ubSrcNum,uint8_t ubNode)

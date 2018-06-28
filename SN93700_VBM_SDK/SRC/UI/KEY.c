@@ -44,7 +44,9 @@ static void KEY_Thread(void const *argument)
 	while(1)
 	{
 		PKEY_Thread();
+	#ifdef OP_AP
 		AKEY_Thread();
+	#endif
 		GKEY_Thread();
 		
         osDelay(KEY_THREAD_PERIOD);
