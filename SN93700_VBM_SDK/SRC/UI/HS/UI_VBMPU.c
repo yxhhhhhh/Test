@@ -243,6 +243,9 @@ uint16_t ubGetBatValue = 0;
 uint16_t ubBatLvLIdx = BAT_LVL0;
 extern uint8_t ubStartUpState;
 
+uint8_t ubLostLinkEnterSanMode = 0;
+
+
 uint8_t ubFactorySettingFLag ;
 uint8_t ubClearOsdFlag_2 =0;
 uint8_t ubFactoryModeFLag = 0;
@@ -552,6 +555,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 	{
 		if(tUI_SyncAppState != pAppStsRpt->tAPP_State)
 		{
+			printf("APP_LINK_STATE###\n");
 			UI_RemoveLostLinkLogo();
 		}
 		ubUI_ResetPeriodFlag = TRUE;
@@ -607,6 +611,11 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	}
 	
 	UI_CheckUsbCharge();
+
+	if(tUI_SyncAppState != APP_LOSTLINK_STATE)
+	{
+		ubLostLinkEnterSanMode = 0;
+	}
 }
 //------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
@@ -614,7 +623,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	APP_EventMsg_t tUI_GetLinkStsMsg = {0};
 	uint8_t ubUI_SendMsg2AppFlag = FALSE;
 	OSD_IMG_INFO tOsdImgInfo;
-	static uint8_t ubSanModeState = 0;
 	
 	osMutexWait(UI_PUMutex, osWaitForever);
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
@@ -631,17 +639,17 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			{
 				if(tUI_PuSetting.ubDefualtFlag == FALSE)
 				{
-					ubSanModeState++;
-					if(ubSanModeState == 10)
+					ubLostLinkEnterSanMode++;
+					if(ubLostLinkEnterSanMode == 15)
 					{
 						UI_SwitchCameraScan(0);
-						ubSanModeState = 0;
+						ubLostLinkEnterSanMode = 0;
 					}
 				}
 			}
 			else
 			{
-				ubSanModeState = 0;
+				ubLostLinkEnterSanMode = 0;
 				UI_DisableScanMode();
 			}
 			
@@ -11452,6 +11460,7 @@ void UI_SwitchCameraScan(uint8_t type)
 	UI_CamNum_t tCamSwtichNum = 0xFF;
 	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 
+	printf("UI_SwitchCameraScan type: %d.\n", type);
 	for(i = 0; i < 4; i++)
 		printf("### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
