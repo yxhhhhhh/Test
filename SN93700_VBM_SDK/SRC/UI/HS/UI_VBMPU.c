@@ -7554,99 +7554,129 @@ void UI_MotorDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-	if(ubFactoryModeFLag == 1)
-		return;
-	
 	printf("UI_MotorDisplay value: 0x%x.\n", value);
 	if((value != MC_UP_DOWN_OFF) && (value != MC_LEFT_RIGHT_OFF))
 	{
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_MOVE, 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 259;
-		tOsdImgInfo.uwYStart = 515;	
-		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_MOVE, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 259;
+			tOsdImgInfo.uwYStart = 515;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		}
 	}
 
 	switch(value)
 	{
 		case MC_UP_ON:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 191;
-			tOsdImgInfo.uwYStart = 576;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 191;
+				tOsdImgInfo.uwYStart = 576;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor1State = MC_UP_ON;
 			break;
 			
 		case MC_UP_TOP:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP_T, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 191;
-			tOsdImgInfo.uwYStart = 576;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP_T, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 191;
+				tOsdImgInfo.uwYStart = 576;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor1State = MC_UP_TOP;
 			break;
 			
 		case MC_DOWN_ON:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 516;
-			tOsdImgInfo.uwYStart = 576;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 516;
+				tOsdImgInfo.uwYStart = 576;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor1State = MC_DOWN_ON;
 			break;
 			
 		case MC_DOWN_TOP:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN_T, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 516;
-			tOsdImgInfo.uwYStart = 576;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN_T, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 516;
+				tOsdImgInfo.uwYStart = 576;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor1State = MC_DOWN_TOP;
 			break;
 
 		case MC_UP_DOWN_OFF:
-			tOsdImgInfo.uwHSize  = 386;
-			tOsdImgInfo.uwVSize  = 389;
-			tOsdImgInfo.uwXStart = 191;
-			tOsdImgInfo.uwYStart = 447;
-			OSD_EraserImg2(&tOsdImgInfo);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOsdImgInfo.uwHSize  = 386;
+				tOsdImgInfo.uwVSize  = 389;
+				tOsdImgInfo.uwXStart = 191;
+				tOsdImgInfo.uwYStart = 447;
+				OSD_EraserImg2(&tOsdImgInfo);
+			}
 			ubMotor1State = MC_UP_DOWN_OFF;
 			break;
 			
 		case MC_LEFT_ON:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 322;
-			tOsdImgInfo.uwYStart = 771;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 322;
+				tOsdImgInfo.uwYStart = 771;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor0State = MC_LEFT_ON;
 			break;
 			
 		case MC_LEFT_TOP:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT_T, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 322;
-			tOsdImgInfo.uwYStart = 771;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT_T, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 322;
+				tOsdImgInfo.uwYStart = 771;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor0State = MC_LEFT_TOP;
 			break;
 		
 		case MC_RIGHT_ON:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 322;
-			tOsdImgInfo.uwYStart = 447;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 322;
+				tOsdImgInfo.uwYStart = 447;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor0State = MC_RIGHT_ON;
 			break;
 			
 		case MC_RIGHT_TOP:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT_T, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 322;
-			tOsdImgInfo.uwYStart = 447;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT_T, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart = 322;
+				tOsdImgInfo.uwYStart = 447;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			}
 			ubMotor0State = MC_RIGHT_TOP;
 			break;
 			
 		case MC_LEFT_RIGHT_OFF:
-			tOsdImgInfo.uwHSize  = 386;
-			tOsdImgInfo.uwVSize  = 389;
-			tOsdImgInfo.uwXStart = 191;
-			tOsdImgInfo.uwYStart = 447;
-			OSD_EraserImg2(&tOsdImgInfo);
+			if(ubFactoryModeFLag == 0)
+			{
+				tOsdImgInfo.uwHSize  = 386;
+				tOsdImgInfo.uwVSize  = 389;
+				tOsdImgInfo.uwXStart = 191;
+				tOsdImgInfo.uwYStart = 447;
+				OSD_EraserImg2(&tOsdImgInfo);
+			}
 			ubMotor0State = MC_LEFT_RIGHT_OFF;
 			break;
 			
