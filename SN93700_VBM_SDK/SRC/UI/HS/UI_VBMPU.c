@@ -294,13 +294,13 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			if(ubPUEnterAdotestFLag == 0)
 			{
 				ubPUEnterAdotestFLag = 1;
-				UI_EnterLocalAdoTest_RX();
+				//UI_EnterLocalAdoTest_RX();
 			}
 		}
 
 		if((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
 		{
-			if(ubBUEnterAdotestFLag == 0)
+			//if(ubBUEnterAdotestFLag == 0)
 			{
 				uint8_t CmdData = UI_SET_BU_ADO_TEST_CMD;
 				if(UI_SendToBUCmd(&CmdData, 1))
@@ -603,6 +603,13 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 		{
 			UI_FactoryStatusDisplay();
 		}
+
+		if(ubPUEnterAdotestFLag == 1)
+		{
+			ubPUEnterAdotestFLag = 2;
+			UI_EnterLocalAdoTest_RX();
+			ubPUEnterAdotestFLag = 0;
+		}
 	}
 
 	if((ubCheckCount%10) == 0)
@@ -837,6 +844,12 @@ void UI_PowerKey(void)
 	printf("UI_PowerKey###\n");
 	if(ubStartUpState)
 		return;
+
+	if(ubFactoryModeFLag == 1)
+	{
+		if((GPIO->GPIO_I9 == 0) || (GPIO->GPIO_I10 == 0))
+			return;
+	}
 	
 	BUZ_PlayPowerOffSound();
 	//UI_UpdateDevStatusInfo(); //20180321
@@ -3385,6 +3398,9 @@ void UI_AutoLcdSetSleepTime(uint8_t SleepMode)
 {
 	uint8_t SleepTime[4] = {0, 1, 3, 5};
 
+	if(ubFactoryModeFLag == 1)
+		return;
+
 	printf("UI_AutoLcdSetSleepTime SleepMode: %d.\n", SleepMode);
 	if(SleepMode > 4)
 		return;
@@ -3392,22 +3408,18 @@ void UI_AutoLcdSetSleepTime(uint8_t SleepMode)
 	tUI_PuSetting.ubSleepMode = SleepMode;
 	UI_UpdateDevStatusInfo();
 
-	#if 0
-	if(SleepMode == 0)
-		UI_TimerEventStop();
-	else
-		UI_TimerEventStart(SleepTime[SleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
-	#else
 	if(SleepMode == 0)
 		UI_TimerDeviceEventStop(TIMER1_2);
 	else
 		UI_TimerDeviceEventStart(TIMER1_2, SleepTime[SleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
-	#endif
 }
 
 uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction) //20180319
 {
 	int ret = 0;
+
+	if(ubFactoryModeFLag == 1)
+		return 0;
 
 	if(PWM->PWM_EN8 == 0)
 		ret = 1;
@@ -10129,7 +10141,7 @@ void UI_UpdateBarIcon_Part2(void)
 
 	tSelCamNum = tCamViewSel.tCamViewPool[0];
 
-	printf("UI_UpdateBarIcon_Part2 tSelCamNum: %d.\n", tSelCamNum);
+	//printf("UI_UpdateBarIcon_Part2 tSelCamNum: %d.\n", tSelCamNum);
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_CAM1+tSelCamNum, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 1070;
@@ -10828,14 +10840,14 @@ void UI_FactorymodeKeyDisplay(uint8_t Value)
 		case GKEY_ID0:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_VOLUKEY,1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 143;
-			tOsdImgInfo.uwYStart = 254;
+			tOsdImgInfo.uwYStart = 477;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 		
 		case GKEY_ID1:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_VOLDKEY,1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 143;
-			tOsdImgInfo.uwYStart = 477;
+			tOsdImgInfo.uwYStart = 254;
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;					
 	}	
@@ -10850,7 +10862,7 @@ void UI_EnterLocalAdoTest_RX(void)
 	tOsdImgInfo.uwYStart = 863;
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 
-	ADO_SelfTest_Init(10);
+	ADO_SelfTest_Init(5);
 	ADO_SelfTest_Record();
 	ADO_SelfTest_Play();
 	ADO_SelfTest_Close();

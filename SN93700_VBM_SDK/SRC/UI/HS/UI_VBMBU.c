@@ -1243,6 +1243,7 @@ void UI_NightModeSetting(void *pvNMParam)
 
 void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 {
+	static uint8_t BuPlayRecordState = 0;
 	uint8_t *pRecvPuParam = (uint8_t *)pvRecvPuParam;
 	uint8_t ubPuCmd = pRecvPuParam[0];
 
@@ -1253,10 +1254,19 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 			break;
 
 		case UI_SET_BU_ADO_TEST_CMD:
-			ADO_SelfTest_Init(10);
-			ADO_SelfTest_Record();
-			ADO_SelfTest_Play();
-			ADO_SelfTest_Close();
+			if(BuPlayRecordState == 0)
+			{
+				BuPlayRecordState = 1;
+				ADO_SelfTest_Init(10);
+				ADO_SelfTest_Record();
+				ADO_SelfTest_Play();
+				ADO_SelfTest_Close();
+				BuPlayRecordState = 2;
+			}
+			else if(BuPlayRecordState == 2)
+			{
+				BuPlayRecordState = 0;
+			}
 			break;
 
 		default:
