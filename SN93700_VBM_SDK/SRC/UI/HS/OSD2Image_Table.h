@@ -322,8 +322,6 @@ OSD2IMGPOOL(DIS_CHINESE_S,			0x3000,	       0,        0)
 
 OSD2IMGPOOL(MENU_NOCAM1,			0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_NOCAM2,			0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL1,		0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL2,		0x3000,	       0,        0)
 //----Fra
 OSD2IMGPOOL(DIS_ALARMON_FR,			0x3000,	       0,        0)
 OSD2IMGPOOL(DIS_LOWTEMP_FR,			0x3000,	       0,        0)
@@ -347,8 +345,6 @@ OSD2IMGPOOL(DIS_CHINESE_S_FR,			0x3000,	       0,        0)
 
 OSD2IMGPOOL(MENU_NOCAM1_FR,			0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_NOCAM2_FR,			0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL1_FR,		0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL2_FR,		0x3000,	       0,        0)
 //----GER
 OSD2IMGPOOL(DIS_ALARMON_GER,			0x3000,	       0,        0)
 OSD2IMGPOOL(DIS_LOWTEMP_GER,			0x3000,	       0,        0)
@@ -372,8 +368,6 @@ OSD2IMGPOOL(DIS_CHINESE_S_GER,			0x3000,	       0,        0)
 
 OSD2IMGPOOL(MENU_NOCAM1_GER,			0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_NOCAM2_GER,			0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL1_GER,		0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL2_GER,		0x3000,	       0,        0)
 
 //----------spa
 OSD2IMGPOOL(DIS_ALARMON_SP,		0x3000,	       0,        0)
@@ -398,8 +392,6 @@ OSD2IMGPOOL(DIS_CHINESE_S_SP,		0x3000,	       0,        0)
 
 OSD2IMGPOOL(MENU_NOCAM1_SP,		0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_NOCAM2_SP,		0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL1_SP,		0x3000,	       0,        0)
-OSD2IMGPOOL(MENU_NOSIGNAL2_SP,		0x3000,	       0,        0)
 //---------------------------------------------------------
 //----eng
 OSD2IMGPOOL(MENU_BRI_TITLE,			0x3000,	       0,        0)

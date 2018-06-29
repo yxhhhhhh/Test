@@ -52,6 +52,8 @@ uint8_t ubStartUpState = 1;
 extern uint8_t ubFactorySettingFLag;
 extern uint8_t ubClearOsdFlag_2;
 
+extern uint8_t ubFactoryModeFLag;
+
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
@@ -215,8 +217,7 @@ void APP_Init(void)
 	RTC_Init(RTC_TimerDisable);
 #endif
 
-#ifdef VBM_PU //20180330
-	/*
+	#if 0 //def VBM_PU //20180330
 	if(ubRTC_GetKey() == 0)
 	{
 		RTC_PowerOff();
@@ -225,8 +226,7 @@ void APP_Init(void)
 	{
 
 	}
-	*/
-#endif
+	#endif
 
 	BSP_Init();
 	APP_CheckBootStatus();
@@ -310,61 +310,6 @@ void APP_PowerOnFunc(void)
 	uint32_t ulBUF_StartAddr = 0;
 
 	APP_LoadKNLSetupInfo();
-
-	#ifdef VBM_PU //20180330
-	uint16_t checkCount = 0;
-	printf("APP_PowerOnFunc GPIO->GPIO_I3: %d.\n", GPIO->GPIO_I3);
-
-	#if 0
-	while(1)
-	{
-		if(GPIO->GPIO_I3 == 1) //Usb On
-		{
-			if(ubRTC_GetKey() == 1)
-			{
-				checkCount++; 
-				if(checkCount >= 10)   // 80
-				{
-					printf("break######\n");
-					break;
-				}
-			}
-			else
-			{
-				checkCount = 0;
-				if(APP_GetBatteryValue() == 100)
-				{
-					//Charge Full
-				}
-			}
-		}
-		else
-		{
-			if(APP_GetBatteryValue() <= 10)
-			{
-				break; //RTC_PowerOff();
-			}
-			
-			if(ubRTC_GetKey() == 1)
-			{
-				checkCount++;
-				if(checkCount >= 10)   // 80
-				{
-					printf("break@@@@@@\n");
-					break;
-				}
-			}
-			else
-			{
-				RTC_PowerOff();
-			}
-		}
-		osDelay(20);
-	}
-	#endif
-	LCDBL_ENABLE(UI_ENABLE);
-	printf("APP_PowerOnFunc LCDBL_ENABLE###\n");
-	#endif
 
 #if USBD_ENABLE
 	//! USB Device initialization
@@ -505,20 +450,23 @@ void APP_LinkStateFunc(APP_EventMsg_t *ptEventMsg)
 			OSD_IMG_INFO tOsdImgInfo;
 			if(ubDisplaymodeFlag == 1)
 			{
-				if(tAPP_PttFunc[ubAPP_PttFlag].ADO_tPttFunPtr == ADO_PTTStart)
+				if(ubFactoryModeFLag == 0)
 				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TALKBACK, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart = 259;
-					tOsdImgInfo.uwYStart = 515;	
-					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-				}
-				else
-				{
-					tOsdImgInfo.uwHSize  = 250;
-					tOsdImgInfo.uwVSize  = 250;
-					tOsdImgInfo.uwXStart = 259;
-					tOsdImgInfo.uwYStart = 515;
-					OSD_EraserImg2(&tOsdImgInfo);
+					if(tAPP_PttFunc[ubAPP_PttFlag].ADO_tPttFunPtr == ADO_PTTStart)
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TALKBACK, 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart = 259;
+						tOsdImgInfo.uwYStart = 515;	
+						tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+					}
+					else
+					{
+						tOsdImgInfo.uwHSize  = 250;
+						tOsdImgInfo.uwVSize  = 250;
+						tOsdImgInfo.uwXStart = 259;
+						tOsdImgInfo.uwYStart = 515;
+						OSD_EraserImg2(&tOsdImgInfo);
+					}
 				}
 			}		
 			break;

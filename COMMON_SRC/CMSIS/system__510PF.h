@@ -102,10 +102,6 @@ typedef enum
 
 #define printd(level, ...)    ((level <= lSYS_DebugLvl) ? printf(__VA_ARGS__) : 0 )
 
-
-//#define APK_DEBUG	3
-//#define apk_print(level, ...)    ((level <= lSYS_DebugLvl) ? printf(__VA_ARGS__) : 0 )
-
 #define SWAP16(x) \
     ((uint16_t) (\
 	       (((uint16_t) (x) & (uint16_t) 0x00ffU) << 8) | \

@@ -648,7 +648,7 @@ static void KNL_AdoDecMonitThread(void const *argument)
 #if defined(BPC_RX) || defined(BPC_CAM)
 				//ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, OFF);
 #endif
-				#ifdef VBM_PU //20180627
+				#ifdef VBM_PU
 				SPEAKER_EN(FALSE);
 				TIMER_Delay_us(1000);
 				SPEAKER_EN(TRUE);
