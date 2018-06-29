@@ -5475,7 +5475,7 @@ void UI_TimeSubMenuDisplay(uint8_t value)
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_AM_S+(ubTimeAMPM*2), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 368;
 			tOsdImgInfo.uwYStart =806;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
 		//-------------------------------------------------------------------
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
