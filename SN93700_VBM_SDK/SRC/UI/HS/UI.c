@@ -49,18 +49,18 @@ void UI_Init(osMessageQId *pvMsgQId)
 	if((GPIO->GPIO_I9 == 0)&&(ubRTC_GetKey() == 1))
 	{
 		ubFactoryModeFLag = 1;
-		printf("enter factorymode\n");
+		printd(Apk_DebugLvl, "enter factorymode\n");
 	}
 	else
 	{
 		ubFactoryModeFLag = 0;
-		printf("no factorymode\n");
+		printd(Apk_DebugLvl, "no factorymode\n");
 	}
 	#endif
 
 	#ifdef VBM_BU //test
 	uint8_t ubCamUVCMode = UI_GetCamUVCMode();
-	printf("UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
+	printd(Apk_DebugLvl, "UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
 	if(GPIO->GPIO_I6 == 0)
 	{
 		if(ubCamUVCMode != 0xCC)
@@ -68,7 +68,7 @@ void UI_Init(osMessageQId *pvMsgQId)
 			UI_SetCamUVCMode(0xCC);
 			UI_UpdateDevStatusInfo();
 			TIMER_Delay_ms(100);
-			printf("Enter UVC.\n");
+			printd(Apk_DebugLvl, "Enter UVC.\n");
 			APP_SetTuningToolMode(1);
 			WDT_Disable(WDT_RST);
 			WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
@@ -82,7 +82,7 @@ void UI_Init(osMessageQId *pvMsgQId)
 			UI_SetCamUVCMode(0);
 			UI_UpdateDevStatusInfo();
 			TIMER_Delay_ms(100);
-			printf("Exit UVC.\n");
+			printd(Apk_DebugLvl, "Exit UVC.\n");
 			APP_SetTuningToolMode(0);
 			WDT_Disable(WDT_RST);
 			WDT_RST_Enable(WDT_CLK_EXTCLK, 1);

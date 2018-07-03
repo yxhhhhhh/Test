@@ -109,7 +109,7 @@ uint8_t APP_CheckBootStatus(void)
 	#if 0
 	#define CHECK_COUNT		10
 	uint16_t checkCount = 0;
-	printf("APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
+	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
 
 	while(1)
 	{
@@ -120,7 +120,7 @@ uint8_t APP_CheckBootStatus(void)
 				checkCount++;
 				if(checkCount >= CHECK_COUNT)
 				{
-					printf("break###\n");
+					printd(Apk_DebugLvl, "break###\n");
 					break;
 				}
 			}
@@ -145,24 +145,24 @@ uint8_t APP_CheckBootStatus(void)
 				checkCount++;
 				if(checkCount >= CHECK_COUNT)
 				{
-					printf("break@@@\n");
+					printd(Apk_DebugLvl, "break@@@\n");
 					break;
 				}
 			}
 			else
 			{
-				printf("PowerOff!!!\n");
+				printd(Apk_DebugLvl, "PowerOff!!!\n");
 				RTC_PowerOff();
 			}
 		}
 		TIMER_Delay_ms(200);
 		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
-	printf("APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
+	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
 	#else
 	#define CHECK_COUNT		10
 	uint16_t checkCount = 0;
-	printf("APP_CheckBootStatus USB: %d, ubRTC_GetKey(): %d.\n", UI_GetUsbDet(), ubRTC_GetKey());
+	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, ubRTC_GetKey(): %d.\n", UI_GetUsbDet(), ubRTC_GetKey());
 
 	while(1)
 	{
@@ -183,20 +183,20 @@ uint8_t APP_CheckBootStatus(void)
 				checkCount++;
 				if(checkCount >= CHECK_COUNT)
 				{
-					printf("break@@@\n");
+					printd(Apk_DebugLvl, "break@@@\n");
 					break;
 				}
 			}
 			else
 			{
-				printf("PowerOff!!!\n");
+				printd(Apk_DebugLvl, "PowerOff!!!\n");
 				RTC_PowerOff();
 			}
 		}
 		TIMER_Delay_ms(200);
 		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
-	printf("APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
+	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
 	#endif
 	
 	//LCDBL_ENABLE(UI_ENABLE);
@@ -629,7 +629,7 @@ uint8_t APP_UpdateLinkStatus(void)
 			tAPP_StsReport.ubAPP_Report[ubKNL_RoleNum+8] = KNL_GetRssiValue(ubKNL_RoleNum);
 			if(UI_GetCamViewPoolID() == ubKNL_RoleNum)
 			{
-				//printf("### LinkStatus ubKNL_RoleNum: %d, UI_GetCamViewPoolID(): %d.\n", ubKNL_RoleNum, UI_GetCamViewPoolID());
+				//printd(Apk_DebugLvl, "### LinkStatus ubKNL_RoleNum: %d, UI_GetCamViewPoolID(): %d.\n", ubKNL_RoleNum, UI_GetCamViewPoolID());
 				ubAPP_Event = APP_LINK_EVENT; //当前是无信号状态,匹配成功以后状态未更新,一直无法进入LINK状态.20180519
 			}
 		}

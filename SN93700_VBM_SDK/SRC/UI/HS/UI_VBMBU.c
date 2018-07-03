@@ -323,7 +323,7 @@ void UI_PairingKey(void)
 		return;
 	
 	APP_EventMsg_t tUI_PairMessage = {0};
-	printf("UI_PairingKey###\n");
+	printd(Apk_DebugLvl, "UI_PairingKey###\n");
 	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
 	UI_SendMessageToAPP(&tUI_PairMessage);
 	BUZ_PlaySingleSound();
@@ -337,7 +337,7 @@ void UI_PairingLongKey(void)
 	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
 	UI_SendMessageToAPP(&tUI_PairMessage);
 	*/
-	printf("UI_PairingLongKey###\n");
+	printd(Apk_DebugLvl, "UI_PairingLongKey###\n");
 	BUZ_PlaySingleSound();
 }
 //------------------------------------------------------------------------------
@@ -643,7 +643,7 @@ void UI_VoiceCheck (void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	printf("ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);	
+	printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);	
 
 	if(ulUI_AdcRpt > 0x3000)
 		voice_temp = 5;
@@ -663,7 +663,7 @@ void UI_VoiceCheck (void)
 
 	//if(ubVoicetemp_bak != voice_temp)
 	//{
-	//	printf("voice_temp: %d \n",voice_temp);
+	//	printd(Apk_DebugLvl, "voice_temp: %d \n",voice_temp);
 	
 		tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_CHECK;
@@ -1013,32 +1013,32 @@ void UI_UpdateDevStatusInfo(void)
 //===========================================
 void MC0_StartHook(void)
 {
-	printf(">> MC0 StartHook()!!\r\n");
+	printd(Apk_DebugLvl, ">> MC0 StartHook()!!\r\n");
 }
 
 void MC0_StopHook(void)
 {
-	printf(">> MC0 StopHook()!!\r\n");
+	printd(Apk_DebugLvl, ">> MC0 StopHook()!!\r\n");
 }
 
 void MC0_FinishHook(void)
 {
-	printf(">> MC0 FinishHook()!!\r\n");
+	printd(Apk_DebugLvl, ">> MC0 FinishHook()!!\r\n");
 }
 
 void MC1_StartHook(void)
 {
-	printf(">> MC1 StartHook()!!\r\n");
+	printd(Apk_DebugLvl, ">> MC1 StartHook()!!\r\n");
 }
 
 void MC1_StopHook(void)
 {
-	printf(">> MC1 StopHook()!!\r\n");
+	printd(Apk_DebugLvl, ">> MC1 StopHook()!!\r\n");
 }
 
 void MC1_FinishHook(void)
 {
-	printf(">> MC1 FinishHook!!\r\n");
+	printd(Apk_DebugLvl, ">> MC1 FinishHook!!\r\n");
 }
 //------------------------------------------------------------------------------
 //NOTE: 马达控制初始化
@@ -1087,14 +1087,14 @@ void UI_StopMotor(void)
 		MC_Stop(MC_1);
 		ubUI_Mc1RunFlag = 0;
 		ubUI_Mc2RunFlag = 0;
-		printf("UI_StopMotor MC_1!!!\n");
+		printd(Apk_DebugLvl, "UI_StopMotor MC_1!!!\n");
 	}
 	if((ubUI_Mc3RunFlag == 1) || (ubUI_Mc4RunFlag == 1))
 	{
 		MC_Stop(MC_0);
 		ubUI_Mc3RunFlag = 0;
 		ubUI_Mc4RunFlag = 0;
-		printf("UI_StopMotor MC_0!!!\n");
+		printd(Apk_DebugLvl, "UI_StopMotor MC_0!!!\n");
 	}
 
 	ubUI_McHandshake = 0;
@@ -1107,7 +1107,7 @@ void UI_PtzControlSetting(void *pvMCParam)
   	#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
 
-	//printf("UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
+	//printd(Apk_DebugLvl, "UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
 	switch(pMC_Param[0])
 	{
 		case 0:
@@ -1176,7 +1176,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 //------------------------------------------------------------------------------
 void UI_MCStateCheck(void)
 {
-	//printf(">> MC ubUI_McPreHandshake: %d, ubUI_McHandshake: %d, ubMcHandshakeLost: %d.\r\n", ubUI_McPreHandshake, ubUI_McHandshake, ubMcHandshakeLost);
+	/printd(Apk_DebugLvl, ">> MC ubUI_McPreHandshake: %d, ubUI_McHandshake: %d, ubMcHandshakeLost: %d.\r\n", ubUI_McPreHandshake, ubUI_McHandshake, ubMcHandshakeLost);
 	if(tUI_SyncAppState == APP_LINK_STATE)
 	{
 		if((ubUI_McPreHandshake == ubUI_McHandshake) && (ubUI_McHandshake > 0))
@@ -1213,7 +1213,7 @@ void UI_UpdateMCStatus(void)
 			ubUI_Mc1RunFlag = 0;
 			ubUI_Mc2RunFlag = 0;
  			MC_Stop(MC_0);
-			printf(">> MC0 Stop!!\r\n");
+			printd(Apk_DebugLvl, ">> MC0 Stop!!\r\n");
 		}
 	}
 	
@@ -1226,7 +1226,7 @@ void UI_UpdateMCStatus(void)
 			ubUI_Mc3RunFlag = 0;
 			ubUI_Mc4RunFlag = 0;
  			MC_Stop(MC_1);
-			printf(">> MC1 Stop!!\r\n");
+			printd(Apk_DebugLvl, ">> MC1 Stop!!\r\n");
 		}
 	}
   	#endif
@@ -1293,19 +1293,19 @@ void UI_SetIrMode(uint8_t mode)
 
 void UI_SetIRLed(uint8_t LedState)
 {
-	//printf("UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
+	//printd(Apk_DebugLvl, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
 	if((GPIO->GPIO_O4 == 0) && (LedState == 1))
 	{
 		GPIO->GPIO_O4 = 1;
 		UI_SetIrMode(1); //开IR, 黑白色
-		printf("UI_SetIRLed On###\n");
+		printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
 	}
 
 	if((GPIO->GPIO_O4 == 1) && (LedState == 0))
 	{
 		GPIO->GPIO_O4 = 0;
 		UI_SetIrMode(0); //关IR, 彩色
-		printf("UI_SetIRLed Off###\n");
+		printd(Apk_DebugLvl, "UI_SetIRLed Off###\n");
 	}
 }
 
@@ -1335,7 +1335,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMinIrCnt = 0;
 	}
 	
-	//printf("UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+	//printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
 	if(tUI_BuStsInfo.tNightModeFlag)
 	{
 		if(ubCheckMinIrCnt >= IR_CHECK_CNT)
@@ -1373,7 +1373,7 @@ void UI_TestSetting(void *pvTSParam)
 	#if 0
 	if(TestData0 == 0x11)
 	{
-		printf("UI_TestSetting TestData1: %d.\n", TestData1);
+		printd(Apk_DebugLvl, "UI_TestSetting TestData1: %d.\n", TestData1);
 		APP_SetTuningToolMode(TestData1);
 		WDT_Disable(WDT_RST);
 		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
@@ -1390,7 +1390,7 @@ void UI_TestCheck(void)
 	#define Motor1_Wait		40
 	static uint16_t ubTestCount = 0;
 	
-	printf("UI_TestCheck ubTestCount: %d.\n", ubTestCount);
+	printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
 	if(ubTestCount == 0)
 	{
 		MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转

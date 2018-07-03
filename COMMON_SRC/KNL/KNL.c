@@ -8701,7 +8701,7 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 	uint8_t ubTxAdo_Path;
 #endif
 
-	printf("KNL_VdoStart ubSrcNum: %d ###.\n", ubSrcNum);
+	printd(Apk_DebugLvl, "KNL_VdoStart ubSrcNum: %d ###.\n", ubSrcNum);
 	ubSrcNumMap = ubKNL_SrcNumMap(ubSrcNum);
 	if(ubSrcNumMap <= KNL_STA4)
 	{

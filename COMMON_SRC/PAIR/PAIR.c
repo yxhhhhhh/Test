@@ -71,7 +71,7 @@ static void PAIR_Thread(void const *argument)
 		}
 		else if(ubPAIR_State == PAIR_PRP)
 		{
-//			printf("Sent TWC_PRP");
+			//printf("Sent TWC_PRP");
 			if(tTWC_Send(TWC_AP_MASTER, TWC_PRP, (uint8_t *)&PAIR_PrpPket,sizeof(PAIR_PrpPket), 8) == TWC_SUCCESS)
 				printf("Sent TWC_PRP_ok \n");
 

@@ -488,7 +488,7 @@ void UI_StateReset(void)
 	tUI_SyncAppState		  = APP_STATE_NULL;
 	ulUI_LogoIndex			  = OSDLOGO_BOOT;
 
-	printf("UI_StateReset###\n");
+	printd(Apk_DebugLvl, "UI_StateReset###\n");
 
 	tUI_MenuItem.ubItemIdx 	  = BRIGHT_ITEM;
 	tUI_MenuItem.ubItemPreIdx = BRIGHT_ITEM;
@@ -558,7 +558,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 	{
 		if(tUI_SyncAppState != pAppStsRpt->tAPP_State)
 		{
-			printf("APP_LINK_STATE###\n");
+			printd(Apk_DebugLvl, "APP_LINK_STATE###\n");
 			UI_RemoveLostLinkLogo();
 		}
 		ubUI_ResetPeriodFlag = TRUE;
@@ -637,7 +637,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	osMutexWait(UI_PUMutex, osWaitForever);
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
 
-	//printf("UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
+	//printd(Apk_DebugLvl, "UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	switch(tUI_SyncAppState)
 	{
@@ -794,7 +794,7 @@ void UI_PuInit(void)
 	{
 		UI_FactoryStatusDisplay();
 	}
-	printf("UI_PuInit ok.\n");
+	printd(Apk_DebugLvl, "UI_PuInit ok.\n");
 }
 
 void UI_PowerOnSet(void)
@@ -834,19 +834,19 @@ void UI_PowerKeyShort(void)
 	{
 		LCDBL_ENABLE(UI_DISABLE);
 	}
-	printf("UI_PowerKeyShort###\n");
+	printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
 }
 void UI_PowerOff(void)
 {
 	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
-	printf("UI_PowerOff Power OFF!\n");
+	printd(Apk_DebugLvl, "UI_PowerOff Power OFF!\n");
 	RTC_PowerDisable();
 	while(1);
 }
 //------------------------------------------------------------------------------
 void UI_PowerKey(void)
 {
-	printf("UI_PowerKey###\n");
+	printd(Apk_DebugLvl, "UI_PowerKey###\n");
 
 	if(ubFactoryModeFLag == 1)
 	{
@@ -863,14 +863,14 @@ void UI_PowerKey(void)
 
 	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
 	RTC_SetGPO_1(0, RTC_PullDownEnable);	
-	printf("UI_PowerKey Power OFF!\n");
+	printd(Apk_DebugLvl, "UI_PowerKey Power OFF!\n");
 	RTC_PowerDisable();
 	while(1);
 }
 //------------------------------------------------------------------------------
 void UI_MenuKey(void)
 {
-	printf("UI_MenuKey tUI_State: 0x%x.\n", tUI_State);
+	printd(Apk_DebugLvl, "UI_MenuKey tUI_State: 0x%x.\n", tUI_State);
 	switch(tUI_State)
 	{
 		case UI_DISPLAY_STATE:
@@ -933,7 +933,7 @@ void UI_MenuKey(void)
 					tOsdInfo.uwXStart = 503;
 					tOsdInfo.uwYStart = 360;	
 					tOSD_Img2(&tOsdInfo, OSD_UPDATE);
-					printf("UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+					printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
 				}
 				else
 				{
@@ -949,7 +949,7 @@ void UI_MenuKey(void)
 					tOSD_Img2(&tOsdInfo, OSD_UPDATE);
 					*/
 					OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
-					printf("UI_MenuKey OSD2IMG_MENU_NOSIGNAL1.\n");
+					printd(Apk_DebugLvl, "UI_MenuKey OSD2IMG_MENU_NOSIGNAL1.\n");
 				}
 			}
 			tUI_State = UI_DISPLAY_STATE;
@@ -2401,7 +2401,7 @@ void UI_PushTalkKey(void)
 {
 	OSD_IMG_INFO tOsdInfo;
 
-	printf("UI_PushTalkKey#####\n");
+	printd(Apk_DebugLvl, "UI_PushTalkKey#####\n");
 	if(((ubTempAlarmState > TEMP_ALARM_IDLE)&&(ubTempAlarmState < TEMP_ALARM_OFF)) ||  
 		((ubPickupAlarmState > PICKUP_ALARM_IDLE)&&(ubPickupAlarmState < PICKUP_ALARM_OFF)) || 
 		(tUI_SyncAppState != APP_LINK_STATE))
@@ -2479,7 +2479,7 @@ void UI_PushTalkKey(void)
 	}
 	osDelay(20);
 	
-	printf("UI_PushTalkKey#####\n");
+	printd(Apk_DebugLvl, "UI_PushTalkKey#####\n");
 	if(((ubTempAlarmState > TEMP_ALARM_IDLE)&&(ubTempAlarmState < TEMP_ALARM_OFF)) || 
 		((ubPickupAlarmState > PICKUP_ALARM_IDLE)&&(ubPickupAlarmState < PICKUP_ALARM_OFF)) || 
 		(tUI_SyncAppState != APP_LINK_STATE))
@@ -3149,7 +3149,7 @@ void UI_ShowSysVolume(uint8_t value)
 	OSD_IMG_INFO tOsdImgInfo;
 	ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n36DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 
-	printf("UI_ShowSysVolume tVOL_UpdateLvL: %d.\n", value);
+	printd(Apk_DebugLvl, "UI_ShowSysVolume tVOL_UpdateLvL: %d.\n", value);
 	tUI_PuSetting.VolLvL.ubVOL_UpdateCnt = UI_UPDATEVOLLVL_PERIOD*5; 
 	
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
@@ -3214,12 +3214,12 @@ void UI_AutoBrightnessAdjust(void) //20180324
 		{
 			if((LightSenseVal >= LightSenseArray[i].ubMin) && (LightSenseVal <= LightSenseArray[i].ubMax))
 			{
-				//printf("LightSenseVal: %d, value(%d, %d).\r\n", LightSenseVal, ubAutoBrightnessValue, LightSenseArray[i].ubValue);
+				//printd(Apk_DebugLvl, "LightSenseVal: %d, value(%d, %d).\r\n", LightSenseVal, ubAutoBrightnessValue, LightSenseArray[i].ubValue);
 				if(ubAutoBrightnessValue != LightSenseArray[i].ubValue)
 				{
 					LCD_BACKLIGHT_CTRL(ulUI_BLTable[LightSenseArray[i].ubValue]);
 					ubAutoBrightnessValue = LightSenseArray[i].ubValue;
-					//printf("UI_AutoBrightnessAdjust: %d#\r\n",ubAutoBrightnessValue);
+					//printd(Apk_DebugLvl, "UI_AutoBrightnessAdjust: %d#\r\n",ubAutoBrightnessValue);
 				}
 				break;
 			}
@@ -3243,7 +3243,7 @@ void UI_BrightnessSubMenuPage(UI_ArrowKey_t tArrowKey)
 		return;
 	}
 
-	//printf("tArrowKey  %d \n",tArrowKey); 	
+	//printd(Apk_DebugLvl, "tArrowKey  %d \n",tArrowKey); 	
 
 	switch(tArrowKey)
 	{
@@ -3318,7 +3318,7 @@ void UI_BrightnessDisplay(uint8_t value)
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 
 	tUI_PuSetting.BriLvL.tBL_UpdateLvL = value;
-	printf("UI_BrightnessDisplay tBL_UpdateLvL: %d.\n", tUI_PuSetting.BriLvL.tBL_UpdateLvL);
+	printd(Apk_DebugLvl, "UI_BrightnessDisplay tBL_UpdateLvL: %d.\n", tUI_PuSetting.BriLvL.tBL_UpdateLvL);
 	LCD_BACKLIGHT_CTRL(ulUI_BLTable[tUI_PuSetting.BriLvL.tBL_UpdateLvL]);
 	UI_UpdateDevStatusInfo();
 }
@@ -3408,7 +3408,7 @@ void UI_DrawAutoLcdSubMenuPage(void)
 
 void UI_AutoLcdSetSleepTimerEvent(void)
 {
-	printf("UI_AutoLcdSetSleepTimerEvent###\n");
+	printd(Apk_DebugLvl, "UI_AutoLcdSetSleepTimerEvent###\n");
 	LCDBL_ENABLE(UI_DISABLE);
 }
 
@@ -3419,7 +3419,7 @@ void UI_AutoLcdSetSleepTime(uint8_t SleepMode)
 	if(ubFactoryModeFLag == 1)
 		return;
 
-	printf("UI_AutoLcdSetSleepTime SleepMode: %d.\n", SleepMode);
+	printd(Apk_DebugLvl, "UI_AutoLcdSetSleepTime SleepMode: %d.\n", SleepMode);
 	if(SleepMode > 4)
 		return;
 	
@@ -4830,13 +4830,13 @@ void UI_SetAlert(uint8_t time)
 	}
 	else
 	{
-		//printf("ubAlertCnt %d \n",ubAlertCnt);
+		//printd(Apk_DebugLvl, "ubAlertCnt %d \n",ubAlertCnt);
 		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
 		ADO_SetDacR2RVol(R2R_VOL_n5p6DB);		
 		if((ubAlertCnt%3) == 0)
 		{
 			BUZ_PlayLowBatSound();
-			printf("UI_SetAlert BUZ_PlaySingleSound###\n");
+			printd(Apk_DebugLvl, "UI_SetAlert BUZ_PlaySingleSound###\n");
 		}
 	}
 } 
@@ -4846,7 +4846,7 @@ void UI_ShowAlarm(uint8_t type)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-	printf("UI_ShowAlarm type: %d.\n", type);
+	printd(Apk_DebugLvl, "UI_ShowAlarm type: %d.\n", type);
 	switch(type)
 	{
 		case 0:
@@ -4931,7 +4931,7 @@ void UI_PlayAlarmSound(uint8_t type)
 		ADO_SetDacR2RVol(R2R_VOL_n5p6DB);		
 		if((ubPlayAlarmCount%3) == 0)
 		{
-			printf("UI_PlayAlarmSound BUZ_PlaySingleSound###\n");
+			printd(Apk_DebugLvl, "UI_PlayAlarmSound BUZ_PlaySingleSound###\n");
 			BUZ_PlayLowBatSound();
 		}
 	}
@@ -5011,7 +5011,7 @@ void UI_TempAlarmCheck(void)
 	}
 	else if(ubTempAlarmState == TEMP_ALARM_OFF)
 	{
-		//printf("TEMP: (%d) ++++++\n", ubTempAlarmTriggerCount);
+		//printd(Apk_DebugLvl, "TEMP: (%d) ++++++\n", ubTempAlarmTriggerCount);
 		if(ubTempAlarmTriggerCount < ALARM_INTERVAL) //60s
 		{
 			ubTempAlarmTriggerCount++;
@@ -5064,7 +5064,7 @@ void UI_PickupAlarmCheck(void)
 	}
 	else if(ubPickupAlarmState == PICKUP_ALARM_OFF)
 	{
-		//printf("PICKUP: (%d) ------\n", ubPickupAlarmTriggerCount);
+		//printd(Apk_DebugLvl, "PICKUP: (%d) ------\n", ubPickupAlarmTriggerCount);
 		if(ubPickupAlarmTriggerCount < ALARM_INTERVAL) //60s
 		{
 			ubPickupAlarmTriggerCount++;
@@ -5270,7 +5270,7 @@ void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 		ubTimeMin = tUI_PuSetting.tSysCalendar.ubMin;
 
 
-		//printf("ubTimeHour  %d\n",ubTimeHour);
+		//printd(Apk_DebugLvl, "ubTimeHour  %d\n",ubTimeHour);
 		ubEnterTimeMenuFlag = 1;
 		
 		UI_DrawSubMenuPage(TIME_ITEM);
@@ -5507,7 +5507,7 @@ void UI_Zoom_SetScaleParam(uint8_t tZoomScale)
 	uint32_t ulLcd_HSize = uwLCD_GetLcdHoSize();
 	uint32_t ulLcd_VSize = uwLCD_GetLcdVoSize();
 
-	//printf("UI_Zoom_SetScaleParam tZoomScale: %d, tUI_PuSetting.ubZoomScale: %d.\r\n", tZoomScale, tUI_PuSetting.ubZoomScale);
+	//printd(Apk_DebugLvl, "UI_Zoom_SetScaleParam tZoomScale: %d, tUI_PuSetting.ubZoomScale: %d.\r\n", tZoomScale, tUI_PuSetting.ubZoomScale);
 
 	if(tZoomScale == 0) //off
 	{
@@ -5839,7 +5839,7 @@ void UI_GetPairCamInfo(void)
 		
 	for(i = 0; i < 4 ; i++)
 	{
-		printf("tUI_CamStatus[%d].ulCAM_ID  %lx \n",i,tUI_CamStatus[i].ulCAM_ID);
+		printd(Apk_DebugLvl, "tUI_CamStatus[%d].ulCAM_ID  %lx \n",i,tUI_CamStatus[i].ulCAM_ID);
 		if(tUI_CamStatus[i].ulCAM_ID != INVALID_ID)
 		{
 			ubCamPairFlag[i] = 1; 
@@ -5849,7 +5849,7 @@ void UI_GetPairCamInfo(void)
 			ubCamPairFlag[i] = 0;
 			//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< i));
 		}
-		printf("ubCamPairFlag[%d]= %d \n",i,ubCamPairFlag[i] );
+		printd(Apk_DebugLvl, "ubCamPairFlag[%d]= %d \n",i,ubCamPairFlag[i] );
 	}
 
 
@@ -5973,7 +5973,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 						break;
 					}	
 				}
-				//printf("ubPairSelCam %d \n",i,ubPairSelCam);
+				//printd(Apk_DebugLvl, "ubPairSelCam %d \n",i,ubPairSelCam);
 
 				if(ubCamFullFlag == 0)
 				{
@@ -6187,7 +6187,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 		{
 			if(tUI_CamStatus[i].ulCAM_ID != INVALID_ID)
 			{
-				printf("UI_CamDeleteCamera CameraID: %d.\n");
+				printd(Apk_DebugLvl, "UI_CamDeleteCamera CameraID: %d.\n");
 				tUI_CamStatus[i].ulCAM_ID 	= INVALID_ID;
 				tUI_CamStatus[i].tCamConnSts = CAM_OFFLINE;
 				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
@@ -6364,7 +6364,7 @@ void UI_SetScanMenu(uint8_t value)
 
 	UI_UpdateDevStatusInfo();
 
-	printf("UI_SetScanMenu ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
+	printd(Apk_DebugLvl, "UI_SetScanMenu ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
 	if(tUI_PuSetting.ubScanTime == 0)
 		UI_DisableScanMode();
 	else
@@ -7135,7 +7135,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 				tUI_PuSetting.ubFeatCode2			= 0x00;	
 
 				UI_CamDeleteCamera(1, 0);
-				printf("defulat ~~~\n");			
+				printd(Apk_DebugLvl, "defulat ~~~\n");			
 				UI_UpdateDevStatusInfo();	
 				ubFactorySettingFlag = 0;
 
@@ -7218,7 +7218,7 @@ void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 		case ENTER_ARROW:
 			tUI_PuSetting.NightmodeFlag &=(~(1<<ubSubSubMenuItemFlag));
 			tUI_PuSetting.NightmodeFlag |=(ubSubSubSubMenuItemFlag<<ubSubSubMenuItemFlag);
-			printf("UI_NightModeSubSubSubMenuPage tUI_PuSetting.NightmodeFlag: 0x%x.\n", tUI_PuSetting.NightmodeFlag);
+			printd(Apk_DebugLvl, "UI_NightModeSubSubSubMenuPage tUI_PuSetting.NightmodeFlag: 0x%x.\n", tUI_PuSetting.NightmodeFlag);
 			UI_UpdateDevStatusInfo();
 			UI_NightModeDisplay(ubSubSubMenuItemFlag);
 		
@@ -7481,9 +7481,9 @@ void UI_GetVolData(UI_CamNum_t tCamNum, void *pvTrig)
 	ubGetIR1Temp =  pvdata[1];
 	ubGetIR2Temp =  pvdata[2];
 
-	//printf("ubGetVoiceTemp %d \n",ubGetVoiceTemp);
-	//printf("ubGetIR1Temp %d \n",ubGetIR1Temp);
-	//printf("ubGetIR2Temp %d \n",ubGetIR2Temp);
+	//printd(Apk_DebugLvl, "ubGetVoiceTemp %d \n",ubGetVoiceTemp);
+	//printd(Apk_DebugLvl, "ubGetIR1Temp %d \n",ubGetIR1Temp);
+	//printd(Apk_DebugLvl, "ubGetIR2Temp %d \n",ubGetIR2Temp);
 	
 	if((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
 		UI_VolBarDisplay(ubGetVoiceTemp);
@@ -7496,7 +7496,7 @@ uint8_t UI_TempCToF(uint8_t cTemp)
 
 	fTemp = cTemp*18/10 + (((cTemp*18%10) >= 5)?1:0) + 32;
 
-	//printf("UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+	//printd(Apk_DebugLvl, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	return fTemp;
 }
 
@@ -7508,7 +7508,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 
 	if(ubRealTemp > 99)
 		ubRealTemp = 99;
-	//printf("UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+	//printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
 	if((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
 	{
 		UI_TempBarDisplay(ubRealTemp);
@@ -7611,7 +7611,7 @@ void UI_EnableMotor(uint8_t value)
 {
 	UI_PUReqCmd_t tUI_motorReqCmd;
 
-	printf("UI_EnableMotor value: %d.\n", value);
+	printd(Apk_DebugLvl, "UI_EnableMotor value: %d.\n", value);
 	tUI_motorReqCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 	tUI_motorReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
 	tUI_motorReqCmd.ubCmd[UI_SETTING_ITEM] 	= UI_MOTOR_SETTING;
@@ -7642,7 +7642,7 @@ void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
 {
 	UI_PUReqCmd_t tUI_NightModeReqCmd;
 
-	//printf("UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
+	//printd(Apk_DebugLvl, "UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
 	tUI_NightModeReqCmd.tDS_CamNum 					= tCamViewSel.tCamViewPool[0];
 	tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_SETTING;
 	tUI_NightModeReqCmd.ubCmd[UI_SETTING_ITEM] 		= UI_NIGHTMODE_SETTING;
@@ -7665,7 +7665,7 @@ void UI_CamvLDCModeCmd(uint8_t value)
 {
 	UI_PUReqCmd_t tUI_CamvLDCModeCmd;
 
-	printf("UI_CamvLDCModeCmd value: %d.\n", value);
+	printd(Apk_DebugLvl, "UI_CamvLDCModeCmd value: %d.\n", value);
 	tUI_CamvLDCModeCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 	tUI_CamvLDCModeCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
 	tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_ITEM] 	= UI_IMGPROC_SETTING;
@@ -7683,7 +7683,7 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
 	int i;
 	UI_PUReqCmd_t tUI_SendCmd;
 
-	printf("UI_SendToBUCmd, tCamViewPool[0]: %d.\n", tCamViewSel.tCamViewPool[0]);
+	printd(Apk_DebugLvl, "UI_SendToBUCmd, tCamViewPool[0]: %d.\n", tCamViewSel.tCamViewPool[0]);
 	tUI_SendCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 	tUI_SendCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
 	tUI_SendCmd.ubCmd[UI_SETTING_ITEM] 	= UI_PU_TO_BU_CMD_SETTING;
@@ -7711,7 +7711,7 @@ void UI_TestCmd(uint8_t Value1, uint8_t Value2)
 {
 	UI_PUReqCmd_t tUI_TestCmd;
 
-	printf("UI_TestCmd (%d, %d), tCamViewPool[0]: %d.\n", Value1, Value2, tCamViewSel.tCamViewPool[0]);
+	printd(Apk_DebugLvl, "UI_TestCmd (%d, %d), tCamViewPool[0]: %d.\n", Value1, Value2, tCamViewSel.tCamViewPool[0]);
 	tUI_TestCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 	tUI_TestCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
 	tUI_TestCmd.ubCmd[UI_SETTING_ITEM] 	= UI_TEST_SETTING;
@@ -7721,7 +7721,6 @@ void UI_TestCmd(uint8_t Value1, uint8_t Value2)
 	if(UI_SendRequestToBU(osThreadGetId(), &tUI_TestCmd) != rUI_SUCCESS)
 	{
 		printd(DBG_ErrorLvl, "tUI_TestCmd Fail!\n");
-		printf("tUI_TestCmd Fail!\n");
 	}
 }
 
@@ -7729,7 +7728,7 @@ void UI_MotorDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-	printf("UI_MotorDisplay value: 0x%x.\n", value);
+	printd(Apk_DebugLvl, "UI_MotorDisplay value: 0x%x.\n", value);
 	if((value != MC_UP_DOWN_OFF) && (value != MC_LEFT_RIGHT_OFF))
 	{
 		if(ubFactoryModeFLag == 0)
@@ -7878,7 +7877,7 @@ void UI_MotorControl(uint8_t Value)
 		if(ubMotor1State != MC_UP_DOWN_OFF)
 			UI_MotorDisplay(ubMotor1State);
 		
-		printf("UI_MotorControl NOT LINK.\n");
+		printd(Apk_DebugLvl, "UI_MotorControl NOT LINK.\n");
 		return;
 	}
 
@@ -7888,7 +7887,7 @@ void UI_MotorControl(uint8_t Value)
 	if(((ubMotor1State>>4)&&(Value>>4)) || (Value == ubMotor1State))
 		return;
 
-	printf("UI_MotorControl Value: (0x%x) #####\n", Value);
+	printd(Apk_DebugLvl, "UI_MotorControl Value: (0x%x) #####\n", Value);
 	UI_EnableMotor((Value&0x01)?(Value>>4):0);
 	UI_MotorDisplay(Value);
 }
@@ -7904,7 +7903,7 @@ void UI_MotorStateCheck(void)
 	if(tUI_PuSetting.ubDefualtFlag == TRUE)
 		return;
 
-	//printf("### UP_DOWN: (0x%x, %d), LEFT_RIGHT: (0x%x, %d).\n", ubMotor1State, ubMC1OnCount, ubMotor0State, ubMC0OnCount);
+	//printd(Apk_DebugLvl, "### UP_DOWN: (0x%x, %d), LEFT_RIGHT: (0x%x, %d).\n", ubMotor1State, ubMC1OnCount, ubMotor0State, ubMC0OnCount);
 	if(ubMotor1State == MC_UP_ON)
 	{
 		ubMC1OnCount++;
@@ -8004,7 +8003,7 @@ void UI_GetBatLevel(void)
 	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
 	ubAdjustAdc = uwSADC_GetReport(SADC_CH3);
 	ubGetBatValue = ubBatAdc*33*2*100/1024;
-	//printf("UI_GetBatLevel ubBatAdc: %d, ubAdjustAdc: %d, ubGetBatValue: %d.\n", ubBatAdc, ubAdjustAdc, ubGetBatValue);
+	//printd(Apk_DebugLvl, "UI_GetBatLevel ubBatAdc: %d, ubAdjustAdc: %d, ubGetBatValue: %d.\n", ubBatAdc, ubAdjustAdc, ubGetBatValue);
 
 	if(ubGetBatValue < 3500)
 	{
@@ -8023,7 +8022,7 @@ void UI_GetBatLevel(void)
 	if(ubGetBatValue >= 4250)
 		ubBatLvLIdx = BAT_LVL4;
 
-	//printf("UI_GetBatLevel ubBatLvLIdx: %d, ubGetBatValue: %d.\n", ubBatLvLIdx, ubGetBatValue);
+	//printd(Apk_DebugLvl, "UI_GetBatLevel ubBatLvLIdx: %d, ubGetBatValue: %d.\n", ubBatLvLIdx, ubGetBatValue);
 	
 	#if UI_TEST_MODE
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
@@ -8062,14 +8061,14 @@ void UI_CheckUsbCharge(void)
 {
 	static uint8_t ubUsbStatus = 0;
 
-	//printf("### USB: %d, ChgFull: %d, USB_Config: %d.\n", UI_GetUsbDet(), UI_GetBatChgFull(), tUSBD_GetConfigStatus());
+	//printd(Apk_DebugLvl, "### USB: %d, ChgFull: %d, USB_Config: %d.\n", UI_GetUsbDet(), UI_GetBatChgFull(), tUSBD_GetConfigStatus());
 	if(UI_GetUsbDet() == 1) //USB_DET
 	{
 		if(tUSBD_GetConfigStatus() == 1) //充电器
 		{
 			if(GPIO->GPIO_O12 == 1)
 			{
-				printf("UI_CheckUsbCharge AC Charge!\n");
+				printd(Apk_DebugLvl, "UI_CheckUsbCharge AC Charge!\n");
 				GPIO->GPIO_O12 = 0; //大电流快充
 			}
 		}
@@ -8077,7 +8076,7 @@ void UI_CheckUsbCharge(void)
 		{
 			if(GPIO->GPIO_O12 == 0)
 			{
-				printf("UI_CheckUsbCharge USB Charge!\n");
+				printd(Apk_DebugLvl, "UI_CheckUsbCharge USB Charge!\n");
 				GPIO->GPIO_O12 = 1;
 			}
 		}
@@ -8100,7 +8099,7 @@ void UI_CheckUsbCharge(void)
 			if(PWM->PWM_EN8 == 0)
 			{
 				LCDBL_ENABLE(UI_ENABLE);
-				printf("UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
+				printd(Apk_DebugLvl, "UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
 			}
 		}
 	}
@@ -10362,7 +10361,7 @@ void UI_UpdateBarIcon_Part2(void)
 
 	tSelCamNum = tCamViewSel.tCamViewPool[0];
 
-	//printf("UI_UpdateBarIcon_Part2 tSelCamNum: %d.\n", tSelCamNum);
+	//printd(Apk_DebugLvl, "UI_UpdateBarIcon_Part2 tSelCamNum: %d.\n", tSelCamNum);
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_CAM1+tSelCamNum, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 1070;
@@ -10452,7 +10451,7 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 			tCamNumOsdImgInfo[tSelCamNum].uwYStart = 1070;	
 		}
 
-		//printf("osd 1\n");
+		//printd(Apk_DebugLvl, "osd 1\n");
 	
 		*/
 		
@@ -10476,7 +10475,7 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 	switch(tUI_CamStatus[tCamNum].tCamConnSts)
 	{
 		case CAM_ONLINE:
-			//printf("dis osd 2\n");
+			//printd(Apk_DebugLvl, "dis osd 2\n");
 
 			if(TRUE == ubUI_BuOnlineFlag[tCamNum])
 				break;
@@ -10616,7 +10615,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwXStart = 503;
 					tOsdImgInfo.uwYStart = 360;	
 					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-					printf("UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+					printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
 				}
 				else
 				{
@@ -10632,7 +10631,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 					*/
 					OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
-					printf("UI_ShowLostLinkLogo OSD2IMG_MENU_NOSIGNAL1.\n");
+					printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOSIGNAL1.\n");
 				}
 			}
 			else
@@ -10755,7 +10754,7 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 				{
 					UI_DisableScanMode();
 
-					printf("UI_RedrawStatusBar tCamViewNum: %d, tPairSelCam: %d.\n", tCamViewSel.tCamViewPool[0], tPairInfo.tPairSelCam);
+					printd(Apk_DebugLvl, "UI_RedrawStatusBar tCamViewNum: %d, tPairSelCam: %d.\n", tCamViewSel.tCamViewPool[0], tPairInfo.tPairSelCam);
 					if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
 					{
 						tCamViewSel.tCamViewType	= SINGLE_VIEW;
@@ -10840,7 +10839,7 @@ void UI_FactoryStatusDisplay(void)
 	uint8_t  ubper_temp, ubir_temp1,ubir_temp2;
 	uint16_t  ubir_temp;
 
-	printf("UI_FactoryStatusDisplay.\n");
+	printd(Apk_DebugLvl, "UI_FactoryStatusDisplay.\n");
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PER, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 142;
 	tOsdImgInfo.uwYStart = 1055;
@@ -11553,11 +11552,11 @@ void UI_LoadDevStatusInfo(void)
 	
 	if((tUI_PuSetting.ubFeatCode0 == 0x23)&&(tUI_PuSetting.ubFeatCode1== 0x45)&&(tUI_PuSetting.ubFeatCode2 == 0x67))
 	{
-		printf("tUI_PuSetting.ubDefualtFlag  %d \n",tUI_PuSetting.ubDefualtFlag);
+		printd(Apk_DebugLvl, "tUI_PuSetting.ubDefualtFlag  %d \n",tUI_PuSetting.ubDefualtFlag);
 	}
 	else
 	{
-		printf("ubDefulat OK~~~\n");
+		printd(Apk_DebugLvl, "ubDefulat OK~~~\n");
 			tUI_PuSetting.ubTotalBuNum 				 = DISPLAY_MODE;
 			tUI_PuSetting.ubCamViewNum	  =    		CAM1;
 			tUI_PuSetting.tAdoSrcCamNum				 = (tUI_PuSetting.tAdoSrcCamNum > CAM4)?CAM1:tUI_PuSetting.tAdoSrcCamNum;
@@ -11640,18 +11639,13 @@ void UI_LoadDevStatusInfo(void)
 		ubAlarmIconFlag = 1;
 	
 	ubRealTemp = tUI_PuSetting.ubTempunitFlag?ubRealTemp:UI_TempCToF(ubRealTemp);
-	printf("UI_LoadDevStatusInfo ubRealTemp: %d, ubTempunitFlag: %d.\n", ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+	printd(Apk_DebugLvl, "UI_LoadDevStatusInfo ubRealTemp: %d, ubTempunitFlag: %d.\n", ubRealTemp, tUI_PuSetting.ubTempunitFlag);
 	UI_GetPairCamInfo();
 
 	tCamViewSel.tCamViewPool[0] = tUI_PuSetting.ubCamViewNum;
-	printf("tCamViewSel.tCamViewNum  %d \n",tCamViewSel.tCamViewPool[0]);
+	printd(Apk_DebugLvl, "tCamViewSel.tCamViewNum  %d \n",tCamViewSel.tCamViewPool[0]);
 
 	ubFactorySettingFLag = tUI_PuSetting.ubDefualtFlag;
-
-	//tUI_PuSetting.ubLangageFlag 			= 2;
-	//printf("tUI_PuSetting.ubScanModeEn   %d \n",tUI_PuSetting.ubScanModeEn );
-	//ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
-	//UI_CamvLDCModeCmd(CAMSET_ON);
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)
@@ -11697,9 +11691,9 @@ void UI_SwitchCameraScan(uint8_t type)
 	UI_CamNum_t tCamSwtichNum = 0xFF;
 	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 
-	printf("UI_SwitchCameraScan type: %d.\n", type);
+	printd(Apk_DebugLvl, "UI_SwitchCameraScan type: %d.\n", type);
 	for(i = 0; i < 4; i++)
-		printf("### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
+		printd(Apk_DebugLvl, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
 	if(type == 0)
 	{
@@ -11709,7 +11703,7 @@ void UI_SwitchCameraScan(uint8_t type)
 
 	ubCamOnlineNum = UI_GetCamOnLineNum(0);
 
-	printf("UI_SwitchCameraScan ubCamOnlineNum: %d, tCamViewSel.tCamViewPool[0]: %d.\n", ubCamOnlineNum, tCamViewSel.tCamViewPool[0]);
+	printd(Apk_DebugLvl, "UI_SwitchCameraScan ubCamOnlineNum: %d, tCamViewSel.tCamViewPool[0]: %d.\n", ubCamOnlineNum, tCamViewSel.tCamViewPool[0]);
 	#if 0
 	if(ubCamOnlineNum < 2)
 		return;
@@ -11749,7 +11743,7 @@ void UI_SwitchCameraScan(uint8_t type)
 	}
 
 SWITCH_CAMERA:	
-	printf("UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
+	printd(Apk_DebugLvl, "UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
 	if(0xFF == tCamSwtichNum)
 		return;
 	
@@ -11774,13 +11768,13 @@ void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *
 	tUI_TimerParam.tEM 			= TIMER_CB;
 	tUI_TimerParam.pvEvent 		= pvRegCb;
 
-	printf("UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
+	printd(Apk_DebugLvl, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
 	TIMER_Start(tDevice, tUI_TimerParam);
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice)
 {
-	printf("UI_TimerDeviceEventStop tDevice: %d.\n", tDevice);
+	printd(Apk_DebugLvl, "UI_TimerDeviceEventStop tDevice: %d.\n", tDevice);
 	TIMER_Stop(tDevice);
 }
 //------------------------------------------------------------------------------
@@ -11788,7 +11782,7 @@ void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb)
 {
 	TIMER_SETUP_t tUI_TimerParam;
 
-	printf("UI_TimerEventStart TIMER2_1.\n");
+	printd(Apk_DebugLvl, "UI_TimerEventStart TIMER2_1.\n");
 	tUI_TimerParam.tCLK 		= TIMER_CLK_EXTCLK;	
 	tUI_TimerParam.ulTmLoad 	= 10000 * ulTime_ms;
 	tUI_TimerParam.ulTmCounter 	= tUI_TimerParam.ulTmLoad;
@@ -11802,7 +11796,7 @@ void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb)
 //------------------------------------------------------------------------------
 void UI_TimerEventStop(void)
 {
-	printf("UI_TimerEventStop TIMER2_1.\n");
+	printd(Apk_DebugLvl, "UI_TimerEventStop TIMER2_1.\n");
 	TIMER_Stop(TIMER2_1);
 }
 //------------------------------------------------------------------------------
@@ -11811,7 +11805,7 @@ void UI_ScanModeTimerEvent(void)
 	UI_Event_t tScanEvent;
 	osMessageQId *pUI_ScanEventQH = NULL;
 
-	printf("UI_ScanModeTimerEvent###\n");
+	printd(Apk_DebugLvl, "UI_ScanModeTimerEvent###\n");
 	UI_TimerEventStop();
 	tScanEvent.tEventType = SCANMODE_EVENT;
 	tScanEvent.pvEvent 	  = NULL;
@@ -11821,7 +11815,7 @@ void UI_ScanModeTimerEvent(void)
 //------------------------------------------------------------------------------
 void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 {
-	printf("UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
+	printd(Apk_DebugLvl, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
 	ubUI_ScanStartFlag = ubTimerEn;
 	if(TRUE == ubTimerEn)
 	{
@@ -11838,7 +11832,7 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 //------------------------------------------------------------------------------
 void UI_EnableScanMode(void)
 {
-	printf("UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
+	printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
 	if(tUI_PuSetting.ubScanTime == 0)
 	{
 		UI_DisableScanMode();
@@ -11851,7 +11845,7 @@ void UI_EnableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_DisableScanMode(void)
 {
-	printf("UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
+	printd(Apk_DebugLvl, "UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
 	if(FALSE == ubUI_ScanStartFlag)
 		return;
 	UI_SetupScanModeTimer(FALSE);
@@ -11859,12 +11853,12 @@ void UI_DisableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_ScanModeExec(void)
 {
-	printf("UI_ScanModeExec###\n");
+	printd(Apk_DebugLvl, "UI_ScanModeExec###\n");
 	#if 0
 	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 	uint8_t ubSearchCnt;
 
-	printf("UI_ScanModeExec tSearchCam: %d.\n", tSearchCam);
+	printd(Apk_DebugLvl, "UI_ScanModeExec tSearchCam: %d.\n", tSearchCam);
 	for(ubSearchCnt = 0; ubSearchCnt < tUI_PuSetting.ubTotalBuNum; ubSearchCnt++)
 	{
 		tSearchCam = ((tSearchCam + 1) >= CAM_4T)?CAM1:((UI_CamNum_t)(tSearchCam + 1));
@@ -11916,7 +11910,7 @@ void UI_SwitchCameraSource(void)
 {
 	APP_EventMsg_t tUI_SwitchBuMsg = {0};
 
-	printf("UI_SwitchCameraSource###\n");
+	printd(Apk_DebugLvl, "UI_SwitchCameraSource###\n");
 	tUI_SwitchBuMsg.ubAPP_Event 	 = APP_VIEWTYPECHG_EVENT;
 	tUI_SwitchBuMsg.ubAPP_Message[0] = 3;		//! Message Length	
 	tUI_SwitchBuMsg.ubAPP_Message[1] = tCamViewSel.tCamViewType;
