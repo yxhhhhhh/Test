@@ -109,7 +109,7 @@ uint8_t ubTemp_bak = 25;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint32_t ubBuSWVersion = 180627;
+uint32_t ubBuSWVersion = 10;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -1449,10 +1449,10 @@ uint8_t UI_SendVersionToPu(void)
 	tUI_VersionReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_REPORT;
 	tUI_VersionReqCmd.ubCmd[UI_REPORT_ITEM] 	= UI_BU_TO_PU_CMD;
 	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA] 	= UI_BU_CMD_VERSION;
-	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+1] 	= ubBuSWVersion;
-	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubBuSWVersion/10000;
-	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+3] 	= ubBuSWVersion/100%100;		
-	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+4] 	= ubBuSWVersion%100;		
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+1] 	= ubBuHWVersion;
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubBuSWVersion/10;
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+3] 	= ubBuSWVersion%10;		
+	tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+4] 	= 0;		
 	tUI_VersionReqCmd.ubCmd_Len  			  	= 7;
 
 	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_VersionReqCmd))

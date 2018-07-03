@@ -47,7 +47,6 @@ extern uint32_t Image$$RW_IRAM3$$Base;
 
 extern uint8_t ubDisplaymodeFlag;
 extern uint8_t ubSetViewCam;
-uint8_t ubStartUpState = 1;
 
 extern uint8_t ubFactorySettingFLag;
 extern uint8_t ubClearOsdFlag_2;
@@ -640,8 +639,11 @@ uint8_t APP_UpdateLinkStatus(void)
 
 	if((ubAPP_Event == APP_LINK_EVENT)&&(ubLinkonceflag == 0))
 	{
-		UI_PowerOnSet();
-		ubLinkonceflag = 1;
+		if(LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus())
+		{
+			UI_PowerOnSet();
+			ubLinkonceflag = 1;
+		}
 	}
 	
 	return ubAPP_Event;
