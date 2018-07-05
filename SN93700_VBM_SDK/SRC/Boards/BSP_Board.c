@@ -98,6 +98,8 @@ void BSP_BoardInit(void)
 	GLB->PADIO53 = 0;
 
 	//! FCHG_ON
+	GLB->PADIO12  = 3;
+	GLB->PADIO40  = 3;	
 	GLB->PADIO54 = 0;
 
 	//! CHG_ON

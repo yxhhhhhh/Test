@@ -194,6 +194,15 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 	osMutexRelease(UI_BUMutex);
 }
 //------------------------------------------------------------------------------
+void UI_StatusCheck(uint16_t pThreadCnt)
+{
+	if(((pThreadCnt)%10) == 0)
+	{
+		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
+		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
+	}
+}
+//------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
 {
 	APP_EventMsg_t tUI_GetLinkStsMsg = {0};
@@ -216,8 +225,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			#if 1
 			if(((*pThreadCnt)%10) == 0)
 			{
-				uint16_t uwChkType = UI_SYSVOICELVL_CHK | UI_SYSTEMPDATA_CHK | UI_SYSIRLEDDATA_CHK;
-
+				uint16_t uwChkType = UI_SYSVOICELVL_CHK | UI_SYSTEMPDATA_CHK;
 				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 			}
 			#else
@@ -255,11 +263,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			break;
 	}
 	//PAIRING_LED_IO = 0;
-	
-	#if TEST_MODE
-	//UI_TestCheck(); //20180517
-	#endif
-	
+
+	UI_StatusCheck(*pThreadCnt);
 	tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
 	UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
 	osMutexRelease(UI_BUMutex);
@@ -285,6 +290,7 @@ static void UI_SysCheckStatus(void const *argument)
 
 	while(1)
 	{
+		printf("tUI_BuStsInfo.tNightModeFlag uwUI_ChkType: 0x%x.\n",uwUI_ChkType);
 		osMessageGet(osUI_SysChkQue, &uwUI_ChkType, osWaitForever);
 		if(uwUI_ChkType & UI_SYSVOICELVL_CHK)
 		{
@@ -577,7 +583,7 @@ void UI_VoxTrigger(void)
 		return;
 	}
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
-	if(ulUI_AdcRpt > ADC_SUMRPT_VOX_THH)
+	if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH) //ADC_SUMRPT_VOX_THH
 	{
 		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
 		UI_DisableVox();
@@ -1176,7 +1182,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 //------------------------------------------------------------------------------
 void UI_MCStateCheck(void)
 {
-	/printd(Apk_DebugLvl, ">> MC ubUI_McPreHandshake: %d, ubUI_McHandshake: %d, ubMcHandshakeLost: %d.\r\n", ubUI_McPreHandshake, ubUI_McHandshake, ubMcHandshakeLost);
+	//printd(Apk_DebugLvl, ">> MC ubUI_McPreHandshake: %d, ubUI_McHandshake: %d, ubMcHandshakeLost: %d.\r\n", ubUI_McPreHandshake, ubUI_McHandshake, ubMcHandshakeLost);
 	if(tUI_SyncAppState == APP_LINK_STATE)
 	{
 		if((ubUI_McPreHandshake == ubUI_McHandshake) && (ubUI_McHandshake > 0))
@@ -1299,6 +1305,7 @@ void UI_SetIRLed(uint8_t LedState)
 		GPIO->GPIO_O4 = 1;
 		UI_SetIrMode(1); //开IR, 黑白色
 		printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
+		//BUZ_PlaySingleSound();
 	}
 
 	if((GPIO->GPIO_O4 == 1) && (LedState == 0))
@@ -1306,6 +1313,7 @@ void UI_SetIRLed(uint8_t LedState)
 		GPIO->GPIO_O4 = 0;
 		UI_SetIrMode(0); //关IR, 彩色
 		printd(Apk_DebugLvl, "UI_SetIRLed Off###\n");
+		//BUZ_PlaySingleSound();
 	}
 }
 
@@ -1335,7 +1343,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMinIrCnt = 0;
 	}
 	
-	//printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+	printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
 	if(tUI_BuStsInfo.tNightModeFlag)
 	{
 		if(ubCheckMinIrCnt >= IR_CHECK_CNT)
@@ -1362,6 +1370,8 @@ void UI_BuInit(void)
 {
 	UI_MotoControlInit();
 	pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+	GPIO->GPIO_O4 = 0;
+	tUI_BuStsInfo.tNightModeFlag = 1;
 }
 
 void UI_TestSetting(void *pvTSParam)
