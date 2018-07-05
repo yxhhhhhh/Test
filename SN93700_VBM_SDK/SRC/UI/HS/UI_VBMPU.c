@@ -33,6 +33,9 @@
 
 #define UI_TEST_MODE	0
 
+#define Current_Test	0
+
+
 /**
  * Key event mapping table
  *
@@ -285,8 +288,11 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		}
 	}
 
+	#if Current_Test
+	#else
 	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1)
 		return;
+	#endif
 	
 	if(ubFactoryModeFLag == 1)
 	{
@@ -568,8 +574,11 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 		ubUI_ResetPeriodFlag = TRUE;
 		if(FALSE == ubUI_PuStartUpFlag)
 		{
+			#if Current_Test
+			#else
 			if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 				UI_EnableVox();
+			#endif
 			ubUI_PuStartUpFlag = TRUE;
 		}
 		/*
@@ -850,6 +859,7 @@ void UI_PowerKeyShort(void)
 	{
 		LCDBL_ENABLE(UI_DISABLE);
 	}
+
 	printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
 }
 void UI_PowerOff(void)
@@ -2549,6 +2559,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 				#if UI_TEST_MODE //test
 				UI_TestCmd(0x11, 1);
 				#endif
+
+				#if Current_Test
+				UI_EnableVox();
+				#endif
 				
 				UI_MotorControl(MC_LEFT_ON);
 				break;
@@ -2612,6 +2626,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			{
 				#if UI_TEST_MODE //test
 				UI_TestCmd(0x11, 0);
+				#endif
+
+				#if Current_Test
+				UI_DisableVox();
 				#endif
 				
 				UI_MotorControl(MC_RIGHT_ON);
@@ -2783,7 +2801,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 }
 //------------------------------------------------
 void UI_VolUpKey(void)
-{
+{	
 	if(tUI_State != UI_DISPLAY_STATE)
 		return;
 	
@@ -2806,10 +2824,11 @@ void UI_VolUpKey(void)
 	}
 	
 	UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
+
 }
 
 void UI_VolDownKey(void)
-{
+{	
 	if(tUI_State != UI_DISPLAY_STATE)
 		return;
 	
@@ -2831,24 +2850,6 @@ void UI_VolDownKey(void)
 	 	tUI_PuSetting.VolLvL.tVOL_UpdateLvL--;
 	}
 	UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
-
-	/*
-	//UI_PuPowerSaveModeSelection();
-
-	UI_PUReqCmd_t tPsCmd;
-	tPsCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
-	tPsCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
-	tPsCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
-	tPsCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
-	tPsCmd.ubCmd_Len  				= 3;
-	if(UI_SendRequestToBU(osThreadGetId(), &tPsCmd) != rUI_SUCCESS)
-	{
-		printd(DBG_ErrorLvl, "VOX Notify Fail !\n");
-		return;
-	}
-	tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = PS_VOX_MODE;
-	UI_EnableVox();
-	*/
 }
 //------------------------------------------------------------------------------
 uint8_t UI_GetAlarmStatus(void)
@@ -8037,7 +8038,7 @@ void UI_GetBatLevel(void)
 		ubBatLowCount++;
 		if(ubBatLowCount == 10)
 		{
-			//UI_PowerOff();
+			UI_PowerOff();
 		}
 	}
 	else
@@ -11384,8 +11385,8 @@ void UI_EnableVox(void)
 {
 	APP_EventMsg_t tUI_PsMessage = {0};	
 
-	if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
-		return;
+	//if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
+		//return;
 
 	LCDBL_ENABLE(UI_DISABLE);
 
@@ -11405,6 +11406,7 @@ void UI_DisableVox(void)
 	APP_EventMsg_t tUI_PsMessage = {0};
 	UI_PUReqCmd_t tPsCmd;
 
+	/*
 	if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
 		return;
 
@@ -11422,6 +11424,7 @@ void UI_DisableVox(void)
 				return;
 		}
 	}
+	*/
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
 	tUI_PsMessage.ubAPP_Message[1] = PS_VOX_MODE;
@@ -11986,7 +11989,7 @@ void UI_EngModeKey(void)
 	tOsdImgInfo.uwVSize  = uwLCD_GetLcdVoSize();
 	OSD_EraserImg1(&tOsdImgInfo);
 	for(i = 0; i < 10; i++)
-		uwUI_NumArray[i] = OSD2IMG_ENG_D0 + i;
+		uwUI_NumArray[i] = OSD2IMG_ENG_NUM0 + i;
 	tUI_EngOsdImg.pNumImgIdxArray = uwUI_NumArray;
 	for(i = 0; i < 26; i++)
 	{
@@ -11998,6 +12001,12 @@ void UI_EngModeKey(void)
 	for(i = 0; i < 4; i++)
 		uwUI_SymbolArray[i] = OSD2IMG_ENG_COLONSYM + i;
 	tUI_EngOsdImg.pSymbolImgIdxArray = uwUI_SymbolArray;
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_BLANKBAR, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 0;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	
 	EN_SetupOsdImgInfo(&tUI_EngOsdImg);
 	EN_OpenEnMode(TRUE);
 	tUI_State = UI_ENGMODE_STATE;

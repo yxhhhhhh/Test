@@ -113,48 +113,27 @@ uint8_t APP_CheckBootStatus(void)
 
 	while(1)
 	{
-		if(UI_GetUsbDet() == 1) //Usb On
+		if(ubRTC_GetKey() == 1)
 		{
-			if(ubRTC_GetKey() == 1)
+			checkCount++;
+			if(checkCount >= CHECK_COUNT)
 			{
-				checkCount++;
-				if(checkCount >= CHECK_COUNT)
-				{
-					printd(Apk_DebugLvl, "break###\n");
-					break;
-				}
-			}
-			else
-			{
-				checkCount = 0;
-				if(UI_GetBatChgFull() == 0)//µç³Ø³äÂú(APP_GetBatteryValue() == 100)
-				{
-					//Charge Full
-				}
+				break;
 			}
 		}
 		else
 		{
-			if(APP_GetBatteryValue() <= 10)
+			if(checkCount >= CHECK_COUNT)
 			{
 				break;
 			}
-			
-			if(ubRTC_GetKey() == 1)
-			{
-				checkCount++;
-				if(checkCount >= CHECK_COUNT)
-				{
-					printd(Apk_DebugLvl, "break@@@\n");
-					break;
-				}
-			}
 			else
 			{
-				printd(Apk_DebugLvl, "PowerOff!!!\n");
+				checkCount = 0;
 				RTC_PowerOff();
 			}
 		}
+		
 		TIMER_Delay_ms(200);
 		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
@@ -220,10 +199,6 @@ void APP_Init(void)
 	if(ubRTC_GetKey() == 0)
 	{
 		RTC_PowerOff();
-	}
-	else
-	{
-
 	}
 	#endif
 

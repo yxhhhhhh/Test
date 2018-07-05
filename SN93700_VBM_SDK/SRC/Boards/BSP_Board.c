@@ -27,9 +27,9 @@ void BSP_BoardInit(void)
 {
 	#if 1
 	GLB->PADIO9  = 3;
-	GLB->PADIO10  = 3;
-	GLB->PADIO37  = 3;
-	GLB->PADIO38  = 3;
+	GLB->PADIO10 = 3;
+	GLB->PADIO37 = 3;
+	GLB->PADIO38 = 3;
 
 	//! UART
 	GLB->PADIO22 = 2;
@@ -80,7 +80,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO17 = 0;
 	GLB->PADIO55 = 0;
 	//GLB->PADIO56 = 0;
-	GLB->PADIO57 = 0;
+	//GLB->PADIO57 = 0;
 	
 	//! BackLight
 	GLB->PADIO24 = 7;
@@ -94,7 +94,7 @@ void BSP_BoardInit(void)
 	//! USB_DET
 	GLB->PADIO11 = 7; //PWM11 /GLB->PADIO11 = 3会导致开机进不了系统,一直卡在开机logo
 	GLB->PADIO25 = 3;
-	GLB->PADIO39 = 7; //PWM9
+	GLB->PADIO39 = 3; //PWM9
 	GLB->PADIO53 = 0;
 
 	//! FCHG_ON
@@ -110,7 +110,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO14 = 3;
 	GLB->PADIO42 = 3;
 	GLB->PADIO56 = 0;
-
+	
 	#else //DEMO
 	//! UART
 	GLB->PADIO22 = 2;

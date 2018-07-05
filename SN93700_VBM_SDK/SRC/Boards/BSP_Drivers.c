@@ -80,6 +80,7 @@ void BSP_DriversInit(void)
 
 	//! CHG_FULL
 	GPIO->GPIO_OE0	= 0;
+
 	#else //DEMO
 	//! LED
 	GPIO->GPIO_OE2 	= 1;
