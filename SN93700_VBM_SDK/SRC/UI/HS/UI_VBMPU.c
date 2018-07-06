@@ -206,6 +206,7 @@ uint8_t ubDisplaymodeFlag = 0;
 
 uint8_t ubGetTempData = 25;
 uint8_t ubRealTemp = 25;
+uint8_t ubRealTempCheckCnt = 0;
 uint8_t ubHighAlarmOn = 0;
 uint8_t ubLowAlarmOn = 0;
 uint8_t ubHighAlarmTriggerFlag = 0;
@@ -575,9 +576,8 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 		if(FALSE == ubUI_PuStartUpFlag)
 		{
 			#if Current_Test
-			#else
-			if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
-				UI_EnableVox();
+			//if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+				//UI_EnableVox();
 			#endif
 			ubUI_PuStartUpFlag = TRUE;
 		}
@@ -846,11 +846,8 @@ void UI_EventHandles(UI_Event_t *ptEventPtr)
 	}
 }
 //------------------------------------------------------------------------------
-void UI_PowerKeyShort(void)
+void UI_PowerKeyDeal(void)
 {
-	if(ubFactoryModeFLag == 1)
-		return;
-
 	if(PWM->PWM_EN8 == 0)
 	{
 		LCDBL_ENABLE(UI_ENABLE);
@@ -859,6 +856,15 @@ void UI_PowerKeyShort(void)
 	{
 		LCDBL_ENABLE(UI_DISABLE);
 	}
+
+}
+
+void UI_PowerKeyShort(void)
+{
+	if(ubFactoryModeFLag == 1)
+		return;
+
+	UI_PowerKeyDeal();
 
 	printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
 }
@@ -955,10 +961,20 @@ void UI_MenuKey(void)
 					tOsdInfo.uwYStart = 279;	
 					tOSD_Img2(&tOsdInfo, OSD_QUEUE);	
 
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NOCAM2+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdInfo);
-					tOsdInfo.uwXStart = 503;
-					tOsdInfo.uwYStart = 360 - 80;	
-					tOSD_Img2(&tOsdInfo, OSD_UPDATE);
+					if(tUI_PuSetting.ubLangageFlag == 2)
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NOCAM2+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdInfo);
+						tOsdInfo.uwXStart = 503;
+						tOsdInfo.uwYStart = 360 - 80 - 5;
+						tOSD_Img2(&tOsdInfo, OSD_UPDATE);
+					}
+					else
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NOCAM2+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdInfo);
+						tOsdInfo.uwXStart = 503;
+						tOsdInfo.uwYStart = 360 - 80;	
+						tOSD_Img2(&tOsdInfo, OSD_UPDATE);
+					}
 					printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
 				}
 				else
@@ -2556,7 +2572,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{
 
-				#if UI_TEST_MODE //test
+				#if UI_TEST_MODE
 				UI_TestCmd(0x11, 1);
 				#endif
 
@@ -3396,8 +3412,10 @@ void UI_DrawAutoLcdSubMenuPage(void)
 
 void UI_AutoLcdSetSleepTimerEvent(void)
 {
-	printd(Apk_DebugLvl, "UI_AutoLcdSetSleepTimerEvent###\n");
-	LCDBL_ENABLE(UI_DISABLE);
+	printd(Apk_DebugLvl, "UI_AutoLcdSetSleepTimerEvent ubShowAlarmstate: %d.\n", ubShowAlarmstate);
+
+	if(ubShowAlarmstate == 0)
+		LCDBL_ENABLE(UI_DISABLE);
 }
 
 void UI_AutoLcdSetSleepTime(uint8_t SleepMode)
@@ -4889,6 +4907,10 @@ void UI_ShowAlarm(uint8_t type)
 
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 	ubShowAlarmstate = 1;
+	if(PWM->PWM_EN8 == 0)
+	{
+		LCDBL_ENABLE(UI_ENABLE);
+	}
 }
 
 void UI_PlayAlarmSound(uint8_t type)
@@ -6182,6 +6204,7 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 		
 		case LEFT_ARROW:
 		case EXIT_ARROW:
+			UI_GetPairCamInfo();
 			tUI_State = UI_SUBMENU_STATE;		
 			tOsdImgInfo.uwHSize  = 672;
 			tOsdImgInfo.uwVSize  = 729;
@@ -7531,15 +7554,29 @@ uint8_t UI_TempCToF(uint8_t cTemp)
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
+	uint8_t ubBuTemp = 0;
 	
-	ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+	ubBuTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+	if(ubRealTemp == ubBuTemp)
+	{
+		ubRealTempCheckCnt++;
+	}
+	else
+	{
+		ubRealTempCheckCnt = 0;
+	}
+	ubRealTemp = ubBuTemp;
+	//ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
 
 	if(ubRealTemp > 99)
 		ubRealTemp = 99;
 	//printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
 	if((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
 	{
-		UI_TempBarDisplay(ubRealTemp);
+		if(ubRealTempCheckCnt == 3)
+		{
+			UI_TempBarDisplay(ubRealTemp);
+		}
 	}
 }
 
@@ -10647,10 +10684,20 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwYStart = 279;	
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NOCAM2+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart = 503;
-					tOsdImgInfo.uwYStart = 360 - 80;
-					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+					if(tUI_PuSetting.ubLangageFlag == 2)
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NOCAM2+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart = 503;
+						tOsdImgInfo.uwYStart = 360 - 80 - 5;
+						tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+					}
+					else
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NOCAM2+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart = 503;
+						tOsdImgInfo.uwYStart = 360 - 80;
+						tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+					}
 					printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
 				}
 				else

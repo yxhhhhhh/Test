@@ -106,7 +106,7 @@ uint8_t APP_CheckBootStatus(void)
 {
 	#ifdef VBM_PU
 	
-	#if 0
+	#if 1
 	#define CHECK_COUNT		10
 	uint16_t checkCount = 0;
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
@@ -195,7 +195,7 @@ void APP_Init(void)
 	RTC_Init(RTC_TimerDisable);
 #endif
 
-	#if 0 //def VBM_PU //20180330
+	#if 0//def VBM_PU //20180330
 	if(ubRTC_GetKey() == 0)
 	{
 		RTC_PowerOff();
