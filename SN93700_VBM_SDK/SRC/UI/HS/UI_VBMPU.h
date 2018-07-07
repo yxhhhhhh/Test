@@ -11,9 +11,9 @@
 	\file		UI_VBMPU.h
 	\brief		User Interface Header file (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.7
-	\date		2017/11/30
-	\copyright	Copyright (C) 2017 SONiX Technology Co., Ltd. All rights reserved.
+	\version	1.8
+	\date		2018/06/29
+	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _UI_VBMPU_H_
@@ -963,4 +963,5 @@ void UI_SendNightModeToBu(void);
 uint8_t UI_GetBuVersion(void);
 void UI_FactoryStatusDisplay(void);
 uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len);
+void UI_EnterLongKey(void);
 #endif

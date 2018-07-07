@@ -28,7 +28,7 @@
 //------------------------------------------------------------------------------
 #define APP_EVENTQUEUE_SZ			30
 #define APP_PAIRING_TIMEOUT			60	//!< Unit: seconds
-#define osHeapSize                  ((size_t) (768*1024))
+#define osHeapSize                  ((size_t) (820*1024))
 
 typedef enum
 {

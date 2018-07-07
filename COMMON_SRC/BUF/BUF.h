@@ -27,10 +27,10 @@
 #define BUF_NUM_SEN_YUV				5
 
 #define BUF_NUM_VDO_BS				10
-#define BUF_NUM_VDO_BS0				10
-#define BUF_NUM_VDO_BS1				10
-#define BUF_NUM_VDO_BS2				10
-#define BUF_NUM_VDO_BS3				10
+#define BUF_NUM_VDO_BS0				BUF_NUM_VDO_BS	//10
+#define BUF_NUM_VDO_BS1				BUF_NUM_VDO_BS	//10
+#define BUF_NUM_VDO_BS2				BUF_NUM_VDO_BS	//10
+#define BUF_NUM_VDO_BS3				BUF_NUM_VDO_BS	//10
 
 #define BUF_NUM_ADC					3
 #define BUF_NUM_DAC					3

@@ -11,8 +11,8 @@
 	\file		KNL.h
 	\brief		Kernel Control header file
 	\author		Justin Chen
-	\version	1.5
-	\date		2018/04/23
+	\version	1.9
+	\date		2018/06/29
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -35,8 +35,8 @@
 #define KNL_MAX_NODE_NUM				16		//!< Maximum Node Number
 #define KNL_SRC_NUM						20		//!< Source Number
 
-//#define KNL_ADO_SUB_PKT_LEN				48		//!< Audio Sub-Packet Length	
-#define KNL_ADO_SUB_PKT_LEN				36		//!< Audio Sub-Packet Length	
+//#define KNL_ADO_SUB_PKT_LEN				48		//!< Audio Sub-Packet Length
+#define KNL_ADO_SUB_PKT_LEN				36		//!< Audio Sub-Packet Length
 
 #define KNL_AVG_PLY_CNT_TH				4
 #define KNL_ADO_DEBUG_EN				0
@@ -47,14 +47,17 @@
 #define KNL_LCD_FUNC_ENABLE				1
 #endif
 
-#define KNL_RFPWR_CTRL_ENABLE			0
+#define KNL_SD_FUNC_ENABLE				1
 #define KNL_REC_FUNC_ENABLE				0
+
 #define KNL_USBH_FUNC_ENABLE            0
+
+#define KNL_RFPWR_CTRL_ENABLE			0
 
 typedef enum
 {	
 	KNL_FPS_OUT		= 0,			//!< Output FPS
-	KNL_FPS_IN,						//!< Input FPS	
+	KNL_FPS_IN,						//!< Input FPS
 	KNL_BB_FRM_OK
 }KNL_FPS_TYPE;
 
@@ -1501,6 +1504,8 @@ void KNL_TurnOffTuningTool(void);
 \return Tuning tool mode
 */
 KNL_TuningMode_t KNL_GetTuningToolMode(void);
+
+void KNL_SDUpgradeFwFunc(void);
 
 //Extern
 extern osMessageQId KNL_ProcessQueue;

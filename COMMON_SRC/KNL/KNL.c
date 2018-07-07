@@ -32,9 +32,11 @@
 #include "USBD_API.h"
 #include "USBH_API.h"
 #include "RTC_API.h"
+#include "FWU_API.h"
 #include "LCD.h"
 #include "SEN.h"
 #include "TIMER.h"
+#include "WDT.h"
 #include "RC.h"
 #include "BSP.h"
 #include "VDO.h"
@@ -177,7 +179,7 @@ uint32_t ulKNL_FrmTRxNumTemp[KNL_MAX_ROLE];		//For Output
 uint8_t ubKNL_WorSts;
 
 //For FS
-FS_KNL_PARA_t tAPP_Fs;
+FS_KNL_PARA_t tKNL_FsParam;
 
 //For Record
 uint8_t ubKNL_StartRecFlag = 0;
@@ -370,10 +372,6 @@ void KNL_SetAdoInfo(ADO_KNL_PARA_t tAdoInfo)
 	tKNL_AdoInfo.AAC_De_buf_size     		= tAdoInfo.AAC_De_buf_size;	
 	tKNL_AdoInfo.Rec_buf_th					= tAdoInfo.Rec_buf_th;
 	tKNL_AdoInfo.Ply_buf_th        			= tAdoInfo.Ply_buf_th;
-	tKNL_AdoInfo.Audio32_En_buf_th 			= tAdoInfo.Audio32_En_buf_th;
-	tKNL_AdoInfo.Audio32_De_buf_th 			= tAdoInfo.Audio32_De_buf_th;
-	tKNL_AdoInfo.AAC_En_buf_th     			= tAdoInfo.AAC_En_buf_th;
-	tKNL_AdoInfo.AAC_De_buf_th     			= tAdoInfo.AAC_De_buf_th;
 }
 //------------------------------------------------------------------------
 
@@ -673,11 +671,6 @@ void KNL_BufInit(void)
 	uint8_t ubSrc;
 	uint32_t i;	
 	uint32_t ulAddr;
-#if KNL_REC_FUNC_ENABLE
-    uint32_t ulNeedMemSize;
-    uint32_t ulTotalMemSize;
-    uint32_t ulResiMemSize;
-#endif
 #if KNL_USBH_FUNC_ENABLE
 	uint8_t uvc_stream_num = 0;
     USBH_UVC_FRAME_INFO uvc_frame_info;
@@ -1004,19 +997,24 @@ void KNL_BufInit(void)
 			}
 		}
 	}	
-	
-#if KNL_REC_FUNC_ENABLE
+
+#if KNL_SD_FUNC_ENABLE
     //FS
-	if(1)
+	if(ubSD_ChkIFSetup())
 	{
+		uint32_t ulNeedMemSize;
+
         ulNeedMemSize = ulFS_GetTotalBufSize(FS_RES_MODE_HDx1);
 		printd(DBG_Debug3Lvl, "FS Buf:0x%X\r\n",ulNeedMemSize);
 		BUF_BufInit(BUF_FS,1,ulNeedMemSize,0);
 	}
-    
+
+	#if KNL_REC_FUNC_ENABLE
     //REC
-    if(1)
+    if(ubSD_ChkIFSetup())
     {
+		uint32_t ulTotalMemSize, ulResiMemSize;
+
         ulTotalMemSize = 0x2000000;
         ulResiMemSize = ulTotalMemSize-(ulBUF_GetBlkBufAddr(0,BUF_FS)+ulBUF_AlignAddrTo1K(ulFS_GetTotalBufSize(FS_RES_MODE_HDx1)));
         BUF_BufInit(BUF_REC,1,ulResiMemSize,0);
@@ -1025,10 +1023,11 @@ void KNL_BufInit(void)
         Media_FileFormatConfigInit();
         printd(DBG_Debug3Lvl, "MaxRECTime %d minutes\r\n",ulREC_ModeSet(ulResiMemSize));
     }
+	#endif
 #endif
-    
+
 #if KNL_USBH_FUNC_ENABLE	
-	memset(&uvc_frame_info, 0, sizeof(USBH_UVC_FRAME_INFO));    
+	memset(&uvc_frame_info, 0, sizeof(USBH_UVC_FRAME_INFO));
     
 #if defined (CONFIG_DUAL_HOST)
 	uvc_stream_num = 4;
@@ -1498,19 +1497,19 @@ void KNL_BlockInit(void)
 	USBD_Start();
 #endif
 
-	SD_FuncDisable;
-#if KNL_REC_FUNC_ENABLE
+#if KNL_SD_FUNC_ENABLE
     //For FS
-    if(1)
+    if(ubSD_ChkIFSetup())
     {
-        tAPP_Fs.ulFS_BufStartAddr = ulBUF_GetBlkBufAddr(0,BUF_FS);
-        tAPP_Fs.Mode = FS_RES_MODE_HDx1;
-        FS_Init(&tAPP_Fs);
+        tKNL_FsParam.ulFS_BufStartAddr = ulBUF_GetBlkBufAddr(0,BUF_FS);
+        tKNL_FsParam.Mode = FS_RES_MODE_HDx1;
+        FS_Init(&tKNL_FsParam);
         printd(DBG_Debug3Lvl, "FS buf %d bytes\r\n",ulFS_GetTotalBufSize(FS_RES_MODE_HDx1));
     }
-    
+
+	#if KNL_REC_FUNC_ENABLE	
     //For REC
-    if(1)
+	if(ubSD_ChkIFSetup())
     {
         vREC_AdoEnableSet(1);
 
@@ -1538,6 +1537,9 @@ void KNL_BlockInit(void)
         // Test Send Video and Audio Frame
         APP_1MSCounter();
     }
+	#endif
+#else
+	SD_FunctionDisable;
 #endif
 
 	USBH_FuncDisable;
@@ -8957,6 +8959,42 @@ uint8_t ubKNL_ChkSenStateChangeDone(void)
 #else
 	return 1;
 #endif
+}
+//------------------------------------------------------------------------------
+void KNL_SDUpgradeFwFunc(void)
+{
+	KNL_SRC tKNL_SrcNum;
+	typedef	void (*pvVAExecFunc)(uint8_t);
+	pvVAExecFunc pAdoExecFunc[] = {KNL_AdoStop, KNL_AdoStart};
+	pvVAExecFunc pVdoExecFunc[] = {KNL_VdoStop, KNL_VdoStart};
+	uint8_t ubExecIdx = 0;
+
+	for(ubExecIdx = 0; ubExecIdx < 2; ubExecIdx++)
+	{
+		for(tKNL_SrcNum = KNL_SRC_1_MAIN; tKNL_SrcNum <= KNL_SRC_4_MAIN; tKNL_SrcNum++)
+		{
+			pAdoExecFunc[ubExecIdx](tKNL_SrcNum);
+			pVdoExecFunc[ubExecIdx](tKNL_SrcNum);
+		}
+		for(tKNL_SrcNum = KNL_SRC_1_SUB; tKNL_SrcNum <= KNL_SRC_4_SUB; tKNL_SrcNum++)
+		{
+			pAdoExecFunc[ubExecIdx](tKNL_SrcNum);
+			pVdoExecFunc[ubExecIdx](tKNL_SrcNum);
+		}
+		for(tKNL_SrcNum = KNL_SRC_1_AUX; tKNL_SrcNum <= KNL_SRC_4_AUX; tKNL_SrcNum++)
+		{
+			pAdoExecFunc[ubExecIdx](tKNL_SrcNum);
+			pVdoExecFunc[ubExecIdx](tKNL_SrcNum);
+		}
+		if((!ubExecIdx) && FWU_SdUpgradeStart(ulBUF_GetFreeAddr()))
+		{
+			printd(DBG_CriticalLvl, "FW Upgrade Success ...\n");
+			WDT_RST_Enable(WDT_CLK_EXTCLK, 0);
+			while(1);
+		}
+		else
+			printd(DBG_ErrorLvl, "FW Upgrade Fail !!!\n");
+	}
 }
 //------------------------------------------------------------------------------
 uint8_t ubKNL_JPEGEncode(uint16_t uwH, uint16_t uwV, uint32_t ulVdoAddr, uint32_t ulJpgAddr)

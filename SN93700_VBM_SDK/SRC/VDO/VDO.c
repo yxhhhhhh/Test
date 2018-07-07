@@ -67,12 +67,12 @@ void VDO_Init(void)
 	KNL_SetVdoFps(15);
 #endif
 #ifdef VBM_PU
-	ubVDO_PathRstFlag = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
-	tVDO_SvPlayRole = (VDO_DISP_TYPE/*tKNL_GetDispType()*/ == KNL_DISP_SINGLE)?KNL_STA1:KNL_NONE;
-	//! Display Setting
-	tVDO_Status.tVdoDispType = VDO_DISP_TYPE;//tKNL_GetDispType();
+	ubVDO_PathRstFlag  = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
+	tVDO_SvPlayRole    = (VDO_DISP_TYPE == KNL_DISP_SINGLE)?KNL_STA1:KNL_NONE;
 	tKNL_DualBURole[0] = KNL_NONE;
 	tKNL_DualBURole[1] = KNL_NONE;
+	//! Display Setting
+	tVDO_Status.tVdoDispType = VDO_DISP_TYPE;
 	KNL_VdoDisplaySetting();
 	KNL_SetPlyMode(KNL_NORMAL_PLY);				//!< Normal Play
 	KNL_SetVdoFps(15);
@@ -182,7 +182,7 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 			tVDO_KNLRole = *pVDO_BURole;
 			if((tVDO_SvPlayRole == tVDO_KNLRole) && (FALSE == ubVDO_DualPathFlag))
 				break;
-			tVDO_KNLSrcLocate.ubSetupFlag = FALSE;			
+			tVDO_KNLSrcLocate.ubSetupFlag = FALSE;
 			tVDO_KNLSrcLocate.tSrcNum[0]  = tVDO_KNLSrcNum = tVDO_KNLRoleInfo[tVDO_KNLRole].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum;
 			if(((TRUE == ubVDO_ResChgFlag) || (TRUE == ubVDO_PathRstFlag)) &&
 			   ((tKNL_DualBURole[0] != tVDO_KNLRole) && (tKNL_DualBURole[1] != tVDO_KNLRole)))

@@ -28,6 +28,7 @@
 #include "MMU_API.h"
 #include "DMAC_API.h"
 #include "BB_API.h"
+#include "SD_API.h"
 #include "VDO.h"
 #include "ADO.h"
 #include "RC.h"
@@ -194,7 +195,6 @@ void APP_Init(void)
 #else
 	RTC_Init(RTC_TimerDisable);
 #endif
-
 	#if 0//def VBM_PU //20180330
 	if(ubRTC_GetKey() == 0)
 	{
@@ -209,8 +209,8 @@ void APP_Init(void)
     {
         printd(DBG_ErrorLvl, "RTOS initial fail\n");
     }
-
-	if (ubAPP_SfWpGpioPin <= 13) {
+	if(ubAPP_SfWpGpioPin <= 13)
+	{
 		printd(DBG_InfoLvl, "SF_WP=GPIO%d\n",ubAPP_SfWpGpioPin);
 	}
 	SF_SetWpPin(ubAPP_SfWpGpioPin);
@@ -225,9 +225,7 @@ void APP_Init(void)
 	#endif
 	
 	FWU_Init();
-	
 	UI_Init(&APP_EventQueue);
-	
 	tAPP_StsReport.tAPP_State  	= APP_POWER_OFF_STATE;
 	ulAPP_WaitTickTime      	= 0;	//!< osWaitForever;
 	APP_StateCtrlFunc 			= APP_StateFlowCtrl;
@@ -284,7 +282,6 @@ void APP_PowerOnFunc(void)
 	uint32_t ulBUF_StartAddr = 0;
 
 	APP_LoadKNLSetupInfo();
-
 #if USBD_ENABLE
 	//! USB Device initialization
 	USBD_Init(tAPP_KNLInfo.tUsbdClassMode);
@@ -296,6 +293,9 @@ void APP_PowerOnFunc(void)
 	//! System initialization
 	DMAC_Init();
 	PAIR_Init(&APP_EventQueue);
+
+	//! SD Interface Setup
+	SD_SetupIF(SD_1);
 
 	ulBUF_StartAddr  = ulMMU_GetBufStartAddr();
 	//! UI Buffer Setup
@@ -541,14 +541,14 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			ADO_KNLSysInfoSetup(tAPP_KNLInfo.tKNL_Role);
 		#endif
 			APP_UpdateKNLSetupInfo();
+		#ifdef VBM_PU
+			KNL_ResetLcdChannel();
+		#endif
 			break;
 		}
 		default:
 			return;
 	}
-#ifdef VBM_PU
-	KNL_ResetLcdChannel();
-#endif
 	VDO_Start();
 	ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 }
@@ -729,6 +729,7 @@ void APP_FWUgradeSetup(void)
 	FWU_MODE_t tAPP_FwuMode = FWU_USBDMSC;
 	char *pFW_Ver = SN937XX_FW_VERSION, *p, *q;
 	FWU_MSCParam_t tAPP_FWUParam = {{0},{0},{0}};
+	FWU_SDParam_t  tAPP_FWUSdParam;
 
 	strncpy(tAPP_FWUParam.cVolumeLable, SN937XX_VOLUME_LABLE, sizeof(tAPP_FWUParam.cVolumeLable));
 	for(p=pFW_Ver; (q=strchr(p, '.'))!=NULL; p=q+1)
@@ -740,6 +741,9 @@ void APP_FWUgradeSetup(void)
 		tAPP_FwuMode = FWU_DISABLE;
 #endif
 	FWU_Setup(tAPP_FwuMode, &tAPP_FWUParam);
+	tAPP_FWUSdParam.ubTargetFileNameLen = 9;
+	strncpy(tAPP_FWUSdParam.cTargetFileName, "SN937XXFW", tAPP_FWUSdParam.ubTargetFileNameLen);	
+	FWU_Setup(FWU_SDCARD, &tAPP_FWUSdParam);
 	FWU_Enable();
 }
 //------------------------------------------------------------------------------
@@ -891,7 +895,7 @@ void APP_Start(void)
 {
 	//! Kernel Setup
 	KNL_BlockInit();
-	
+
 	//! Video Start
 	#ifdef VBM_BU	
 	VDO_Start();
@@ -916,4 +920,3 @@ void APP_Start(void)
 	UI_SwitchCameraSource();
 #endif
 }
-//------------------------------------------------------------------------------

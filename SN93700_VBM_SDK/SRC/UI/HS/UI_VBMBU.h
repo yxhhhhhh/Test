@@ -104,7 +104,6 @@ typedef struct
 
 typedef struct
 {
-//	uint32_t	   		  ulUI_DevStsTag;
 	char 		   		  cbUI_DevStsTag[11];
 	char 		  		  cbUI_FwVersion[11];
 	uint32_t 			  ulCAM_ID;

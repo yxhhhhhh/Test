@@ -28,7 +28,7 @@
 #include "RTC_API.h"
 #include "CIPHER_API.h"
 #include "DMAC_API.h"
-#include "SDIO_API.h"
+#include "SD_API.h"
 #include "APBC.h"
 #include "APP_CFG.h"
 
@@ -42,7 +42,7 @@ void BSP_DriversInit(void)
 	CIPHER_Init();
 	CQ_Init();
     APBC_Init();
-
+	SD_Init();
 	#if 1
 	//! LED
 	//GPIO->GPIO_OE3 	= 1;
@@ -109,7 +109,8 @@ void BSP_DriversInit(void)
 	#endif
 	
 	//! RTC GPIO1
-	RTC_SetGPO_1(1, RTC_PullDownDisable);		
+	RTC_SetGPO_1(1, RTC_PullDownDisable);	
+	
 	printd(DBG_CriticalLvl, "SONiX SN9370X High Speed Mode Start!\n");
 }
 #endif
@@ -118,6 +119,7 @@ void BSP_DriversInit(void)
 void BSP_DriversInit(void)
 {
 	WDT_Disable(WDT_RST);
+	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	UART_Init(UART_2, UART_CLOCK_96M, BR_115200, UART_1STOPBIT, NULL);
 	TIMER_Init();
 	CIPHER_Init();
@@ -138,10 +140,14 @@ void BSP_DriversInit(void)
 {
 	WDT_Disable(WDT_RST);
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
+#ifdef CFG_UART1_ENABLE
+	UART_Init(UART_1, UART_CLOCK_96M, BR_115200, UART_1STOPBIT, NULL);
+#endif
 	UART_Init(UART_2, UART_CLOCK_96M, BR_115200, UART_1STOPBIT, NULL);
 	TIMER_Init();
 	CIPHER_Init();
-	CQ_Init();	
+	CQ_Init();
+	SD_Init();
 
 	//! LED
 	GPIO->GPIO_OE1 	= 1;

@@ -11,20 +11,20 @@
 	\file		UI_VBMPU.c
 	\brief		User Interface of VBM Parent Unit (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.7
-	\date		2017/11/30
-	\copyright	Copyright (C) 2017 SONiX Technology Co., Ltd. All rights reserved.
+	\version	1.8
+	\date		2018/06/29
+	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <string.h>
 #include "UI_VBMPU.h"
 #include "SF_API.h"
 #include "EN_API.h"
+#include "FWU_API.h"
 #include "TIMER.h"
+#include "VDO.h"
 #include "LCD.h"
 #include "Buzzer.h"
-#include "FWU_API.h"
-#include "VDO.h"
 #include "SADC.h"
 #include "WDT.h"
 
@@ -35,6 +35,7 @@
 
 #define Current_Test	0
 
+#define SD_UPDATE_TEST	0
 
 /**
  * Key event mapping table
@@ -50,15 +51,15 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 	{AKEY_MENU, 		0,			UI_MenuKey,					NULL},
 	{AKEY_UP, 			0,			UI_UpArrowKey,				NULL},
 	{AKEY_DOWN, 		0,			UI_DownArrowKey,			NULL},
-	{AKEY_DOWN, 		50,			NULL,						NULL},
+	{AKEY_DOWN, 		50,			UI_EngModeKey,				NULL},
 	{AKEY_LEFT, 		0,			UI_LeftArrowKey,			NULL},
 	{AKEY_LEFT, 		30,			NULL,						NULL},
 	{AKEY_RIGHT, 		0,			UI_RightArrowKey,			NULL},
 	{AKEY_RIGHT, 		30,			NULL,						NULL},
 	{AKEY_ENTER, 		0,			UI_EnterKey,				NULL},
-	{AKEY_ENTER, 		20,			NULL, 						NULL},
-	{AKEY_PS,			0,			NULL,						NULL},
-	{AKEY_PS,			20,			NULL,						NULL},
+	{AKEY_ENTER, 		20,			UI_EnterLongKey, 			NULL},
+	{AKEY_PS,			0,			UI_BuPowerSaveKey,			NULL},
+	{AKEY_PS,			20,			UI_PuPowerSaveKey,			NULL},
 	{AKEY_PTT,			0,			UI_PushTalkKey,				NULL},
 	{PKEY_ID0,			0,			UI_PowerKeyShort,			NULL},
 	{PKEY_ID0, 			20,			UI_PowerKey,				NULL},
@@ -119,7 +120,7 @@ ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n29p8DB, R
 //uint32_t ulUI_BLTable[] = {0x100, 0x118, 0x200, 0x400, 0x600, 0x700, 0x800, 0x0900, 0xA00};
 uint32_t ulUI_BLTable[] = {0, 4, 16, 28, 40, 52, 64, 76, 88};
 
-
+osMutexId UI_PUMutex;
 static UI_SubMenuCamNum_t tCamSelect;
 static UI_CamViewSelect_t tCamViewSel;
 static UI_CamViewSelect_t tCamPreViewSel;
@@ -435,6 +436,7 @@ void UI_OnInitDialog(void)
 	//GPIO->GPIO_O1 	= 0;
 	//GPIO->GPIO_O0 	= 0;
 	//GPIO->GPIO_O13 	= 0;
+	
 	//BUZ_PlayPowerOnSound();
 	
 	if (wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) == RTC_WATCHDOG_CHK_TAG) {
@@ -498,7 +500,6 @@ void UI_StateReset(void)
 	tUI_State 		 		  = UI_DISPLAY_STATE;
 	tUI_SyncAppState		  = APP_STATE_NULL;
 	ulUI_LogoIndex			  = OSDLOGO_BOOT;
-
 	printd(Apk_DebugLvl, "UI_StateReset###\n");
 
 	tUI_MenuItem.ubItemIdx 	  = BRIGHT_ITEM;
@@ -511,15 +512,6 @@ void UI_StateReset(void)
 	UI_LoadDevStatusInfo();
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
 	
-	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
-	{
-		printd(DBG_ErrorLvl, "Calendar base setting fail!\n");
-		//return;
-	}
-	if ((wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_PWRSTS_KEEP_TAG)
-	&& (wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_WATCHDOG_CHK_TAG)) {
-		RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-	}
 }
 //------------------------------------------------------------------------------
 void UI_UpdateAppStatus(void *ptAppStsReport)
@@ -545,7 +537,6 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 			UI_ReportBuConnectionStatus(pAppStsRpt->ubAPP_Report);
 			break;
 		case APP_VWMODESTS_RPT:
-			//tUI_PuSetting.ubScanModeEn = pAppStsRpt->ubAPP_Report[0];
 			if (pAppStsRpt->ubAPP_Report[0] != SCAN_VIEW)
 				UI_DisableScanMode();
 			break;
@@ -661,7 +652,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	
 	osMutexWait(UI_PUMutex, osWaitForever);
 	UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
-
 	//printd(Apk_DebugLvl, "UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	switch(tUI_SyncAppState)
@@ -887,14 +877,12 @@ void UI_PowerKey(void)
 	}
 	
 	BUZ_PlayPowerOffSound();
-	//UI_UpdateDevStatusInfo(); //20180321
 	osDelay(600);			//wait buzzer play finish
 	LCDBL_ENABLE(UI_DISABLE);
 	//POWER_LED_IO  = 0;
 	//SIGNAL_LED_IO = 0;
-
 	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
-	RTC_SetGPO_1(0, RTC_PullDownEnable);	
+	RTC_SetGPO_1(0, RTC_PullDownEnable);
 	printd(Apk_DebugLvl, "UI_PowerKey Power OFF!\n");
 	RTC_PowerDisable();
 	while(1);
@@ -1161,6 +1149,14 @@ void UI_EnterKey(void)
 		default:
 			break;
 	}
+}
+//------------------------------------------------------------------------------
+void UI_EnterLongKey(void)
+{
+	#if SD_UPDATE_TEST
+	BUZ_PlaySingleSound();
+	KNL_SDUpgradeFwFunc();
+	#endif
 }
 //------------------------------------------------------------------------------
 void UI_ShowColorSettingValue(uint8_t ubValue)
@@ -1804,7 +1800,7 @@ void UI_CameraSelectionKey(void)
 		uwStartIdx = OSD2IMG_SELCAM4TENABLE_ICON;
 		uwDisplayImgIdx = (uwStartIdx - OSD2IMG_SELCAM1ONLINE_ICON);
 		tOSD_Img2(&tOsdImgInfo[uwDisplayImgIdx], OSD_QUEUE);
-		tOSD_Img2(&tOsdImg4TInfo[((tUI_PuSetting.ubPairedBuNum > 1)?0:1)], OSD_QUEUE);
+		tOSD_Img2(&tOsdImg4TInfo[((tUI_PuSetting.ubPairedBuNum >= 1)?0:1)], OSD_QUEUE);
 		tOSD_Img2(&tOsdImg4TInfo[((tUI_PuSetting.ubPairedBuNum > 1)?2:3)], OSD_QUEUE);
 		ubSelItem = (tCamViewSel.tCamViewType == QUAL_VIEW)?QUAL_TYPE_ITEM:
 		            (tCamViewSel.tCamViewType == DUAL_VIEW)?DUAL_TYPE_ITEM:
@@ -2075,6 +2071,9 @@ void UI_ChangeAudioSource(UI_ArrowKey_t tArrowKey)
 			break;
 		case RIGHT_ARROW:
 			if((tAdoCamNumSel + 1) >= tUI_PuSetting.ubTotalBuNum)
+				return;
+			if((tUI_CamStatus[tAdoCamNumSel + 1].ulCAM_ID == INVALID_ID) ||
+			   (tUI_CamStatus[tAdoCamNumSel + 1].tCamConnSts == CAM_OFFLINE))
 				return;
 			++tAdoCamNumSel;
 			break;
@@ -7685,7 +7684,7 @@ void UI_EnableMotor(uint8_t value)
 	if(UI_SendRequestToBU(osThreadGetId(), &tUI_motorReqCmd) != rUI_SUCCESS)
 	{
 		printd(DBG_ErrorLvl, "UI_EnableMotor Fail!\n");
-	}
+	}
 
 	if(value == 0)
 	{
@@ -8255,7 +8254,7 @@ void UI_CheckLinkFunc(void)
 {
 	
 }
-//------------------------------------------------------------------------------
+//------------------------------------------------
 #define CAMS_SET_ITEM_OFFSET	50
 /*
 void UI_DrawCamsSubMenuPage(void)
@@ -10095,6 +10094,8 @@ UI_CamNum_t UI_ChangeSelectCamNum4UiMenu(UI_CamNum_t *tCurrentCamNum, UI_ArrowKe
 			{
 				if((tUI_PuSetting.ubPairedBuNum > 1) && (tCamNum > DUAL_TYPE_ITEM))
 					return (UI_CamNum_t)(tCamNum-1);
+				else if((tUI_PuSetting.ubPairedBuNum == 1) && (tCamNum > DUAL_TYPE_ITEM))
+					return (UI_CamNum_t)(tCamNum-2);
 				if(tCamNum == DUAL_TYPE_ITEM)
 					tCamNum = CAM_4T;
 			}
@@ -10117,7 +10118,7 @@ UI_CamNum_t UI_ChangeSelectCamNum4UiMenu(UI_CamNum_t *tCurrentCamNum, UI_ArrowKe
 					return tMaxCamNum;
 			}
 			tChangeCamNum = tMaxCamNum;
-			for(;tCamNum < tMaxCamNum; tCamNum++)
+			for(;tCamNum < (tMaxCamNum - 1); tCamNum++)
 			{
 				if((tUI_CamStatus[tCamNum+1].ulCAM_ID != INVALID_ID) &&
 				   (tUI_CamStatus[tCamNum+1].tCamConnSts == CAM_ONLINE))
@@ -10127,7 +10128,7 @@ UI_CamNum_t UI_ChangeSelectCamNum4UiMenu(UI_CamNum_t *tCurrentCamNum, UI_ArrowKe
 				}
 			}
 			if((DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum) && (tChangeCamNum == tMaxCamNum))
-				tChangeCamNum = (tUI_PuSetting.ubPairedBuNum > 1)?(UI_CamNum_t)DUAL_TYPE_ITEM:(UI_CamNum_t)QUAL_TYPE_ITEM;
+				tChangeCamNum = (tUI_PuSetting.ubPairedBuNum >= 1)?(UI_CamNum_t)DUAL_TYPE_ITEM:(UI_CamNum_t)QUAL_TYPE_ITEM;
 			break;
 		default:
 			break;
@@ -11169,7 +11170,7 @@ void UI_EnterLocalAdoTest_RX(void)
 	tOsdImgInfo.uwYStart = 863;
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 
-	ADO_SelfTest_Init(5);
+	ADO_SelfTest_Init(); //ADO_SelfTest_Init(5);
 	ADO_SelfTest_Record();
 	ADO_SelfTest_Play();
 	ADO_SelfTest_Close();

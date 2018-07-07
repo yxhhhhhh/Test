@@ -455,7 +455,10 @@ void UI_SystemSetup(void)
 	ADO_Noise_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
 	UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
 	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
-	UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
+	if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
+		ubUI_SyncDisVoxFlag = TRUE;
+	else
+		UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
     MD_ReportReadyCbFunc(UI_SetMotionEvent);
     MD_SetMdState(MD_UNSTABLE);
 }
@@ -559,9 +562,9 @@ void UI_DisableVox(void)
 	tUI_VoxMsg.ubAPP_Message[2] = FALSE;
 	UI_SendMessageToAPP(&tUI_VoxMsg);
 	tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
-	UI_UpdateDevStatusInfo();
 //	tUI_BuStsInfo.tCamScanMode = CAMSET_ON;
 //	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
+	UI_UpdateDevStatusInfo();
 	printd(DBG_InfoLvl, "		=> VOX Mode Disable\n");
 }
 //------------------------------------------------------------------------------
@@ -1005,7 +1008,6 @@ void UI_UpdateDevStatusInfo(void)
 	uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
 
 	osMutexWait(APP_UpdateMutex, osWaitForever);
-	//tUI_BuStsInfo.ulUI_DevStsTag = 0x93700;
 	memcpy(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1);
 	memcpy(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1);
 	SF_DisableWrProtect();
@@ -1263,7 +1265,7 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 			if(BuPlayRecordState == 0)
 			{
 				BuPlayRecordState = 1;
-				ADO_SelfTest_Init(10);
+				ADO_SelfTest_Init(); //ADO_SelfTest_Init(10); 
 				ADO_SelfTest_Record();
 				ADO_SelfTest_Play();
 				ADO_SelfTest_Close();

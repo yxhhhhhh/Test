@@ -11,8 +11,8 @@
 	\file		ADO_API.h
 	\brief		Audio header file
 	\author		Chinwei Hsu/Bruce Hsu
-	\version	2.23
-	\date		2018/06/11
+	\version	2.24
+	\date		2018/06/15
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -21,9 +21,10 @@
 
 #include "_510PF.h"
 
-#define ADO_AUDIO32 	1
+#define ADO_AUDIO32 			1
 #define ADO_AUDIO32_MAX_NUM 	7
-#define ADO_SRC_NUM		4
+#define ADO_SRC_NUM				4
+#define ADO_SELF_TEST_LENGTH	5
 
 extern osMessageQId tADO_EncodeQueue;       //!< Audio event queue for external
 extern osMessageQId tADO_EncodeQueueHandle;
@@ -485,13 +486,9 @@ typedef struct KNL_ADO_PARAMETER
 	ADO_BUFFERSIZE AAC_En_buf_size;
 	ADO_BUFFERSIZE AAC_De_buf_size;
 	ADO_BUFFERSIZE Alarm_buf_size;
-		
+	
 	ADO_BUFFERTH Rec_buf_th;            //!< ADC buffer threshold
-	ADO_BUFFERTH Ply_buf_th;            //!< DAC buffer threshold	
-	ADO_BUFFERTH Audio32_En_buf_th;
-	ADO_BUFFERTH Audio32_De_buf_th;	
-	ADO_BUFFERTH AAC_En_buf_th;
-	ADO_BUFFERTH AAC_De_buf_th;
+	ADO_BUFFERTH Ply_buf_th;            //!< DAC buffer threshold
 	
 	uint32_t ulADO_BufStartAddr;        //!< Audio buffer start address(4-byte alingment!!)
 }ADO_KNL_PARA_t;
@@ -503,12 +500,9 @@ typedef struct WavPlayInfo{
 //------------------------------------------------------------------------------
 typedef struct AdoSelfTestInfo{
 	uint32_t ulInitFlag;
-	uint32_t ulTestLength;	//unit:seconds
-	uint32_t ulOneSecDataSize;	//unit:bytes
 	uint32_t ulRecDelayCycle;	//unit:ms
 	uint32_t ulPlyDelayCycle;	//unit:ms
 	uint32_t ulRecordSize;	//unit:bytes
-	uint32_t ulRecordStarAddr;
 	uint32_t ulPlaySize;	//unit:bytes
 	uint32_t ulOriginAdcEnStatus;
 	uint32_t ulOriginSigDelAdcBootGainStatus;
@@ -546,11 +540,7 @@ typedef struct AUDIO_METADATA
 	ADO_BUFFERSIZE Alarm_buf_size;
 	
 	ADO_BUFFERTH Rec_buf_th;                //!< ADC buffer threshold
-	ADO_BUFFERTH Ply_buf_th;                //!< DAC buffer threshold	
-	ADO_BUFFERTH Audio32_En_buf_th;
-	ADO_BUFFERTH Audio32_De_buf_th;
-	ADO_BUFFERTH AAC_En_buf_th;
-	ADO_BUFFERTH AAC_De_buf_th;
+	ADO_BUFFERTH Ply_buf_th;                //!< DAC buffer threshold
 	
 	ADO_BUF_MONIT_t Rec_BufMonit;           //!< ADC buffer index monitor
 	ADO_BUF_MONIT_t Ply_BufMonit;           //!< DAC buffer index monitor
@@ -560,6 +550,8 @@ typedef struct AUDIO_METADATA
 	
 	ADO_BUF_MONIT_t Audio32_En_BufMonit;
 	ADO_BUF_MONIT_t Audio32_De_BufMonit;
+	
+	ADO_BUF_MONIT_t SelfTest_BufMonit;
 	
 	ADO_BUF_MONIT_t AAC_En_BufMonit;
 	ADO_BUF_MONIT_t AAC_De_BufMonit;
@@ -1119,19 +1111,18 @@ ADO_WAV_STATE tADO_GetWavState(void);
 void ADO_LatencySetting(uint8_t ulSrcNum, uint32_t ulTargetLatency);
 //------------------------------------------------------------------------------
 /*!
-\brief test self sigma-delta adc and r2r dac loopback function
-\param ulSeconds		if ulSeconds is 5, it will record 5 seconds sound and play 5 seconds sound
+\brief test self sigma-delta adc and r2r dac loopback function; test lengh: define ADO_SELF_TEST_LENGTH
 \return(no)
 \par [Example]
 \code 
 		//control flow
-        ADO_SelfTest_Init(5);
+        ADO_SelfTest_Init();
 		ADO_SelfTest_Record();
 		ADO_SelfTest_Play();
 		ADO_SelfTest_Close();
 \endcode
 */
-void ADO_SelfTest_Init(uint8_t ulSeconds);
+void ADO_SelfTest_Init(void);
 void ADO_SelfTest_Record(void);
 void ADO_SelfTest_Play(void);
 void ADO_SelfTest_Close(void);

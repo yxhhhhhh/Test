@@ -11,7 +11,7 @@
 	\file			FS_API.h
 	\brief		File system API header file
 	\author		Chinwei Hsu
-	\version	1.0
+	\version	1.1
 	\date		2017/03/15
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
@@ -21,11 +21,8 @@
 
 #include "_510PF.h"
 
-#define FS_MAJORVER    1		// Major version = 1
-#define FS_MINORVER    0        // Minor version = 0
-
-#define FS_FLD_NAME_MAX_LENGTH		15		//	dont fix!!
-#define FS_FILE_NAME_MAX_LENGTH		64		//	dont fix!!
+#define FS_FLD_NAME_MAX_LENGTH		8
+#define FS_FILE_NAME_MAX_LENGTH		22
 
 //-----------------------------------------------------------------------------
 // fs create queue call status
@@ -808,5 +805,12 @@ void FS_GetLatestFileName(char *Output);
 \return(no)
 */
 void FS_FileNameHandle(char *Output, char *Input, uint32_t ulNameLen);
+//-----------------------------------------------------------------------------
+/*!
+\brief get the open file size
+\param ubSrcNum		source number
+\return file size
+*/
+uint64_t ullFS_GetOpenFileSize(uint8_t ubSrcNum);
 //-----------------------------------------------------------------------------
 #endif

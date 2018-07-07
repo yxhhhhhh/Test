@@ -11,8 +11,8 @@
 	\file		FWU_API.h
 	\brief		Firmware upgrade function header file
 	\author		Hanyi Chiu
-	\version	1.1
-	\date		2018/06/12
+	\version	1.3
+	\date		2018/07/03
 	\copyright	Copyright (C) 2017 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -22,13 +22,20 @@
 #include <stdint.h>
 
 //! SN937XX Firmware Version
-#define SN937XX_FW_VERSION				"01.00.01.027"
+#define SN937XX_FW_VERSION				"01.00.01.029"
 
 typedef enum
 {
 	FWU_USBDMSC,
+	FWU_SDCARD,
 	FWU_DISABLE,
 }FWU_MODE_t;
+
+typedef enum
+{
+	FWU_UPG_FAIL,
+	FWU_UPG_SUCCESS,
+}FWU_UpgResult_t;
 
 typedef struct
 {
@@ -36,6 +43,12 @@ typedef struct
 	char cFileName[8];			//! Length must be less than or equal to 8.(File system only support 8.3 filename)
 	char cFileNameExt[3];		//! Length must be less than or equal to 3.(File system only support 8.3 filename)
 }FWU_MSCParam_t;
+
+typedef struct
+{
+	char cTargetFileName[32];
+	uint8_t ubTargetFileNameLen;
+}FWU_SDParam_t;
 
 //------------------------------------------------------------------------------
 /*!
@@ -57,6 +70,13 @@ void FWU_Setup(FWU_MODE_t tModeSel, void *pvModeParam);
 \return (no)
 */
 void FWU_Enable(void);
+//------------------------------------------------------------------------
+/*!
+\brief Start upgrade function use SD card
+\param ulBUF_StartAddr	Buffer start address
+\return upgrade result
+*/
+FWU_UpgResult_t FWU_SdUpgradeStart(uint32_t ulBUF_StartAddr);
 //------------------------------------------------------------------------
 /*!
 \brief 	Get FWU Version	

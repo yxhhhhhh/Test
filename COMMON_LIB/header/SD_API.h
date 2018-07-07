@@ -11,7 +11,7 @@
 	\file		SD_API.h
 	\brief		SD API access header file
 	\author		Justin Chen
-	\version	0.2
+	\version	0.3
 	\date		2017/03/16
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
@@ -21,12 +21,7 @@
 
 #include "_510PF.h"
 
-#define SD_FuncEnable									\
-						{								\
-							GLB->SDIO1_FUNC_DIS = 0;	\
-							GLB->SDIO2_FUNC_DIS = 0;	\
-						}
-#define SD_FuncDisable									\
+#define SD_FunctionDisable								\
 						{								\
 							GLB->SDIO1_FUNC_DIS = 1;	\
 							GLB->SDIO2_FUNC_DIS = 1;	\
@@ -46,10 +41,32 @@ typedef enum
 
 //------------------------------------------------------------------------
 /*!
-\brief Initial SD1
+\brief Initial SD
 \return(no)
 */
-void SD_Init(SD_DEVICE_t tSD_Dev);
+void SD_Init(void);
+
+//------------------------------------------------------------------------
+/*!
+\brief SD Interface setup
+\return(no)
+*/
+uint8_t SD_SetupIF(SD_DEVICE_t tSD_Dev);
+
+//------------------------------------------------------------------------
+/*!
+\brief Get SD interface number
+\return SD_1 or SD_2
+*/
+SD_DEVICE_t tSD_GetDevIF(void);
+
+//------------------------------------------------------------------------
+/*!
+\brief Check SD interface setup result
+\return 0->Not ready
+        1->Ready
+*/
+uint8_t ubSD_ChkIFSetup(void);
 
 //------------------------------------------------------------------------
 /*!
@@ -58,7 +75,6 @@ void SD_Init(SD_DEVICE_t tSD_Dev);
 		1->Pass	
 */
 uint8_t ubSD_Identify(SD_DEVICE_t tSD_Dev);
-
 
 //------------------------------------------------------------------------------
 /*!

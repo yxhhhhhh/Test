@@ -17,6 +17,7 @@
 */
 
 #include "BUF.h"
+#include "DDR_API.h"
 
 //------------------------------------------------------------------------------
 /*!	\file BUF.c	
@@ -918,7 +919,7 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
         printd(DBG_Debug3Lvl, "REC--->BUF_BufInit->ulBUF_FreeBufAddr:0x%X\n",ulBUF_FreeBufAddr); 
     }
 
-	if (ulBUF_FreeBufAddr >= (32L*1024*1024)) {
+	if (ulBUF_FreeBufAddr >= DDR_BSZ_MAX) {
         printd(DBG_ErrorLvl, "Buffer full:%d\n",ulBUF_FreeBufAddr); 
     }
 }
