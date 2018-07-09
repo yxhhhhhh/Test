@@ -652,7 +652,7 @@ void LCD_Init (LCD_OUTPUT_TYP tLcdOutput)
 		}
 		
 		//reset pin 20180704
-		#if 0
+		#if 1
 		GPIO->GPIO_OE3= 1;
 		GPIO->GPIO_O3 = 1;
 		TIMER_Delay_ms(20);

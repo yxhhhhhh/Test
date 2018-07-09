@@ -859,8 +859,6 @@ void UITempSubSubSubmenuDisplay(uint8_t SubMenuItem);
 void UISoundSubSubSubmenuDisplay(uint8_t SubMenuItem);
 void InitAlarmSubSubSubmenu(uint8_t SubMenuItem);
 void UI_SetAlarm(uint8_t SubMenuItem);
-void UI_SetAlert(uint8_t time);
-
 void UI_DrawTimeSubMenuPage(void);
 void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_TimeSubMenuDisplay(uint8_t value);

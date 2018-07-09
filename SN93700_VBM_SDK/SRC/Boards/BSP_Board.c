@@ -62,7 +62,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO21 = 0;
 
 	//! SD
-	//GLB->PADIO0  = 4;
+	GLB->PADIO0  = 4;
 	GLB->PADIO1  = 4;
 	GLB->PADIO2  = 4;
 	GLB->PADIO3  = 4;
@@ -106,7 +106,6 @@ void BSP_BoardInit(void)
 	GLB->PADIO55 = 0;
 	
 	//! CHG_FULL
-	GLB->PADIO0 = 3;
 	GLB->PADIO14 = 3;
 	GLB->PADIO42 = 3;
 	GLB->PADIO56 = 0;

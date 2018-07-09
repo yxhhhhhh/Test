@@ -290,7 +290,6 @@ static void UI_SysCheckStatus(void const *argument)
 
 	while(1)
 	{
-		printf("tUI_BuStsInfo.tNightModeFlag uwUI_ChkType: 0x%x.\n",uwUI_ChkType);
 		osMessageGet(osUI_SysChkQue, &uwUI_ChkType, osWaitForever);
 		if(uwUI_ChkType & UI_SYSVOICELVL_CHK)
 		{
@@ -1345,7 +1344,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMinIrCnt = 0;
 	}
 	
-	printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+	//printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
 	if(tUI_BuStsInfo.tNightModeFlag)
 	{
 		if(ubCheckMinIrCnt >= IR_CHECK_CNT)

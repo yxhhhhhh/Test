@@ -35,7 +35,7 @@
 
 #define Current_Test	0
 
-#define SD_UPDATE_TEST	0
+#define SD_UPDATE_TEST	1
 
 /**
  * Key event mapping table
@@ -231,9 +231,11 @@ uint8_t ubShowCamPairFullSta = 0;
 
 uint8_t ubShowAlarmstate = 0;
 uint8_t ubPlayAlarmCount = 0;
+uint8_t ubTempAlarmCheckCount = 0;
 uint8_t ubTempAlarmState = TEMP_ALARM_IDLE;
 uint16_t ubTempAlarmTriggerCount = 0;
 
+uint8_t ubPickupAlarmCheckCount = 0;
 uint8_t ubPickupAlarmState = PICKUP_ALARM_IDLE;
 uint16_t ubPickupAlarmTriggerCount = 0;
 
@@ -1154,7 +1156,6 @@ void UI_EnterKey(void)
 void UI_EnterLongKey(void)
 {
 	#if SD_UPDATE_TEST
-	BUZ_PlaySingleSound();
 	KNL_SDUpgradeFwFunc();
 	#endif
 }
@@ -2205,6 +2206,7 @@ UI_Result_t UI_SetupPuWorMode(void)
 		else
 			printd(DBG_ErrorLvl, "CAM%d:WOR Setting Fail !\n", (tCamNum + 1));
 	}
+	
 	if(rUI_SUCCESS == tWorRet)
 	{
 		APP_EventMsg_t tUI_PsMessage = {0};
@@ -2217,6 +2219,7 @@ UI_Result_t UI_SetupPuWorMode(void)
 		tUI_PsMessage.ubAPP_Message[2]  = FALSE;
 		tUI_PsMessage.ubAPP_Message[3]  = CAM1;
 		UI_SendMessageToAPP(&tUI_PsMessage);
+		printd(Apk_DebugLvl, "UI_SetupPuWorMode!\n");
 	}
 	return rUI_SUCCESS;
 }
@@ -2576,7 +2579,8 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 				#endif
 
 				#if Current_Test
-				UI_EnableVox();
+				//UI_EnableVox();
+				UI_SetupPuWorMode();
 				#endif
 				
 				UI_MotorControl(MC_LEFT_ON);
@@ -2644,7 +2648,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 				#endif
 
 				#if Current_Test
-				UI_DisableVox();
+				//UI_DisableVox();
 				#endif
 				
 				UI_MotorControl(MC_RIGHT_ON);
@@ -4826,37 +4830,16 @@ void UI_AlarmTriggerDisplay(uint8_t value)
 	}
 }
 
-void UI_SetAlert(uint8_t time)
-{
-	if(++ubAlertCnt > (time * 5))
-	{
-		ubAlertCnt = 100;
-		ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
-	}
-	else
-	{
-		//printd(Apk_DebugLvl, "ubAlertCnt %d \n",ubAlertCnt);
-		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
-		ADO_SetDacR2RVol(R2R_VOL_n5p6DB);		
-		if((ubAlertCnt%3) == 0)
-		{
-			BUZ_PlayLowBatSound();
-			printd(Apk_DebugLvl, "UI_SetAlert BUZ_PlaySingleSound###\n");
-		}
-	}
-} 
-
 /*********************************wjb@apical********************************/
 void UI_ShowAlarm(uint8_t type)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-	printd(Apk_DebugLvl, "UI_ShowAlarm type: %d.\n", type);
+	printd(Apk_DebugLvl, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
 	switch(type)
 	{
 		case 0:
 			UI_AlarmTriggerDisplay(0);
-
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10)*2), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 340;
 			tOsdImgInfo.uwYStart = 600;	
@@ -4870,19 +4853,12 @@ void UI_ShowAlarm(uint8_t type)
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 334;
 			tOsdImgInfo.uwYStart = 600-72;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			ubShowAlarmstate = 1;
 			break;
 
 		case 1:
 			UI_AlarmTriggerDisplay(1);
-
-			/*
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 167;
-			tOsdImgInfo.uwYStart = 282;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-			*/
-
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_0+((ubRealTemp/10)*2), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 340;
 			tOsdImgInfo.uwYStart = 600;	
@@ -4896,20 +4872,32 @@ void UI_ShowAlarm(uint8_t type)
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 334;
 			tOsdImgInfo.uwYStart =600-72;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			ubShowAlarmstate = 2;
 			break;
 
 		case 2:
 			UI_AlarmTriggerDisplay(2);
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+			ubShowAlarmstate = 3;
+			break;
+
+		case 3:
+			tOsdImgInfo.uwHSize  = 387;
+			tOsdImgInfo.uwVSize  = 717;
+			tOsdImgInfo.uwXStart = 167;
+			tOsdImgInfo.uwYStart = 282;
+			OSD_EraserImg2(&tOsdImgInfo);
+			ubShowAlarmstate = 0;
+			return;
+			break;
+
+		default:
 			break;
 	}
 
-	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-	ubShowAlarmstate = 1;
 	if(PWM->PWM_EN8 == 0)
-	{
 		LCDBL_ENABLE(UI_ENABLE);
-	}
 }
 
 void UI_PlayAlarmSound(uint8_t type)
@@ -4995,7 +4983,12 @@ void UI_TempAlarmCheck(void)
 			{
 				if((ubPickupAlarmState == PICKUP_ALARM_IDLE) || (ubPickupAlarmState == PICKUP_ALARM_OFF))
 				{
-					ubTempAlarmState = HIGH_TEMP_ALARM_ON;
+					ubTempAlarmCheckCount++;
+					if(ubTempAlarmCheckCount == 5)
+					{
+						ubTempAlarmState = HIGH_TEMP_ALARM_ON;
+						ubTempAlarmCheckCount = 0;
+					}
 				}
 			}
 		}
@@ -5006,9 +4999,19 @@ void UI_TempAlarmCheck(void)
 			{
 				if((ubPickupAlarmState == PICKUP_ALARM_IDLE) || (ubPickupAlarmState == PICKUP_ALARM_OFF))
 				{
-					ubTempAlarmState = LOW_TEMP_ALARM_ON;
+					ubTempAlarmCheckCount++;
+					if(ubTempAlarmCheckCount == 5)
+					{
+						ubTempAlarmState = LOW_TEMP_ALARM_ON;
+						ubTempAlarmCheckCount = 0;
+					}
 				}
 			}
+		}
+
+		if((ubShowAlarmstate == 1) || (ubShowAlarmstate == 2))
+		{
+			UI_ShowAlarm(3);
 		}
 	}
 	else if(ubTempAlarmState == HIGH_TEMP_ALARM_ON)
@@ -5033,7 +5036,6 @@ void UI_TempAlarmCheck(void)
 	}
 	else if(ubTempAlarmState == TEMP_ALARM_OFF)
 	{
-		//printd(Apk_DebugLvl, "TEMP: (%d) ++++++\n", ubTempAlarmTriggerCount);
 		if(ubTempAlarmTriggerCount < ALARM_INTERVAL) //60s
 		{
 			ubTempAlarmTriggerCount++;
@@ -5042,6 +5044,7 @@ void UI_TempAlarmCheck(void)
 		{
 			ubTempAlarmState = TEMP_ALARM_IDLE;
 			ubTempAlarmTriggerCount = 0;
+			ubTempAlarmCheckCount = 0;
 		}	
 	}
 }
@@ -5069,9 +5072,19 @@ void UI_PickupAlarmCheck(void)
 			{
 				if((ubTempAlarmState == TEMP_ALARM_IDLE) || (ubTempAlarmState == TEMP_ALARM_OFF))
 				{
-					ubPickupAlarmState = PICKUP_ALARM_ON;
+					ubPickupAlarmCheckCount++;
+					if(ubPickupAlarmCheckCount == 5)
+					{
+						ubPickupAlarmState = PICKUP_ALARM_ON;
+						ubPickupAlarmCheckCount = 0;
+					}
 				}
 			}
+		}
+
+		if(ubShowAlarmstate == 3)
+		{
+			UI_ShowAlarm(3);
 		}
 	}
 	else if(ubPickupAlarmState == PICKUP_ALARM_ON)
@@ -5095,6 +5108,7 @@ void UI_PickupAlarmCheck(void)
 		{
 			ubPickupAlarmState = PICKUP_ALARM_IDLE;
 			ubPickupAlarmTriggerCount = 0;
+			ubPickupAlarmCheckCount = 0;
 		}
 	}
 }
@@ -6896,10 +6910,21 @@ void UI_NightModeSubSubSubmenuDisplay(uint8_t value)
 	tOsdImgInfo.uwYStart =0;		
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 338+(ubSubSubSubMenuItemFlag*76);
-	tOsdImgInfo.uwYStart =167;	
-	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+	if(tUI_PuSetting.ubLangageFlag == 1)
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 338+(ubSubSubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =167;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	}
+	else
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 338+(ubSubSubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =167;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -8069,12 +8094,19 @@ void UI_GetBatLevel(void)
 	ubGetBatValue = ubBatAdc*33*2*100/1024;
 	//printd(Apk_DebugLvl, "UI_GetBatLevel ubBatAdc: %d, ubAdjustAdc: %d, ubGetBatValue: %d.\n", ubBatAdc, ubAdjustAdc, ubGetBatValue);
 
-	if(ubGetBatValue < 3500)
+	if(UI_GetUsbDet() == 0)
 	{
-		ubBatLowCount++;
-		if(ubBatLowCount == 10)
+		if(ubGetBatValue < 3500)
 		{
-			UI_PowerOff();
+			ubBatLowCount++;
+			if(ubBatLowCount == 10)
+			{
+				UI_PowerOff();
+			}
+		}
+		else
+		{
+			ubBatLowCount = 0;
 		}
 	}
 	else
