@@ -3388,8 +3388,8 @@ void UI_DrawAutoLcdSubMenuPage(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SLEEP_OFF_S+ (8*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 233;
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SLEEP_OFF_S + tUI_PuSetting.ubSleepMode*2 + (8*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart= 233 + (tUI_PuSetting.ubSleepMode*76);
 	tOsdImgInfo.uwYStart =729;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
@@ -3471,7 +3471,7 @@ void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey)
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
-		ubSleepModeFlag = 0;
+		ubSleepModeFlag = tUI_PuSetting.ubSleepMode;
 		ubSubMenuItemFlag = 0;
 		ubSubMenuItemPreFlag = 1;	
 		
@@ -4419,6 +4419,22 @@ void UI_AlarmSubSubMenuEnterKey(uint8_t SubMenuItem)
 			tUI_State = UI_SUBSUBSUBMENU_STATE;
 			item_temp = (ubSubMenuItemFlag*3)+ubSubSubMenuItemFlag;
 			InitAlarmSubSubSubmenu(item_temp);
+
+			switch(ubSubSubMenuItemFlag)
+			{
+				case 0:
+					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubHighTempSetting;
+					break;
+				case 1:
+					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubLowTempSetting;
+					break;
+				case 2:
+					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubTempAlertSetting;
+					break;
+				default:
+					break;
+			}
+				
 			UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);						
 		break;
 
@@ -4426,6 +4442,17 @@ void UI_AlarmSubSubMenuEnterKey(uint8_t SubMenuItem)
 		case 1:
 			tUI_State = UI_SUBSUBSUBMENU_STATE;
 			InitAlarmSubSubSubmenu(item_temp);
+			switch(ubSubSubMenuItemFlag)
+			{
+				case 0:
+					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubSoundLevelSetting;
+					break;
+				case 1:
+					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubSoundAlertSetting;
+					break;
+				default:
+					break;
+			}
 			UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);	
 		break;	
 	}
@@ -5624,8 +5651,8 @@ void UI_DrawZoomSubMenuPage(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_OFF_S+ (6*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 270;
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM_OFF_S+tUI_PuSetting.ubZoomScale*2+(6*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart= 270 + (tUI_PuSetting.ubZoomScale*76);
 	tOsdImgInfo.uwYStart =729;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
@@ -5650,7 +5677,7 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
-		ubSubMenuItemFlag = 0;
+		ubSubMenuItemFlag = tUI_PuSetting.ubZoomScale;
 		ubSubMenuItemPreFlag = 1;	
 		
 		UI_DrawSubMenuPage(ZOOM_ITEM);
@@ -6077,7 +6104,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				
 				if(ubSubMenuItemFlag == 2)
 				{
-					ubSubSubMenuItemFlag = 0;
+					ubSubSubMenuItemFlag = tUI_PuSetting.ubScanTime;
 					ubUI_ScanStartFlag = FALSE;
 					ubSubSubMenuItemPreFlag = 1;
 				}
@@ -6715,10 +6742,12 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
 	
 		case LANGUAGESET_ITEM:				
 			ubSubSubMenuRealItem = 0;
+			ubSubSubMenuItemFlag = tUI_PuSetting.ubLangageFlag;
 			UI_LangageDisplay(ubSubSubMenuItemFlag);
 			break;
 
 		case FLICKER_ITEM:
+			ubSubSubMenuItemFlag = tUI_PuSetting.ubFlickerFlag;
 			UI_FlickerDisplay(ubSubSubMenuItemFlag);
 			break;
 			
@@ -6727,6 +6756,7 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
 			break;
 			
 		case TEMPUNIT_ITEM:
+			ubSubSubMenuItemFlag = tUI_PuSetting.ubTempunitFlag;
 			UI_TempUnitDisplay(ubSubSubMenuItemFlag);
 			break;
 
@@ -7154,7 +7184,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 	{
 		case NIGHTMODE_ITEM:
 			tUI_State = UI_SUBSUBSUBMENU_STATE;
-			ubSubSubSubMenuItemFlag = 0;
+			ubSubSubSubMenuItemFlag = ((tUI_PuSetting.NightmodeFlag>>ubSubSubMenuItemFlag)&0x01)?1:0;
 			ubSubSubSubMenuRealItem = 0;
 			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
 			break;
@@ -10440,7 +10470,7 @@ void UI_UpdateBarIcon_Part1(void)
 
 	if((UI_GetUsbDet() == 1) && (UI_GetBatChgFull() == 0)) //battery charge full
 	{
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BAT4, 1, &tOsdImgInfo);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_CHG4, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 10;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
