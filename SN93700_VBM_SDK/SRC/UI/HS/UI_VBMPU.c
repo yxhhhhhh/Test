@@ -291,12 +291,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
 				return;
 		}
 	}
-
-	#if Current_Test
-	#else
-	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1)
-		return;
-	#endif
 	
 	if(ubFactoryModeFLag == 1)
 	{
@@ -339,6 +333,16 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			//ubBUEnterAdotestFLag = 0;
 		}
 	}
+
+	#if Current_Test
+	#else
+	if((ubUI_ResetPeriodFlag == FALSE) &&(tUI_PuSetting.ubDefualtFlag == FALSE))
+		return;
+	
+	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1)
+		return;
+	#endif
+
 	
 	if(ptKeyEvent->ubKeyAction == KEY_UP_ACT)
 	{
@@ -3709,7 +3713,6 @@ void UI_DrawSubSubMenu_Alarm(void)
 				tOsdImgInfo.uwXStart= 270;
 				tOsdImgInfo.uwYStart =400 -5;	
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
 			}
 		}
 		else
@@ -7254,10 +7257,12 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 			break;
 			
 		case TEMPUNIT_ITEM:
+			if(tUI_PuSetting.ubTempunitFlag != ubTempunitFlag)
+				ubRealTemp = ubTempunitFlag?UI_TempFToC(ubRealTemp):UI_TempCToF(ubRealTemp);
 			tUI_PuSetting.ubTempunitFlag  = ubTempunitFlag;
-			ubRealTemp = tUI_PuSetting.ubTempunitFlag?ubRealTemp:UI_TempCToF(ubRealTemp); //20180323
-			//UI_UpdateDevStatusInfo();	
+			UI_TempBarDisplay(ubRealTemp);
 			UI_TempUnitDisplay(ubTempunitFlag);
+			//UI_UpdateDevStatusInfo();	
 			break;
 
 		case PRODUCT_INFO_ITEM:
@@ -7613,20 +7618,22 @@ uint8_t UI_TempCToF(uint8_t cTemp)
 	return fTemp;
 }
 
+
+uint8_t UI_TempFToC(uint8_t fTemp)
+{
+	uint8_t cTemp = 0;
+
+	cTemp = ((fTemp-32)*10/18) + ((((fTemp-32)*10%18) >= 5)?1:0);
+
+	return cTemp;
+}
+
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
 	uint8_t ubBuTemp = 0;
 	
 	ubBuTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
-	if(ubRealTemp == ubBuTemp)
-	{
-		ubRealTempCheckCnt++;
-	}
-	else
-	{
-		ubRealTempCheckCnt = 0;
-	}
 	ubRealTemp = ubBuTemp;
 	//ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
 
@@ -7635,10 +7642,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 	//printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
 	if((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
 	{
-		if(ubRealTempCheckCnt == 3)
-		{
-			UI_TempBarDisplay(ubRealTemp);
-		}
+		UI_TempBarDisplay(ubRealTemp);
 	}
 }
 
@@ -7687,6 +7691,11 @@ void UI_TempBarDisplay(uint8_t value)
 		tOsdImgInfo.uwYStart = 920;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC+(!tUI_PuSetting.ubTempunitFlag), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 874;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 +(value%10), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;

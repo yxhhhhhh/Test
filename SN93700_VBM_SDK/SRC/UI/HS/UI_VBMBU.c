@@ -196,7 +196,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t pThreadCnt)
 {
-	if(((pThreadCnt)%10) == 0)
+	if(((pThreadCnt)%5) == 0)
 	{
 		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
 		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
@@ -222,21 +222,17 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				//UI_MDTrigger();
 
-			#if 1
 			if(((*pThreadCnt)%10) == 0)
 			{
-				uint16_t uwChkType = UI_SYSVOICELVL_CHK | UI_SYSTEMPDATA_CHK;
+				uint16_t uwChkType = UI_SYSVOICELVL_CHK;
 				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 			}
-			#else
-			if(((*pThreadCnt)%10) == 0)
+
+			if(((*pThreadCnt)%2) == 0)
 			{
-				UI_VoiceCheck();
-				UI_TempCheck();
+				uint16_t uwChkType = UI_SYSTEMPDATA_CHK;
+				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 			}
-			
-			UI_BrightnessCheck();
-			#endif
 			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
@@ -651,7 +647,7 @@ void UI_VoiceCheck (void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);	
+	//printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);	
 
 	if(ulUI_AdcRpt > 0x3000)
 		voice_temp = 5;
@@ -686,6 +682,43 @@ void UI_VoiceCheck (void)
 	
 }
 //------------------------------------------------------------------------------
+typedef struct {
+	uint8_t TempVal[8];
+	uint8_t TempAverage;
+	uint8_t TempSize;
+}TEMP_CHECK_DATA;
+
+TEMP_CHECK_DATA ubTempData;
+
+uint8_t UI_GetTempAverVal(uint8_t Value)
+{
+	static uint16_t ubTempCheckCnt = 0;
+	uint8_t ubAbsVal = 0;
+
+	if((ubTempCheckCnt%5) == 2)
+	{
+		ubTempCheckCnt = 0;
+		ubTempData.TempAverage = (ubTempData.TempVal[0] + ubTempData.TempVal[1] + ubTempData.TempVal[2])/3;
+		return ubTempData.TempAverage;
+	}
+	else
+	{
+		ubAbsVal = (ubTempData.TempVal[ubTempCheckCnt] >= Value) ? (ubTempData.TempVal[ubTempCheckCnt] - Value): (Value - ubTempData.TempVal[ubTempCheckCnt]);
+
+		if(ubAbsVal < 3)
+		{
+			ubTempCheckCnt++;
+		}
+		else
+		{
+			ubTempCheckCnt = 0;
+		}
+		ubTempData.TempVal[ubTempCheckCnt] = Value;
+	}
+
+	return 0xFF;
+}
+
 void UI_TempCheck(void) //20180322
 {
 	uint8_t cur_temp;
@@ -703,6 +736,11 @@ void UI_TempCheck(void) //20180322
 	tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
 
 	cur_temp = tem;
+
+	cur_temp = UI_GetTempAverVal(cur_temp);
+	printd(Apk_DebugLvl, "### tem: %d, cur_temp: %d.\n", tem, cur_temp);
+	if(cur_temp == 0xFF)
+		return;
 	
 	//if(ubTemp_bak != cur_temp)
 	{

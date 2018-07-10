@@ -921,6 +921,7 @@ void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb);
 void UI_AutoBrightnessAdjust(void);
 
 uint8_t UI_TempCToF(uint8_t cTemp);
+uint8_t UI_TempFToC(uint8_t fTemp);
 uint8_t UI_CheckStopAlarm(void);
 uint8_t UI_GetAlarmStatus(void);
 void UI_TempAlarmCheck(void);
