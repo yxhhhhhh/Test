@@ -544,7 +544,7 @@ void UI_ChangePsModeToNormalMode(void)
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_OFF);
 	tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 	ubUI_WorModeEnFlag = FALSE;
 	ubUI_WorWakeUpCnt  = 0;
 	printd(DBG_InfoLvl, "		=> WOR Disable\n");
@@ -598,7 +598,7 @@ void UI_VoiceTrigSetting(void *pvTrigMode)
 
 	tUI_BuStsInfo.tCamScanMode = *pVoiceTrigMode;
 	ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, (CAMSET_ON == tUI_BuStsInfo.tCamScanMode)?ADO_ON:ADO_OFF);
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 void UI_VoiceTrigger(void)

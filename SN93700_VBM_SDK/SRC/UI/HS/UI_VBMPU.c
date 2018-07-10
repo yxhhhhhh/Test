@@ -60,7 +60,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 	{AKEY_ENTER, 		20,			UI_EnterLongKey, 			NULL},
 	{AKEY_PS,			0,			UI_BuPowerSaveKey,			NULL},
 	{AKEY_PS,			20,			UI_PuPowerSaveKey,			NULL},
-	{AKEY_PTT,			0,			UI_PushTalkKey,				NULL},
+	{AKEY_PTT,			2,			UI_PushTalkKey,				NULL},
 	{PKEY_ID0,			0,			UI_PowerKeyShort,			NULL},
 	{PKEY_ID0, 			20,			UI_PowerKey,				NULL},
 	{GKEY_ID0,			0,			UI_VolUpKey,				NULL},
@@ -878,6 +878,7 @@ void UI_PowerKey(void)
 			return;
 	}
 	
+	UI_UpdateDevStatusInfo();
 	BUZ_PlayPowerOffSound();
 	osDelay(600);			//wait buzzer play finish
 	LCDBL_ENABLE(UI_DISABLE);
@@ -929,7 +930,7 @@ void UI_MenuKey(void)
 			break;
 		case UI_MAINMENU_STATE:
 		{
-			UI_UpdateDevStatusInfo();	
+			//UI_UpdateDevStatusInfo();	
 			OSD_IMG_INFO tOsdInfo;
 
 			tOsdInfo.uwHSize  = 672;
@@ -2212,7 +2213,7 @@ UI_Result_t UI_SetupPuWorMode(void)
 		APP_EventMsg_t tUI_PsMessage = {0};
 
 		tUI_PuSetting.tPsMode = PS_WOR_MODE;
-		UI_UpdateDevStatusInfo();
+		//UI_UpdateDevStatusInfo();
 		tUI_PsMessage.ubAPP_Event 	    = APP_POWERSAVE_EVENT;
 		tUI_PsMessage.ubAPP_Message[0]  = 3;		//! Message Length
 		tUI_PsMessage.ubAPP_Message[1]  = PS_WOR_MODE;
@@ -2244,7 +2245,7 @@ UI_Result_t UI_SetupBuEcoMode(UI_CamNum_t tECO_CamNum)
 		if(UI_SendRequestToBU(osThreadGetId(), &tPsCmd) == rUI_SUCCESS)
 		{
 			tUI_CamStatus[tECO_CamNum].tCamPsMode = PS_ECO_MODE;
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 			tUI_PsMessage.ubAPP_Message[2]  = FALSE;
 			tUI_PsMessage.ubAPP_Message[3]  = tECO_CamNum;
 			tUI_PsMessage.ubAPP_Message[4]  = FALSE;
@@ -2550,11 +2551,11 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 			ubSetViewCam = tCamViewSel.tCamViewPool[0];
 						
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 		}
 		#else
 		UI_SwitchCameraScan(1); //20180622
-		UI_UpdateDevStatusInfo();
+		//UI_UpdateDevStatusInfo();
 		#endif
 	}
 	
@@ -3195,7 +3196,7 @@ void UI_ShowSysVolume(uint8_t value)
 	tOsdImgInfo.uwXStart = 602;
 	tOsdImgInfo.uwYStart = 1166;	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 }
 
 void UI_AutoBrightnessAdjust(void) //20180324
@@ -3327,7 +3328,7 @@ void UI_BrightnessDisplay(uint8_t value)
 	tUI_PuSetting.BriLvL.tBL_UpdateLvL = value;
 	printd(Apk_DebugLvl, "UI_BrightnessDisplay tBL_UpdateLvL: %d.\n", tUI_PuSetting.BriLvL.tBL_UpdateLvL);
 	LCD_BACKLIGHT_CTRL(ulUI_BLTable[tUI_PuSetting.BriLvL.tBL_UpdateLvL]);
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 }
 
 void UI_AutoBriDisplay(uint8_t value)
@@ -3433,7 +3434,7 @@ void UI_AutoLcdSetSleepTime(uint8_t SleepMode)
 		return;
 	
 	tUI_PuSetting.ubSleepMode = SleepMode;
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 
 	if(SleepMode == 0)
 		UI_TimerDeviceEventStop(TIMER1_2);
@@ -4721,7 +4722,7 @@ void UI_AlarmSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			else
 				ubAlarmIconFlag = 1;
 
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 			
 			tUI_State = UI_SUBSUBMENU_STATE;		
 			tOsdImgInfo.uwHSize  = 672;
@@ -4778,7 +4779,7 @@ void UI_SetAlarm(uint8_t SubMenuItem)
 			break;
 		
 	}
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 }
 
 void UI_AlarmTriggerDisplay(uint8_t value)
@@ -5694,7 +5695,7 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
 			UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
 			UI_ZoomDisplay();
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 		break;	
 
 		case LEFT_ARROW:
@@ -6245,7 +6246,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 				tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == i)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
 				UI_ResetDevSetting(i);
-				UI_UpdateDevStatusInfo();
+				//UI_UpdateDevStatusInfo();
 				tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 				tUI_UnindBuMsg.ubAPP_Message[1] = i;
@@ -6263,7 +6264,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 		tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 		tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == CameraId)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
 		UI_ResetDevSetting(CameraId);
-		UI_UpdateDevStatusInfo();
+		//UI_UpdateDevStatusInfo();
 		tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 		tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 		tUI_UnindBuMsg.ubAPP_Message[1] = CameraId;
@@ -6320,7 +6321,7 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 				tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == ubSubSubMenuItemFlag)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
 				UI_ResetDevSetting(ubSubSubMenuItemFlag);
-				UI_UpdateDevStatusInfo();
+				//UI_UpdateDevStatusInfo();
 				tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 				tUI_UnindBuMsg.ubAPP_Message[1] = ubSubSubMenuItemFlag;
@@ -6356,7 +6357,7 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_SwitchCameraSource();
 			UI_ClearBuConnectStatusFlag();
 			ubSetViewCam = tCamViewSel.tCamViewPool[0];						
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 		break;	
 		
 		case LEFT_ARROW:
@@ -6414,7 +6415,7 @@ void UI_SetScanMenu(uint8_t value)
 	tOsdImgInfo.uwYStart = 0;
 	OSD_EraserImg2(&tOsdImgInfo);
 
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 
 	printd(Apk_DebugLvl, "UI_SetScanMenu ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
 	if(tUI_PuSetting.ubScanTime == 0)
@@ -6520,7 +6521,7 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 			ubPairDisplayTime = 60; //10
 	
 			UI_ResetDevSetting(tPairInfo.tPairSelCam);
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 48;
@@ -6914,7 +6915,14 @@ void UI_NightModeSubSubSubmenuDisplay(uint8_t value)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart= 338+(ubSubSubSubMenuItemFlag*76);
-		tOsdImgInfo.uwYStart =167;	
+		tOsdImgInfo.uwYStart =167+ 40;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	}
+	else if(tUI_PuSetting.ubLangageFlag == 3)
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 338+(ubSubSubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =167+ 70;	
 		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 	}
 	else
@@ -7156,7 +7164,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 			UI_LangageDisplay(ubLangageFlag);
 			UI_DrawSettingSubMenuPage_NoSel(0);
 			UI_SettingSubmenuDisplay();
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 			break;
 
 		case FLICKER_ITEM:
@@ -7170,7 +7178,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 			}
 			tUI_PuSetting.ubFlickerFlag = ubFlickerFlag;
 			UI_FlickerDisplay(ubFlickerFlag);
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 			break;
 			
 		case DEFAULT_ITEM:
@@ -7218,7 +7226,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 		case TEMPUNIT_ITEM:
 			tUI_PuSetting.ubTempunitFlag  = ubTempunitFlag;
 			ubRealTemp = tUI_PuSetting.ubTempunitFlag?ubRealTemp:UI_TempCToF(ubRealTemp); //20180323
-			UI_UpdateDevStatusInfo();	
+			//UI_UpdateDevStatusInfo();	
 			UI_TempUnitDisplay(ubTempunitFlag);
 			break;
 
@@ -7282,7 +7290,7 @@ void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_PuSetting.NightmodeFlag &=(~(1<<ubSubSubMenuItemFlag));
 			tUI_PuSetting.NightmodeFlag |=(ubSubSubSubMenuItemFlag<<ubSubSubMenuItemFlag);
 			printd(Apk_DebugLvl, "UI_NightModeSubSubSubMenuPage tUI_PuSetting.NightmodeFlag: 0x%x.\n", tUI_PuSetting.NightmodeFlag);
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 			UI_NightModeDisplay(ubSubSubMenuItemFlag);
 		
 		case LEFT_ARROW:
@@ -8715,7 +8723,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				}
 				*pCamsModeSts[ubSubMenuItemIdx] 		= tCamsSetMode;
 				tUI_CamStatus[tCamSelNum].tCamFlicker   = tCamsFlicker;
-				UI_UpdateDevStatusInfo();
+				//UI_UpdateDevStatusInfo();
 			}
 			break;
 		case EXIT_MENUFUNC:
@@ -9208,7 +9216,7 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 			UI_PairingSubSubMenuPage(DOWN_ARROW);
 			UI_ResetDevSetting(tPairInfo.tPairSelCam);
-			UI_UpdateDevStatusInfo();
+			//UI_UpdateDevStatusInfo();
 			break;
 		case rUI_FAIL:
 			break;
@@ -10075,7 +10083,7 @@ void UI_SettingSysDateTimeSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 					printd(DBG_ErrorLvl, "Calendar base setting fail !\n");
 				else
 					RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-				UI_UpdateDevStatusInfo();
+				//UI_UpdateDevStatusInfo();
 				tUI_State = UI_SUBSUBMENU_STATE;
 				return;
 			}
@@ -11249,7 +11257,7 @@ void UI_ChangeBuPsModeToNormalMode(UI_CamNum_t tPS_CamNum)
 	if(pUI_BuConnectFlag[1])
 		*(pUI_BuConnectFlag[1]+tPS_CamNum) = FALSE;
 	tUI_CamStatus[tPS_CamNum].tCamPsMode = POWER_NORMAL_MODE;
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 void UI_ReportBuConnectionStatus(void *pvConnectionSts)
@@ -11434,7 +11442,7 @@ void UI_UnBindBu(UI_CamNum_t tUI_DelCam)
 	tUI_CamStatus[tUI_DelCam].tCamConnSts = CAM_OFFLINE;
 	tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 	UI_ResetDevSetting(tUI_DelCam);
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 	tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 	tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 	tUI_UnindBuMsg.ubAPP_Message[1] = tUI_DelCam;
@@ -11457,7 +11465,7 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 		UI_SendMessageToAPP(&tUI_PsMessage);
 		tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
 		tUI_CamStatus[tCamNum].tCamPsMode = POWER_NORMAL_MODE;
-		UI_UpdateDevStatusInfo();
+		//UI_UpdateDevStatusInfo();
 	}
 }
 //------------------------------------------------------------------------------
@@ -11476,7 +11484,7 @@ void UI_EnableVox(void)
 	tUI_PsMessage.ubAPP_Message[2] = TRUE;
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	tUI_PuSetting.tPsMode = PS_VOX_MODE;
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 	LCD_UnInit();
 	LCD->LCD_MODE = LCD_GPIO;
 }
@@ -11512,7 +11520,7 @@ void UI_DisableVox(void)
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
 	tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 void UI_MDTrigger(UI_CamNum_t tCamNum, void *pvTrig)
@@ -12037,8 +12045,8 @@ void UI_SwitchCameraSource(void)
 	UI_SendMessageToAPP(&tUI_SwitchBuMsg);
 	
 	if ((tCamViewSel.tCamViewType == SINGLE_VIEW) || (tCamViewSel.tCamViewType == SCAN_VIEW)) {
-		if(tUI_PuSetting.tAdoSrcCamNum != tCamViewSel.tCamViewPool[0])
-			UI_UpdateDevStatusInfo();
+		//if(tUI_PuSetting.tAdoSrcCamNum != tCamViewSel.tCamViewPool[0])
+			//UI_UpdateDevStatusInfo();
 		tUI_PuSetting.tAdoSrcCamNum = tCamViewSel.tCamViewPool[0];
 	}
 	

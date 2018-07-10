@@ -777,7 +777,7 @@ void SEN_ISPInitial(void)
     //NR Day mode
     SEN_SetIrMode(0); // 1:sensor黑白色
 
-	ISP_SetMirrorFlip(2); //20180508 翻转sensor画面
+	ISP_SetMirrorFlip(3); //20180508 翻转sensor画面
 }
 
 //------------------------------------------------------------------------------

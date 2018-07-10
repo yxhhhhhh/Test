@@ -203,7 +203,6 @@ void APP_Init(void)
 	#endif
 
 	BSP_Init();
-	APP_CheckBootStatus();
 	//printd(DBG_InfoLvl, "%s\n", osKernelSystemId);	// Move to CLI VCS command
     if(APP_OsStatus != osOK)
     {
@@ -215,6 +214,14 @@ void APP_Init(void)
 	}
 	SF_SetWpPin(ubAPP_SfWpGpioPin);
 	SF_Init();
+	#ifdef VBM_PU
+	UI_LoadDevStatusInfo();
+	if(ubFactorySettingFLag == 0)
+	{
+		APP_CheckBootStatus();
+	}
+	#endif
+	
 	PROF_Init();
 	MMU_Init();
 	TWC_Init();
