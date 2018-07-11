@@ -213,10 +213,12 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	switch(tUI_SyncAppState)
 	{
 		case APP_LINK_STATE:
-			if(TRUE == ubUI_WorModeEnFlag)
-				UI_ChangePsModeToNormalMode();
+			//if(TRUE == ubUI_WorModeEnFlag)
+				//UI_ChangePsModeToNormalMode();
 			if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
 				UI_VoxTrigger();
+			if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
+				UI_VoiceTrigger();
 			if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
 				UI_VoiceTrigger();
 			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)

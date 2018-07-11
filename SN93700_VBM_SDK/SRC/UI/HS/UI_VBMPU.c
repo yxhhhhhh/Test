@@ -336,8 +336,11 @@ void UI_KeyEventExec(void *pvKeyEvent)
 
 	#if Current_Test
 	#else
-	if((ubUI_ResetPeriodFlag == FALSE) &&(tUI_PuSetting.ubDefualtFlag == FALSE))
-		return;
+	if(tUI_PuSetting.ubDefualtFlag == FALSE)
+	{
+		if(ubUI_ResetPeriodFlag == FALSE)
+			return;
+	}
 	
 	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1)
 		return;
@@ -350,7 +353,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		   ((ptKeyEvent->ubKeyID == AKEY_UP)   || (ptKeyEvent->ubKeyID == AKEY_DOWN) ||
 		    (ptKeyEvent->ubKeyID == AKEY_LEFT) || (ptKeyEvent->ubKeyID == AKEY_RIGHT)))
 		{
-			if(UI_GetAlarmStatus())
+			if(ubShowAlarmstate) //UI_GetAlarmStatus()
 				return;
 			
 			//UI_DPTZ_KeyRelease(ptKeyEvent->ubKeyID);
@@ -382,6 +385,9 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		{
 			if(UI_DPTZ_KeyPress(ptKeyEvent->ubKeyID, uwIdx) == rUI_FAIL)
 				continue;
+
+			if(ubShowAlarmstate)
+				return;
 			
 			if(UiKeyEventMap[uwIdx].KeyEventFuncPtr)
 			{
@@ -4914,12 +4920,15 @@ void UI_ShowAlarm(uint8_t type)
 			break;
 
 		case 3:
-			tOsdImgInfo.uwHSize  = 387;
-			tOsdImgInfo.uwVSize  = 717;
-			tOsdImgInfo.uwXStart = 167;
-			tOsdImgInfo.uwYStart = 282;
-			OSD_EraserImg2(&tOsdImgInfo);
-			ubShowAlarmstate = 0;
+			if(ubShowAlarmstate)
+			{
+				tOsdImgInfo.uwHSize  = 387;
+				tOsdImgInfo.uwVSize  = 717;
+				tOsdImgInfo.uwXStart = 167;
+				tOsdImgInfo.uwYStart = 282;
+				OSD_EraserImg2(&tOsdImgInfo);
+				ubShowAlarmstate = 0;
+			}
 			return;
 			break;
 
@@ -7925,11 +7934,14 @@ void UI_MotorDisplay(uint8_t value)
 		case MC_UP_DOWN_OFF:
 			if(ubFactoryModeFLag == 0)
 			{
-				tOsdImgInfo.uwHSize  = 386;
-				tOsdImgInfo.uwVSize  = 389;
-				tOsdImgInfo.uwXStart = 191;
-				tOsdImgInfo.uwYStart = 447;
-				OSD_EraserImg2(&tOsdImgInfo);
+				if(ubMotor1State = MC_UP_DOWN_OFF)
+				{
+					tOsdImgInfo.uwHSize  = 386;
+					tOsdImgInfo.uwVSize  = 389;
+					tOsdImgInfo.uwXStart = 191;
+					tOsdImgInfo.uwYStart = 447;
+					OSD_EraserImg2(&tOsdImgInfo);
+				}
 			}
 			ubMotor1State = MC_UP_DOWN_OFF;
 			break;
@@ -7981,11 +7993,14 @@ void UI_MotorDisplay(uint8_t value)
 		case MC_LEFT_RIGHT_OFF:
 			if(ubFactoryModeFLag == 0)
 			{
-				tOsdImgInfo.uwHSize  = 386;
-				tOsdImgInfo.uwVSize  = 389;
-				tOsdImgInfo.uwXStart = 191;
-				tOsdImgInfo.uwYStart = 447;
-				OSD_EraserImg2(&tOsdImgInfo);
+				if(ubMotor0State != MC_LEFT_RIGHT_OFF)
+				{
+					tOsdImgInfo.uwHSize  = 386;
+					tOsdImgInfo.uwVSize  = 389;
+					tOsdImgInfo.uwXStart = 191;
+					tOsdImgInfo.uwYStart = 447;
+					OSD_EraserImg2(&tOsdImgInfo);
+				}
 			}
 			ubMotor0State = MC_LEFT_RIGHT_OFF;
 			break;
