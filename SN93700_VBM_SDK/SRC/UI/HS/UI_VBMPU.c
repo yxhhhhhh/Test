@@ -35,7 +35,7 @@
 
 #define Current_Test	0
 
-#define SD_UPDATE_TEST	1
+#define SD_UPDATE_TEST	0
 
 /**
  * Key event mapping table
@@ -254,7 +254,6 @@ uint16_t ubBatLvLIdx = BAT_LVL0;
 uint8_t ubLostLinkEnterSanMode = 0;
 uint8_t ubLogoInitStaus = 0;
 
-
 uint8_t ubFactorySettingFLag ;
 uint8_t ubClearOsdFlag_2 =0;
 uint8_t ubFactoryModeFLag = 0;
@@ -266,11 +265,13 @@ uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
 uint32_t ubPuSWVersion = 10;
-
 uint8_t ubBuHWVersion = 0;
 uint32_t ubBuSWVersion = 0;
 
 uint32_t ubPttEndCount = 0;
+
+uint8_t ubFastShowLostLinkSta = 0;
+
 
 
 //------------------------------------------------------------------------------
@@ -815,7 +816,7 @@ void UI_PuInit(void)
 		UI_EnableScanMode();
 	}
 
-	UI_CamvLDCModeCmd(CAMSET_ON);
+	//UI_CamvLDCModeCmd(CAMSET_ON);
 
 	if(ubFactoryModeFLag == 1)
 	{
@@ -2584,7 +2585,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{
-
 				#if UI_TEST_MODE
 				UI_TestCmd(0x11, 1);
 				#endif
@@ -2812,6 +2812,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						tUI_PuSetting.ubLangageFlag = ubLangageFlag;
 						UI_UpdateDevStatusInfo();
 						UI_PuInit();
+						ubFastShowLostLinkSta = 1;
 					}
 				}
 			}
@@ -5928,7 +5929,6 @@ void UI_GetPairCamInfo(void)
 		else
 		{
 			ubCamPairFlag[i] = 0;
-			//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< i));
 		}
 		printd(Apk_DebugLvl, "ubCamPairFlag[%d]= %d \n",i,ubCamPairFlag[i] );
 	}
@@ -6365,8 +6365,12 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 				tUI_UnindBuMsg.ubAPP_Message[1] = ubSubSubMenuItemFlag;
 				UI_SendMessageToAPP(&tUI_UnindBuMsg);
-				ubCamPairFlag[ubSubSubMenuItemFlag] = 0; //20180324
-				//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< ubSubSubMenuItemFlag));
+				ubCamPairFlag[ubSubSubMenuItemFlag] = 0;
+				UI_GetPairCamInfo();
+				if(ubNoAddCamFlag == 1)
+				{
+					ubFastShowLostLinkSta = 1;
+				}
 			}
 			tUI_State = UI_SUBSUBMENU_STATE;		
 			tOsdImgInfo.uwHSize  = 672;
@@ -7247,6 +7251,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 				tUI_PuSetting.ubFeatCode1			= 0x00;
 				tUI_PuSetting.ubFeatCode2			= 0x00;	
 
+				LCDBL_ENABLE(FALSE);
 				UI_CamDeleteCamera(1, 0);
 				printd(Apk_DebugLvl, "defulat ~~~\n");			
 				UI_UpdateDevStatusInfo();	
@@ -7757,29 +7762,32 @@ void UI_EnableMotor(uint8_t value)
 	UI_PUReqCmd_t tUI_motorReqCmd;
 
 	printd(Apk_DebugLvl, "UI_EnableMotor value: %d.\n", value);
-	tUI_motorReqCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
-	tUI_motorReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
-	tUI_motorReqCmd.ubCmd[UI_SETTING_ITEM] 	= UI_MOTOR_SETTING;
-	tUI_motorReqCmd.ubCmd[UI_SETTING_DATA] 	= value;
-	tUI_motorReqCmd.ubCmd_Len  			  	= 3;
-	if(UI_SendRequestToBU(osThreadGetId(), &tUI_motorReqCmd) != rUI_SUCCESS)
+	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
-		printd(DBG_ErrorLvl, "UI_EnableMotor Fail!\n");
-	}
+		tUI_motorReqCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+		tUI_motorReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
+		tUI_motorReqCmd.ubCmd[UI_SETTING_ITEM] 	= UI_MOTOR_SETTING;
+		tUI_motorReqCmd.ubCmd[UI_SETTING_DATA] 	= value;
+		tUI_motorReqCmd.ubCmd_Len  			  	= 3;
+		if(UI_SendRequestToBU(osThreadGetId(), &tUI_motorReqCmd) != rUI_SUCCESS)
+		{
+			printd(DBG_ErrorLvl, "UI_EnableMotor Fail!\n");
+		}
 
-	if(value == 0)
-	{
-		TIMER_Delay_ms(50);
-		SPEAKER_EN(TRUE);
-		TIMER_Delay_us(2);
-		SPEAKER_EN(FALSE);
-		TIMER_Delay_us(2);
-		SPEAKER_EN(TRUE);
-	}
-	else
-	{
-		SPEAKER_EN(FALSE);
-		//ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+		if(value == 0)
+		{
+			TIMER_Delay_ms(50);
+			SPEAKER_EN(TRUE);
+			TIMER_Delay_us(2);
+			SPEAKER_EN(FALSE);
+			TIMER_Delay_us(2);
+			SPEAKER_EN(TRUE);
+		}
+		else
+		{
+			SPEAKER_EN(FALSE);
+			//ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+		}
 	}
 }
 
@@ -7788,16 +7796,19 @@ void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
 	UI_PUReqCmd_t tUI_NightModeReqCmd;
 
 	//printd(Apk_DebugLvl, "UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
-	tUI_NightModeReqCmd.tDS_CamNum 					= tCamViewSel.tCamViewPool[0];
-	tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_SETTING;
-	tUI_NightModeReqCmd.ubCmd[UI_SETTING_ITEM] 		= UI_NIGHTMODE_SETTING;
-	tUI_NightModeReqCmd.ubCmd[UI_SETTING_DATA] 		= CameraId;
-	tUI_NightModeReqCmd.ubCmd[UI_SETTING_DATA+1] 	= NightMode;
-	tUI_NightModeReqCmd.ubCmd_Len  			  		= 4;
-	
-	if(UI_SendRequestToBU(osThreadGetId(), &tUI_NightModeReqCmd) != rUI_SUCCESS)
+	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
-		printd(DBG_ErrorLvl, "UI_CamNightModeCmd Fail!\n");
+		tUI_NightModeReqCmd.tDS_CamNum 					= tCamViewSel.tCamViewPool[0];
+		tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_SETTING;
+		tUI_NightModeReqCmd.ubCmd[UI_SETTING_ITEM] 		= UI_NIGHTMODE_SETTING;
+		tUI_NightModeReqCmd.ubCmd[UI_SETTING_DATA] 		= CameraId;
+		tUI_NightModeReqCmd.ubCmd[UI_SETTING_DATA+1] 	= NightMode;
+		tUI_NightModeReqCmd.ubCmd_Len  			  		= 4;
+
+		if(UI_SendRequestToBU(osThreadGetId(), &tUI_NightModeReqCmd) != rUI_SUCCESS)
+		{
+			printd(DBG_ErrorLvl, "UI_CamNightModeCmd Fail!\n");
+		}
 	}
 }
 
@@ -7811,15 +7822,18 @@ void UI_CamvLDCModeCmd(uint8_t value)
 	UI_PUReqCmd_t tUI_CamvLDCModeCmd;
 
 	printd(Apk_DebugLvl, "UI_CamvLDCModeCmd value: %d.\n", value);
-	tUI_CamvLDCModeCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
-	tUI_CamvLDCModeCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
-	tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_ITEM] 	= UI_IMGPROC_SETTING;
-	tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_DATA] 	= UI_IMGvLDC_SETTING;
-	tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_DATA+1] = value;
-	tUI_CamvLDCModeCmd.ubCmd_Len  			  	= 4;
-	if(UI_SendRequestToBU(osThreadGetId(), &tUI_CamvLDCModeCmd) != rUI_SUCCESS)
+	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
-		printd(DBG_ErrorLvl, "UI_CamvLDCModeCmd Fail!\n");
+		tUI_CamvLDCModeCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+		tUI_CamvLDCModeCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
+		tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_ITEM] 	= UI_IMGPROC_SETTING;
+		tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_DATA] 	= UI_IMGvLDC_SETTING;
+		tUI_CamvLDCModeCmd.ubCmd[UI_SETTING_DATA+1] = value;
+		tUI_CamvLDCModeCmd.ubCmd_Len  			  	= 4;
+		if(UI_SendRequestToBU(osThreadGetId(), &tUI_CamvLDCModeCmd) != rUI_SUCCESS)
+		{
+			printd(DBG_ErrorLvl, "UI_CamvLDCModeCmd Fail!\n");
+		}
 	}
 }
 
@@ -7829,21 +7843,25 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
 	UI_PUReqCmd_t tUI_SendCmd;
 
 	printd(Apk_DebugLvl, "UI_SendToBUCmd, tCamViewPool[0]: %d.\n", tCamViewSel.tCamViewPool[0]);
-	tUI_SendCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
-	tUI_SendCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
-	tUI_SendCmd.ubCmd[UI_SETTING_ITEM] 	= UI_PU_TO_BU_CMD_SETTING;
-	for(i = 0; i < data_len; i++)
+	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
-		tUI_SendCmd.ubCmd[UI_SETTING_DATA+i] = data[i];
-	}
-	tUI_SendCmd.ubCmd_Len  			  	= 2 + data_len;
-	if(UI_SendRequestToBU(osThreadGetId(), &tUI_SendCmd) != rUI_SUCCESS)
-	{
-		printd(DBG_ErrorLvl, "UI_SendToBUCmd Fail!\n");
-		return rUI_FAIL;
+		tUI_SendCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+		tUI_SendCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
+		tUI_SendCmd.ubCmd[UI_SETTING_ITEM] 	= UI_PU_TO_BU_CMD_SETTING;
+		for(i = 0; i < data_len; i++)
+		{
+			tUI_SendCmd.ubCmd[UI_SETTING_DATA+i] = data[i];
+		}
+		tUI_SendCmd.ubCmd_Len  			  	= 2 + data_len;
+		if(UI_SendRequestToBU(osThreadGetId(), &tUI_SendCmd) != rUI_SUCCESS)
+		{
+			printd(DBG_ErrorLvl, "UI_SendToBUCmd Fail!\n");
+			return rUI_FAIL;
+		}
+		return rUI_SUCCESS;
 	}
 
-	return rUI_SUCCESS;
+	return rUI_FAIL;
 }
 
 uint8_t UI_GetBuVersion(void)
@@ -7857,15 +7875,18 @@ void UI_TestCmd(uint8_t Value1, uint8_t Value2)
 	UI_PUReqCmd_t tUI_TestCmd;
 
 	printd(Apk_DebugLvl, "UI_TestCmd (%d, %d), tCamViewPool[0]: %d.\n", Value1, Value2, tCamViewSel.tCamViewPool[0]);
-	tUI_TestCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
-	tUI_TestCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
-	tUI_TestCmd.ubCmd[UI_SETTING_ITEM] 	= UI_TEST_SETTING;
-	tUI_TestCmd.ubCmd[UI_SETTING_DATA] 	= Value1;
-	tUI_TestCmd.ubCmd[UI_SETTING_DATA+1] = Value2;
-	tUI_TestCmd.ubCmd_Len  			  	= 4;
-	if(UI_SendRequestToBU(osThreadGetId(), &tUI_TestCmd) != rUI_SUCCESS)
+	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
-		printd(DBG_ErrorLvl, "tUI_TestCmd Fail!\n");
+		tUI_TestCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+		tUI_TestCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
+		tUI_TestCmd.ubCmd[UI_SETTING_ITEM] 	= UI_TEST_SETTING;
+		tUI_TestCmd.ubCmd[UI_SETTING_DATA] 	= Value1;
+		tUI_TestCmd.ubCmd[UI_SETTING_DATA+1] = Value2;
+		tUI_TestCmd.ubCmd_Len  			  	= 4;
+		if(UI_SendRequestToBU(osThreadGetId(), &tUI_TestCmd) != rUI_SUCCESS)
+		{
+			printd(DBG_ErrorLvl, "tUI_TestCmd Fail!\n");
+		}
 	}
 }
 
@@ -10740,7 +10761,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 		}
 	}
 
-	if((FALSE == tUI_PuSetting.IconSts.ubShowLostLogoFlag) && (*pThreadCnt == uwUI_LostPeriod))
+	if(((FALSE == tUI_PuSetting.IconSts.ubShowLostLogoFlag) && (*pThreadCnt == uwUI_LostPeriod))
+		|| ((FALSE == tUI_PuSetting.IconSts.ubShowLostLogoFlag) && (ubFastShowLostLinkSta == 1)))
 	{
 		uint32_t ulLostLogAddr = *((uint32_t *)(pbPROF_GetParam(SYSPARAM) + LOSTLOGO_ADDR));
 		//UI_CamNum_t tCamNum;
@@ -10771,6 +10793,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 				tLCD_JpegDecodeDisable();
 				//OSD_LogoJpeg(OSDLOGO_LOSTLINK);
 
+				ubFastShowLostLinkSta = 0;
 				if(ubNoAddCamFlag == 1)
 				{
 					OSD_LogoJpeg(OSDLOGO_WHITE_BG);
