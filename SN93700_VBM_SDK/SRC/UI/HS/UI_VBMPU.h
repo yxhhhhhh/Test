@@ -665,6 +665,8 @@ typedef enum
 {
 	UI_GET_BU_VERSION_CMD = 0x20,
 	UI_SET_BU_ADO_TEST_CMD,
+	UI_SET_TALK_ON_CMD,	
+	UI_SET_TALK_OFF_CMD,	
 }UI_PUTOBUCmdID_t;
 
 typedef enum

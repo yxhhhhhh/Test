@@ -60,7 +60,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 	{AKEY_ENTER, 		20,			UI_EnterLongKey, 			NULL},
 	{AKEY_PS,			0,			UI_BuPowerSaveKey,			NULL},
 	{AKEY_PS,			20,			UI_PuPowerSaveKey,			NULL},
-	{AKEY_PTT,			2,			UI_PushTalkKey,				NULL},
+	{AKEY_PTT,			0,			UI_PushTalkKey,				NULL},
 	{PKEY_ID0,			0,			UI_PowerKeyShort,			NULL},
 	{PKEY_ID0, 			20,			UI_PowerKey,				NULL},
 	{GKEY_ID0,			0,			UI_VolUpKey,				NULL},
@@ -295,7 +295,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	
 	if(ubFactoryModeFLag == 1)
 	{
-		if((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I9 == 0))
+		if((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
 		{
 			if(ubPUEnterAdotestFLag == 0)
 			{
@@ -304,7 +304,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			}
 		}
 
-		if((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
+		if((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I9 == 0))
 		{
 			//if(ubBUEnterAdotestFLag == 0)
 			{
@@ -525,6 +525,15 @@ void UI_StateReset(void)
 	UI_LoadDevStatusInfo();
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
 	
+	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
+	{
+		printd(DBG_ErrorLvl, "Calendar base setting fail!\n");
+		//return;
+	}
+	if ((wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_PWRSTS_KEEP_TAG)
+	&& (wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_WATCHDOG_CHK_TAG)) {
+		RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+	}
 }
 //------------------------------------------------------------------------------
 void UI_UpdateAppStatus(void *ptAppStsReport)
@@ -2455,6 +2464,7 @@ void UI_BuPowerSaveModeSelection(UI_ArrowKey_t tArrowKey)
 void UI_PushTalkKey(void)
 {
 	OSD_IMG_INFO tOsdInfo;
+	uint8_t CmdData = 0;
 
 	printd(Apk_DebugLvl, "UI_PushTalkKey#####\n");
 	if(((ubTempAlarmState > TEMP_ALARM_IDLE)&&(ubTempAlarmState < TEMP_ALARM_OFF)) ||  
@@ -2488,9 +2498,13 @@ void UI_PushTalkKey(void)
 	{
 		SPEAKER_EN(FALSE);
 		ubPttEndCount = 0;
+		CmdData = UI_SET_TALK_ON_CMD;
+		UI_SendToBUCmd(&CmdData, 1);
 	}
 	else
 	{
+		CmdData = UI_SET_TALK_OFF_CMD;
+		UI_SendToBUCmd(&CmdData, 1);	
 		ubPttEndCount = 1;
 	}
 }
@@ -2833,7 +2847,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 //------------------------------------------------
 void UI_VolUpKey(void)
 {	
-	if(tUI_State != UI_DISPLAY_STATE)
+	/*if(tUI_State != UI_DISPLAY_STATE)
 		return;
 	
 	if(tUI_PuSetting.ubDefualtFlag == FALSE)
@@ -2844,6 +2858,7 @@ void UI_VolUpKey(void)
 	
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL8)
 	  	return;
+	*/
 				
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL8)
 	{
@@ -2855,11 +2870,12 @@ void UI_VolUpKey(void)
 	}
 	
 	UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
-
+	tUI_State = UI_DISPLAY_STATE;
 }
 
 void UI_VolDownKey(void)
 {	
+	/*
 	if(tUI_State != UI_DISPLAY_STATE)
 		return;
 	
@@ -2868,6 +2884,7 @@ void UI_VolDownKey(void)
 		if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 			return;
 	}
+	*/
 	
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL < VOL_LVL0)
 	  return;
@@ -2881,6 +2898,7 @@ void UI_VolDownKey(void)
 	 	tUI_PuSetting.VolLvL.tVOL_UpdateLvL--;
 	}
 	UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
+	tUI_State = UI_DISPLAY_STATE;
 }
 //------------------------------------------------------------------------------
 uint8_t UI_GetAlarmStatus(void)
@@ -3179,6 +3197,15 @@ void UI_ShowSysVolume(uint8_t value)
 
 	if(ubFactoryModeFLag == 1)
 		return;
+
+	if(tUI_State != UI_DISPLAY_STATE)
+	{
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 1280;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);
+	}
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_VOL_BG, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 48;
@@ -5732,10 +5759,13 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 		break;
 
 		case ENTER_ARROW:
-			tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
-			UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
-			UI_ZoomDisplay();
-			//UI_UpdateDevStatusInfo();
+			if(APP_LINK_STATE == tUI_SyncAppState)
+			{
+				tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
+				UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
+				UI_ZoomDisplay();
+				//UI_UpdateDevStatusInfo();
+			}
 		break;	
 
 		case LEFT_ARROW:
@@ -7955,7 +7985,7 @@ void UI_MotorDisplay(uint8_t value)
 		case MC_UP_DOWN_OFF:
 			if(ubFactoryModeFLag == 0)
 			{
-				if(ubMotor1State = MC_UP_DOWN_OFF)
+				if(ubMotor1State != MC_UP_DOWN_OFF)
 				{
 					tOsdImgInfo.uwHSize  = 386;
 					tOsdImgInfo.uwVSize  = 389;

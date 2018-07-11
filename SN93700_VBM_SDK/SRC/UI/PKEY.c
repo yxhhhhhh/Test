@@ -273,12 +273,12 @@ GKEY_ID_t GKEY_Detection(void)
 		return GKEY_UNKNOW;
 	}
 
-	if((GPIO->GPIO_I9 == 0)&&(GPIO->GPIO_I10 == 1))
+	if((GPIO->GPIO_I10 == 0)&&(GPIO->GPIO_I9 == 1))
 	{
 		return GKEY_ID0;
 	}
 
-	if((GPIO->GPIO_I10 == 0)&&(GPIO->GPIO_I9 == 1))
+	if((GPIO->GPIO_I9 == 0)&&(GPIO->GPIO_I10 == 1))
 	{
 		return GKEY_ID1;
 	}

@@ -653,8 +653,14 @@ static void KNL_AdoDecMonitThread(void const *argument)
 				TIMER_Delay_us(2);
 				SPEAKER_EN(FALSE);
 				TIMER_Delay_us(2);
-				#endif
+
 				SPEAKER_EN(TRUE);
+				#endif
+
+				#if VBM_BU
+					//SPEAKER_EN(TRUE);
+					SPEAKER_EN(FALSE);
+				#endif
 				break;
 			case PLAY_BUF_EMP:
 				printf("-Dac play empty-\n");

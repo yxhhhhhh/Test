@@ -111,6 +111,8 @@ I2C1_Type *pTempI2C;
 uint8_t ubBuHWVersion = 1;
 uint32_t ubBuSWVersion = 10;
 
+uint8_t ubTalkCnt = 0;
+
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -213,12 +215,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	switch(tUI_SyncAppState)
 	{
 		case APP_LINK_STATE:
-			//if(TRUE == ubUI_WorModeEnFlag)
-				//UI_ChangePsModeToNormalMode();
+			if(TRUE == ubUI_WorModeEnFlag)
+				UI_ChangePsModeToNormalMode();
 			if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
 				UI_VoxTrigger();
-			if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
-				UI_VoiceTrigger();
 			if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
 				UI_VoiceTrigger();
 			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
@@ -235,6 +235,15 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				uint16_t uwChkType = UI_SYSTEMPDATA_CHK;
 				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 			}
+
+			if(ubTalkCnt >= 1)
+				ubTalkCnt++;
+
+			if(ubTalkCnt == 3)
+			{
+				ubTalkCnt = 0;
+				SPEAKER_EN(TRUE);
+			}			
 			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
@@ -1111,16 +1120,16 @@ void UI_MotoControlInit(void)
 	
 	tMC_SettingApp.ubMC_ClockDivider = 63;
 	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	tMC_SettingApp.ubMC_HighPeriod = 24;//48/24/18
-	tMC_SettingApp.ubMC_PeriodPerStep = 18;//36/18/16
+	tMC_SettingApp.ubMC_HighPeriod = 48;//48/24/18
+	tMC_SettingApp.ubMC_PeriodPerStep = 36;//36/18/16
 	tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
-	tMC_Setup(MC_0,&tMC_SettingApp);
+	tMC_Setup(MC_0,&tMC_SettingApp);	//left right
 
 	tMC_SettingApp.ubMC_ClockDivider = 63;
 	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	tMC_SettingApp.ubMC_HighPeriod = 64;	//18
-	tMC_SettingApp.ubMC_PeriodPerStep = 48;	//16
-	tMC_Setup(MC_1,&tMC_SettingApp);
+	tMC_SettingApp.ubMC_HighPeriod = 144;	//18  64
+	tMC_SettingApp.ubMC_PeriodPerStep = 36;	//16	48
+	tMC_Setup(MC_1,&tMC_SettingApp);	//up down
 	#endif
 }
 
@@ -1291,6 +1300,7 @@ void UI_NightModeSetting(void *pvNMParam)
 void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 {
 	static uint8_t BuPlayRecordState = 0;
+	static uint8_t BuTalkSpkState = 0;	
 	uint8_t *pRecvPuParam = (uint8_t *)pvRecvPuParam;
 	uint8_t ubPuCmd = pRecvPuParam[0];
 
@@ -1314,6 +1324,14 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 			{
 				BuPlayRecordState = 0;
 			}
+			break;
+
+		case UI_SET_TALK_ON_CMD:
+			ubTalkCnt = 1;			
+			break;
+
+		case UI_SET_TALK_OFF_CMD:
+			SPEAKER_EN(FALSE);
 			break;
 
 		default:
