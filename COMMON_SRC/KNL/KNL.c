@@ -658,8 +658,8 @@ static void KNL_AdoDecMonitThread(void const *argument)
 				#endif
 
 				#if VBM_BU
-					//SPEAKER_EN(TRUE);
-					SPEAKER_EN(FALSE);
+				SPEAKER_EN(TRUE);
+				//SPEAKER_EN(FALSE);
 				#endif
 				break;
 			case PLAY_BUF_EMP:

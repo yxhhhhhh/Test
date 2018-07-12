@@ -1120,15 +1120,15 @@ void UI_MotoControlInit(void)
 	
 	tMC_SettingApp.ubMC_ClockDivider = 63;
 	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	tMC_SettingApp.ubMC_HighPeriod = 48;//48/24/18
-	tMC_SettingApp.ubMC_PeriodPerStep = 36;//36/18/16
+	tMC_SettingApp.ubMC_HighPeriod = 24;//48/24/18
+	tMC_SettingApp.ubMC_PeriodPerStep = 18;//36/18/16
 	tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
 	tMC_Setup(MC_0,&tMC_SettingApp);	//left right
 
 	tMC_SettingApp.ubMC_ClockDivider = 63;
 	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	tMC_SettingApp.ubMC_HighPeriod = 144;	//18  64
-	tMC_SettingApp.ubMC_PeriodPerStep = 36;	//16	48
+	tMC_SettingApp.ubMC_HighPeriod = 72;	//18  64
+	tMC_SettingApp.ubMC_PeriodPerStep = 18;	//16	48
 	tMC_Setup(MC_1,&tMC_SettingApp);	//up down
 	#endif
 }

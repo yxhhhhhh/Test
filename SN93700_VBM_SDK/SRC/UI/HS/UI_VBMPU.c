@@ -240,6 +240,7 @@ uint8_t ubPickupAlarmState = PICKUP_ALARM_IDLE;
 uint16_t ubPickupAlarmTriggerCount = 0;
 
 uint8_t ubDisplayPTN = 0;
+uint8_t ubMotorDirection = 0;
 uint8_t ubMotor0State = MC_LEFT_RIGHT_OFF;
 uint8_t ubMotor1State = MC_UP_DOWN_OFF;
 uint8_t ubMC0OnCount = 0;
@@ -862,11 +863,18 @@ void UI_PowerKeyDeal(void)
 {
 	if(PWM->PWM_EN8 == 0)
 	{
+		#if Current_Test
+		UI_DisableVox();
+		TIMER_Delay_ms(500);
+		#endif
 		LCDBL_ENABLE(UI_ENABLE);
 	}
 	else
 	{
 		LCDBL_ENABLE(UI_DISABLE);
+		#if Current_Test
+		UI_EnableVox();
+		#endif
 	}
 
 }
@@ -877,7 +885,7 @@ void UI_PowerKeyShort(void)
 		return;
 
 	UI_PowerKeyDeal();
-
+	
 	printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
 }
 void UI_PowerOff(void)
@@ -2605,7 +2613,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 				#if Current_Test
 				//UI_EnableVox();
-				UI_SetupPuWorMode();
+				//UI_SetupPuWorMode();
 				#endif
 				
 				UI_MotorControl(MC_LEFT_ON);
@@ -8090,14 +8098,17 @@ void UI_MotorControl(uint8_t Value)
 		return;
 
 	printd(Apk_DebugLvl, "UI_MotorControl Value: (0x%x) #####\n", Value);
-	UI_EnableMotor((Value&0x01)?(Value>>4):0);
+	//UI_EnableMotor((Value&0x01)?(Value>>4):0);
+
+	if((Value&0x01) == 0)
+		UI_EnableMotor(0);
 	UI_MotorDisplay(Value);
 }
 
 void UI_MotorStateCheck(void)
 {
-	#define MC0_MAX_CNT	100 //left - right /80
-	#define MC1_MAX_CNT	40 //up - down
+	#define MC0_MAX_CNT	88 //left - right /80
+	#define MC1_MAX_CNT	20 //up - down
 
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
@@ -8108,7 +8119,11 @@ void UI_MotorStateCheck(void)
 	//printd(Apk_DebugLvl, "### UP_DOWN: (0x%x, %d), LEFT_RIGHT: (0x%x, %d).\n", ubMotor1State, ubMC1OnCount, ubMotor0State, ubMC0OnCount);
 	if(ubMotor1State == MC_UP_ON)
 	{
+		if(ubMotorDirection != 1)
+			ubMC1OnCount = 0;
+		
 		ubMC1OnCount++;
+		ubMotorDirection = 1;
 		if(ubMC1OnCount >= MC1_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_UP_TOP);
@@ -8121,11 +8136,15 @@ void UI_MotorStateCheck(void)
 	}
 	else if(ubMotor1State == MC_UP_TOP)
 	{
-		ubMC1OnCount = 0;
+		//ubMC1OnCount = 0;
 	}
 	else if(ubMotor1State == MC_DOWN_ON)
 	{
+		if(ubMotorDirection != 2)
+			ubMC1OnCount = 0;
+		
 		ubMC1OnCount++;
+		ubMotorDirection = 2;
 		if(ubMC1OnCount >= MC1_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_DOWN_TOP);
@@ -8138,17 +8157,21 @@ void UI_MotorStateCheck(void)
 	}
 	else if(ubMotor1State == MC_DOWN_TOP)
 	{
-		ubMC1OnCount = 0;
+		//ubMC1OnCount = 0;
 	}
 	else if(ubMotor1State == MC_UP_DOWN_OFF)
 	{
-		ubMC1OnCount = 0;
+		//ubMC1OnCount = 0;
 	}
 
 	
 	if(ubMotor0State == MC_LEFT_ON)
 	{
+		if(ubMotorDirection != 3)
+			ubMC0OnCount = 0;
+		
 		ubMC0OnCount++;
+		ubMotorDirection = 3;
 		if(ubMC0OnCount >= MC0_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_LEFT_TOP);
@@ -8161,11 +8184,15 @@ void UI_MotorStateCheck(void)
 	}
 	else if(ubMotor0State == MC_LEFT_TOP)
 	{
-		ubMC0OnCount = 0;
+		//ubMC0OnCount = 0;
 	}
 	else if(ubMotor0State == MC_RIGHT_ON)
 	{
+		if(ubMotorDirection != 4)
+			ubMC0OnCount = 0;
+		
 		ubMC0OnCount++;
+		ubMotorDirection = 4;
 		if(ubMC0OnCount >= MC0_MAX_CNT)
 		{
 			UI_MotorDisplay(MC_RIGHT_TOP);
@@ -8178,11 +8205,11 @@ void UI_MotorStateCheck(void)
 	}
 	else if(ubMotor0State == MC_RIGHT_TOP)
 	{
-		ubMC0OnCount = 0;
+		//ubMC0OnCount = 0;
 	}
 	else if(ubMotor0State == MC_LEFT_RIGHT_OFF)
 	{
-		ubMC0OnCount = 0;
+		//ubMC0OnCount = 0;
 	}
 }
 
@@ -11601,10 +11628,10 @@ void UI_DisableVox(void)
 	APP_EventMsg_t tUI_PsMessage = {0};
 	UI_PUReqCmd_t tPsCmd;
 
-	/*
-	if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
-		return;
+	//if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
+		//return;
 
+	/*
 	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
 		tPsCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
@@ -11620,6 +11647,7 @@ void UI_DisableVox(void)
 		}
 	}
 	*/
+	
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
 	tUI_PsMessage.ubAPP_Message[1] = PS_VOX_MODE;
