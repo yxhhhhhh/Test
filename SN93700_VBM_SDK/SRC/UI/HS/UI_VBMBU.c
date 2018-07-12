@@ -1333,7 +1333,11 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 		case UI_SET_TALK_OFF_CMD:
 			SPEAKER_EN(FALSE);
 			break;
-
+			
+		case UI_GET_BU_PS_MODE_CMD:
+			UI_SendPsModeToPu();
+			break;
+	
 		default:
 			break;
 	}
@@ -1378,7 +1382,7 @@ void UI_SetIRLed(uint8_t LedState)
 
 void UI_BrightnessCheck(void) //20180408
 {
-	#define IR_CHECK_CNT	3
+	#define IR_CHECK_CNT	5
 	int i;
 	static uint16_t ubCheckMinIrCnt = 0;
 	static uint16_t ubCheckMaxIrCnt = 0;
@@ -1386,12 +1390,12 @@ void UI_BrightnessCheck(void) //20180408
 	
 	uwDetLvl = uwSADC_GetReport(1);
 
-	if(uwDetLvl < 0x01)
+	if(uwDetLvl < 0x04)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
 	}
-	else if(uwDetLvl > 0x03)
+	else if(uwDetLvl > 0x09)
 	{
 		ubCheckMaxIrCnt++;
 		ubCheckMinIrCnt = 0;
@@ -1532,4 +1536,25 @@ uint8_t UI_SendVersionToPu(void)
 
 	return rUI_SUCCESS;
 }
+
+uint8_t UI_SendPsModeToPu(void)
+{
+	UI_BUReqCmd_t tUI_PsModeReqCmd;
+	
+	tUI_PsModeReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_REPORT;
+	tUI_PsModeReqCmd.ubCmd[UI_REPORT_ITEM] 	= UI_BU_TO_PU_CMD;
+	tUI_PsModeReqCmd.ubCmd[UI_REPORT_DATA] 	= UI_BU_CMD_PS_MODE;
+	tUI_PsModeReqCmd.ubCmd[UI_REPORT_DATA+1] 	= tUI_BuStsInfo.tCamPsMode;		
+	tUI_PsModeReqCmd.ubCmd_Len  			  	= 4;
+
+	printd(Apk_DebugLvl, "UI_SendPsModeToPu PsMode: %d.\n", tUI_BuStsInfo.tCamPsMode);
+	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_PsModeReqCmd))
+	{
+		printd(DBG_ErrorLvl, "UI_SendPsModeToPu Fail!\n");
+		return rUI_FAIL;
+	}
+
+	return rUI_SUCCESS;
+}
+
 

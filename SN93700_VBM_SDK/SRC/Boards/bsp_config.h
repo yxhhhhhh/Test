@@ -43,7 +43,8 @@
 //#define	SIGNAL_LED_IO_ENABLE		(GPIO->GPIO_OE3)
 #define	LCD_PWR_ENABLE				(GPIO->GPIO_O10 = 0)	//output low
 #define	LCD_PWR_DISABLE				(GPIO->GPIO_O10 = 1)	//output high
-
+#define LCDBL_STATE					(PWM->PWM_EN8)
+#define SPEAKER_STATE				(GPIO->GPIO_O2)
 #else //DEMO
 #define LCDBL_ENABLE(en)												\
 									{									\

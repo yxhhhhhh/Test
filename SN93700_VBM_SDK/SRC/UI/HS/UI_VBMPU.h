@@ -647,7 +647,7 @@ typedef enum
 typedef enum
 {
 	UI_BU_CMD_VERSION = 0x20,
-	
+	UI_BU_CMD_PS_MODE,
 }UI_BUTOPUCmdID_t;
 
 typedef enum
@@ -667,6 +667,7 @@ typedef enum
 	UI_SET_BU_ADO_TEST_CMD,
 	UI_SET_TALK_ON_CMD,	
 	UI_SET_TALK_OFF_CMD,	
+	UI_GET_BU_PS_MODE_CMD,
 }UI_PUTOBUCmdID_t;
 
 typedef enum
@@ -965,4 +966,6 @@ uint8_t UI_GetBuVersion(void);
 void UI_FactoryStatusDisplay(void);
 uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len);
 void UI_EnterLongKey(void);
+UI_Result_t UI_SetupPuWorMode(void);
+uint8_t UI_GetBuPsMode(void);
 #endif

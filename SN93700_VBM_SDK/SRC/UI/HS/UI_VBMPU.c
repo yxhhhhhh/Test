@@ -33,7 +33,7 @@
 
 #define UI_TEST_MODE	0
 
-#define Current_Test	0
+#define Current_Test	1
 
 #define SD_UPDATE_TEST	0
 
@@ -272,7 +272,8 @@ uint32_t ubBuSWVersion = 0;
 uint32_t ubPttEndCount = 0;
 
 uint8_t ubFastShowLostLinkSta = 0;
-
+uint8_t ubPwrKeyShortSta = 0;
+uint8_t ubGetPsModeFlag = 0;
 
 
 //------------------------------------------------------------------------------
@@ -665,6 +666,52 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	{
 		ubLostLinkEnterSanMode = 0;
 	}
+
+	if(tUI_PuSetting.ubDefualtFlag == FALSE)
+	{
+		#if Current_Test
+		if(ubPwrKeyShortSta >= 1)
+		{
+			ubPwrKeyShortSta++;
+		}
+
+		if(ubPwrKeyShortSta == 4)
+		{
+			if(LCDBL_STATE == 0)
+				LCDBL_ENABLE(UI_ENABLE);
+			ubPwrKeyShortSta = 0;
+		}
+		#endif
+		if(tUI_SyncAppState == APP_LINK_STATE)
+		{
+			if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
+			{
+				if(SPEAKER_STATE == FALSE)
+				{
+					SPEAKER_EN(TRUE);
+					TIMER_Delay_us(2);
+					SPEAKER_EN(FALSE);
+					TIMER_Delay_us(2);
+					SPEAKER_EN((TRUE));
+				}
+			}
+
+			if((ubGetPsModeFlag == 0) && (UI_GetBuPsMode() == rUI_SUCCESS))
+			{
+				ubGetPsModeFlag = 1;
+			}
+		}
+		else
+		{
+			if(SPEAKER_STATE == TRUE)
+			{
+				SPEAKER_EN(FALSE);
+			}
+
+			ubGetPsModeFlag = 0;
+		}
+	}
+	
 }
 //------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
@@ -859,21 +906,54 @@ void UI_EventHandles(UI_Event_t *ptEventPtr)
 	}
 }
 //------------------------------------------------------------------------------
+void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
+{
+	OSD_IMG_INFO tOsdImgInfo;
+	UI_PUReqCmd_t tPsCmd;
+	
+	if(PS_VOX_MODE == tUI_PsMode)
+	{
+		if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+		{
+			tPsCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+			tPsCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
+			tPsCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
+			tPsCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
+			tPsCmd.ubCmd_Len  				= 3;
+			if(UI_SendRequestToBU(osThreadGetId(), &tPsCmd) != rUI_SUCCESS)
+			{
+				printd(DBG_ErrorLvl, "VOX Notify Fail !\n");
+				return;
+			}
+		}
+		tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = PS_VOX_MODE;
+		UI_EnableVox();
+	}
+	else if(PS_WOR_MODE == tUI_PsMode)
+	{
+		UI_SetupPuWorMode();
+	}
+}
+//------------------------------------------------------------------------------
 void UI_PowerKeyDeal(void)
 {
-	if(PWM->PWM_EN8 == 0)
+	if(LCDBL_STATE == 0)
 	{
 		#if Current_Test
-		UI_DisableVox();
-		TIMER_Delay_ms(500);
-		#endif
+		if(ubPwrKeyShortSta == 0)
+		{
+			ubPwrKeyShortSta = 1;
+			UI_DisableVox();
+		}
+		#else
 		LCDBL_ENABLE(UI_ENABLE);
+		#endif
 	}
 	else
 	{
 		LCDBL_ENABLE(UI_DISABLE);
 		#if Current_Test
-		UI_EnableVox();
+		UI_SwitchMode(PS_VOX_MODE);
 		#endif
 	}
 
@@ -885,7 +965,7 @@ void UI_PowerKeyShort(void)
 		return;
 
 	UI_PowerKeyDeal();
-	
+
 	printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
 }
 void UI_PowerOff(void)
@@ -1544,8 +1624,10 @@ UI_Result_t UI_DPTZ_KeyPress(uint8_t ubKeyID, uint8_t ubKeyMapIdx)
 
 	if(ubKeyID == UiKeyEventMap[ubKeyMapIdx].ubKeyID)
 	{
+		/* modify by wjb
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, uwUI_ArrowOsdImgIdx[ubKeyID], 1, &tOsdImgInfo);
 		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		*/
 		return rUI_SUCCESS;
 	}
 	return rUI_FAIL;
@@ -3198,9 +3280,20 @@ void UI_ShowSysVolume(uint8_t value)
 	tUI_PuSetting.VolLvL.ubVOL_UpdateCnt = UI_UPDATEVOLLVL_PERIOD*5; 
 	
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
+	{
 		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
+		SPEAKER_EN(FALSE);
+	}
 	else
+	{
+		TIMER_Delay_us(20);
+		SPEAKER_EN(TRUE);
+		TIMER_Delay_us(2);
+		SPEAKER_EN(FALSE);
+		TIMER_Delay_us(2);
+		SPEAKER_EN((TRUE));
     	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+	}
 	tUI_PuSetting.VolLvL.tVOL_UpdateLvL = value;
 
 	if(ubFactoryModeFLag == 1)
@@ -4972,7 +5065,7 @@ void UI_ShowAlarm(uint8_t type)
 			break;
 	}
 
-	if(PWM->PWM_EN8 == 0)
+	if(LCDBL_STATE == 0)
 		LCDBL_ENABLE(UI_ENABLE);
 }
 
@@ -7713,6 +7806,15 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 			ubBuSWVersion = pvdata[2]*10 + pvdata[3];
 			break;
 
+		case UI_BU_CMD_PS_MODE:
+			if((ubGetPsModeFlag == 1) && (ubPwrKeyShortSta == 0))
+			{
+				if(pvdata[1] == PS_VOX_MODE)
+				{
+					UI_DisableVox();
+				}
+			}
+			break;
 		default:
 			break;
 	}
@@ -7798,7 +7900,7 @@ void UI_VolBarDisplay(uint8_t value)
 void UI_EnableMotor(uint8_t value)
 {
 	UI_PUReqCmd_t tUI_motorReqCmd;
-
+	
 	printd(Apk_DebugLvl, "UI_EnableMotor value: %d.\n", value);
 	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
@@ -7880,7 +7982,7 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
 	int i;
 	UI_PUReqCmd_t tUI_SendCmd;
 
-	printd(Apk_DebugLvl, "UI_SendToBUCmd, tCamViewPool[0]: %d.\n", tCamViewSel.tCamViewPool[0]);
+	printd(Apk_DebugLvl, "UI_SendToBUCmd, tCamViewPool[0]: %d, ConnSts: %d.\n", tCamViewSel.tCamViewPool[0], tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
 	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
 		tUI_SendCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
@@ -7900,6 +8002,12 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
 	}
 
 	return rUI_FAIL;
+}
+
+uint8_t UI_GetBuPsMode(void)
+{
+	uint8_t CmdData = UI_GET_BU_PS_MODE_CMD;
+	return UI_SendToBUCmd(&CmdData, 1);
 }
 
 uint8_t UI_GetBuVersion(void)
@@ -8100,7 +8208,7 @@ void UI_MotorControl(uint8_t Value)
 	printd(Apk_DebugLvl, "UI_MotorControl Value: (0x%x) #####\n", Value);
 	//UI_EnableMotor((Value&0x01)?(Value>>4):0);
 
-	if((Value&0x01) == 0)
+	if((Value == MC_UP_DOWN_OFF) || (Value == MC_LEFT_RIGHT_OFF))
 		UI_EnableMotor(0);
 	UI_MotorDisplay(Value);
 }
@@ -8226,7 +8334,7 @@ void UI_GetBatLevel(void)
 		{3590, 	 	3660, 	BAT_LVL1},
 		{3660, 	 	3760,	BAT_LVL2},
 		{3760, 		3860, 	BAT_LVL3},
-		{3860, 	 	4250, 	BAT_LVL4},
+		{3860, 	 	4350, 	BAT_LVL4},
 	};
 	
 	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
@@ -8263,7 +8371,7 @@ void UI_GetBatLevel(void)
 		}
 	}
 
-	if(ubGetBatValue >= 4250)
+	if(ubGetBatValue >= 4350)
 		ubBatLvLIdx = BAT_LVL4;
 
 	//printd(Apk_DebugLvl, "UI_GetBatLevel ubBatLvLIdx: %d, ubGetBatValue: %d.\n", ubBatLvLIdx, ubGetBatValue);
@@ -8340,7 +8448,7 @@ void UI_CheckUsbCharge(void)
 	{
 		if(ubLogoInitStaus == 1)
 		{
-			if(PWM->PWM_EN8 == 0)
+			if(LCDBL_STATE == 0)
 			{
 				LCDBL_ENABLE(UI_ENABLE);
 				printd(Apk_DebugLvl, "UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
@@ -8413,19 +8521,11 @@ void UI_PTNDisplay(uint8_t value)
 			ubDisplayPTN = 1;
 		break;
 	}
-	
 }
 
-void UI_CheckFunc(void)
-{
-	static uint16_t ubCheckCount = 0;
-	
-}
 
-void UI_CheckLinkFunc(void)
-{
-	
-}
+//----------------------------------------------------------Apical---------------------------------------------
+
 //------------------------------------------------
 #define CAMS_SET_ITEM_OFFSET	50
 /*
@@ -10406,7 +10506,7 @@ void UI_UpdateVolLvlIcon(void)
 	if(!tUI_PuSetting.VolLvL.ubVOL_UpdateCnt)
 		return;
 	
-	if(!(--tUI_PuSetting.VolLvL.ubVOL_UpdateCnt))
+	if((!(--tUI_PuSetting.VolLvL.ubVOL_UpdateCnt))||(ubMotor0State != MC_LEFT_RIGHT_OFF)||(ubMotor1State != MC_UP_DOWN_OFF))
 	{
 		if(tUI_State == UI_DISPLAY_STATE)
 		{
@@ -10417,6 +10517,7 @@ void UI_UpdateVolLvlIcon(void)
 			tOsdImgInfo.uwHSize  = 672;
 			tOsdImgInfo.uwVSize  = 161;
 			OSD_EraserImg2(&tOsdImgInfo);
+			tUI_PuSetting.VolLvL.ubVOL_UpdateCnt = 0;
 		}
 	}
 }
@@ -11601,6 +11702,8 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 		tUI_CamStatus[tCamNum].tCamPsMode = POWER_NORMAL_MODE;
 		//UI_UpdateDevStatusInfo();
 	}
+
+	
 }
 //------------------------------------------------------------------------------
 void UI_EnableVox(void)
@@ -11631,7 +11734,8 @@ void UI_DisableVox(void)
 	//if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
 		//return;
 
-	/*
+	printd(Apk_DebugLvl, "UI_DisableVox#\n");
+
 	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
 		tPsCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
@@ -11646,8 +11750,7 @@ void UI_DisableVox(void)
 				return;
 		}
 	}
-	*/
-	
+
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
 	tUI_PsMessage.ubAPP_Message[1] = PS_VOX_MODE;

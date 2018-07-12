@@ -139,7 +139,7 @@ typedef struct
 typedef enum
 {
 	UI_BU_CMD_VERSION = 0x20,
-	
+	UI_BU_CMD_PS_MODE,
 }UI_BUTOPUCmdID_t;
 
 typedef enum
@@ -158,7 +158,8 @@ typedef enum
 	UI_GET_BU_VERSION_CMD = 0x20,
 	UI_SET_BU_ADO_TEST_CMD,
 	UI_SET_TALK_ON_CMD,	
-	UI_SET_TALK_OFF_CMD,	
+	UI_SET_TALK_OFF_CMD,
+	UI_GET_BU_PS_MODE_CMD,
 }UI_PUTOBUCmdID_t;
 
 typedef enum
@@ -301,6 +302,7 @@ uint8_t UI_GetCamUVCMode(void);
 void UI_PairingLongKey(void);
 void UI_NightModeSetting(void *pvNMParam);
 uint8_t UI_SendVersionToPu(void);
+uint8_t UI_SendPsModeToPu(void);
 void UI_RecvPUCmdSetting(void *pvRecvPuParam);
 
 #endif
