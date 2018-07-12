@@ -49,7 +49,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 {
 	{NULL,				0,					NULL},
 	{GKEY_ID0, 			0,					UI_PairingKey},
-	{GKEY_ID0, 			50,					UI_PairingLongKey},	
+	{GKEY_ID0, 			10,					UI_PairingLongKey},	
 	{PKEY_ID0, 			0,					UI_PairingKey},
 	{PKEY_ID0, 			20,					UI_PowerKey},
 };
@@ -331,6 +331,7 @@ void UI_PowerKey(void)
 //------------------------------------------------------------------------------
 void UI_PairingKey(void)
 {
+	/*
 	if((UI_GetCamUVCMode()) && (GPIO->GPIO_I6 == 0))
 		return;
 	
@@ -339,18 +340,19 @@ void UI_PairingKey(void)
 	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
 	UI_SendMessageToAPP(&tUI_PairMessage);
 	BUZ_PlaySingleSound();
+	*/
 }
 
 void UI_PairingLongKey(void)
 {
-	/*
+	if((UI_GetCamUVCMode()) && (GPIO->GPIO_I6 == 0))
+		return;
+	
 	APP_EventMsg_t tUI_PairMessage = {0};
-
 	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
 	UI_SendMessageToAPP(&tUI_PairMessage);
-	*/
-	printd(Apk_DebugLvl, "UI_PairingLongKey###\n");
 	BUZ_PlaySingleSound();
+	printd(Apk_DebugLvl, "UI_PairingLongKey###\n");
 }
 //------------------------------------------------------------------------------
 void UI_UpdateBUStatusToPU(void)
@@ -749,7 +751,7 @@ void UI_TempCheck(void) //20180322
 	cur_temp = tem;
 
 	cur_temp = UI_GetTempAverVal(cur_temp);
-	printd(Apk_DebugLvl, "### tem: %d, cur_temp: %d.\n", tem, cur_temp);
+	//printd(Apk_DebugLvl, "### tem: %d, cur_temp: %d.\n", tem, cur_temp);
 	if(cur_temp == 0xFF)
 		return;
 	

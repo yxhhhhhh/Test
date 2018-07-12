@@ -27,7 +27,7 @@
 #include "Buzzer.h"
 #include "SADC.h"
 #include "WDT.h"
-
+#include "PAIR.h"
 
 #define osUI_SIGNALS	0x66
 
@@ -473,8 +473,8 @@ void UI_OnInitDialog(void)
 //		tCamViewSel.tCamViewPool[0] = (tCamViewSel.tCamViewType == KNL_DISP_QUAD)?CAM_4T:CAM1;
 //		tCamViewSel.tCamViewPool[1] = (tCamViewSel.tCamViewType == KNL_DISP_DUAL_C)?CAM2:NO_CAM;
 		UI_CamNum_t tCamNum;
-
 		tCamViewSel.tCamViewType = SINGLE_VIEW;
+		/*
 		for(tCamNum = CAM1; tCamNum < CAM_4T ; tCamNum++)
 		{
 			if(tUI_CamStatus[tCamNum].ulCAM_ID != INVALID_ID)
@@ -483,7 +483,9 @@ void UI_OnInitDialog(void)
 				break;
 			}
 		}
+		*/
 	}
+
 
 	if (tCamViewSel.tCamViewType == SCAN_VIEW) {
 		UI_EnableScanMode();
@@ -5390,8 +5392,13 @@ void UI_TimeSetSystemTime(void) //add by wjb
 void UI_TimeShowSystemTime(uint8_t type)
 {
 	OSD_IMG_INFO tOsdImgInfo;
+	RTC_Calendar_t tUi_Calendar;
+	tUi_Calendar.ubHour = tUI_PuSetting.tSysCalendar.ubHour;
+	tUi_Calendar.ubMin = tUI_PuSetting.tSysCalendar.ubMin;
 	
-	RTC_GetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+	RTC_GetCalendar((RTC_Calendar_t *)(&tUi_Calendar));
+	tUI_PuSetting.tSysCalendar.ubHour = tUi_Calendar.ubHour;
+	tUI_PuSetting.tSysCalendar.ubMin = tUi_Calendar.ubMin;
 
 	if((type == 1) || (ubTimeHour != (tUI_PuSetting.tSysCalendar.ubHour%12)) || (ubTimeMin != tUI_PuSetting.tSysCalendar.ubMin)
 		|| (ubTimeAMPM^(tUI_PuSetting.tSysCalendar.ubHour >= 12?1:0)))
@@ -6666,6 +6673,9 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 	switch(tResult)
 	{
 		case rUI_SUCCESS:
+			tPairInfo.tPairSelCam= ubPairSelCam;
+			tPairInfo.tDispLocation = ubPairSelCam;
+			
 			tUI_PuSetting.ubPairedBuNum += (tUI_PuSetting.ubPairedBuNum >= tUI_PuSetting.ubTotalBuNum)?0:1;
 			tUI_CamStatus[tPairInfo.tPairSelCam].ulCAM_ID = tPairInfo.tPairSelCam;
 			tUI_CamStatus[tPairInfo.tPairSelCam].tCamDispLocation = tPairInfo.tDispLocation;
@@ -6716,7 +6726,7 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
 			}
 			#else
-			if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
+			//if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
 			{
 				tCamViewSel.tCamViewType	= SINGLE_VIEW;
 				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
@@ -7782,8 +7792,8 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 	ubRealTemp = ubBuTemp;
 	//ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
 
-	if(ubRealTemp > 99)
-		ubRealTemp = 99;
+	if(ubRealTemp > 199)
+		ubRealTemp = 199;
 	//printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
 	if((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
 	{
@@ -7828,32 +7838,37 @@ void UI_TempBarDisplay(uint8_t value)
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
 
-	if(value > 99)
-		value = 99;
+	if(value > 199)
+		value = 199;
 
-	if(value/10)
+	if(value/100)
 	{
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(value/10), 1, &tOsdImgInfo);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(value/100), 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 920;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
 	else
 	{
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0, 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 0;
-		tOsdImgInfo.uwYStart = 920;
-		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		//tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0, 1, &tOsdImgInfo);
+		//tOsdImgInfo.uwXStart = 0;
+		//tOsdImgInfo.uwYStart = 920;
+		//tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC+(!tUI_PuSetting.ubTempunitFlag), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 874;
+	tOsdImgInfo.uwYStart = 851;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 +(value/10%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 901;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 +(value%10), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 904;	
+	tOsdImgInfo.uwYStart = 882;  
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
@@ -7873,13 +7888,13 @@ void UI_VolBarDisplay(uint8_t value)
 			{
 				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_VOL1, 1, &tOsdImgInfo);
 				tOsdImgInfo.uwXStart = 0;
-				tOsdImgInfo.uwYStart = 832 - 30*(i-1);
+				tOsdImgInfo.uwYStart = 823 - 30*(i-1);
 			}
 			else
 			{
 				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_VOL0, 1, &tOsdImgInfo);
 				tOsdImgInfo.uwXStart = 0;
-				tOsdImgInfo.uwYStart = 832 - 30*(i-1);
+				tOsdImgInfo.uwYStart = 823 - 30*(i-1);
 			}
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 		}
@@ -7890,7 +7905,7 @@ void UI_VolBarDisplay(uint8_t value)
 		{
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_VOL0, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart = 0;
-			tOsdImgInfo.uwYStart = 832 - 30*i;
+			tOsdImgInfo.uwYStart = 823 - 30*i;
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 		}
 	}
@@ -10716,7 +10731,7 @@ void UI_UpdateBarIcon_Part2(void)
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC+(!tUI_PuSetting.ubTempunitFlag), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 874;
+	tOsdImgInfo.uwYStart = 851;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 
 	if((tUI_PuSetting.NightmodeFlag >> tSelCamNum) & (0x01) == 1)	
@@ -12274,7 +12289,7 @@ void UI_SwitchCameraSource(void)
 {
 	APP_EventMsg_t tUI_SwitchBuMsg = {0};
 
-	printd(Apk_DebugLvl, "UI_SwitchCameraSource###\n");
+	printd(Apk_DebugLvl, "UI_SwitchCameraSource tCamViewPool[0]: %d ###\n", tCamViewSel.tCamViewPool[0]);
 	tUI_SwitchBuMsg.ubAPP_Event 	 = APP_VIEWTYPECHG_EVENT;
 	tUI_SwitchBuMsg.ubAPP_Message[0] = 3;		//! Message Length	
 	tUI_SwitchBuMsg.ubAPP_Message[1] = tCamViewSel.tCamViewType;

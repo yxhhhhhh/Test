@@ -41,6 +41,9 @@ PAIR_ID_TABLE   PAIR_IdTable;
 PAIR_Info_t 	tPAIR_Info;
 PAIR_TAG		tPAIR_DelStaNum;
 static uint32_t ulPAIR_SFAddr;
+
+extern uint8_t ubPairSelCam; 
+
 uint8_t ubFixChTable[3] =
 {
 	20, 82, 154
@@ -380,8 +383,12 @@ void PAIR_Prp(TWC_TAG GetSta,uint8_t *pData)
 			{
 				if(tPAIR_Tag != ubPAIR_Number)
 				{
-					tPAIR_DelStaNum = tPAIR_Tag;
-					PAIR_IdTable.ulSTA_ID[tPAIR_Tag] = PAIR_INVAILD_ID;
+					ubPAIR_Number = tPAIR_Tag;
+					PAIR_PrpPket.ubTxNumber = ubPAIR_Number;
+					ubPairSelCam = ubPAIR_Number;
+					//printf("ubPairSelCam 11  = %d \n",ubPairSelCam);
+					//tPAIR_DelStaNum = tPAIR_Tag;
+					//PAIR_IdTable.ulSTA_ID[tPAIR_Tag] = PAIR_INVAILD_ID;
 				}
 			}
 		}

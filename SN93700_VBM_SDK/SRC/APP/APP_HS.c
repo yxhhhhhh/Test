@@ -328,6 +328,8 @@ void APP_PowerOnFunc(void)
 	//! UI Plug-in
 	UI_PlugIn();
 
+	PAIR_ShowDeviceID();
+
 	//! Application Start
 	APP_Start();
 }
