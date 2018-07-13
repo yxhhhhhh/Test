@@ -160,6 +160,7 @@ typedef enum
 	UI_SET_TALK_ON_CMD,	
 	UI_SET_TALK_OFF_CMD,
 	UI_GET_BU_PS_MODE_CMD,
+	UI_SET_BU_ALARM_VALUE_CMD,
 }UI_PUTOBUCmdID_t;
 
 typedef enum
@@ -304,5 +305,6 @@ void UI_NightModeSetting(void *pvNMParam);
 uint8_t UI_SendVersionToPu(void);
 uint8_t UI_SendPsModeToPu(void);
 void UI_RecvPUCmdSetting(void *pvRecvPuParam);
-
+uint8_t UI_CheckAlarmWakeUp(void);
+void UI_AlarmTrigger(void);
 #endif

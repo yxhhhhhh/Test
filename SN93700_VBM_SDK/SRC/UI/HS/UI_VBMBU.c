@@ -113,6 +113,14 @@ uint32_t ubBuSWVersion = 10;
 
 uint8_t ubTalkCnt = 0;
 
+
+uint8_t ubCurTempVal = 0;
+uint8_t ubCurSoundVal = 0;
+uint8_t ubHighAlarm = 0;
+uint8_t ubLowAlarm = 0;
+uint8_t ubSoundAlarm = 0;
+
+
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -217,10 +225,13 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 		case APP_LINK_STATE:
 			if(TRUE == ubUI_WorModeEnFlag)
 				UI_ChangePsModeToNormalMode();
+			
 			if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
 				UI_VoxTrigger();
+			
 			if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
 				UI_VoiceTrigger();
+			
 			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				//UI_MDTrigger();
 
@@ -243,7 +254,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			{
 				ubTalkCnt = 0;
 				SPEAKER_EN(TRUE);
-			}			
+			}		
 			
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
@@ -480,6 +491,7 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
 	APP_EventMsg_t tUI_PsMessage = {0};
 	UI_PowerSaveMode_t *pPS_Mode = (UI_PowerSaveMode_t *)pvPS_Mode;
 
+	printd(Apk_DebugLvl, "UI_PowerSaveSetting pPS_Mode[0]: %d. \n", pPS_Mode[0]);
 	switch(pPS_Mode[0])
 	{
 		case PS_VOX_MODE:
@@ -593,12 +605,22 @@ void UI_VoxTrigger(void)
 		ubUI_SyncDisVoxFlag = FALSE;
 		return;
 	}
+
+	#if 0
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 	if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH) //ADC_SUMRPT_VOX_THH
 	{
 		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
 		UI_DisableVox();
 	}
+	#else
+	if(UI_CheckAlarmWakeUp())
+	{
+		printd(Apk_DebugLvl, "UI_VoxTrigger UI_DisableVox!\n");
+		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
+		UI_DisableVox();
+	}
+	#endif
 }
 //------------------------------------------------------------------------------
 void UI_VoiceTrigSetting(void *pvTrigMode)
@@ -690,6 +712,7 @@ void UI_VoiceCheck (void)
 		tUI_VoiceReqCmd.ubCmd_Len  			  = 5;
 		UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
 
+		ubCurSoundVal = voice_temp;
 	//	ubVoicetemp_bak = voice_temp;
 	//}
 	
@@ -734,7 +757,7 @@ uint8_t UI_GetTempAverVal(uint8_t Value)
 
 void UI_TempCheck(void) //20180322
 {
-	uint8_t cur_temp;
+	//uint8_t cur_temp;
 	UI_BUReqCmd_t tUI_TempReqCmd;
 
 	//I2C1_Type *pI2C;
@@ -748,22 +771,22 @@ void UI_TempCheck(void) //20180322
 
 	tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
 
-	cur_temp = tem;
+	ubCurTempVal = tem;
 
-	cur_temp = UI_GetTempAverVal(cur_temp);
-	//printd(Apk_DebugLvl, "### tem: %d, cur_temp: %d.\n", tem, cur_temp);
-	if(cur_temp == 0xFF)
+	ubCurTempVal = UI_GetTempAverVal(ubCurTempVal);
+	printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d.\n", tem, ubCurTempVal);
+	if(ubCurTempVal == 0xFF)
 		return;
 	
 	//if(ubTemp_bak != cur_temp)
 	{
 		tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] = UI_TEMP_CHECK;
-		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA] = cur_temp;
+		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA] = ubCurTempVal;
 		tUI_TempReqCmd.ubCmd_Len  			  = 3;
 		UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
 
-		ubTemp_bak = cur_temp;
+		ubTemp_bak = ubCurTempVal;
 	}
 }
 //------------------------------------------------------------------------------
@@ -1204,7 +1227,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 				while(1);
 				#endif
 				ubUI_Mc3RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);
+				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
 			}
 			ubUI_McHandshake++;
 			break;
@@ -1220,7 +1243,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 				while(1);
 				#endif
 				ubUI_Mc4RunFlag = 1;
-				MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady);
+				MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);
 			}
 			ubUI_McHandshake++;
 			break;
@@ -1338,6 +1361,13 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 			
 		case UI_GET_BU_PS_MODE_CMD:
 			UI_SendPsModeToPu();
+			break;
+
+		case UI_SET_BU_ALARM_VALUE_CMD:
+			printd(Apk_DebugLvl,  "UI_SET_BU_ALARM_VALUE_CMD (%d, %d, %d).\n", pRecvPuParam[1], pRecvPuParam[2], pRecvPuParam[3]);
+			ubHighAlarm = pRecvPuParam[1];
+			ubLowAlarm = pRecvPuParam[2];
+			ubSoundAlarm = pRecvPuParam[3];
 			break;
 	
 		default:
@@ -1559,4 +1589,91 @@ uint8_t UI_SendPsModeToPu(void)
 	return rUI_SUCCESS;
 }
 
+uint8_t UI_CheckAlarmWakeUp(void)
+{
+	#define CHECK_CNT	3
+	static uint8_t ubHighTempCnt = 0;
+	static uint8_t ubLowTempCnt = 0;
+	static uint8_t ubSoundCnt = 0;
 
+	printd(Apk_DebugLvl, "UI_CheckAlarmWakeUp (%d, %d, %d).\n", ubHighTempCnt, ubLowTempCnt, ubSoundCnt);
+	if(ubHighAlarm > 0)
+	{
+		if(ubCurTempVal >= ubHighAlarm)
+		{
+			ubHighTempCnt++;
+			if(ubHighTempCnt == CHECK_CNT)
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			ubHighTempCnt = 0;
+		}
+	}
+	else
+	{
+		ubHighTempCnt = 0;
+	}
+
+	if(ubLowAlarm < 0)
+	{
+		if(ubCurTempVal <= ubLowAlarm)
+		{
+			ubLowTempCnt++;
+			if(ubLowTempCnt == CHECK_CNT)
+			{
+				return 2;
+			}
+		}
+		else
+		{
+			ubLowTempCnt = 0;
+		}
+	}
+	else
+	{
+		ubLowTempCnt = 0;
+	}
+
+	if(ubSoundAlarm > 0)
+	{
+		if(ubCurSoundVal >= ubSoundAlarm)
+		{
+			ubSoundCnt++;
+			if(ubSoundCnt == 5)
+			{
+				return 3;
+			}
+		}
+		else
+		{
+			ubSoundCnt = 0;
+		}
+	}
+	else
+	{
+		ubSoundCnt = 0;
+	}
+
+	return 0;
+}
+
+void UI_AlarmTrigger(void)
+{
+	UI_BUReqCmd_t tUI_AlarmReqCmd;
+	uint32_t ulUI_AdcRpt = 0;
+
+	tUI_AlarmReqCmd.ubCmd[UI_TWC_TYPE]	= UI_REPORT;
+	tUI_AlarmReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOX_TRIG;
+	tUI_AlarmReqCmd.ubCmd[UI_REPORT_DATA] = FALSE;
+	tUI_AlarmReqCmd.ubCmd_Len  			= 3;
+
+	if(UI_CheckAlarmWakeUp())
+	{
+		printd(Apk_DebugLvl, "UI_AlarmTrigger UI_DisableVox!\n");
+		UI_SendRequestToPU(NULL, &tUI_AlarmReqCmd);
+		UI_DisableVox();
+	}
+}
