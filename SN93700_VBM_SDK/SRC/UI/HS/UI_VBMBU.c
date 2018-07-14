@@ -112,7 +112,7 @@ uint8_t ubBuHWVersion = 1;
 uint32_t ubBuSWVersion = 10;
 
 uint8_t ubTalkCnt = 0;
-
+uint8_t ubPairVolCnt = 0;
 
 uint8_t ubCurTempVal = 0;
 uint8_t ubCurSoundVal = 0;
@@ -211,6 +211,18 @@ void UI_StatusCheck(uint16_t pThreadCnt)
 		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
 		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 	}
+
+	if(ubTalkCnt == 0)
+	{
+		if(ubPairVolCnt >= 1)
+			ubPairVolCnt++;
+
+		if(ubPairVolCnt == 3)
+		{
+			ubPairVolCnt = 0;
+			SPEAKER_EN(TRUE);
+		}
+	}
 }
 //------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
@@ -254,8 +266,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			{
 				ubTalkCnt = 0;
 				SPEAKER_EN(TRUE);
-			}		
-			
+			}
+
 			if((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
 				UI_UpdateBUStatusToPU();
 			(*pThreadCnt)++;
@@ -358,7 +370,9 @@ void UI_PairingLongKey(void)
 {
 	if((UI_GetCamUVCMode()) && (GPIO->GPIO_I6 == 0))
 		return;
-	
+
+	ubPairVolCnt = 1;
+	SPEAKER_EN(TRUE);
 	APP_EventMsg_t tUI_PairMessage = {0};
 	tUI_PairMessage.ubAPP_Event = (APP_PAIRING_STATE == tUI_SyncAppState)?APP_PAIRING_STOP_EVENT:APP_PAIRING_START_EVENT;
 	UI_SendMessageToAPP(&tUI_PairMessage);
