@@ -296,6 +296,17 @@ typedef enum
 	MC_RIGHT_TOP 		= 0x42,
 }MC_STATE;
 
+
+typedef enum
+{
+	PWR_ON = 0,
+	PWR_Prep_Sleep,
+	PWR_Start_Sleep,
+	PWR_Sleep_Complete,
+	PWR_Prep_Wakeup,
+	PWR_Start_Wakeup,
+}PWR_STATE;
+
 typedef struct
 {
 	void (*pvFuncPtr)(UI_ArrowKey_t);
@@ -839,6 +850,7 @@ void UI_DrawBrightnessSubMenuPage_NoSel(void);
 
 void UI_DrawAutoLcdSubMenuPage(void);
 uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction);
+void UI_AutoLcdSetSleepTimerEvent(void);
 void UI_AutoLcdSetSleepTime(uint8_t SleepMode);
 void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_AutoLcdSubMenuDisplay(uint8_t value);
@@ -932,6 +944,8 @@ void UI_TempAlarmCheck(void);
 void UI_PickupAlarmCheck(void);
 
 void UI_PTNDisplay(uint8_t value);
+void UI_EnableMotor(uint8_t value);
+void UI_MotorDisplay(uint8_t value);
 void UI_MotorControl(uint8_t Value);
 void UI_MotorStateCheck(void);
 

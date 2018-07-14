@@ -803,7 +803,7 @@ void APP_LcdDisplayOn(void)
 	LCD_SetGammaLevel(4);
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
-	LCDBL_ENABLE(UI_ENABLE);
+	//LCDBL_ENABLE(UI_ENABLE);
 }
 #endif
 //------------------------------------------------------------------------------
