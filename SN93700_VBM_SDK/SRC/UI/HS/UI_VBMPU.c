@@ -541,6 +541,7 @@ void UI_StateReset(void)
 		printd(DBG_ErrorLvl, "Calendar base setting fail!\n");
 		//return;
 	}
+	
 	if ((wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_PWRSTS_KEEP_TAG)
 	&& (wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_WATCHDOG_CHK_TAG)) {
 		RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
@@ -7943,6 +7944,12 @@ void UI_TempBarDisplay(uint8_t value)
 		value = 199;
 
 	//printf("UI_TempBarDisplay value: %d,\n", value);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BLANK1, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 901;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	
 	if(value/100)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(value/100), 1, &tOsdImgInfo);
@@ -12332,7 +12339,7 @@ void UI_EnableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_DisableScanMode(void)
 {
-	printd(Apk_DebugLvl, "UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
+	//printd(Apk_DebugLvl, "UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
 	if(FALSE == ubUI_ScanStartFlag)
 		return;
 	UI_SetupScanModeTimer(FALSE);

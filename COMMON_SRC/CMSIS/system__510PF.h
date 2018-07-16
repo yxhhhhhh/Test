@@ -100,7 +100,7 @@ typedef enum
 	DBG_Debug3Lvl,
 } SYS_PrintLevel_t;
 
-#define Apk_DebugLvl	5 // 5 / 1
+#define Apk_DebugLvl	1 // 5 / 1
 #define printd(level, ...)    ((level <= lSYS_DebugLvl) ? printf(__VA_ARGS__) : 0 )
 
 #define SWAP16(x) \
