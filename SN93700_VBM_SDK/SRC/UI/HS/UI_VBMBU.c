@@ -206,6 +206,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t pThreadCnt)
 {
+	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	if(((pThreadCnt)%5) == 0)
 	{
 		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
@@ -1154,6 +1155,8 @@ void UI_MotoControlInit(void)
 
 	ubUI_Mc1RunFlag = 0;
 	ubUI_Mc2RunFlag = 0;
+	ubUI_Mc3RunFlag = 0;
+	ubUI_Mc4RunFlag = 0;
 	ubUI_Mc1RunCnt = 0;
 	ubUI_Mc2RunCnt = 0;
 	
@@ -1166,8 +1169,8 @@ void UI_MotoControlInit(void)
 
 	tMC_SettingApp.ubMC_ClockDivider = 63;
 	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	tMC_SettingApp.ubMC_HighPeriod = 72;	//18  64
-	tMC_SettingApp.ubMC_PeriodPerStep = 18;	//16	48
+	tMC_SettingApp.ubMC_HighPeriod = 36;	//18  64
+	tMC_SettingApp.ubMC_PeriodPerStep = 36;	//16	48
 	tMC_Setup(MC_1,&tMC_SettingApp);	//up down
 	#endif
 }
@@ -1202,7 +1205,8 @@ void UI_PtzControlSetting(void *pvMCParam)
   	#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
 
-	//printd(Apk_DebugLvl, "UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
+	printd(Apk_DebugLvl, "UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
+	printd(Apk_DebugLvl, "UI_PtzControlSetting Run: (%d, %d, %d %d).\n", ubUI_Mc1RunFlag, ubUI_Mc2RunFlag,ubUI_Mc3RunFlag,ubUI_Mc4RunFlag);
 	switch(pMC_Param[0])
 	{
 		case 0:

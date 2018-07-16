@@ -8149,7 +8149,7 @@ void UI_EnableMotor(uint8_t value)
 {
 	UI_PUReqCmd_t tUI_motorReqCmd;
 	
-	printd(Apk_DebugLvl, "UI_EnableMotor value: %d.\n", value);
+	printd(Apk_DebugLvl, "UI_EnableMotor value: %d, tCamConnSts: %d.\n", value, tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
 	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
 	{
 		tUI_motorReqCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
@@ -8164,12 +8164,18 @@ void UI_EnableMotor(uint8_t value)
 
 		if(value == 0)
 		{
-			TIMER_Delay_ms(50);
-			SPEAKER_EN(TRUE);
-			TIMER_Delay_us(2);
-			SPEAKER_EN(FALSE);
-			TIMER_Delay_us(2);
-			SPEAKER_EN(TRUE);
+			if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
+			{
+				if(SPEAKER_STATE == FALSE)
+				{
+					TIMER_Delay_ms(50);
+					SPEAKER_EN(TRUE);
+					TIMER_Delay_us(2);
+					SPEAKER_EN(FALSE);
+					TIMER_Delay_us(2);
+					SPEAKER_EN(TRUE);
+				}
+			}
 		}
 		else
 		{
@@ -8360,7 +8366,7 @@ void UI_MotorControl(uint8_t Value)
 void UI_MotorStateCheck(void)
 {
 	#define MC0_MAX_CNT	88 //left - right /80
-	#define MC1_MAX_CNT	20 //up - down
+	#define MC1_MAX_CNT	40 //up - down
 
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
