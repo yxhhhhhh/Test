@@ -1205,8 +1205,8 @@ void UI_PtzControlSetting(void *pvMCParam)
   	#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
 
-	printd(Apk_DebugLvl, "UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
-	printd(Apk_DebugLvl, "UI_PtzControlSetting Run: (%d, %d, %d %d).\n", ubUI_Mc1RunFlag, ubUI_Mc2RunFlag,ubUI_Mc3RunFlag,ubUI_Mc4RunFlag);
+	//printd(Apk_DebugLvl, "UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
+	//printd(Apk_DebugLvl, "UI_PtzControlSetting Run: (%d, %d, %d %d).\n", ubUI_Mc1RunFlag, ubUI_Mc2RunFlag,ubUI_Mc3RunFlag,ubUI_Mc4RunFlag);
 	switch(pMC_Param[0])
 	{
 		case 0:

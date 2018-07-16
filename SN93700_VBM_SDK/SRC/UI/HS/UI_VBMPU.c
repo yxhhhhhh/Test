@@ -638,17 +638,7 @@ void UI_LinkStatusCheck(uint16_t ubLinkCheckCount)
 		if(ubPttEndCount == 4)
 		{
 			ubPttEndCount = 0;
-			if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
-			{
-				if(SPEAKER_STATE == FALSE)
-				{
-					SPEAKER_EN(TRUE);
-					TIMER_Delay_us(2);
-					SPEAKER_EN(FALSE);
-					TIMER_Delay_us(2);
-					SPEAKER_EN((TRUE));
-				}
-			}
+			UI_SetSpeaker(TRUE);
 		}
 	}
 }
@@ -688,6 +678,8 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	{
 		if(tUI_SyncAppState == APP_LINK_STATE)
 		{
+			UI_SetSpeaker(TRUE);
+			
 			#if Current_Test
 			if((ubGetPsModeFlag == 0) && (UI_GetBuPsMode() == rUI_SUCCESS))
 			{
@@ -704,10 +696,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 		else
 		{
 			ubLinkStateCheckCount++;
-			if(SPEAKER_STATE == TRUE)
-			{
-				SPEAKER_EN(FALSE);
-			}
+			UI_SetSpeaker(FALSE);
 
 			#if Current_Test
 			ubGetPsModeFlag = 0;
@@ -2661,7 +2650,7 @@ void UI_PushTalkKey(void)
 	//SPEAKER_EN(((TRUE == ubUI_PttStartFlag)?UI_DISABLE:UI_ENABLE));
 	if(TRUE == ubUI_PttStartFlag)
 	{
-		SPEAKER_EN(FALSE);
+		UI_SetSpeaker(FALSE);
 		ubPttEndCount = 0;
 		CmdData = UI_SET_TALK_ON_CMD;
 		UI_SendToBUCmd(&CmdData, 1);
@@ -3360,16 +3349,11 @@ void UI_ShowSysVolume(uint8_t value)
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
 	{
 		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
-		SPEAKER_EN(FALSE);
+		UI_SetSpeaker(FALSE);
 	}
 	else
 	{
-		TIMER_Delay_us(20);
-		SPEAKER_EN(TRUE);
-		TIMER_Delay_us(2);
-		SPEAKER_EN(FALSE);
-		TIMER_Delay_us(2);
-		SPEAKER_EN((TRUE));
+		UI_SetSpeaker(TRUE);
     	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 	}
 	tUI_PuSetting.VolLvL.tVOL_UpdateLvL = value;
@@ -5226,7 +5210,7 @@ void UI_PlayAlarmSound(uint8_t type)
 	{
 		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
 		ADO_SetDacR2RVol(R2R_VOL_n5p6DB);		
-		if((ubPlayAlarmCount%5) == 0)
+		if((ubPlayAlarmCount%4) == 0)
 		{
 			printd(Apk_DebugLvl, "UI_PlayAlarmSound BUZ_PlaySingleSound###\n");
 			BUZ_PlayLowBatSound();
@@ -8164,22 +8148,11 @@ void UI_EnableMotor(uint8_t value)
 
 		if(value == 0)
 		{
-			if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
-			{
-				if(SPEAKER_STATE == FALSE)
-				{
-					TIMER_Delay_ms(50);
-					SPEAKER_EN(TRUE);
-					TIMER_Delay_us(2);
-					SPEAKER_EN(FALSE);
-					TIMER_Delay_us(2);
-					SPEAKER_EN(TRUE);
-				}
-			}
+			UI_SetSpeaker(TRUE);
 		}
 		else
 		{
-			SPEAKER_EN(FALSE);
+			UI_SetSpeaker(FALSE);
 			//ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 		}
 	}
@@ -12529,5 +12502,28 @@ UI_CamNum_t UI_GetCamViewPoolID(void)
 	return tCamViewSel.tCamViewPool[0];
 }
 
-
+void UI_SetSpeaker(uint8_t State)
+{
+	if(State == 1)
+	{
+		if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
+		{
+			if(SPEAKER_STATE == FALSE)
+			{
+				SPEAKER_EN(TRUE);
+				TIMER_Delay_us(2);
+				SPEAKER_EN(FALSE);
+				TIMER_Delay_us(2);
+				SPEAKER_EN((TRUE));
+			}
+		}
+	}
+	else
+	{
+		if(SPEAKER_STATE == TRUE)
+		{
+			SPEAKER_EN(FALSE);
+		}
+	}
+}
 //------------------------------------------------------------------------------
