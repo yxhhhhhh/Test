@@ -163,8 +163,8 @@ uint8_t ubDefualtFlag = 0;
 uint8_t ubTempunitFlag = 0;
 uint8_t ubNightmodeFlag[4] = {0,0,0,0};
 
-uint8_t ubTimeHour = 6;
-uint8_t ubTimeMin = 22;
+uint8_t ubTimeHour = 12;
+uint8_t ubTimeMin = 0;
 uint8_t ubTimeAMPM = 0;
 
 uint8_t ubPairDisplayCnt = 0;
@@ -281,6 +281,7 @@ uint8_t ubPowerState = PWR_ON;
 uint8_t ubSleepWaitCnt = 0;
 uint8_t ubWakeUpWaitCnt = 0;
 
+uint16_t ubSpeakerCount = 0;
 
 
 //------------------------------------------------------------------------------
@@ -351,6 +352,8 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		if(ubUI_ResetPeriodFlag == FALSE)
 			return;
 	}
+
+	UI_CameraResetCycleTime(ptKeyEvent->ubKeyAction);
 	
 	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1)
 		return;
@@ -502,6 +505,16 @@ void UI_OnInitDialog(void)
 
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
 
+	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
+	{
+		printd(DBG_ErrorLvl, "Calendar base setting fail!!!\n");
+	}
+	
+	if ((wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_PWRSTS_KEEP_TAG)
+	&& (wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_WATCHDOG_CHK_TAG)) {
+		RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+	}
+
 	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_WATCHDOG_CHK_TAG);
 
 	ubLogoInitStaus = 1;
@@ -535,7 +548,7 @@ void UI_StateReset(void)
 		printd(DBG_ErrorLvl, "UI Setting 2-way command fail!\n");
 	UI_LoadDevStatusInfo();
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
-	
+
 	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
 	{
 		printd(DBG_ErrorLvl, "Calendar base setting fail!\n");
@@ -630,18 +643,6 @@ void UI_LinkStatusCheck(uint16_t ubLinkCheckCount)
 			getBuResult = UI_GetBuVersion();
 		}
 	}
-	
-	if(tUI_PuSetting.ubDefualtFlag == FALSE)
-	{
-		if(ubPttEndCount >= 1)
-			ubPttEndCount++;
-
-		if(ubPttEndCount == 4)
-		{
-			ubPttEndCount = 0;
-			UI_SetSpeaker(TRUE);
-		}
-	}
 }
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t ubCheckCount)
@@ -678,9 +679,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	if(tUI_PuSetting.ubDefualtFlag == FALSE)
 	{
 		if(tUI_SyncAppState == APP_LINK_STATE)
-		{
-			UI_SetSpeaker(TRUE);
-			
+		{			
 			#if Current_Test
 			if((ubGetPsModeFlag == 0) && (UI_GetBuPsMode() == rUI_SUCCESS))
 			{
@@ -693,11 +692,16 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 				ubSetAlarmRet = UI_SendAlarmSettingToBu();
 			}
 			ubLinkStateCheckCount = 0;
+
+			UI_SetSpeaker(0, 1);
 		}
 		else
 		{
 			ubLinkStateCheckCount++;
-			UI_SetSpeaker(FALSE);
+			if(ubSpeakerCount == 0)
+			{
+				UI_SetSpeaker(1, 0);
+			}
 
 			#if Current_Test
 			ubGetPsModeFlag = 0;
@@ -708,6 +712,17 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			#endif
 			
 			ubSetAlarmRet = rUI_FAIL;
+		}
+
+	
+		if(ubSpeakerCount >= 1)
+		{
+			ubSpeakerCount++;
+		}
+
+		if(ubSpeakerCount == 4)
+		{
+			UI_SetSpeaker(1, TRUE);
 		}
 
 		#if Current_Test
@@ -1052,7 +1067,7 @@ void UI_PowerKey(void)
 	}
 	
 	UI_UpdateDevStatusInfo();
-	BUZ_PlayPowerOffSound();
+	//BUZ_PlayPowerOffSound();
 	osDelay(600);			//wait buzzer play finish
 	LCDBL_ENABLE(UI_DISABLE);
 	//POWER_LED_IO  = 0;
@@ -2651,8 +2666,7 @@ void UI_PushTalkKey(void)
 	//SPEAKER_EN(((TRUE == ubUI_PttStartFlag)?UI_DISABLE:UI_ENABLE));
 	if(TRUE == ubUI_PttStartFlag)
 	{
-		UI_SetSpeaker(FALSE);
-		ubPttEndCount = 0;
+		UI_SetSpeaker(0, 0);
 		CmdData = UI_SET_TALK_ON_CMD;
 		UI_SendToBUCmd(&CmdData, 1);
 	}
@@ -2660,7 +2674,7 @@ void UI_PushTalkKey(void)
 	{
 		CmdData = UI_SET_TALK_OFF_CMD;
 		UI_SendToBUCmd(&CmdData, 1);	
-		ubPttEndCount = 1;
+		UI_SetSpeaker(0, 1);
 	}
 }
 //------------------------------------------------------------------------------
@@ -3350,11 +3364,14 @@ void UI_ShowSysVolume(uint8_t value)
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
 	{
 		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
-		UI_SetSpeaker(FALSE);
+		UI_SetSpeaker(0, 0);
 	}
 	else
 	{
-		UI_SetSpeaker(TRUE);
+		if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL1)
+		{
+			UI_SetSpeaker(0, 1);
+		}
     	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 	}
 	tUI_PuSetting.VolLvL.tVOL_UpdateLvL = value;
@@ -5495,27 +5512,27 @@ void UI_TimeShowSystemTime(uint8_t type)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 	RTC_Calendar_t tUi_Calendar;
-	tUi_Calendar.ubHour = tUI_PuSetting.tSysCalendar.ubHour;
-	tUi_Calendar.ubMin = tUI_PuSetting.tSysCalendar.ubMin;
+	//tUi_Calendar.ubHour = tUI_PuSetting.tSysCalendar.ubHour;
+	//tUi_Calendar.ubMin = tUI_PuSetting.tSysCalendar.ubMin;
 	
 	RTC_GetCalendar((RTC_Calendar_t *)(&tUi_Calendar));
-	tUI_PuSetting.tSysCalendar.ubHour = tUi_Calendar.ubHour;
-	tUI_PuSetting.tSysCalendar.ubMin = tUi_Calendar.ubMin;
+	//tUI_PuSetting.tSysCalendar.ubHour = tUi_Calendar.ubHour;
+	//tUI_PuSetting.tSysCalendar.ubMin = tUi_Calendar.ubMin;
 
-	if((type == 1) || (ubTimeHour != (tUI_PuSetting.tSysCalendar.ubHour%12)) || (ubTimeMin != tUI_PuSetting.tSysCalendar.ubMin)
-		|| (ubTimeAMPM^(tUI_PuSetting.tSysCalendar.ubHour >= 12?1:0)))
+	if((type == 1) || (ubTimeHour != (tUi_Calendar.ubHour%12)) || (ubTimeMin != tUi_Calendar.ubMin)
+		|| (ubTimeAMPM^(tUi_Calendar.ubHour >= 12?1:0)))
 	{
-		if(tUI_PuSetting.tSysCalendar.ubHour >= 12)
+		if(tUi_Calendar.ubHour >= 12)
 		{
 			ubTimeAMPM = 1;
-	 		ubTimeHour = tUI_PuSetting.tSysCalendar.ubHour - 12;
+	 		ubTimeHour = tUi_Calendar.ubHour - 12;
 		}
 		else
 		{
 			ubTimeAMPM = 0;
-			ubTimeHour = tUI_PuSetting.tSysCalendar.ubHour;
+			ubTimeHour = tUi_Calendar.ubHour;
 		}
-		ubTimeMin = tUI_PuSetting.tSysCalendar.ubMin;
+		ubTimeMin = tUi_Calendar.ubMin;
 
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeHour/10), 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
@@ -5911,15 +5928,20 @@ void UI_DrawZoomSubMenuPage(void)
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB1_POINT, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 302+(tUI_PuSetting.ubZoomScale*75);
 		tOsdImgInfo.uwYStart = 1066 + 30;	
-		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
 	else
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB1_POINT, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 302+(tUI_PuSetting.ubZoomScale*75);
 		tOsdImgInfo.uwYStart = 1066;	
-		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ZOOM, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart= 48+(96*4);
+	tOsdImgInfo.uwYStart =1173;	
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 }	
 void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
@@ -5933,6 +5955,12 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 		UI_DrawSubMenuPage(ZOOM_ITEM);
 		ubUI_FastStateFlag = TRUE;
 		return;
+	}
+
+	if((APP_LINK_STATE != tUI_SyncAppState) || (CAM_OFFLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts))
+	{
+		if((tArrowKey != LEFT_ARROW) && (tArrowKey != EXIT_ARROW))
+			return;
 	}
 
 	switch(tArrowKey)
@@ -5969,13 +5997,10 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 		break;
 
 		case ENTER_ARROW:
-			if(APP_LINK_STATE == tUI_SyncAppState)
-			{
-				tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
-				UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
-				UI_ZoomDisplay();
-				//UI_UpdateDevStatusInfo();
-			}
+			tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
+			UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
+			UI_ZoomDisplay();
+			//UI_UpdateDevStatusInfo();
 		break;	
 
 		case LEFT_ARROW:
@@ -6706,6 +6731,22 @@ void UI_SetScanMenu(uint8_t value)
 	else
 		UI_EnableScanMode();
 }
+
+void UI_CameraResetCycleTime(uint8_t KeyAction)
+{
+	if(ubFactoryModeFLag == 1)
+		return;
+
+	if(KeyAction == KEY_UP_ACT)
+	{
+		UI_SetupScanModeTimer(TRUE);
+	}
+	else if(KeyAction == KEY_DOWN_ACT)
+	{
+		UI_SetupScanModeTimer(FALSE);
+	}
+}
+
 //------------------------------------------------------------------------------
 //#define PAIRING_ICON_NUM	2
 void UI_DrawPairingStatusIcon(void)
@@ -8155,12 +8196,11 @@ void UI_EnableMotor(uint8_t value)
 
 		if(value == 0)
 		{
-			UI_SetSpeaker(TRUE);
+			UI_SetSpeaker(0, 1);
 		}
 		else
 		{
-			UI_SetSpeaker(FALSE);
-			//ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+			UI_SetSpeaker(0, 0);
 		}
 	}
 }
@@ -12509,27 +12549,51 @@ UI_CamNum_t UI_GetCamViewPoolID(void)
 	return tCamViewSel.tCamViewPool[0];
 }
 
-void UI_SetSpeaker(uint8_t State)
+void UI_SetSpeaker(uint8_t type, uint8_t State)
 {
-	if(State == 1)
+	if(type == 0)
 	{
-		if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
+		if(State == 0)
 		{
-			if(SPEAKER_STATE == FALSE)
-			{
-				SPEAKER_EN(TRUE);
-				TIMER_Delay_us(2);
+			if(SPEAKER_STATE == TRUE)
 				SPEAKER_EN(FALSE);
-				TIMER_Delay_us(2);
-				SPEAKER_EN((TRUE));
+			ubSpeakerCount = 0;
+		}
+		else
+		{
+			if(FALSE == ubUI_PttStartFlag)
+			{
+				if(ubSpeakerCount == 0)
+					ubSpeakerCount = 1;
 			}
 		}
 	}
 	else
 	{
-		if(SPEAKER_STATE == TRUE)
+		if(State == 1)
 		{
-			SPEAKER_EN(FALSE);
+			if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
+			{
+				if(ubSpeakerCount > 0)
+				{
+					if(SPEAKER_STATE == FALSE)
+					{
+						SPEAKER_EN(TRUE);
+						TIMER_Delay_us(2);
+						SPEAKER_EN(FALSE);
+						TIMER_Delay_us(2);
+						SPEAKER_EN(TRUE);
+						//BUZ_PlayPowerOffSound();
+					}
+					ubSpeakerCount = 0;
+				}
+			}
+		}
+		else
+		{
+			if(SPEAKER_STATE == TRUE)
+				SPEAKER_EN(FALSE);
+			ubSpeakerCount = 0;
 		}
 	}
 }

@@ -986,5 +986,6 @@ uint8_t UI_GetBuPsMode(void);
 void UI_SetSleepState(void);
 void UI_CheckPowerMode(void);
 uint8_t UI_SendAlarmSettingToBu(void);
-void UI_SetSpeaker(uint8_t State);
+void UI_SetSpeaker(uint8_t type, uint8_t State);
+void UI_CameraResetCycleTime(uint8_t KeyAction);
 #endif
