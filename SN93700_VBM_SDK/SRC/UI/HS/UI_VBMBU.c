@@ -653,9 +653,14 @@ void UI_VoiceTrigger(void)
 	uint32_t ulUI_AdcRpt = 0;
 
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
+	printd(Apk_DebugLvl, "UI_VoiceTrigger ulUI_AdcRpt: %d.\n", ulUI_AdcRpt);
 	if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
 	{
+		#if 0
 		if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
+		#else
+		if(UI_CheckAlarmWakeUp())
+		#endif
 		{
 			APP_EventMsg_t tUI_PsMessage = {0};
 

@@ -53,6 +53,7 @@ extern uint8_t ubFactorySettingFLag;
 extern uint8_t ubClearOsdFlag_2;
 
 extern uint8_t ubFactoryModeFLag;
+extern uint8_t ubWorWakeUpFlag ;
 
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
@@ -112,31 +113,48 @@ uint8_t APP_CheckBootStatus(void)
 	uint16_t checkCount = 0;
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
 
-	while(1)
+	uint8_t ubWorWakepValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);	
+	ubWorWakepValue &= 0xF0;
+	
+	if((!ubRTC_GetKey()) && (ubWorWakepValue == RTC_PS_WOR_TAG))
+	{			
+		ubWorWakeUpFlag = 1;
+	}
+	else
 	{
-		if(ubRTC_GetKey() == 1)
+		ubWorWakeUpFlag = 0;
+	}
+	
+	printf("ubWorWakeUpFlag~~~~ %d \n",ubWorWakeUpFlag);
+
+	if(ubWorWakeUpFlag == 0)
+	{
+		while(1)
 		{
-			checkCount++;
-			if(checkCount >= CHECK_COUNT)
+			if(ubRTC_GetKey() == 1)
 			{
-				break;
-			}
-		}
-		else
-		{
-			if(checkCount >= CHECK_COUNT)
-			{
-				break;
+				checkCount++;
+				if(checkCount >= CHECK_COUNT)
+				{
+					break;
+				}
 			}
 			else
 			{
-				checkCount = 0;
-				RTC_PowerOff();
+				if(checkCount >= CHECK_COUNT)
+				{
+					break;
+				}
+				else
+				{
+					checkCount = 0;
+					RTC_PowerOff();
+				}
 			}
+			
+			TIMER_Delay_ms(200);
+			WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 		}
-		
-		TIMER_Delay_ms(200);
-		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
 	#else

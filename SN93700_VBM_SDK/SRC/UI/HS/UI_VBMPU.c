@@ -36,6 +36,8 @@
 
 #define Current_Test	0
 
+#define Current_Mode	PS_VOX_MODE // PS_WOR_MODE / PS_VOX_MODE
+
 #define SD_UPDATE_TEST	0
 
 /**
@@ -282,7 +284,7 @@ uint8_t ubSleepWaitCnt = 0;
 uint8_t ubWakeUpWaitCnt = 0;
 
 uint16_t ubSpeakerCount = 0;
-
+uint8_t ubWorWakeUpFlag ;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -436,8 +438,9 @@ void UI_OnInitDialog(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 	uint8_t i = 0;
-	
-	OSD_LogoJpeg(OSDLOGO_BOOT);
+
+	if(ubWorWakeUpFlag != 1)	
+		OSD_LogoJpeg(OSDLOGO_BOOT);
 	//OSD_LogoJpeg(OSDLOGO_LOGOFINISH);
 
 	/*
@@ -503,6 +506,7 @@ void UI_OnInitDialog(void)
 		UI_DisableScanMode();
 	}
 
+	UI_LoadDevStatusInfo();
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
 
 	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
@@ -518,7 +522,11 @@ void UI_OnInitDialog(void)
 	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_WATCHDOG_CHK_TAG);
 
 	ubLogoInitStaus = 1;
-	LCDBL_ENABLE(UI_ENABLE);
+	
+	if(ubWorWakeUpFlag != 1)
+	{
+		LCDBL_ENABLE(UI_ENABLE);
+	}
 }
 //------------------------------------------------------------------------------
 void UI_StateReset(void)
@@ -546,19 +554,7 @@ void UI_StateReset(void)
 	UI_ResetSubSubMenuInfo();
 	if(tTWC_RegTransCbFunc(TWC_UI_SETTING, UI_RecvBUResponse, UI_RecvBURequest) != TWC_SUCCESS)
 		printd(DBG_ErrorLvl, "UI Setting 2-way command fail!\n");
-	UI_LoadDevStatusInfo();
-	ubSetViewCam = tCamViewSel.tCamViewPool[0];
 
-	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
-	{
-		printd(DBG_ErrorLvl, "Calendar base setting fail!\n");
-		//return;
-	}
-	
-	if ((wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_PWRSTS_KEEP_TAG)
-	&& (wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_WATCHDOG_CHK_TAG)) {
-		RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-	}
 }
 //------------------------------------------------------------------------------
 void UI_UpdateAppStatus(void *ptAppStsReport)
@@ -928,7 +924,8 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 	UI_PUReqCmd_t tPsCmd;
-	
+
+	printd(Apk_DebugLvl, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
 	if(PS_VOX_MODE == tUI_PsMode)
 	{
 		if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
@@ -987,7 +984,7 @@ void UI_CheckPowerMode(void)
 	else if(ubPowerState == PWR_Start_Sleep)
 	{
 		UI_TimerDeviceEventStop(TIMER1_2);
-		UI_SwitchMode(PS_VOX_MODE);
+		UI_SwitchMode(Current_Mode);
 		ubSleepWaitCnt = 0;
 		ubPowerState = PWR_Sleep_Complete;
 	}
@@ -7930,8 +7927,11 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
 	uint8_t ubBuTemp = 0;
-	
-	ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+
+	if((tCamViewSel.tCamViewPool[0] == tCamNum) && (CAM_ONLINE == tUI_CamStatus[tCamNum].tCamConnSts))
+	{
+		ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+	}
 
 	if(ubRealTemp > 199)
 		ubRealTemp = 199;
@@ -8620,8 +8620,11 @@ void UI_CheckUsbCharge(void)
 		{
 			if(LCDBL_STATE == 0)
 			{
-				LCDBL_ENABLE(UI_ENABLE);
-				printd(Apk_DebugLvl, "UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
+				if(ubWorWakeUpFlag != 1)
+				{
+					LCDBL_ENABLE(UI_ENABLE);
+					printd(Apk_DebugLvl, "UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
+				}
 			}
 		}
 	}
@@ -11273,7 +11276,7 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwYStart = 0;
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-					ubClearOsdFlag =1;
+					//ubClearOsdFlag =1;
 				}
 			   	UI_UpdateBarIcon_Part1();
 				UI_UpdateBarIcon_Part2();	
@@ -11296,6 +11299,13 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 					
 					if((TRUE == tUI_PuSetting.ubScanModeEn) && (FALSE == ubUI_ScanStartFlag))
 						UI_EnableScanMode();
+				}
+
+				if(ubClearOsdFlag == 0)
+				{
+					if(ubWorWakeUpFlag == 1)
+						LCDBL_ENABLE(UI_ENABLE);	
+					ubClearOsdFlag =1;
 				}
 				
 			}
@@ -11873,7 +11883,8 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 		//UI_UpdateDevStatusInfo();
 	}
 
-	ubPowerState = PWR_ON;
+	ubWakeUpWaitCnt = 5;
+	ubPowerState = PWR_Start_Wakeup;
 }
 //------------------------------------------------------------------------------
 void UI_EnableVox(void)
