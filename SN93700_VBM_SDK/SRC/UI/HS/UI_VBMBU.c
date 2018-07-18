@@ -1033,7 +1033,7 @@ void UI_ResetDevSetting(void)
 {
 	uint8_t i;
 
-	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_ON);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamWdrMode,  		CAMSET_OFF);
@@ -1071,7 +1071,7 @@ void UI_LoadDevStatusInfo(void)
 	} else {
 		printd(DBG_ErrorLvl, "TAG no match, Reset UI\n");
 	}
-	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_ON);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_OFF);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_ON);
 	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamWdrMode,  		CAMSET_OFF);

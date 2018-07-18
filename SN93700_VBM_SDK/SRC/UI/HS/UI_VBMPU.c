@@ -2877,10 +2877,15 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 				}
 				else
 				{
-					if((NULL == pT_Num[ubFS_Timeitem]) || (*pT_Num[ubFS_Timeitem] == ubT_MinNum[ubFS_Timeitem]))
-							return;
-					(*pT_Num[ubFS_Timeitem])--;
+					if(NULL == pT_Num[ubFS_Timeitem])
+						return;
+
+					if(*pT_Num[ubFS_Timeitem] == ubT_MinNum[ubFS_Timeitem])
+						*pT_Num[ubFS_Timeitem] = ubT_MaxNum[ubFS_Timeitem];
+					else
+						(*pT_Num[ubFS_Timeitem])--;
 						
+					//(*pT_Num[ubFS_Timeitem])--;
 					UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
 				}
 				break;
@@ -2917,10 +2922,15 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 				}
 				else
 				{
-					if((NULL == pT_Num[ubFS_Timeitem]) || (*pT_Num[ubFS_Timeitem] >= ubT_MaxNum[ubFS_Timeitem]))
+					if(NULL == pT_Num[ubFS_Timeitem])
 						return;
-					(*pT_Num[ubFS_Timeitem])++;
-						
+
+					if(*pT_Num[ubFS_Timeitem] == ubT_MaxNum[ubFS_Timeitem])
+						*pT_Num[ubFS_Timeitem] = ubT_MinNum[ubFS_Timeitem];
+					else
+						(*pT_Num[ubFS_Timeitem])++;
+					
+					//(*pT_Num[ubFS_Timeitem])++;
 					UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
 				}
 				break;
@@ -12048,7 +12058,7 @@ void UI_ResetDevSetting(UI_CamNum_t tCamNum)
 	ulUI_MonitorPsFlag[tCamNum] = FALSE;
 	tUI_CamStatus[tCamNum].tCamConnSts = CAM_OFFLINE;
 	tUI_CamStatus[tCamNum].tCamPsMode = POWER_NORMAL_MODE;
-	UI_CLEAR_CAMSETTINGTODEFU(tUI_CamStatus[tCamNum].tCamAnrMode,  		CAMSET_ON);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_CamStatus[tCamNum].tCamAnrMode,  		CAMSET_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_CamStatus[tCamNum].tCam3DNRMode, 		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_CamStatus[tCamNum].tCamvLDCMode, 		CAMSET_ON);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_CamStatus[tCamNum].tCamWdrMode,  		CAMSET_OFF);
@@ -12150,7 +12160,7 @@ void UI_LoadDevStatusInfo(void)
 						tUI_CamStatus[tCamNum].ulCAM_ID = INVALID_ID;
 					if(INVALID_ID != tUI_CamStatus[tCamNum].ulCAM_ID)
 						tUI_PuSetting.ubPairedBuNum += 1;
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamAnrMode,  		CAMSET_ON);
+					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamAnrMode,  		CAMSET_OFF);
 					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCam3DNRMode, 		CAMSET_ON);
 					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamvLDCMode, 		CAMSET_ON);
 					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamWdrMode,  		CAMSET_OFF);
