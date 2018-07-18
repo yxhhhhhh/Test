@@ -86,6 +86,6 @@ void BUZ_PlayPowerOffSound(void);
 void BUZ_PlaySingleSound(void);
 void BUZ_PlayLowBatSound(void);
 void BUZ_PlayTestSound(void);
-void BUZ_PlayTempAlarmSound(void);
+void BUZ_PlayAlarmSound(void);
 
 #endif

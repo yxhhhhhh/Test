@@ -35,8 +35,7 @@
 #define UI_TEST_MODE	0
 
 #define Current_Test	0
-
-#define Current_Mode	PS_VOX_MODE // PS_WOR_MODE / PS_VOX_MODE
+#define Current_Mode	PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
 
 #define SD_UPDATE_TEST	0
 
@@ -228,6 +227,7 @@ uint8_t ubAlarmSoundShowFlag = 0;
 uint16_t ubAlarmSoundIdleCnt = 0;
 uint8_t ubAlarmSoundDisplay = 0;
 uint8_t ubAlarmSoundTriggerFlag = 0;
+uint8_t ubAlarmPlayState = 0;
 
 uint8_t ubDelCamitem = 0;
 uint8_t ubCameraScanTime[5] = {0, 5, 10, 15, 30};
@@ -303,6 +303,17 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			if(ptKeyEvent->ubKeyID != PKEY_ID0)
 				return;
 		}
+	}
+	else
+	{
+		#if Current_Test
+		if(((ubPowerState >= PWR_Prep_Sleep) && (ubPowerState <= PWR_Start_Sleep)) ||
+			((ubPowerState >= PWR_Prep_Wakeup) && (ubPowerState <= PWR_Start_Wakeup)))
+		{
+			if(ptKeyEvent->ubKeyID != PKEY_ID0) //Powerkey
+				return;
+		}
+		#endif
 	}
 	
 	if(ubFactoryModeFLag == 1)
@@ -538,7 +549,7 @@ void UI_StateReset(void)
 	ubUI_ResetPeriodFlag	  = FALSE;
 	ubUI_FastStateFlag		  = FALSE;
 	ubUI_ShowTimeFlag		  = FALSE;
-	ubUI_PttStartFlag		  = TRUE;
+	ubUI_PttStartFlag		  = FALSE;
 	ubUI_ScanStartFlag    	  = FALSE;
 	ubUI_DualViewExFlag		  = FALSE;
 	ubUI_StopUpdateStsBarFlag = FALSE;
@@ -710,7 +721,6 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			ubSetAlarmRet = rUI_FAIL;
 		}
 
-	
 		if(ubSpeakerCount >= 1)
 		{
 			ubSpeakerCount++;
@@ -875,9 +885,14 @@ void UI_PuInit(void)
 	
 	UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL0)
+	{
 		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
+		UI_SetSpeaker(2, 0);
+	}
 	else
+	{
     	ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+	}
 	
 	LCD_BACKLIGHT_CTRL(ulUI_BLTable[tUI_PuSetting.BriLvL.tBL_UpdateLvL]);
 	//LCDBL_ENABLE(UI_ENABLE);
@@ -976,7 +991,7 @@ void UI_CheckPowerMode(void)
 			LCDBL_ENABLE(UI_DISABLE);
 
 		ubSleepWaitCnt++;
-		if(ubSleepWaitCnt >= 4)
+		if(ubSleepWaitCnt >= 2)
 		{
 			ubPowerState = PWR_Start_Sleep;
 		}
@@ -996,7 +1011,7 @@ void UI_CheckPowerMode(void)
 	else if(ubPowerState == PWR_Prep_Wakeup)
 	{
 		ubWakeUpWaitCnt++;
-		if(ubWakeUpWaitCnt == 4)
+		if(ubWakeUpWaitCnt == 2)
 		{
 			UI_DisableVox();
 			ubPowerState = PWR_Start_Wakeup;
@@ -1005,7 +1020,7 @@ void UI_CheckPowerMode(void)
 	else if(ubPowerState == PWR_Start_Wakeup)
 	{
 		ubWakeUpWaitCnt++;
-		if(ubWakeUpWaitCnt >= 7)
+		if(ubWakeUpWaitCnt >= 5)
 		{
 			if(LCDBL_STATE == 0)
 				LCDBL_ENABLE(UI_ENABLE);
@@ -1088,7 +1103,10 @@ void UI_MenuKey(void)
 				return;
 
 			if(UI_CheckStopAlarm() == 1)
-					return;
+			{
+				UI_StopPlayAlarm();
+				return;
+			}
 			
 			tOsdInfo.uwHSize  = 672;
 			tOsdInfo.uwVSize  = 1280;
@@ -2636,7 +2654,7 @@ void UI_PushTalkKey(void)
 	printd(Apk_DebugLvl, "UI_PushTalkKey ubUI_PttStartFlag: %d.\n", ubUI_PttStartFlag);
 	if(((ubTempAlarmState > TEMP_ALARM_IDLE)&&(ubTempAlarmState < TEMP_ALARM_OFF)) ||  
 		((ubPickupAlarmState > PICKUP_ALARM_IDLE)&&(ubPickupAlarmState < PICKUP_ALARM_OFF)) || 
-		(tUI_SyncAppState != APP_LINK_STATE))
+		(tUI_SyncAppState != APP_LINK_STATE) || (ubShowAlarmstate > 0))
 	{
 		ubDisplaymodeFlag = 0;
 		return;
@@ -2940,7 +2958,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		case ENTER_ARROW:
 		{
 			if(UI_CheckStopAlarm() == 1)
-					return;
+			{
+				UI_StopPlayAlarm();
+				return;
+			}
 			
 			if(tUI_PuSetting.ubDefualtFlag == TRUE)
 			{
@@ -5229,17 +5250,41 @@ void UI_PlayAlarmSound(uint8_t type)
 				ubTempAlarmState = TEMP_ALARM_IDLE;
 			}
 		}
-		ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
+		UI_StopPlayAlarm();	
 	}
 	else
 	{
 		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
-		ADO_SetDacR2RVol(R2R_VOL_n5p6DB);		
-		if((ubPlayAlarmCount%4) == 0)
+		ADO_SetDacR2RVol(R2R_VOL_n5p6DB);
+		if(ubAlarmPlayState == 0)
+		{
+			ADO_Stop();
+			ubAlarmPlayState = 1;
+			if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == 0)
+			{
+				UI_SetSpeaker(2, 1);
+			}
+		}
+		
+		if((ubPlayAlarmCount%3) == 0)
 		{
 			printd(Apk_DebugLvl, "UI_PlayAlarmSound BUZ_PlaySingleSound###\n");
-			BUZ_PlayLowBatSound();
+			BUZ_PlayAlarmSound();
 		}
+	}
+}
+
+void UI_StopPlayAlarm(void)
+{
+	if(ubAlarmPlayState == 1)
+	{
+		ubAlarmPlayState = 0;
+		if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == 0)
+		{
+			UI_SetSpeaker(2, 0);
+		}
+		ADO_Start(tCamViewSel.tCamViewPool[0]);
+		ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 	}
 }
 
@@ -8594,6 +8639,9 @@ void UI_CheckUsbCharge(void)
 	static uint8_t ubUsbStatus = 0;
 
 	//printd(Apk_DebugLvl, "### USB: %d, ChgFull: %d, USB_Config: %d.\n", UI_GetUsbDet(), UI_GetBatChgFull(), tUSBD_GetConfigStatus());
+
+	#if Current_Test
+	#else
 	if(UI_GetUsbDet() == 1) //USB_DET
 	{
 		if(tUSBD_GetConfigStatus() == 1) //³äµçÆ÷
@@ -8623,6 +8671,7 @@ void UI_CheckUsbCharge(void)
 		if(GPIO->GPIO_O12 == 0)
 			GPIO->GPIO_O12 = 1;
 	}
+	#endif
 
 	if((UI_GetUsbDet() == 1) && (ubUsbStatus == 0))
 	{
@@ -11893,7 +11942,7 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 		//UI_UpdateDevStatusInfo();
 	}
 
-	ubWakeUpWaitCnt = 5;
+	ubWakeUpWaitCnt = 4;
 	ubPowerState = PWR_Start_Wakeup;
 }
 //------------------------------------------------------------------------------
@@ -12589,7 +12638,7 @@ void UI_SetSpeaker(uint8_t type, uint8_t State)
 			}
 		}
 	}
-	else
+	else if(type == 1)
 	{
 		if(State == 1)
 		{
@@ -12597,14 +12646,16 @@ void UI_SetSpeaker(uint8_t type, uint8_t State)
 			{
 				if(ubSpeakerCount > 0)
 				{
-					if(SPEAKER_STATE == FALSE)
+					if(FALSE == ubUI_PttStartFlag)
 					{
-						SPEAKER_EN(TRUE);
-						TIMER_Delay_us(2);
-						SPEAKER_EN(FALSE);
-						TIMER_Delay_us(2);
-						SPEAKER_EN(TRUE);
-						//BUZ_PlayPowerOffSound();
+						if(SPEAKER_STATE == FALSE)
+						{
+							SPEAKER_EN(TRUE);
+							TIMER_Delay_us(2);
+							SPEAKER_EN(FALSE);
+							TIMER_Delay_us(2);
+							SPEAKER_EN(TRUE);
+						}
 					}
 					ubSpeakerCount = 0;
 				}
@@ -12615,6 +12666,33 @@ void UI_SetSpeaker(uint8_t type, uint8_t State)
 			if(SPEAKER_STATE == TRUE)
 				SPEAKER_EN(FALSE);
 			ubSpeakerCount = 0;
+		}
+	}
+	else if(type == 2)
+	{
+		if(State == 0)
+		{
+			if(SPEAKER_STATE == TRUE)
+				SPEAKER_EN(FALSE);
+			ubSpeakerCount = 0;
+		}
+		else
+		{
+			if(FALSE == ubUI_PttStartFlag)
+			{
+				if(FALSE == ubUI_PttStartFlag)
+				{
+					if(SPEAKER_STATE == FALSE)
+					{
+						SPEAKER_EN(TRUE);
+						TIMER_Delay_us(2);
+						SPEAKER_EN(FALSE);
+						TIMER_Delay_us(2);
+						SPEAKER_EN(TRUE);
+					}
+				}
+				ubSpeakerCount = 0;
+			}
 		}
 	}
 }

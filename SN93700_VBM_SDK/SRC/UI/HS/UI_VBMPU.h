@@ -861,7 +861,8 @@ void UI_AlarmSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_AlarmSubSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_AlarmSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_DrawAlarmSubMenuPage_NoSel(void);
-
+void UI_PlayAlarmSound(uint8_t type);
+void UI_StopPlayAlarm(void);
 void UI_AlarmmenuDisplay(void);
 void UITempSubmenuDisplay(void);
 void UISoundSubmenuDisplay(void);
