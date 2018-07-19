@@ -1627,6 +1627,7 @@ uint8_t UI_CheckAlarmWakeUp(void)
 			ubHighTempCnt++;
 			if(ubHighTempCnt == CHECK_CNT)
 			{
+				ubHighTempCnt = 0;
 				return 1;
 			}
 		}
@@ -1647,6 +1648,7 @@ uint8_t UI_CheckAlarmWakeUp(void)
 			ubLowTempCnt++;
 			if(ubLowTempCnt == CHECK_CNT)
 			{
+				ubLowTempCnt = 0;
 				return 2;
 			}
 		}
@@ -1667,6 +1669,7 @@ uint8_t UI_CheckAlarmWakeUp(void)
 			ubSoundCnt++;
 			if(ubSoundCnt == 5)
 			{
+				ubSoundCnt = 0;
 				return 3;
 			}
 		}

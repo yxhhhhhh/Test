@@ -166,7 +166,7 @@ uint8_t ubNightmodeFlag[4] = {0,0,0,0};
 
 uint8_t ubTimeHour = 12;
 uint8_t ubTimeMin = 0;
-uint8_t ubTimeAMPM = 0;
+uint8_t ubTimeAMPM = 1;
 
 uint8_t ubPairDisplayCnt = 0;
 uint8_t ubPairDisplayTime = 60;
@@ -653,7 +653,9 @@ void UI_LinkStatusCheck(uint16_t ubLinkCheckCount)
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t ubCheckCount)
 {
-	static uint8_t ubSetAlarmRet = 0;
+	static uint8_t ubSetAlarmRet = rUI_FAIL;
+	static uint8_t ubNightModeRet = rUI_FAIL;
+
 
 	if(ubFactoryModeFLag == 1)
 	{
@@ -697,6 +699,12 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			{
 				ubSetAlarmRet = UI_SendAlarmSettingToBu();
 			}
+
+			if(ubNightModeRet == rUI_FAIL)
+			{
+				ubNightModeRet = UI_SendNightModeToBu();
+			}
+
 			ubLinkStateCheckCount = 0;
 
 			UI_SetSpeaker(0, 1);
@@ -814,15 +822,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				UI_PickupAlarmCheck();
 				UI_MotorStateCheck();
 
-				if(((*pThreadCnt)%5) == 0)
-				{
-					if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
-						(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
-					{
-						UI_SendNightModeToBu();
-					}
-				}
-			
 				UI_RedrawStatusBar(pThreadCnt);
 				(*pThreadCnt)++;
 				ubUI_SendMsg2AppFlag = TRUE;
@@ -942,7 +941,8 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 	printd(Apk_DebugLvl, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
 	if(PS_VOX_MODE == tUI_PsMode)
 	{
-		if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+		if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+			(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 		{
 			tPsCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 			tPsCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
@@ -1013,7 +1013,7 @@ void UI_CheckPowerMode(void)
 	else if(ubPowerState == PWR_Prep_Wakeup)
 	{
 		ubWakeUpWaitCnt++;
-		if(ubWakeUpWaitCnt == 2)
+		if(ubWakeUpWaitCnt >= 2)
 		{
 			if(GPIO->GPIO_O12 == 0)
 				GPIO->GPIO_O12 = 1; //LCD Power
@@ -1066,8 +1066,15 @@ void UI_PowerKeyShort(void)
 
 void UI_PowerOff(void)
 {
-	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
 	printd(Apk_DebugLvl, "UI_PowerOff Power OFF!\n");
+
+	UI_SendPwrNormalModeToBu();
+	UI_UpdateDevStatusInfo();
+	//BUZ_PlayPowerOffSound();
+	osDelay(600);//wait buzzer play finish
+	LCDBL_ENABLE(UI_DISABLE);
+	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
+	RTC_SetGPO_1(0, RTC_PullDownEnable);
 	RTC_PowerDisable();
 	while(1);
 }
@@ -1081,7 +1088,8 @@ void UI_PowerKey(void)
 		if((GPIO->GPIO_I9 == 0) || (GPIO->GPIO_I10 == 0))
 			return;
 	}
-	
+
+	UI_SendPwrNormalModeToBu();
 	UI_UpdateDevStatusInfo();
 	//BUZ_PlayPowerOffSound();
 	osDelay(600);			//wait buzzer play finish
@@ -5551,10 +5559,18 @@ void UI_TimeSetSystemTime(void) //add by wjb
 	tUI_PuSetting.tSysCalendar.ubMonth = 1;
 	tUI_PuSetting.tSysCalendar.ubDate = 1;
 
+	printd(Apk_DebugLvl, "UI_TimeSetSystemTime ubTimeHour: %d, ubTimeMin: %d, ubTimeAMPM: %d.\n", ubTimeHour, ubTimeMin, ubTimeAMPM);
 	if(ubTimeAMPM)
-		tUI_PuSetting.tSysCalendar.ubHour = ubTimeHour + 12;
+	{
+		if(ubTimeHour == 12)
+			tUI_PuSetting.tSysCalendar.ubHour = ubTimeHour;
+		else
+			tUI_PuSetting.tSysCalendar.ubHour = ubTimeHour + 12;
+	}
 	else
+	{
 		tUI_PuSetting.tSysCalendar.ubHour = ubTimeHour;
+	}
 	
 	tUI_PuSetting.tSysCalendar.ubMin = ubTimeMin;
 	tUI_PuSetting.tSysCalendar.ubSec = 0;
@@ -5582,7 +5598,10 @@ void UI_TimeShowSystemTime(uint8_t type)
 		if(tUi_Calendar.ubHour >= 12)
 		{
 			ubTimeAMPM = 1;
-	 		ubTimeHour = tUi_Calendar.ubHour - 12;
+			if(tUi_Calendar.ubHour == 12)
+				ubTimeHour = 12;
+			else
+	 			ubTimeHour = tUi_Calendar.ubHour - 12;
 		}
 		else
 		{
@@ -5650,11 +5669,7 @@ void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 		else
 		{
 			ubTimeAMPM = 0;
-
-			if(tUi_Calendar.ubHour == 0)
-				ubTimeHour = 12;
-			else
-				ubTimeHour = tUi_Calendar.ubHour;
+			ubTimeHour = tUi_Calendar.ubHour;
 		}
 		ubTimeMin = tUi_Calendar.ubMin;
 
@@ -8119,12 +8134,13 @@ void UI_VolBarDisplay(uint8_t value)
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
-void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
+uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
 {
 	UI_PUReqCmd_t tUI_NightModeReqCmd;
 
 	//printd(Apk_DebugLvl, "UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
-	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
 		tUI_NightModeReqCmd.tDS_CamNum 					= tCamViewSel.tCamViewPool[0];
 		tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_SETTING;
@@ -8136,21 +8152,26 @@ void UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
 		if(UI_SendRequestToBU(osThreadGetId(), &tUI_NightModeReqCmd) != rUI_SUCCESS)
 		{
 			printd(DBG_ErrorLvl, "UI_CamNightModeCmd Fail!\n");
+			return rUI_FAIL;
 		}
+		return rUI_SUCCESS;
 	}
+
+	return rUI_FAIL;
 }
 
-void UI_SendNightModeToBu(void)
+uint8_t UI_SendNightModeToBu(void)
 {
-	UI_CamNightModeCmd(tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
+	return UI_CamNightModeCmd(tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
 }
 
-void UI_CamvLDCModeCmd(uint8_t value)
+uint8_t UI_CamvLDCModeCmd(uint8_t value)
 {
 	UI_PUReqCmd_t tUI_CamvLDCModeCmd;
 
 	printd(Apk_DebugLvl, "UI_CamvLDCModeCmd value: %d.\n", value);
-	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
 		tUI_CamvLDCModeCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 		tUI_CamvLDCModeCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
@@ -8161,8 +8182,12 @@ void UI_CamvLDCModeCmd(uint8_t value)
 		if(UI_SendRequestToBU(osThreadGetId(), &tUI_CamvLDCModeCmd) != rUI_SUCCESS)
 		{
 			printd(DBG_ErrorLvl, "UI_CamvLDCModeCmd Fail!\n");
+			return rUI_FAIL;
 		}
+		return rUI_SUCCESS;
 	}
+
+	return rUI_FAIL;
 }
 
 uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
@@ -8171,7 +8196,8 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
 	UI_PUReqCmd_t tUI_SendCmd;
 
 	printd(Apk_DebugLvl, "UI_SendToBUCmd, tCamViewPool[0]: %d, ConnSts: %d.\n", tCamViewSel.tCamViewPool[0], tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
-	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
 		tUI_SendCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 		tUI_SendCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
@@ -8217,12 +8243,38 @@ uint8_t UI_SendAlarmSettingToBu(void)
 	return UI_SendToBUCmd(CmdData, 4);
 }
 
+void UI_SendPwrNormalModeToBu(void)
+{
+	UI_PUReqCmd_t tPwrCmd;
+	
+	if(tUI_PuSetting.tPsMode != POWER_NORMAL_MODE)
+	{
+		if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+			(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
+		{
+			tPwrCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
+			tPwrCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
+			tPwrCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
+			tPwrCmd.ubCmd[UI_SETTING_DATA]   = POWER_NORMAL_MODE;
+			tPwrCmd.ubCmd_Len  				= 3;
+			if(UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
+			{
+				printd(DBG_ErrorLvl, "UI_SendPwrNormalModeToBu Fail!\n");
+				if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+					return;
+			}
+		}
+		tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
+	}
+}
+
 void UI_TestCmd(uint8_t Value1, uint8_t Value2)
 {
 	UI_PUReqCmd_t tUI_TestCmd;
 
 	printd(Apk_DebugLvl, "UI_TestCmd (%d, %d), tCamViewPool[0]: %d.\n", Value1, Value2, tCamViewSel.tCamViewPool[0]);
-	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
 		tUI_TestCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 		tUI_TestCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
@@ -8242,7 +8294,8 @@ void UI_EnableMotor(uint8_t value)
 	UI_PUReqCmd_t tUI_motorReqCmd;
 	
 	printd(Apk_DebugLvl, "UI_EnableMotor value: %d, tCamConnSts: %d.\n", value, tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
-	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
 		tUI_motorReqCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 		tUI_motorReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_SETTING;
@@ -11935,6 +11988,7 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 	if(tCamNum > CAM4)
 		return;
 
+	#if 0
 	if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 	{
 		tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
@@ -11946,9 +12000,14 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 		tUI_CamStatus[tCamNum].tCamPsMode = POWER_NORMAL_MODE;
 		//UI_UpdateDevStatusInfo();
 	}
-
-	ubWakeUpWaitCnt = 4;
-	ubPowerState = PWR_Start_Wakeup;
+	#else
+	printd(Apk_DebugLvl, "UI_VoxTrigger tCamNum: %d, tUI_PuSetting.tPsMode: %d $$$\n", tCamNum, tUI_PuSetting.tPsMode);
+	if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+	{
+		ubWakeUpWaitCnt = 1;
+		ubPowerState = PWR_Prep_Wakeup;
+	}
+	#endif
 }
 //------------------------------------------------------------------------------
 void UI_EnableVox(void)
@@ -11981,7 +12040,8 @@ void UI_DisableVox(void)
 
 	printd(Apk_DebugLvl, "UI_DisableVox#\n");
 
-	if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
+	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
+		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
 		tPsCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 		tPsCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
