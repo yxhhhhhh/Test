@@ -5626,37 +5626,37 @@ void UI_TimeShowSystemTime(uint8_t type)
 void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
 	OSD_IMG_INFO tOsdImgInfo;
+	RTC_Calendar_t tUi_Calendar;	
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
 	uint8_t ubT_MinNum[3] = {1,  0,  0};	
 	uint8_t *pT_Num[3] = {(uint8_t *)(&ubTimeHour),
 						(uint8_t *)(&ubTimeMin), (uint8_t *)(&ubTimeAMPM)
 						};
 
-
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
 		ubSubMenuItemFlag = 0;
 		ubSubMenuItemPreFlag = 1;	
 
-		if(tUI_PuSetting.tSysCalendar.ubHour >= 12)
+		RTC_GetCalendar((RTC_Calendar_t *)(&tUi_Calendar));
+		if(tUi_Calendar.ubHour >= 12)
 		{
 			ubTimeAMPM = 1;
-			if(tUI_PuSetting.tSysCalendar.ubHour == 12)
+			if(tUi_Calendar.ubHour == 12)
 				ubTimeHour = 12;
 			else
-	 			ubTimeHour = tUI_PuSetting.tSysCalendar.ubHour - 12;
+	 			ubTimeHour = tUi_Calendar.ubHour - 12;
 		}
 		else
 		{
 			ubTimeAMPM = 0;
 
-			if(tUI_PuSetting.tSysCalendar.ubHour == 0)
+			if(tUi_Calendar.ubHour == 0)
 				ubTimeHour = 12;
 			else
-				ubTimeHour = tUI_PuSetting.tSysCalendar.ubHour;
+				ubTimeHour = tUi_Calendar.ubHour;
 		}
-		ubTimeMin = tUI_PuSetting.tSysCalendar.ubMin;
-
+		ubTimeMin = tUi_Calendar.ubMin;
 
 		//printd(Apk_DebugLvl, "ubTimeHour  %d\n",ubTimeHour);
 		ubEnterTimeMenuFlag = 1;
