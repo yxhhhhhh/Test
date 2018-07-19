@@ -34,8 +34,8 @@
 
 #define UI_TEST_MODE	0
 
-#define Current_Test	0
-#define Current_Mode	PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
+//#define Current_Test	0
+//#define Current_Mode	PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
 
 #define SD_UPDATE_TEST	0
 
@@ -307,8 +307,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	else
 	{
 		#if Current_Test
-		if(((ubPowerState >= PWR_Prep_Sleep) && (ubPowerState <= PWR_Start_Sleep)) ||
-			((ubPowerState >= PWR_Prep_Wakeup) && (ubPowerState <= PWR_Start_Wakeup)))
+		if(PWR_ON != ubPowerState)
 		{
 			if(ptKeyEvent->ubKeyID != PKEY_ID0) //Powerkey
 				return;
@@ -1000,11 +999,14 @@ void UI_CheckPowerMode(void)
 	{
 		UI_TimerDeviceEventStop(TIMER1_2);
 		UI_SwitchMode(Current_Mode);
+		if(GPIO->GPIO_O12 == 1)
+			GPIO->GPIO_O12 = 0; //LCD Power
 		ubSleepWaitCnt = 0;
 		ubPowerState = PWR_Sleep_Complete;
 	}
 	else if(ubPowerState == PWR_Sleep_Complete)
 	{
+		
 		ubSleepWaitCnt = 0;
 		ubWakeUpWaitCnt = 0;
 	}
@@ -1013,6 +1015,8 @@ void UI_CheckPowerMode(void)
 		ubWakeUpWaitCnt++;
 		if(ubWakeUpWaitCnt == 2)
 		{
+			if(GPIO->GPIO_O12 == 0)
+				GPIO->GPIO_O12 = 1; //LCD Power
 			UI_DisableVox();
 			ubPowerState = PWR_Start_Wakeup;
 		}
@@ -4049,7 +4053,7 @@ void UI_DrawSubSubMenu_Alarm(void)
 					tOsdImgInfo.uwYStart =431 - 28;	
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 				}	
-				if(tUI_PuSetting.ubLangageFlag  == 3)
+				else if(tUI_PuSetting.ubLangageFlag  == 3)
 				{
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart= 346;
@@ -5130,6 +5134,7 @@ void UI_ShowAlarm(uint8_t type)
 	if((ubMotor0State != MC_LEFT_RIGHT_OFF) ||(ubMotor1State != MC_UP_DOWN_OFF))
 	{
 		UI_MotorDisplay(MC_LEFT_RIGHT_OFF);
+		UI_MotorDisplay(MC_UP_DOWN_OFF);
 		UI_EnableMotor(0);
 	}
 		
