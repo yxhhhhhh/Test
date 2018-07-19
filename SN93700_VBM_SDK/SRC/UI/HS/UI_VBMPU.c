@@ -656,7 +656,6 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	static uint8_t ubSetAlarmRet = rUI_FAIL;
 	static uint8_t ubNightModeRet = rUI_FAIL;
 
-
 	if(ubFactoryModeFLag == 1)
 	{
 		if(ubCheckCount%5 == 0)
@@ -719,13 +718,15 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 
 			#if Current_Test
 			ubGetPsModeFlag = 0;
-			if((ubLinkStateCheckCount % 10) && (ubPowerState == PWR_Sleep_Complete))
+			if((ubLinkStateCheckCount % 15) && (ubPowerState == PWR_Sleep_Complete))
 			{
-				ubPowerState = PWR_Prep_Wakeup;
+				//ubWakeUpWaitCnt = 0;
+				//ubPowerState = PWR_Prep_Wakeup;
 			}
 			#endif
 			
 			ubSetAlarmRet = rUI_FAIL;
+			ubNightModeRet = rUI_FAIL;
 		}
 
 		if(ubSpeakerCount >= 1)
@@ -976,6 +977,41 @@ void UI_PowerKeyDeal(void)
 	}
 }
 
+void UI_EnterSleep(void)
+{
+	OSD_IMG_INFO tOsdInfo;
+
+	if(APP_LOSTLINK_STATE == tUI_SyncAppState)
+	{
+		tOsdInfo.uwHSize  = 672;
+		tOsdInfo.uwVSize  = 1280;
+		tOsdInfo.uwXStart = 48;
+		tOsdInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdInfo);
+	}
+
+	if(GPIO->GPIO_O12 == 1)
+	{
+		GPIO->GPIO_O12 = 0; //LCD Power
+	}
+}
+
+void UI_WakeUp(void)
+{
+	if(APP_LOSTLINK_STATE == tUI_SyncAppState)
+	{
+		tUI_PuSetting.IconSts.ubShowLostLogoFlag = FALSE;
+		ubFastShowLostLinkSta = 1;
+	}
+	
+	if(LCDBL_STATE == 0)
+	{
+		LCDBL_ENABLE(UI_ENABLE);
+	}
+
+	UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+}
+
 void UI_CheckPowerMode(void)
 {
 	printd(Apk_DebugLvl, "UI_CheckPowerMode ubPowerState: %d, Sleep: %d, Wakeup: %d.\n", ubPowerState, ubSleepWaitCnt, ubWakeUpWaitCnt);
@@ -997,16 +1033,22 @@ void UI_CheckPowerMode(void)
 	}
 	else if(ubPowerState == PWR_Start_Sleep)
 	{
-		UI_TimerDeviceEventStop(TIMER1_2);
-		UI_SwitchMode(Current_Mode);
-		if(GPIO->GPIO_O12 == 1)
-			GPIO->GPIO_O12 = 0; //LCD Power
-		ubSleepWaitCnt = 0;
-		ubPowerState = PWR_Sleep_Complete;
+		ubSleepWaitCnt++;
+		if(ubSleepWaitCnt == 3)
+		{
+			UI_TimerDeviceEventStop(TIMER1_2);
+			UI_SwitchMode(Current_Mode);
+		}
+
+		if(ubSleepWaitCnt >= 5)
+		{
+			UI_EnterSleep();
+			ubSleepWaitCnt = 0;
+			ubPowerState = PWR_Sleep_Complete;
+		}
 	}
 	else if(ubPowerState == PWR_Sleep_Complete)
 	{
-		
 		ubSleepWaitCnt = 0;
 		ubWakeUpWaitCnt = 0;
 	}
@@ -1026,10 +1068,7 @@ void UI_CheckPowerMode(void)
 		ubWakeUpWaitCnt++;
 		if(ubWakeUpWaitCnt >= 5)
 		{
-			if(LCDBL_STATE == 0)
-				LCDBL_ENABLE(UI_ENABLE);
-
-			UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+			UI_WakeUp();
 			ubWakeUpWaitCnt = 0;
 			ubPowerState = PWR_ON;
 		}
@@ -8195,7 +8234,7 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
 	int i;
 	UI_PUReqCmd_t tUI_SendCmd;
 
-	printd(Apk_DebugLvl, "UI_SendToBUCmd, tCamViewPool[0]: %d, ConnSts: %d.\n", tCamViewSel.tCamViewPool[0], tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
+	printd(Apk_DebugLvl, "UI_SendToBUCmd CMD: 0x%x, tCamViewPool[0]: %d, ConnSts: %d, ID: 0x%x.\n",data[0], tCamViewSel.tCamViewPool[0], tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts, tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID);
 	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
 		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
@@ -12016,7 +12055,7 @@ void UI_EnableVox(void)
 
 	//if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
 		//return;
-
+	printd(Apk_DebugLvl, "UI_EnableVox###\n");
 	LCDBL_ENABLE(UI_DISABLE);
 
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
@@ -12038,7 +12077,7 @@ void UI_DisableVox(void)
 	//if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
 		//return;
 
-	printd(Apk_DebugLvl, "UI_DisableVox#\n");
+	printd(Apk_DebugLvl, "UI_DisableVox###\n");
 
 	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
 		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
