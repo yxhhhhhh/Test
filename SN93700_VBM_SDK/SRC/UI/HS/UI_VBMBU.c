@@ -1342,6 +1342,7 @@ void UI_NightModeSetting(void *pvNMParam)
 	uint8_t CameraId = pNM_Param[0];
 	uint8_t NightMode = pNM_Param[1];
 
+	printd(Apk_DebugLvl, "UI_NightModeSetting NightMode: %d.\n", NightMode);
 	tUI_BuStsInfo.tNightModeFlag = NightMode;
 }
 

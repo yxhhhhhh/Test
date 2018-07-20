@@ -7735,6 +7735,7 @@ void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_PuSetting.NightmodeFlag |=(ubSubSubSubMenuItemFlag<<ubSubSubMenuItemFlag);
 			printd(Apk_DebugLvl, "UI_NightModeSubSubSubMenuPage tUI_PuSetting.NightmodeFlag: 0x%x.\n", tUI_PuSetting.NightmodeFlag);
 			//UI_UpdateDevStatusInfo();
+			UI_SendNightModeToBu();
 			UI_NightModeDisplay(ubSubSubMenuItemFlag);
 		
 		case LEFT_ARROW:
