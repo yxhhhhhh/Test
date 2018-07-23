@@ -289,6 +289,8 @@ uint8_t ubWakeUpWaitCnt = 0;
 uint16_t ubSpeakerCount = 0;
 uint8_t ubWorWakeUpFlag;
 
+uint8_t ubTimerDevEventStopSta = 0;
+
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -2846,6 +2848,8 @@ void UI_PushTalkKey(void)
 	//SPEAKER_EN(((TRUE == ubUI_PttStartFlag)?UI_DISABLE:UI_ENABLE));
 	if(TRUE == ubUI_PttStartFlag)
 	{
+		UI_TimerDeviceEventStop(TIMER1_2);
+		UI_DisableScanMode();
 		UI_SetSpeaker(0, 0);
 		CmdData = UI_SET_TALK_ON_CMD;
 		UI_SendToBUCmd(&CmdData, 1);
@@ -2855,6 +2859,14 @@ void UI_PushTalkKey(void)
 		CmdData = UI_SET_TALK_OFF_CMD;
 		UI_SendToBUCmd(&CmdData, 1);	
 		UI_SetSpeaker(0, 1);
+		if((TRUE == tUI_PuSetting.ubScanModeEn) && (FALSE == ubUI_ScanStartFlag))
+		{
+			UI_EnableScanMode();
+		}
+		if(tUI_PuSetting.ubSleepMode)
+		{
+			UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+		}
 	}
 }
 //------------------------------------------------------------------------------
@@ -12664,13 +12676,21 @@ void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *
 	tUI_TimerParam.pvEvent 		= pvRegCb;
 
 	printd(Apk_DebugLvl, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
-	TIMER_Start(tDevice, tUI_TimerParam);
+	if(ubTimerDevEventStopSta == 0)
+	{
+		TIMER_Start(tDevice, tUI_TimerParam);
+		ubTimerDevEventStopSta = 1;
+	}
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice)
 {
 	printd(Apk_DebugLvl, "UI_TimerDeviceEventStop tDevice: %d.\n", tDevice);
-	TIMER_Stop(tDevice);
+	if(ubTimerDevEventStopSta == 1)
+	{
+		TIMER_Stop(tDevice);
+		ubTimerDevEventStopSta = 0;
+	}
 }
 //------------------------------------------------------------------------------
 void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb)
@@ -12736,6 +12756,9 @@ void UI_EnableScanMode(void)
 	}
 
 	if(ubPowerState != PWR_ON)
+		return;
+
+	if(TRUE == ubUI_PttStartFlag)
 		return;
 	
 	UI_CheckCameraSource4SV();
