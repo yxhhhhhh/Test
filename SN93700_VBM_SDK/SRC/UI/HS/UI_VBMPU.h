@@ -761,6 +761,7 @@ void UI_BuPowerSaveKey(void);
 void UI_PuPowerSaveModeSelection(UI_ArrowKey_t tArrowKey);
 void UI_BuPowerSaveModeSelection(UI_ArrowKey_t tArrowKey);
 void UI_PushTalkKey(void);
+void UI_PushTalkKeyShort(void);
 void UI_DrawCameraSettingMenu(UI_CameraSettingMenu_t tCamSetMenu);
 void UI_CameraSettingMenu1Key(void);
 void UI_CameraSettingMenu2Key(void);

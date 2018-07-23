@@ -46,7 +46,7 @@ void UI_Init(osMessageQId *pvMsgQId)
 	#endif
 
 	#ifdef VBM_PU
-	if((GPIO->GPIO_I10 == 0)&&(ubRTC_GetKey() == 1))
+	if((GPIO->GPIO_I9 == 0)&&(ubRTC_GetKey() == 1))
 	{
 		ubFactoryModeFLag = 1;
 		printd(Apk_DebugLvl, "enter factorymode\n");

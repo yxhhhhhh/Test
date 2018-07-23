@@ -1444,12 +1444,12 @@ void UI_BrightnessCheck(void) //20180408
 	
 	uwDetLvl = uwSADC_GetReport(1);
 
-	if(uwDetLvl < 0x04)
+	if(uwDetLvl < 0x01)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
 	}
-	else if(uwDetLvl > 0x09)
+	else if(uwDetLvl > 0x3C)
 	{
 		ubCheckMaxIrCnt++;
 		ubCheckMinIrCnt = 0;
