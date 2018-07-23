@@ -12,7 +12,7 @@
 	\brief		Sensor H62 relation function
 	\author		BoCun
 	\version	1.1
-	\date		2018-04-20
+	\date		2018-07-06
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -522,6 +522,24 @@ void SEN_WrGain(uint32_t ulGainX1024)
 }
 
 //------------------------------------------------------------------------------
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
+{
+    if(ubMirrorEn)
+        xtSENInst.ubImgMode |=  H62_MIRROR;
+    else
+        xtSENInst.ubImgMode &=  ~H62_MIRROR;
+    
+    if(ubFlipEn)
+        xtSENInst.ubImgMode |=  H62_FLIP;
+    else
+        xtSENInst.ubImgMode &=  ~H62_FLIP;
+    
+    ulSEN_I2C_Write(0x12, xtSENInst.ubImgMode);
+    //
+    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
+}
+
+//------------------------------------------------------------------------------
 void SEN_GroupHoldOnVSync(void)
 {
 
@@ -530,7 +548,6 @@ void SEN_GroupHoldOnVSync(void)
 //------------------------------------------------------------------------------
 void SEN_GroupHoldOffVSync(void)
 {
-	
 	ulSEN_I2C_Write(0x1f, 0x80);	
 }
 

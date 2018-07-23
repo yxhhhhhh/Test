@@ -1504,7 +1504,11 @@ void KNL_TurnOffTuningTool(void);
 \return Tuning tool mode
 */
 KNL_TuningMode_t KNL_GetTuningToolMode(void);
-
+//------------------------------------------------------------------------
+/*!
+\brief Firmware upgrade function use SD card
+\return no
+*/
 void KNL_SDUpgradeFwFunc(void);
 
 //Extern

@@ -11,9 +11,9 @@
 	\file		IMX323.h
 	\brief		Sensor IMX323 header
 	\author		BoCun
-	\version	1.1
-	\date		2017/11/23
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.2
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _IMX323_H_
@@ -37,6 +37,8 @@
 #define IMX322_DUMMY_LINE_L			(0x0203)
 #define IMX322_GAIN					(0x301E)
 
+#define IMX322_MIRROR		        (0x1 << 0)
+#define IMX322_FLIP                 (0x1 << 1)
 //==============================================================================
 // MACRO FUNCTION 
 //==============================================================================
@@ -241,4 +243,12 @@ void SEN_SetSensorImageSize(void);
 \endcode
 */
 void SEN_SetSensorType(void);
+//------------------------------------------------------------------------
+/*!
+\brief Set sensor mirror/flip.
+\param ubMirrorEn 	mirror.
+\param ubFlipEn 	flip.
+\return (no)
+*/
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn);
 #endif

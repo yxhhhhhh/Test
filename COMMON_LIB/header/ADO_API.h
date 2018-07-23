@@ -11,8 +11,8 @@
 	\file		ADO_API.h
 	\brief		Audio header file
 	\author		Chinwei Hsu/Bruce Hsu
-	\version	2.24
-	\date		2018/06/15
+	\version	2.25
+	\date		2018/07/05
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------

@@ -11,9 +11,9 @@
 	\file		H62.h
 	\brief		Sensor H62 header
 	\author		BoCun
-	\version	1
-	\date		2017/05/31
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.1
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _H62_MIPI_H_
@@ -42,6 +42,8 @@
 #define SEN_IMG_FLIP			 (1)
 #define SEN_IMG_MIRROR			 (2)
 
+#define H62_MIRROR		        (0x1 << 5)
+#define H62_FLIP		        (0x1 << 4)
 //==============================================================================
 // MACRO FUNCTION 
 //==============================================================================
@@ -243,4 +245,12 @@ void SEN_SetSensorImageSize(void);
 \endcode
 */
 void SEN_SetSensorType(void);
+//------------------------------------------------------------------------
+/*!
+\brief Set sensor mirror/flip.
+\param ubMirrorEn 	mirror.
+\param ubFlipEn 	flip.
+\return (no)
+*/
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn);
 #endif

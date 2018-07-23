@@ -11,9 +11,9 @@
 	\file		OV9732.c
 	\brief		Sensor OV9732 relation function
 	\author		BoCun
-	\version	1
-	\date		2017-10-18
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.1
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------#include <stdio.h>
 #include <stdio.h>
@@ -600,6 +600,46 @@ void SEN_WrGain(uint32_t ulGainX1024)
     // B gain
 	ulSEN_I2C_Write(0x51, 0x84, ((uwDGaintmp>>8) &0x000f));
 	ulSEN_I2C_Write(0x51, 0x85, (uwDGaintmp &0x00ff));
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
+{
+    if(ubMirrorEn)
+        xtSENInst.ubImgMode |=  OV9732_MIRROR;
+    else
+        xtSENInst.ubImgMode &=  ~OV9732_MIRROR;
+    
+    if(ubFlipEn)
+        xtSENInst.ubImgMode |=  OV9732_FLIP;
+    else
+        xtSENInst.ubImgMode &=  ~OV9732_FLIP;
+    
+    ulSEN_I2C_Write(0x38, 0x20, xtSENInst.ubImgMode);
+    
+	if (ubMirrorEn && ubFlipEn) {
+        ulSEN_I2C_Write(0x40, 0x04, 0x01);
+        ulSEN_I2C_Write(0x40, 0x05, 0x40);
+        ulSEN_I2C_Write(0x40, 0x06, 0x00);
+        ulSEN_I2C_Write(0x40, 0x07, 0x02);
+	} else if (ubFlipEn) {
+        ulSEN_I2C_Write(0x40, 0x04, 0x00);
+        ulSEN_I2C_Write(0x40, 0x05, 0x02);
+        ulSEN_I2C_Write(0x40, 0x06, 0x01);
+        ulSEN_I2C_Write(0x40, 0x07, 0x40);
+	} else if (ubMirrorEn) {
+        ulSEN_I2C_Write(0x40, 0x04, 0x01);
+        ulSEN_I2C_Write(0x40, 0x05, 0x40);
+        ulSEN_I2C_Write(0x40, 0x06, 0x02);
+        ulSEN_I2C_Write(0x40, 0x07, 0x02);
+	} else {
+        ulSEN_I2C_Write(0x40, 0x04, 0x00);
+        ulSEN_I2C_Write(0x40, 0x05, 0x02);
+        ulSEN_I2C_Write(0x40, 0x06, 0x01);
+        ulSEN_I2C_Write(0x40, 0x07, 0x40);
+	}	
+    //
+    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
 
 //------------------------------------------------------------------------------

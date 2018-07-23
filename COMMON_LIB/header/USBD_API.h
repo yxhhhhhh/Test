@@ -11,8 +11,8 @@
 	\file		USBD_API.h
 	\brief		USB Device Config header file
 	\author		Hanyi Chiu
-	\version	1.1
-	\date		2018/06/12
+	\version	1.4
+	\date		2018/07/09
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -35,6 +35,7 @@ typedef enum
 
 typedef enum
 {
+	USB_UVC_VS_FORMAT_UNDEFINED  	= 0x00,
     USB_UVC_VS_FORMAT_UNCOMPRESSED  = 0x04,
 	USB_UVC_VS_FORMAT_MJPEG         = 0x06,
     USB_UVC_VS_FORMAT_FRAME_BASED   = 0x10,
@@ -103,6 +104,19 @@ uint8_t UVC_GetVdoFormat(void);
 \return Video width
 */
 uint16_t UVC_GetVdoWidth(void);
+//------------------------------------------------------------------------------
+/*!
+\brief Get video Height of UVC
+\return Video height
+*/
+uint16_t UVC_GetVdoHeight(void);
+//------------------------------------------------------------------------------
+/*!
+\brief Check UVC resolution
+\return 1: Check OK
+        0: Check Fail
+*/
+uint8_t ubUVC_CheckResolution(uint16_t uwH_Size, uint16_t uwV_Size);
 //------------------------------------------------------------------------------
 /*!
 \brief Update video image through UVC path

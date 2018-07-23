@@ -11,8 +11,8 @@
 	\file		SEN.c
 	\brief		Sensor relation function
 	\author		BoCun
-	\version	1.5
-	\date		2018-05-07
+	\version	1.6
+	\date		2018-07-06
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -36,7 +36,7 @@
 
 //------------------------------------------------------------------------------
 #define SEN_MAJORVER    1        //!< Major version = 1
-#define SEN_MINORVER    5        //!< Minor version = 5
+#define SEN_MINORVER    6        //!< Minor version = 6
 //------------------------------------------------------------------------------
 osSemaphoreId 	SEM_SEN_VSyncRdy;
 osMessageQId tSEN_ExtEventQueue;
@@ -394,7 +394,6 @@ void SEN_HwEnd_ISR(void)
         //printf("Hw");
 	}
     SEN_ChkISPState();
-	SEN->HW_END_INT_CLR = 1;
 	INTC_IrqClear(INTC_ISP_WIN_END_IRQ);
 	SEN->IMG_TX_EN = 0;
 
@@ -720,7 +719,8 @@ void SEN_ISRInitial(void)
 	SEN->SEN_HSYNC_INT_EN = 0;	
 }
 //------------------------------------------------------------------------------
-void ISP_SetMirrorFlip(uint8_t pFlip_Param) 
+/*
+void H62_SetMirrorFlip(uint8_t pFlip_Param) 
 { 
 	switch(pFlip_Param)
 	{
@@ -748,6 +748,7 @@ void ISP_SetMirrorFlip(uint8_t pFlip_Param)
 			break;
 	} 
 } 
+*/
 //------------------------------------------------------------------------------
 void SEN_ISPInitial(void)
 {
@@ -777,7 +778,7 @@ void SEN_ISPInitial(void)
     //NR Day mode
     SEN_SetIrMode(0); // 1:sensor黑白色
 
-	ISP_SetMirrorFlip(3); //20180508 翻转sensor画面
+    SEN_SetMirrorFlip(0,0); //20180508 翻转sensor画面
 }
 
 //------------------------------------------------------------------------------
@@ -1292,6 +1293,24 @@ bool bSEN_GetFrameDropState(uint8_t ubPath)
         return SEN->FRM_DROP3_INF;
     }
     return 1;
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetRawReorder(uint8_t ubMirrorEn, uint8_t ubFlipEn)
+{
+	if (ubMirrorEn && ubFlipEn) {
+        ISP_SetBlockGainTable(3);
+		SEN->RAW_REORDER = ((ulIQ_GetIspReorderPattern() >> 24) & 0xff);
+	} else if (ubFlipEn) {
+        ISP_SetBlockGainTable(1);
+		SEN->RAW_REORDER = ((ulIQ_GetIspReorderPattern() >> 16) & 0xff);
+	} else if (ubMirrorEn) {
+        ISP_SetBlockGainTable(2);
+		SEN->RAW_REORDER = ((ulIQ_GetIspReorderPattern() >> 8) & 0xff);
+	} else {
+        ISP_SetBlockGainTable(0);
+		SEN->RAW_REORDER = ((ulIQ_GetIspReorderPattern() >> 0) & 0xff);
+	}	
 }
 
 //------------------------------------------------------------------------------

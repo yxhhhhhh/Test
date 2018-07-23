@@ -120,7 +120,6 @@ uint8_t ubHighAlarm = 0;
 uint8_t ubLowAlarm = 0;
 uint8_t ubSoundAlarm = 0;
 
-
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -644,7 +643,6 @@ void UI_VoiceTrigSetting(void *pvTrigMode)
 
 	tUI_BuStsInfo.tCamScanMode = *pVoiceTrigMode;
 	ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, (CAMSET_ON == tUI_BuStsInfo.tCamScanMode)?ADO_ON:ADO_OFF);
-	//UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 void UI_VoiceTrigger(void)

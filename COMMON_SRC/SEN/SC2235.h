@@ -11,9 +11,9 @@
 	\file		SC2235.h
 	\brief		Sensor SC2235 header
 	\author		BoCun
-	\version	1.1
-	\date		2017/11/23
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.2
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _SC2235_H_
@@ -44,6 +44,8 @@
 #define SC2235_GAIN_H               (0x3E08)
 #define SC2235_GAIN_L               (0x3E09)
 
+#define SC2235_MIRROR               (0x06)
+#define SC2235_FLIP		            (0x60)
 //==============================================================================
 // MACRO FUNCTION 
 //==============================================================================
@@ -248,4 +250,12 @@ void SEN_SetSensorImageSize(void);
 \endcode
 */
 void SEN_SetSensorType(void);
+//------------------------------------------------------------------------
+/*!
+\brief Set sensor mirror/flip.
+\param ubMirrorEn 	mirror.
+\param ubFlipEn 	flip.
+\return (no)
+*/
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn);
 #endif

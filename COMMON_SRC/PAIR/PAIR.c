@@ -74,7 +74,7 @@ static void PAIR_Thread(void const *argument)
 		}
 		else if(ubPAIR_State == PAIR_PRP)
 		{
-			//printf("Sent TWC_PRP");
+//			printf("Sent TWC_PRP");
 			if(tTWC_Send(TWC_AP_MASTER, TWC_PRP, (uint8_t *)&PAIR_PrpPket,sizeof(PAIR_PrpPket), 8) == TWC_SUCCESS)
 				printf("Sent TWC_PRP_ok \n");
 
@@ -421,11 +421,19 @@ void PAIR_Paap(TWC_TAG GetSta,uint8_t *pData)
 void PAIR_CheckIdTable(void)
 {
 #if ((DISPLAY_MODE == DISPLAY_1T1R) || (DISPLAY_MODE == DISPLAY_2T1R))
-	uint8_t i;
+	uint8_t i, ubChkFlag = FALSE;
 
 	for(i = DISPLAY_MODE; i < 4; i++)
-		PAIR_IdTable.ulSTA_ID[i] = PAIR_INVAILD_ID;
-	PAIR_SaveId();
+	{
+		if((PAIR_IdTable.ulSTA_ID[i] != PAIR_INVAILD_ID) &&
+		   (PAIR_IdTable.ulSTA_ID[i] != 0xFFFFFFFF))
+		{
+			PAIR_IdTable.ulSTA_ID[i] = PAIR_INVAILD_ID;
+			ubChkFlag = TRUE;
+		}
+	}
+	if(TRUE == ubChkFlag)
+		PAIR_SaveId();
 #endif
 }
 #endif

@@ -169,6 +169,13 @@ void RC_FuncSet(RC_INFO *pInfo);
 
 //------------------------------------------------------------------------------
 /*!
+\brief 	Set RC Function Enable Flag	
+\return(no)
+*/
+void ubRC_SetFlg(uint8_t ubCodecIdx, uint8_t ubRcCtrlFlg);
+
+//------------------------------------------------------------------------------
+/*!
 \brief 	Get RC Function Enable Flag	
 \return	Flag, 0->Diable RC, 1->Enable RC
 */

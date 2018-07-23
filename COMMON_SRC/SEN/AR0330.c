@@ -11,9 +11,9 @@
 	\file		AR0330.c
 	\brief		Sensor AR0330 relation function
 	\author		BoCun
-	\version	1
-	\date		2017-10-18
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.1
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
@@ -551,6 +551,24 @@ void SEN_WrGain(uint16_t uwGainX1024)
     
     //Set digital gain
     ulSEN_I2C_Write(0x30, 0x5e, (uint8_t)((uwDigitalGain>>8) & 0xff), (uint8_t)(uwDigitalGain & 0xff));
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
+{
+    if(ubMirrorEn)
+        xtSENInst.ubImgMode |=  AR0330_MIRROR;
+    else
+        xtSENInst.ubImgMode &=  ~AR0330_MIRROR;
+    
+    if(ubFlipEn)
+        xtSENInst.ubImgMode |=  AR0330_FLIP;
+    else
+        xtSENInst.ubImgMode &=  ~AR0330_FLIP;
+    
+    ulSEN_I2C_Write(0x30, 0x40, xtSENInst.ubImgMode);
+    //
+    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
 
 //------------------------------------------------------------------------------

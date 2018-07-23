@@ -12,8 +12,8 @@
 	\brief		Sensor H62 relation function
 	\author		BoCun
 	\version	1
-	\date		2017-10-18
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------#include <stdio.h>
 #include <stdio.h>
@@ -575,6 +575,24 @@ void SEN_WrGain(uint32_t ulGainX1024)
 	// gain	
 	ulSEN_I2C_Write(0xc4, 0x00);
 	ulSEN_I2C_Write(0xc5, (ubGaintmp & 0xff));
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
+{
+    if(ubMirrorEn)
+        xtSENInst.ubImgMode |=  H62_MIRROR;
+    else
+        xtSENInst.ubImgMode &=  ~H62_MIRROR;
+    
+    if(ubFlipEn)
+        xtSENInst.ubImgMode |=  H62_FLIP;
+    else
+        xtSENInst.ubImgMode &=  ~H62_FLIP;
+    
+    ulSEN_I2C_Write(0x12, xtSENInst.ubImgMode);
+    //
+    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
 
 //------------------------------------------------------------------------------

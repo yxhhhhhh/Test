@@ -11,9 +11,9 @@
 	\file		OV9715.h
 	\brief		Sensor OV9715 header
 	\author		BoCun
-	\version	1
-	\date		2017/03/15
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.1
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _OV9715_H_
@@ -39,6 +39,8 @@
 #define SEN_IMG_FLIP			    (1)
 #define SEN_IMG_MIRROR			    (2)
 
+#define OV9715_MIRROR		        (0x40)
+#define OV9715_FLIP		            (0x80)
 //==============================================================================
 // MACRO FUNCTION 
 //==============================================================================
@@ -247,4 +249,12 @@ void SEN_SetSensorImageSize(void);
 \endcode
 */
 void SEN_SetSensorType(void);
+//------------------------------------------------------------------------
+/*!
+\brief Set sensor mirror/flip.
+\param ubMirrorEn 	mirror.
+\param ubFlipEn 	flip.
+\return (no)
+*/
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn);
 #endif	// OV9715

@@ -518,10 +518,11 @@ void UI_OnInitDialog(void)
 
 	UI_LoadDevStatusInfo();
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
-
+	
 	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
 	{
-		printd(DBG_ErrorLvl, "Calendar base setting fail!!!\n");
+		printd(DBG_ErrorLvl, "Calendar base setting fail!\n");
+		//return;
 	}
 	
 	if ((wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) != RTC_PWRSTS_KEEP_TAG)
@@ -1025,8 +1026,8 @@ void UI_CheckPowerMode(void)
 		if(LCDBL_STATE == 1)
 			LCDBL_ENABLE(UI_DISABLE);
 
-		ubSleepWaitCnt++;
-		if(ubSleepWaitCnt >= 2)
+		//ubSleepWaitCnt++;
+		//if(ubSleepWaitCnt >= 2)
 		{
 			ubPowerState = PWR_Start_Sleep;
 		}
@@ -1034,13 +1035,13 @@ void UI_CheckPowerMode(void)
 	else if(ubPowerState == PWR_Start_Sleep)
 	{
 		ubSleepWaitCnt++;
-		if(ubSleepWaitCnt == 3)
+		if(ubSleepWaitCnt == 1)
 		{
 			UI_TimerDeviceEventStop(TIMER1_2);
 			UI_SwitchMode(Current_Mode);
 		}
 
-		if(ubSleepWaitCnt >= 5)
+		if(ubSleepWaitCnt >= 2)
 		{
 			UI_EnterSleep();
 			ubSleepWaitCnt = 0;
@@ -1066,7 +1067,7 @@ void UI_CheckPowerMode(void)
 	else if(ubPowerState == PWR_Start_Wakeup)
 	{
 		ubWakeUpWaitCnt++;
-		if(ubWakeUpWaitCnt >= 5)
+		if(ubWakeUpWaitCnt >= 4)
 		{
 			UI_WakeUp();
 			ubWakeUpWaitCnt = 0;
@@ -1127,7 +1128,7 @@ void UI_PowerKey(void)
 		if((GPIO->GPIO_I9 == 0) || (GPIO->GPIO_I10 == 0))
 			return;
 	}
-
+	
 	UI_SendPwrNormalModeToBu();
 	UI_UpdateDevStatusInfo();
 	//BUZ_PlayPowerOffSound();
@@ -5178,7 +5179,8 @@ void UI_ShowAlarm(uint8_t type)
 
 	printd(Apk_DebugLvl, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
 	
-	if((ubMotor0State != MC_LEFT_RIGHT_OFF) ||(ubMotor1State != MC_UP_DOWN_OFF))
+	if((ubMotor0State != MC_LEFT_RIGHT_OFF) ||
+(ubMotor1State != MC_UP_DOWN_OFF))
 	{
 		UI_MotorDisplay(MC_LEFT_RIGHT_OFF);
 		UI_MotorDisplay(MC_UP_DOWN_OFF);
@@ -5624,13 +5626,15 @@ void UI_TimeShowSystemTime(uint8_t type)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 	RTC_Calendar_t tUi_Calendar;
-	//tUi_Calendar.ubHour = tUI_PuSetting.tSysCalendar.ubHour;
-	//tUi_Calendar.ubMin = tUI_PuSetting.tSysCalendar.ubMin;
+
+	//printf("tUI_PuSetting.tSysCalendar.ubHour 11 = %d \n",tUI_PuSetting.tSysCalendar.ubHour);
+	//printf("tUI_PuSetting.tSysCalendar.ubMin  11   =%d \n",tUI_PuSetting.tSysCalendar.ubMin);
 	
 	RTC_GetCalendar((RTC_Calendar_t *)(&tUi_Calendar));
-	//tUI_PuSetting.tSysCalendar.ubHour = tUi_Calendar.ubHour;
-	//tUI_PuSetting.tSysCalendar.ubMin = tUi_Calendar.ubMin;
 
+	//printf("tUi_Calendar.ubHour  22 = %d \n",tUi_Calendar.ubHour);
+	//printf("tUi_Calendar.ubMin  22   =%d \n",tUi_Calendar.ubMin);
+	
 	if((type == 1) || (ubTimeHour != (tUi_Calendar.ubHour%12)) || (ubTimeMin != tUi_Calendar.ubMin)
 		|| (ubTimeAMPM^(tUi_Calendar.ubHour >= 12?1:0)))
 	{
@@ -12104,6 +12108,7 @@ void UI_DisableVox(void)
 	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
 	tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
 	//UI_UpdateDevStatusInfo();
+	printd(Apk_DebugLvl, "UI_DisableVox ok###\n");
 }
 //------------------------------------------------------------------------------
 void UI_MDTrigger(UI_CamNum_t tCamNum, void *pvTrig)

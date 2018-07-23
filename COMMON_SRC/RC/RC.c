@@ -163,6 +163,11 @@ void RC_FuncSet(RC_INFO *pInfo)
 	tRC_Info[pInfo->ubCodecIdx].ulInitBitRate		= pInfo->ulInitBitRate;
 }
 
+void ubRC_SetFlg(uint8_t ubCodecIdx, uint8_t ubRcCtrlFlg)
+{
+	tRC_Info[ubCodecIdx].ubEnableFlg = ubRcCtrlFlg;
+}
+
 uint8_t ubRC_GetFlg(uint8_t ubCodecIdx)
 {
 	return tRC_Info[ubCodecIdx].ubEnableFlg;
@@ -1133,23 +1138,39 @@ void RC_SysThread(void const *argument)
 #if OP_STA
 void RC_MonitThread0(void const *argument)
 {
+	uint8_t ubRC_FixPreset0Flg = 0;
+
 	osDelay(1000);
 	while(1)
-	{	
-		if(tRC_Info[0].ubMode == RC_MODE_FIXED_DATA_RATE)
+	{
+		if(!ubRC_GetFlg(0))
+		{
+			if(!ubRC_FixPreset0Flg)
+			{
+				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
+				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
+				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				ubRC_FixPreset0Flg = 1;
+			}
+		}
+		else if(tRC_Info[0].ubMode == RC_MODE_FIXED_DATA_RATE)
 		{
 		}
 		else if(tRC_Info[0].ubMode == RC_MODE_DYNAMIC_QTY_AND_BW)
 		{
 			RC_QtyAndBwProcess(0);
+			ubRC_FixPreset0Flg = 0;
 		}
 		else if((tRC_Info[0].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[0].tAdjSequence == RC_ADJ_QTY_THEN_FPS))
 		{			
 			RC_QtyAndFpsProcess1(0);
+			ubRC_FixPreset0Flg = 0;
 		}
 		else if((tRC_Info[0].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[0].tAdjSequence == RC_ADJ_FPS_THEN_QTY))
 		{			
 			RC_QtyAndFpsProcess2(0);
+			ubRC_FixPreset0Flg = 0;
 		}
 		osDelay(tRC_Info[0].ulUpdateRatePerMs);
 	}	
@@ -1157,23 +1178,39 @@ void RC_MonitThread0(void const *argument)
 
 void RC_MonitThread1(void const *argument)
 {
+	uint8_t ubRC_FixPreset1Flg = 0;
+
 	osDelay(1000);
 	while(1)
 	{	
+		if(!ubRC_GetFlg(1))
+		{
+			if(!ubRC_FixPreset1Flg)
+			{
+				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
+				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
+				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				ubRC_FixPreset1Flg = 1;
+			}
+		}
 		if(tRC_Info[1].ubMode == RC_MODE_FIXED_DATA_RATE)
 		{
 		}
 		else if(tRC_Info[1].ubMode == RC_MODE_DYNAMIC_QTY_AND_BW)
 		{
 			RC_QtyAndBwProcess(1);
+			ubRC_FixPreset1Flg = 0;
 		}
 		else if((tRC_Info[1].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[1].tAdjSequence == RC_ADJ_QTY_THEN_FPS))
 		{			
 			RC_QtyAndFpsProcess1(1);
+			ubRC_FixPreset1Flg = 0;
 		}
 		else if((tRC_Info[1].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[1].tAdjSequence == RC_ADJ_FPS_THEN_QTY))
 		{			
 			RC_QtyAndFpsProcess2(1);
+			ubRC_FixPreset1Flg = 0;
 		}
 		osDelay(tRC_Info[1].ulUpdateRatePerMs);
 	}	
@@ -1181,23 +1218,39 @@ void RC_MonitThread1(void const *argument)
 
 void RC_MonitThread2(void const *argument)
 {
+	uint8_t ubRC_FixPreset2Flg = 0;
+
 	osDelay(1000);
 	while(1)
 	{
+		if(!ubRC_GetFlg(2))
+		{
+			if(!ubRC_FixPreset2Flg)
+			{
+				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
+				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
+				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				ubRC_FixPreset2Flg = 1;
+			}
+		}
 		if(tRC_Info[2].ubMode == RC_MODE_FIXED_DATA_RATE)
 		{
 		}
 		else if(tRC_Info[2].ubMode == RC_MODE_DYNAMIC_QTY_AND_BW)
 		{
 			RC_QtyAndBwProcess(2);
+			ubRC_FixPreset2Flg = 0;
 		}
 		else if((tRC_Info[2].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[2].tAdjSequence == RC_ADJ_QTY_THEN_FPS))
 		{			
 			RC_QtyAndFpsProcess1(2);
+			ubRC_FixPreset2Flg = 0;
 		}
 		else if((tRC_Info[2].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[2].tAdjSequence == RC_ADJ_FPS_THEN_QTY))
 		{			
 			RC_QtyAndFpsProcess2(2);
+			ubRC_FixPreset2Flg = 0;
 		}
 		osDelay(tRC_Info[2].ulUpdateRatePerMs);
 	}	
@@ -1205,23 +1258,39 @@ void RC_MonitThread2(void const *argument)
 
 void RC_MonitThread3(void const *argument)
 {
+	uint8_t ubRC_FixPreset3Flg = 0;
+
 	osDelay(1000);
 	while(1)
-	{	
+	{
+		if(!ubRC_GetFlg(3))
+		{
+			if(!ubRC_FixPreset3Flg)
+			{
+				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
+				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
+				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				ubRC_FixPreset3Flg = 1;
+			}
+		}
 		if(tRC_Info[3].ubMode == RC_MODE_FIXED_DATA_RATE)
 		{
 		}
 		else if(tRC_Info[3].ubMode == RC_MODE_DYNAMIC_QTY_AND_BW)
 		{
 			RC_QtyAndBwProcess(3);
+			ubRC_FixPreset3Flg = 0;
 		}
 		else if((tRC_Info[3].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[3].tAdjSequence == RC_ADJ_QTY_THEN_FPS))
 		{			
 			RC_QtyAndFpsProcess1(3);
+			ubRC_FixPreset3Flg = 0;
 		}
 		else if((tRC_Info[3].ubMode == RC_MODE_DYNAMIC_QTY_AND_FPS) && (tRC_Info[3].tAdjSequence == RC_ADJ_FPS_THEN_QTY))
 		{			
 			RC_QtyAndFpsProcess2(3);
+			ubRC_FixPreset3Flg = 0;
 		}
 		osDelay(tRC_Info[3].ulUpdateRatePerMs);
 	}	
@@ -1266,12 +1335,7 @@ void RC_QtyAndBwModePreset(void)
 {
 	RC_INFO tRcInfo;
 
-	if (KNL_GetTuningToolMode() == KNL_TUNINGMODE_ON) {  
-		tRcInfo.ubEnableFlg 		= 0;
-	} else {
-		tRcInfo.ubEnableFlg 		= 1;    
-	}
-
+	tRcInfo.ubEnableFlg 		= 1;
 	tRcInfo.ubCodecIdx			= 0;
 	tRcInfo.ubMode				= RC_MODE_DYNAMIC_QTY_AND_BW;
 	tRcInfo.ulUpdateRatePerMs	= 1000;
@@ -1279,9 +1343,9 @@ void RC_QtyAndBwModePreset(void)
 	tRcInfo.ubKeySecRatio		= RC_RATIO_70;
 	tRcInfo.ubNonKeySecRatio	= RC_RATIO_50;
 	tRcInfo.ubMinQp				= 28;
-	tRcInfo.ubMaxQp				= 43;	
+	tRcInfo.ubMaxQp				= 43;
 	tRcInfo.ubQpBuf				= 6;
-	tRcInfo.ulInitBitRate		= 0x168000L;	//180KByte	
+	tRcInfo.ulInitBitRate		= 0x168000L;	//180KByte
 	tRcInfo.ulBwBuf				= 30*1024*8L;
 	tRcInfo.ubInitFps			= 15;
 	tRcInfo.ulHighQtyTh			= 190*1024*8L;

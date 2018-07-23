@@ -60,11 +60,11 @@ void VDO_Init(void)
 #endif
 
 	KNL_SetVdoCodec(KNL_VDO_CODEC_H264);
+	KNL_SetVdoFps(VDO_FRAME_RATE);
 #ifdef VBM_BU
 	ubVDO_SysSetupFlag = FALSE;
 	tVDO_KNLRole = (KNL_ROLE)ubKNL_GetRole();
 	tVDO_KNLRole = (KNL_NONE != tVDO_KNLRole)?tVDO_KNLRole:KNL_STA1;
-	KNL_SetVdoFps(15);
 #endif
 #ifdef VBM_PU
 	ubVDO_PathRstFlag  = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
@@ -75,7 +75,6 @@ void VDO_Init(void)
 	tVDO_Status.tVdoDispType = VDO_DISP_TYPE;
 	KNL_VdoDisplaySetting();
 	KNL_SetPlyMode(KNL_NORMAL_PLY);				//!< Normal Play
-	KNL_SetVdoFps(15);
 #endif
 	uwVDO_HSIZE = VDO_MAIN_H_SIZE;
 	uwVDO_VSIZE = VDO_MAIN_V_SIZE;

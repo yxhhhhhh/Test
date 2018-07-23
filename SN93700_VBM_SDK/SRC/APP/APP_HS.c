@@ -111,11 +111,13 @@ uint8_t APP_CheckBootStatus(void)
 	#if 1
 	#define CHECK_COUNT		10
 	uint16_t checkCount = 0;
+	uint8_t ubWorWakepValue;
+	
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d.\n", UI_GetUsbDet());
 
-	uint8_t ubWorWakepValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);	
-	ubWorWakepValue &= 0xF0;
-	
+	ubWorWakepValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
+	ubWorWakepValue &= 0xF0;	
+
 	if((!ubRTC_GetKey()) && (ubWorWakepValue == RTC_PS_WOR_TAG))
 	{			
 		ubWorWakeUpFlag = 1;
@@ -213,13 +215,6 @@ void APP_Init(void)
 #else
 	RTC_Init(RTC_TimerDisable);
 #endif
-	#if 0//def VBM_PU //20180330
-	if(ubRTC_GetKey() == 0)
-	{
-		RTC_PowerOff();
-	}
-	#endif
-
 	BSP_Init();
 	//printd(DBG_InfoLvl, "%s\n", osKernelSystemId);	// Move to CLI VCS command
     if(APP_OsStatus != osOK)
@@ -545,7 +540,7 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			}
 			tAPP_KNLInfo.tBURoleInfo[tAPP_PairRoleInfo.tPairBURole].tKNL_DispLoc = tAPP_PairRoleInfo.tPairBUDispLoc;
 			VDO_DisplayLocationSetup(tAPP_PairRoleInfo.tPairBURole, tAPP_PairRoleInfo.tPairBUDispLoc);
-			VDO_SetPlayRole(tAPP_PairRoleInfo.tPairBURole); //设置当前匹配的摄像头.20180525
+			VDO_SetPlayRole(tAPP_PairRoleInfo.tPairBURole); 
 			VDO_UpdateDisplayParameter();
 			if(APP_UNBIND_BU_EVENT == ptEventMsg->ubAPP_Message[2])
 			{
@@ -632,7 +627,7 @@ uint8_t APP_UpdateLinkStatus(void)
 			if(UI_GetCamViewPoolID() == ubKNL_RoleNum)
 			{
 				//printd(Apk_DebugLvl, "### LinkStatus ubKNL_RoleNum: %d, UI_GetCamViewPoolID(): %d.\n", ubKNL_RoleNum, UI_GetCamViewPoolID());
-				ubAPP_Event = APP_LINK_EVENT; //当前是无信号状态,匹配成功以后状态未更新,一直无法进入LINK状态.20180519
+				ubAPP_Event = APP_LINK_EVENT; 
 			}
 		}
 	}

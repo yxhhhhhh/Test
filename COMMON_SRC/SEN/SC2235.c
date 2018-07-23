@@ -11,9 +11,9 @@
 	\file		SC2235.c
 	\brief		Sensor SC2235 relation function
 	\author		BoCun
-	\version	1.1
-	\date		2017-11-23
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.2
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
@@ -676,6 +676,24 @@ void SEN_WrGain(uint32_t ulGainX1024)
     }    
     // save gain value    
     ulOldGainValue = ulGainX1024;
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
+{
+    if(ubMirrorEn)
+        xtSENInst.ubImgMode |=  SC2235_MIRROR;
+    else
+        xtSENInst.ubImgMode &=  ~SC2235_MIRROR;
+    
+    if(ubFlipEn)
+        xtSENInst.ubImgMode |=  SC2235_FLIP;
+    else
+        xtSENInst.ubImgMode &=  ~SC2235_FLIP;
+    
+    ulSEN_I2C_Write(0x32, 0x21, xtSENInst.ubImgMode);
+    //
+    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
 
 //------------------------------------------------------------------------------

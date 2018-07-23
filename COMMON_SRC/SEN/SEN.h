@@ -11,8 +11,8 @@
 	\file	    SEN.h
 	\brief		Sensor funcations header
 	\author     BoCun
-	\version    0.8
-	\date		2018-05-03
+	\version    0.9
+	\date		2018-07-06
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -833,6 +833,29 @@ void SEN_SetFrameDrop(uint8_t ubPath, uint8_t ubEnable, uint8_t ubN, uint8_t ubM
 \endcode
 */
 bool bSEN_GetFrameDropState(uint8_t ubPath);
+//------------------------------------------------------------------------
+/*!
+\brief Set raw reorder.
+\param ubMirrorEn   mirror on/off.
+\param ubFlipEn     flip  on/off.
+\return(no)
+\par [Example]
+\code		 
+     Normal
+        B  Gb B  Gb ...
+        Gr R  Gr R  ...
+     Mirror
+        Gb B  Gb B  ...
+        R  Gr R  Gr ...
+     Flip   
+        Gr R  Gr R  ...
+        B  Gr B  Gr ...
+     Mirror & Flip
+        R  Gr R  Gr ...
+        Gr B  Gr B  ...
+\endcode
+*/
+void SEN_SetRawReorder(uint8_t ubMirrorEn, uint8_t ubFlipEn);
 //==============================================================================
 // SENSOR extern item
 //==============================================================================

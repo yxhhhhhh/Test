@@ -11,9 +11,9 @@
 	\file		OV9715.c
 	\brief		Sensor OV9715 relation function
 	\author		BoCun
-	\version	1
-	\date		2017-10-18
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.1
+	\date		2018-07-06
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
@@ -826,6 +826,24 @@ void SEN_WrGain(uint16_t uwGainX1024)
 		ubAGaintmp = 0xff;
 	}
 	ulSEN_I2C_Write(0x00, ubAGaintmp);
+}
+
+//------------------------------------------------------------------------------
+void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
+{
+    if(ubMirrorEn)
+        xtSENInst.ubImgMode |=  OV9715_MIRROR;
+    else
+        xtSENInst.ubImgMode &=  ~OV9715_MIRROR;
+    
+    if(ubFlipEn)
+        xtSENInst.ubImgMode |=  OV9715_FLIP;
+    else
+        xtSENInst.ubImgMode &=  ~OV9715_FLIP;
+    
+    ulSEN_I2C_Write(0x04, xtSENInst.ubImgMode);
+    //
+    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
 
 //------------------------------------------------------------------------------
