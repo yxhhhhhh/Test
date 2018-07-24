@@ -64,7 +64,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 	{AKEY_PS,			0,			UI_BuPowerSaveKey,			NULL},
 	{AKEY_PS,			20,			UI_PuPowerSaveKey,			NULL},
 	{AKEY_PTT,			0,			UI_PushTalkKeyShort,		NULL},
-	{AKEY_PTT,			10,			UI_PushTalkKey,				NULL},
+	{AKEY_PTT,			8,			UI_PushTalkKey,				NULL},
 	{PKEY_ID0,			0,			UI_PowerKeyShort,			NULL},
 	{PKEY_ID0, 			20,			UI_PowerKey,				NULL},
 	{GKEY_ID0,			0,			UI_VolUpKey,				NULL},
@@ -291,6 +291,7 @@ uint8_t ubWorWakeUpFlag;
 
 uint8_t ubTimerDevEventStopSta = 0;
 uint8_t ubCamPairOkState = 0;
+uint8_t ubAlarmWakeupType = 0;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -697,32 +698,23 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 		{			
 			#if Current_Test
 			if((ubGetPsModeFlag == 0) && (UI_GetBuPsMode() == rUI_SUCCESS))
-			{
 				ubGetPsModeFlag = 1;
-			}
 			#endif
 
 			if(ubSetAlarmRet == rUI_FAIL)
-			{
 				ubSetAlarmRet = UI_SendAlarmSettingToBu();
-			}
 
 			if(ubNightModeRet == rUI_FAIL)
-			{
 				ubNightModeRet = UI_SendNightModeToBu();
-			}
 
 			ubLinkStateCheckCount = 0;
-
 			UI_SetSpeaker(0, 1);
 		}
 		else
 		{
 			ubLinkStateCheckCount++;
 			if(ubSpeakerCount == 0)
-			{
 				UI_SetSpeaker(1, 0);
-			}
 
 			#if Current_Test
 			ubGetPsModeFlag = 0;
@@ -738,18 +730,24 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 		}
 
 		if(ubSpeakerCount >= 1)
-		{
 			ubSpeakerCount++;
-		}
 
 		if(ubSpeakerCount == 4)
-		{
 			UI_SetSpeaker(1, TRUE);
-		}
 
 		#if Current_Test
 		UI_CheckPowerMode();
 		#endif
+
+		if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
+		{
+			UI_TimerDeviceEventStop(TIMER1_2);
+		}
+		else
+		{
+			if(ubTimerDevEventStopSta == 0)
+				UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
+		}
 	}
 	
 }
@@ -1026,6 +1024,8 @@ void UI_WakeUp(void)
 	{
 		UI_EnableScanMode();
 	}
+
+	UI_TriggerWakeUpAlarm();
 }
 
 void UI_CheckPowerMode(void)
@@ -5308,8 +5308,7 @@ void UI_ShowAlarm(uint8_t type)
 
 	printd(Apk_DebugLvl, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
 	
-	if((ubMotor0State != MC_LEFT_RIGHT_OFF) ||
-(ubMotor1State != MC_UP_DOWN_OFF))
+	if((ubMotor0State != MC_LEFT_RIGHT_OFF) || (ubMotor1State != MC_UP_DOWN_OFF))
 	{
 		UI_MotorDisplay(MC_LEFT_RIGHT_OFF);
 		UI_MotorDisplay(MC_UP_DOWN_OFF);
@@ -5481,6 +5480,12 @@ void UI_TempAlarmCheck(void)
 	if(ubFactoryModeFLag == 1)
 		return;
 
+	if(ubPowerState != PWR_ON)
+	{
+		ubTempAlarmState = TEMP_ALARM_IDLE;
+		return;
+	}
+
 	if(tUI_State != UI_DISPLAY_STATE)
 	{
 		if(ubTempAlarmState == TEMP_ALARM_IDLE)
@@ -5581,6 +5586,12 @@ void UI_PickupAlarmCheck(void)
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
 
+	if(ubPowerState != PWR_ON)
+	{
+		ubPickupAlarmState = PICKUP_ALARM_IDLE;
+		return;
+	}
+
 	if(tUI_State != UI_DISPLAY_STATE)
 	{
 		if(ubPickupAlarmState == PICKUP_ALARM_IDLE)
@@ -5636,6 +5647,30 @@ void UI_PickupAlarmCheck(void)
 			ubPickupAlarmCheckCount = 0;
 		}
 	}
+}
+
+void UI_TriggerWakeUpAlarm(void)
+{
+	printd(Apk_DebugLvl, "UI_TriggerWakeUpAlarm type: %d.\n", ubAlarmWakeupType);
+	switch(ubAlarmWakeupType)
+	{
+		case 1:
+			ubTempAlarmState = HIGH_TEMP_ALARM_ON;
+			break;
+			
+		case 2:
+			ubTempAlarmState = LOW_TEMP_ALARM_ON;
+			break;
+
+		case 3:
+			ubPickupAlarmState = PICKUP_ALARM_ON;
+			break;
+
+		default:
+			break;
+	}
+
+	ubAlarmWakeupType = 0;
 }
 /*********************************wjb@apical********************************/
 
@@ -8269,6 +8304,11 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 			}
 			#endif
 			break;
+
+		case UI_BU_CMD_ALARM_TYPE:
+			ubAlarmWakeupType = pvdata[1];
+			break;
+			
 		default:
 			break;
 	}

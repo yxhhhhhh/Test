@@ -206,7 +206,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 void UI_StatusCheck(uint16_t pThreadCnt)
 {
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
-	if(((pThreadCnt)%5) == 0)
+	//if(((pThreadCnt)%3) == 0)
 	{
 		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
 		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
@@ -247,7 +247,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 				//UI_MDTrigger();
 
-			if(((*pThreadCnt)%10) == 0)
+			//if(((*pThreadCnt)%3) == 0)
 			{
 				uint16_t uwChkType = UI_SYSVOICELVL_CHK;
 				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
@@ -606,6 +606,7 @@ void UI_VoxTrigger(void)
 {
 	UI_BUReqCmd_t tUI_VoxReqCmd;
 	uint32_t ulUI_AdcRpt = 0;
+	uint8_t ubAlarmType = 0;
 
 	tUI_VoxReqCmd.ubCmd[UI_TWC_TYPE]	= UI_REPORT;
 	tUI_VoxReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOX_TRIG;
@@ -628,9 +629,11 @@ void UI_VoxTrigger(void)
 		UI_DisableVox();
 	}
 	#else
-	if(UI_CheckAlarmWakeUp())
+	ubAlarmType = UI_CheckAlarmWakeUp();
+	if(ubAlarmType > 0)
 	{
 		printd(Apk_DebugLvl, "UI_VoxTrigger UI_DisableVox!\n");
+		UI_SendAlarmTypeToPu(ubAlarmType);
 		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
 		UI_DisableVox();
 	}
@@ -649,6 +652,7 @@ void UI_VoiceTrigger(void)
 {
 	UI_BUReqCmd_t tUI_VoiceReqCmd;
 	uint32_t ulUI_AdcRpt = 0;
+	uint8_t ubAlarmType = 0;
 
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 	printd(Apk_DebugLvl, "UI_VoiceTrigger ulUI_AdcRpt: %d.\n", ulUI_AdcRpt);
@@ -657,9 +661,11 @@ void UI_VoiceTrigger(void)
 		#if 0
 		if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
 		#else
-		if(UI_CheckAlarmWakeUp())
+		ubAlarmType = UI_CheckAlarmWakeUp();
+		if(ubAlarmType > 0)
 		#endif
 		{
+			UI_SendAlarmTypeToPu(ubAlarmType);
 			APP_EventMsg_t tUI_PsMessage = {0};
 
 			tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
@@ -1666,7 +1672,7 @@ uint8_t UI_CheckAlarmWakeUp(void)
 		if(ubCurSoundVal >= ubSoundAlarm)
 		{
 			ubSoundCnt++;
-			if(ubSoundCnt == 5)
+			if(ubSoundCnt == CHECK_CNT)
 			{
 				ubSoundCnt = 0;
 				return 3;
@@ -1683,6 +1689,26 @@ uint8_t UI_CheckAlarmWakeUp(void)
 	}
 
 	return 0;
+}
+
+uint8_t UI_SendAlarmTypeToPu(uint8_t AlarmType)
+{
+	UI_BUReqCmd_t tUI_AlarmTypeReqCmd;
+	
+	tUI_AlarmTypeReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_REPORT;
+	tUI_AlarmTypeReqCmd.ubCmd[UI_REPORT_ITEM] 		= UI_BU_TO_PU_CMD;
+	tUI_AlarmTypeReqCmd.ubCmd[UI_REPORT_DATA] 		= UI_BU_CMD_ALARM_TYPE;
+	tUI_AlarmTypeReqCmd.ubCmd[UI_REPORT_DATA+1] 	= AlarmType;		
+	tUI_AlarmTypeReqCmd.ubCmd_Len  			  		= 4;
+
+	printd(Apk_DebugLvl, "UI_SendAlarmTypeToPu AlarmType: %d.\n", AlarmType);
+	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_AlarmTypeReqCmd))
+	{
+		printd(DBG_ErrorLvl, "UI_SendAlarmTypeToPu Fail!\n");
+		return rUI_FAIL;
+	}
+
+	return rUI_SUCCESS;
 }
 
 void UI_AlarmTrigger(void)
