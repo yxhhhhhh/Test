@@ -290,6 +290,7 @@ uint16_t ubSpeakerCount = 0;
 uint8_t ubWorWakeUpFlag;
 
 uint8_t ubTimerDevEventStopSta = 0;
+uint8_t ubCamPairOkState = 0;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -362,8 +363,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		}
 	}
 
-	#if Current_Test
-	#else
 	if(tUI_PuSetting.ubDefualtFlag == FALSE)
 	{
 		if(ubUI_ResetPeriodFlag == FALSE)
@@ -377,8 +376,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	
 	if(UI_AutoLcdResetSleepTime(ptKeyEvent->ubKeyAction) == 1)
 		return;
-	#endif
-
 	
 	if(ptKeyEvent->ubKeyAction == KEY_UP_ACT)
 	{
@@ -1002,10 +999,12 @@ void UI_EnterSleep(void)
 		OSD_EraserImg2(&tOsdInfo);
 	}
 
+	/*
 	if(GPIO->GPIO_O12 == 1)
 	{
 		GPIO->GPIO_O12 = 0; //LCD Power
 	}
+	*/
 }
 
 void UI_WakeUp(void)
@@ -1075,8 +1074,8 @@ void UI_CheckPowerMode(void)
 		ubWakeUpWaitCnt++;
 		if(ubWakeUpWaitCnt >= 2)
 		{
-			if(GPIO->GPIO_O12 == 0)
-				GPIO->GPIO_O12 = 1; //LCD Power
+			//if(GPIO->GPIO_O12 == 0)
+				//GPIO->GPIO_O12 = 1; //LCD Power
 			UI_DisableVox();
 			ubPowerState = PWR_Start_Wakeup;
 		}
@@ -3882,7 +3881,14 @@ uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction) //20180319
 	#if Current_Test
 	if(ubPowerState == PWR_ON)
 	{
-		UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
+		if(KeyAction == KEY_UP_ACT)
+		{
+			UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
+		}
+		else
+		{
+			UI_TimerDeviceEventStop(TIMER1_2);
+		}
 	}
 	#else
 	if(PWM->PWM_EN8 == 0)
@@ -7165,7 +7171,8 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
 				tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
 				UI_SwitchCameraSource();
-			}	
+			}
+			ubCamPairOkState = 1;
 			#endif
 			break;
 		case rUI_FAIL:
@@ -11418,6 +11425,15 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 	if(FALSE == ubUI_ResetPeriodFlag)	
 		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
 
+	if(ubCamPairOkState == 1)
+	{
+		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
+	}
+	else
+	{
+		ubFastShowLostLinkSta = 1;
+	}
+
 	for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
 	{
 		if(PS_ECO_MODE == tUI_CamStatus[tCamNum].tCamPsMode)
@@ -11461,6 +11477,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 				//OSD_LogoJpeg(OSDLOGO_LOSTLINK);
 
 				ubFastShowLostLinkSta = 0;
+				ubCamPairOkState = 0;
 				if(ubNoAddCamFlag == 1)
 				{
 					OSD_LogoJpeg(OSDLOGO_WHITE_BG);
@@ -12676,11 +12693,8 @@ void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *
 	tUI_TimerParam.pvEvent 		= pvRegCb;
 
 	printd(Apk_DebugLvl, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
-	if(ubTimerDevEventStopSta == 0)
-	{
-		TIMER_Start(tDevice, tUI_TimerParam);
-		ubTimerDevEventStopSta = 1;
-	}
+	TIMER_Start(tDevice, tUI_TimerParam);
+	ubTimerDevEventStopSta = 1;
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice)
