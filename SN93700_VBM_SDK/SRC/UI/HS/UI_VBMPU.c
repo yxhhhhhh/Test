@@ -7849,7 +7849,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 				tUI_PuSetting.ubDefualtFlag = TRUE;
 
 				tUI_PuSetting.ubZoomScale				= 0;
-				tUI_PuSetting.VolLvL.tVOL_UpdateLvL		= VOL_LVL6;
+				tUI_PuSetting.VolLvL.tVOL_UpdateLvL		= VOL_LVL4;
 				tUI_PuSetting.NightmodeFlag				= 0x0F;
 				tUI_PuSetting.ubHighTempSetting 		= 0;
 				tUI_PuSetting.ubLowTempSetting 			= 0;
@@ -12518,7 +12518,7 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.ubCamViewNum	  =    		CAM1;
 			tUI_PuSetting.tAdoSrcCamNum				 = (tUI_PuSetting.tAdoSrcCamNum > CAM4)?CAM1:tUI_PuSetting.tAdoSrcCamNum;
 			tUI_PuSetting.BriLvL.tBL_UpdateLvL		 = BL_LVL8; //BL_LVL5
-			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL6; //VOL_LVL4
+			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL4; //VOL_LVL4
 			ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 			
 			tUI_PuSetting.IconSts.ubDrawStsIconFlag  = FALSE;
