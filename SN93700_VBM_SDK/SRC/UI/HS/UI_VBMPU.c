@@ -8531,6 +8531,7 @@ void UI_SendPwrNormalModeToBu(void)
 			}
 		}
 		tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
+		printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Cam%d ok.\n", tCamViewSel.tCamViewPool[0]);
 	}
 }
 
@@ -12295,7 +12296,7 @@ void UI_EnableVox(void)
 
 	//if(DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
 		//return;
-	printd(Apk_DebugLvl, "UI_EnableVox###\n");
+	printd(Apk_DebugLvl, "UI_EnableVox.\n");
 	LCDBL_ENABLE(UI_DISABLE);
 
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
@@ -12307,6 +12308,7 @@ void UI_EnableVox(void)
 	//UI_UpdateDevStatusInfo();
 	LCD_UnInit();
 	LCD->LCD_MODE = LCD_GPIO;
+	printd(Apk_DebugLvl, "UI_EnableVox ok.\n");
 }
 //------------------------------------------------------------------------------
 void UI_DisableVox(void)
@@ -12319,6 +12321,7 @@ void UI_DisableVox(void)
 
 	printd(Apk_DebugLvl, "UI_DisableVox###\n");
 
+	#if 0
 	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
 		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
@@ -12334,6 +12337,9 @@ void UI_DisableVox(void)
 				return;
 		}
 	}
+	#else
+	UI_SendPwrNormalModeToBu();
+	#endif
 
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
