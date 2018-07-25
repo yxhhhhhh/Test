@@ -64,7 +64,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 	{AKEY_PS,			0,			UI_BuPowerSaveKey,			NULL},
 	{AKEY_PS,			20,			UI_PuPowerSaveKey,			NULL},
 	{AKEY_PTT,			0,			UI_PushTalkKeyShort,		NULL},
-	{AKEY_PTT,			8,			UI_PushTalkKey,				NULL},
+	{AKEY_PTT,			7,			UI_PushTalkKey,				NULL},
 	{PKEY_ID0,			0,			UI_PowerKeyShort,			NULL},
 	{PKEY_ID0, 			20,			UI_PowerKey,				NULL},
 	{GKEY_ID0,			0,			UI_VolUpKey,				NULL},
@@ -292,6 +292,7 @@ uint8_t ubWorWakeUpFlag;
 uint8_t ubTimerDevEventStopSta = 0;
 uint8_t ubCamPairOkState = 0;
 uint8_t ubAlarmWakeupType = 0;
+uint8_t ubSwitchCamWakeupSstate = 0;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -317,7 +318,10 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		if(PWR_ON != ubPowerState)
 		{
 			if(ptKeyEvent->ubKeyID != PKEY_ID0) //Powerkey
+			{
+				UI_SetSleepState(0);
 				return;
+			}
 		}
 		#endif
 	}
@@ -988,6 +992,7 @@ void UI_EnterSleep(void)
 	OSD_IMG_INFO tOsdInfo;
 
 	printd(Apk_DebugLvl, "UI_EnterSleep.\n");
+
 	if(APP_LOSTLINK_STATE == tUI_SyncAppState)
 	{
 		tOsdInfo.uwHSize  = 672;
@@ -995,14 +1000,9 @@ void UI_EnterSleep(void)
 		tOsdInfo.uwXStart = 48;
 		tOsdInfo.uwYStart = 0;
 		OSD_EraserImg2(&tOsdInfo);
+		tUI_State = UI_DISPLAY_STATE;
 	}
-
-	/*
-	if(GPIO->GPIO_O12 == 1)
-	{
-		GPIO->GPIO_O12 = 0; //LCD Power
-	}
-	*/
+	
 }
 
 void UI_WakeUp(void)
@@ -1040,29 +1040,17 @@ void UI_CheckPowerMode(void)
 	{
 		if(LCDBL_STATE == 1)
 			LCDBL_ENABLE(UI_DISABLE);
-
-		//ubSleepWaitCnt++;
-		//if(ubSleepWaitCnt >= 2)
-		{
-			ubPowerState = PWR_Start_Sleep;
-		}
+		UI_DisableScanMode();
+		UI_TimerDeviceEventStop(TIMER1_2);
+		UI_SwitchMode(Current_Mode);
+		ubSleepWaitCnt = 0;
+		ubPowerState = PWR_Start_Sleep;
 	}
 	else if(ubPowerState == PWR_Start_Sleep)
 	{
-		ubSleepWaitCnt++;
-		if(ubSleepWaitCnt == 1)
-		{
-			UI_DisableScanMode();
-			UI_TimerDeviceEventStop(TIMER1_2);
-			UI_SwitchMode(Current_Mode);
-		}
-
-		if(ubSleepWaitCnt >= 2)
-		{
-			UI_EnterSleep();
-			ubSleepWaitCnt = 0;
-			ubPowerState = PWR_Sleep_Complete;
-		}
+		UI_EnterSleep();
+		ubSleepWaitCnt = 0;
+		ubPowerState = PWR_Sleep_Complete;
 	}
 	else if(ubPowerState == PWR_Sleep_Complete)
 	{
@@ -1071,37 +1059,43 @@ void UI_CheckPowerMode(void)
 	}
 	else if(ubPowerState == PWR_Prep_Wakeup)
 	{
-		ubWakeUpWaitCnt++;
-		if(ubWakeUpWaitCnt >= 2)
-		{
-			//if(GPIO->GPIO_O12 == 0)
-				//GPIO->GPIO_O12 = 1; //LCD Power
-			UI_DisableVox();
-			ubPowerState = PWR_Start_Wakeup;
-		}
+		//UI_DisableVox();
+		//UI_SwitchCameraSource();
+		//ubSwitchCamWakeupSstate = 1;
+		ubWakeUpWaitCnt = 0;
+		ubPowerState = PWR_Start_Wakeup;
 	}
 	else if(ubPowerState == PWR_Start_Wakeup)
 	{
-		ubWakeUpWaitCnt++;
-		if(ubWakeUpWaitCnt >= 4)
-		{
-			UI_WakeUp();
-			ubWakeUpWaitCnt = 0;
-			ubPowerState = PWR_ON;
-		}
+		UI_WakeUp();
+		ubWakeUpWaitCnt = 0;
+		ubPowerState = PWR_ON;
 	}
 }
 
-void UI_SetSleepState(void)
+void UI_SetSleepState(uint8_t type)
 {
-	if(ubPowerState == PWR_ON)
+	if(type == 0)
 	{
-		ubPowerState = PWR_Prep_Sleep;
-	}
+		if(ubPowerState == PWR_ON)
+		{
+			ubPowerState = PWR_Prep_Sleep;
+		}
 
-	if(ubPowerState == PWR_Sleep_Complete)
+		if(ubPowerState == PWR_Sleep_Complete)
+		{
+			ubPowerState = PWR_Prep_Wakeup;
+			UI_DisableVox();
+			UI_SwitchCameraSource();
+			ubSwitchCamWakeupSstate = 1;
+		}
+	}
+	else
 	{
 		ubPowerState = PWR_Prep_Wakeup;
+		UI_DisableVox();
+		UI_SwitchCameraSource();
+		ubSwitchCamWakeupSstate = 1;
 	}
 }
 
@@ -1112,7 +1106,7 @@ void UI_PowerKeyShort(void)
 		return;
 
 	#if Current_Test
-	UI_SetSleepState();
+	UI_SetSleepState(0);
 	#else
 	UI_PowerKeyDeal();
 	#endif
@@ -2962,11 +2956,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 				#if UI_TEST_MODE
 				UI_TestCmd(0x11, 1);
 				#endif
-
-				#if Current_Test
-				//UI_EnableVox();
-				//UI_SetupPuWorMode();
-				#endif
 				
 				UI_MotorControl(MC_LEFT_ON);
 				break;
@@ -3030,10 +3019,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			{
 				#if UI_TEST_MODE //test
 				UI_TestCmd(0x11, 0);
-				#endif
-
-				#if Current_Test
-				//UI_DisableVox();
 				#endif
 				
 				UI_MotorControl(MC_RIGHT_ON);
@@ -3839,6 +3824,18 @@ void UI_AutoLcdSetSleepTimerEvent(void)
 {
 	printd(Apk_DebugLvl, "UI_AutoLcdSetSleepTimerEvent ubShowAlarmstate: %d.\n", ubShowAlarmstate);
 
+	if(tUI_PuSetting.ubSleepMode == 0)
+	{
+		UI_TimerDeviceEventStop(TIMER1_2);
+		return;
+	}
+	
+	if(ubShowAlarmstate > 0)
+		return;
+
+	if(TRUE == ubUI_PttStartFlag)
+		return;
+	
 	if(ubShowAlarmstate == 0)
 	{
 		#if Current_Test
@@ -5314,7 +5311,7 @@ void UI_ShowAlarm(uint8_t type)
 		UI_MotorDisplay(MC_UP_DOWN_OFF);
 		UI_EnableMotor(0);
 	}
-		
+	
 	switch(type)
 	{
 		case 0:
@@ -5396,8 +5393,13 @@ void UI_ShowAlarm(uint8_t type)
 			break;
 	}
 
-	if(LCDBL_STATE == 0)
-		LCDBL_ENABLE(UI_ENABLE);
+	if(ubShowAlarmstate > 0)
+	{
+		UI_TimerDeviceEventStop(TIMER1_2);
+		UI_DisableScanMode();
+		if(LCDBL_STATE == 0)
+			LCDBL_ENABLE(UI_ENABLE);
+	}
 }
 
 void UI_PlayAlarmSound(uint8_t type)
@@ -5651,6 +5653,8 @@ void UI_PickupAlarmCheck(void)
 
 void UI_TriggerWakeUpAlarm(void)
 {
+	OSD_IMG_INFO tOsdImgInfo;
+	
 	printd(Apk_DebugLvl, "UI_TriggerWakeUpAlarm type: %d.\n", ubAlarmWakeupType);
 	switch(ubAlarmWakeupType)
 	{
@@ -5668,6 +5672,16 @@ void UI_TriggerWakeUpAlarm(void)
 
 		default:
 			break;
+	}
+
+	if(ubAlarmWakeupType > 0)
+	{
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 1280;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);
+		tUI_State = UI_DISPLAY_STATE;
 	}
 
 	ubAlarmWakeupType = 0;
@@ -9006,8 +9020,8 @@ void UI_CheckUsbCharge(void)
 			{
 				if(ubWorWakeUpFlag != 1)
 				{
-					LCDBL_ENABLE(UI_ENABLE);
-					printd(Apk_DebugLvl, "UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
+					//LCDBL_ENABLE(UI_ENABLE);
+					//printd(Apk_DebugLvl, "UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
 				}
 			}
 		}
@@ -12284,8 +12298,7 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 	printd(Apk_DebugLvl, "UI_VoxTrigger tCamNum: %d, tUI_PuSetting.tPsMode: %d $$$\n", tCamNum, tUI_PuSetting.tPsMode);
 	if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 	{
-		ubWakeUpWaitCnt = 1;
-		ubPowerState = PWR_Prep_Wakeup;
+		UI_SetSleepState(1);
 	}
 	#endif
 }
@@ -12819,6 +12832,9 @@ void UI_EnableScanMode(void)
 		return;
 
 	if(TRUE == ubUI_PttStartFlag)
+		return;
+
+	if(ubShowAlarmstate > 0)
 		return;
 	
 	UI_CheckCameraSource4SV();

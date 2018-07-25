@@ -43,6 +43,7 @@ static VDO_Status_t tVDO_Status;
 static KNL_ROLE tVDO_SvPlayRole;
 static KNL_ROLE tKNL_DualBURole[2];
 static uint8_t ubVDO_PathRstFlag;
+extern uint8_t ubSwitchCamWakeupSstate;
 #endif
 #ifdef VBM_BU
 static uint8_t ubVDO_SysSetupFlag;
@@ -179,8 +180,15 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 			KNL_ROLE tVDO_KNLRole = KNL_NONE;
 
 			tVDO_KNLRole = *pVDO_BURole;
-			if((tVDO_SvPlayRole == tVDO_KNLRole) && (FALSE == ubVDO_DualPathFlag))
-				break;
+			if(ubSwitchCamWakeupSstate == 1)
+			{
+				ubSwitchCamWakeupSstate = 0;
+			}
+			else
+			{
+				if((tVDO_SvPlayRole == tVDO_KNLRole) && (FALSE == ubVDO_DualPathFlag))
+					break;
+			}
 			tVDO_KNLSrcLocate.ubSetupFlag = FALSE;
 			tVDO_KNLSrcLocate.tSrcNum[0]  = tVDO_KNLSrcNum = tVDO_KNLRoleInfo[tVDO_KNLRole].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum;
 			if(((TRUE == ubVDO_ResChgFlag) || (TRUE == ubVDO_PathRstFlag)) &&

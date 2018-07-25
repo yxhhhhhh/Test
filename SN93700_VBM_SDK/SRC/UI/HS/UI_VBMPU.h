@@ -986,7 +986,7 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len);
 void UI_EnterLongKey(void);
 UI_Result_t UI_SetupPuWorMode(void);
 uint8_t UI_GetBuPsMode(void);
-void UI_SetSleepState(void);
+void UI_SetSleepState(uint8_t type);
 void UI_CheckPowerMode(void);
 uint8_t UI_SendAlarmSettingToBu(void);
 void UI_SendPwrNormalModeToBu(void);

@@ -8758,6 +8758,7 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 #endif
 
 	ubSrcNumMap = ubKNL_SrcNumMap(ubSrcNum);
+	printd(Apk_DebugLvl, "KNL_VdoStart ubSrcNum: %d, ubSrcNumMap: %d ###\n", ubSrcNum, ubSrcNumMap);
 	if(ubSrcNumMap <= KNL_STA4)
 	{
 		ubKNL_VdoFlowActiveFlg[ubSrcNum] = 1;
