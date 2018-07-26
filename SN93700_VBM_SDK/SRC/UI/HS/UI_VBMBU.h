@@ -141,6 +141,7 @@ typedef enum
 	UI_BU_CMD_VERSION = 0x20,
 	UI_BU_CMD_PS_MODE,
 	UI_BU_CMD_ALARM_TYPE,
+	UI_BU_CMD_PICKUP_VOLUME,
 }UI_BUTOPUCmdID_t;
 
 typedef enum
@@ -306,6 +307,7 @@ void UI_NightModeSetting(void *pvNMParam);
 uint8_t UI_SendVersionToPu(void);
 uint8_t UI_SendPsModeToPu(void);
 uint8_t UI_SendAlarmTypeToPu(uint8_t AlarmType);
+uint8_t UI_SendPickupVolumeToPu(uint32_t ulUI_AdcRpt);
 void UI_RecvPUCmdSetting(void *pvRecvPuParam);
 uint8_t UI_CheckAlarmWakeUp(void);
 void UI_AlarmTrigger(void);

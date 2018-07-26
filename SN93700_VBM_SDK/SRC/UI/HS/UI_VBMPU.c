@@ -33,13 +33,18 @@
 #define osUI_SIGNALS	0x66
 
 #define UI_TEST_MODE	0
-#define TIME_TEST		1
 //#define Current_Test	0
 //#define Current_Mode	PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
 
 #define SD_UPDATE_TEST	0
 
+#define TIME_TEST		1
+
 #define ENG_MODE_TEST 	1
+
+#define PICKUP_VOLUME_TEST 	1
+
+
 /**
  * Key event mapping table
  *
@@ -201,6 +206,11 @@ uint8_t ubFS_MenuItem = 0;
 uint8_t ubFS_Timeitem = 0;
 
 uint8_t ubGetVoiceTemp = 0;
+uint8_t ubGetVoice1 = 0;
+uint8_t ubGetVoice2 = 0;
+uint8_t ubGetVoice3 = 0;
+uint8_t ubGetVoice4 = 0;
+uint32_t ubPickupVolume = 0;
 
 uint8_t ubCamPairFlag[4] = {0,0,0,0};
 uint8_t ubPairSelCam = 0;
@@ -235,6 +245,8 @@ uint8_t ubAlarmPlayState = 0;
 uint8_t ubDelCamitem = 0;
 uint8_t ubCameraScanTime[5] = {0, 5, 10, 15, 30};
 uint8_t ubShowCamPairFullSta = 0;
+uint8_t ubCameraOnlineNum = 0;
+
 
 uint8_t ubShowAlarmstate = 0;
 uint8_t ubPlayAlarmCount = 0;
@@ -752,6 +764,8 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			if(ubTimerDevEventStopSta == 0)
 				UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
 		}
+		
+		ubCameraOnlineNum = UI_GetCamOnLineNum(0);
 	}
 	
 }
@@ -906,7 +920,7 @@ void UI_PuInit(void)
 	LCD_BACKLIGHT_CTRL(ulUI_BLTable[tUI_PuSetting.BriLvL.tBL_UpdateLvL]);
 	//LCDBL_ENABLE(UI_ENABLE);
 
-	if((TRUE == tUI_PuSetting.ubScanModeEn) && (tUI_PuSetting.ubDefualtFlag == FALSE))
+	if((TRUE == tUI_PuSetting.ubScanModeEn) && (tUI_PuSetting.ubScanTime > 0) && (tUI_PuSetting.ubDefualtFlag == FALSE))
 	{
 		UI_EnableScanMode();
 	}
@@ -2871,7 +2885,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						(uint8_t *)(&ubTimeMin), (uint8_t *)(&ubTimeAMPM)
 						};
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
-	uint8_t ubT_MinNum[3] = {1,  0,  0};	
+	uint8_t ubT_MinNum[3] = {0,  0,  0};	
 	UI_CamNum_t tSelCam;
 	UI_PUReqCmd_t tPsCmd;
 
@@ -8238,7 +8252,6 @@ void UI_FS_SetTimeMenuDisplay(uint8_t value)
 void UI_GetVolData(UI_CamNum_t tCamNum, void *pvTrig)
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
-
 	
 	ubGetVoiceTemp = pvdata[0];
 	ubGetIR1Temp =  pvdata[1];
@@ -8321,6 +8334,14 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 
 		case UI_BU_CMD_ALARM_TYPE:
 			ubAlarmWakeupType = pvdata[1];
+			break;
+
+		case UI_BU_CMD_PICKUP_VOLUME:
+			ubGetVoice1 = pvdata[1]; 
+			ubGetVoice2 = pvdata[2]; 
+			ubGetVoice3 = pvdata[3]; 
+			ubGetVoice4 = pvdata[4]; 
+			//printd(Apk_DebugLvl, "VolumeValue: %d.\n",(ubGetVoice1<<24)+(ubGetVoice2<<16)+(ubGetVoice3<<8)+ubGetVoice4);
 			break;
 			
 		default:
@@ -11280,10 +11301,21 @@ void UI_UpdateBarIcon_Part2(void)
 	tSelCamNum = tCamViewSel.tCamViewPool[0];
 
 	//printd(Apk_DebugLvl, "UI_UpdateBarIcon_Part2 tSelCamNum: %d.\n", tSelCamNum);
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_CAM1+tSelCamNum, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 1070;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+
+	if((tUI_PuSetting.ubScanModeEn == TRUE) && (tUI_PuSetting.ubScanTime > 0) && (ubCameraOnlineNum < 2))
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BLANK1, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 1070;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	}
+	else
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_CAM1+tSelCamNum, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 1070;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	}
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC+(!tUI_PuSetting.ubTempunitFlag), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
@@ -11305,7 +11337,7 @@ void UI_UpdateBarIcon_Part2(void)
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
 
-	if((tUI_PuSetting.ubScanModeEn == TRUE) && (tUI_PuSetting.ubScanTime > 0))
+	if((tUI_PuSetting.ubScanModeEn == TRUE) && (tUI_PuSetting.ubScanTime > 0) && (ubCameraOnlineNum >= 2))
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_SCAN, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
@@ -11334,6 +11366,36 @@ void UI_UpdateBarIcon_Part2(void)
 		tOsdImgInfo.uwYStart = 950;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
+
+	#if PICKUP_VOLUME_TEST
+	ubPickupVolume = (ubGetVoice1<<24)+(ubGetVoice2<<16)+(ubGetVoice3<<8)+ubGetVoice4;
+	printf("AAA ubPickupVolume: %d.\n", ubPickupVolume );
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(ubPickupVolume/10000), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 685 - 19;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(ubPickupVolume/1000)%10, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart =  685 - 19*2;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(ubPickupVolume/100)%10, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 685 - 19*3;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(ubPickupVolume/10)%10, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 685 - 19*4;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(ubPickupVolume%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 685 - 19*5;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	#endif
+
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 //------------------------------------------------------------------------------
@@ -11477,10 +11539,11 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 	OSD_IMG_INFO tOsdImgInfo;
 	uint8_t i;
 
-	if(FALSE == ubUI_ResetPeriodFlag)	
+	if(FALSE == ubUI_ResetPeriodFlag)
+	{
 		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
-
-	if(ubCamPairOkState == 1)
+	}
+	else if(ubCamPairOkState == 1)
 	{
 		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
 	}
@@ -12663,7 +12726,6 @@ void UI_SwitchCameraScan(uint8_t type)
 {
 	int i, j;
 	uint8_t ubCamPairNum = 0;
-	uint8_t ubCamOnlineNum = 0;
 	UI_CamNum_t tCamSwtichNum = 0xFF;
 	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 
@@ -12680,17 +12742,15 @@ void UI_SwitchCameraScan(uint8_t type)
 	if(ubPowerState != PWR_ON)
 		return;
 
-	ubCamOnlineNum = UI_GetCamOnLineNum(0);
-
-	printd(Apk_DebugLvl, "UI_SwitchCameraScan ubCamOnlineNum: %d, tCamViewSel.tCamViewPool[0]: %d.\n", ubCamOnlineNum, tCamViewSel.tCamViewPool[0]);
+	printd(Apk_DebugLvl, "UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
 	#if 0
 	if(ubCamOnlineNum < 2)
 		return;
 	#else
-	if(ubCamOnlineNum == 0)
+	if(ubCameraOnlineNum == 0)
 		return;
 
-	if(ubCamOnlineNum == 1)
+	if(ubCameraOnlineNum == 1)
 	{
 		for(i = 0; i < 4; i++)
 		{

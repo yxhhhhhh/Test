@@ -660,6 +660,7 @@ typedef enum
 	UI_BU_CMD_VERSION = 0x20,
 	UI_BU_CMD_PS_MODE,
 	UI_BU_CMD_ALARM_TYPE,
+	UI_BU_CMD_PICKUP_VOLUME,
 }UI_BUTOPUCmdID_t;
 
 typedef enum

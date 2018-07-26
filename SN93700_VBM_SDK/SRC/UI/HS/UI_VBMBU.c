@@ -706,7 +706,7 @@ void UI_VoiceCheck (void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	//printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);	
+	//printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);
 
 	if(ulUI_AdcRpt > 0x3000)
 		voice_temp = 5;
@@ -728,17 +728,19 @@ void UI_VoiceCheck (void)
 	//{
 	//	printd(Apk_DebugLvl, "voice_temp: %d \n",voice_temp);
 	
-		tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
-		tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_CHECK;
-		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] = voice_temp;
+		tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_REPORT;
+		tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] 	= UI_VOICE_CHECK;
+		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] 	= voice_temp;
 		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+1] = ir_temp1;
-		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;		
-		tUI_VoiceReqCmd.ubCmd_Len  			  = 5;
+		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;			
+		tUI_VoiceReqCmd.ubCmd_Len  			  	= 5;
 		UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
 
 		ubCurSoundVal = voice_temp;
 	//	ubVoicetemp_bak = voice_temp;
 	//}
+
+	UI_SendPickupVolumeToPu(ulUI_AdcRpt);
 	
 }
 //------------------------------------------------------------------------------
@@ -1450,12 +1452,12 @@ void UI_BrightnessCheck(void) //20180408
 	
 	uwDetLvl = uwSADC_GetReport(1);
 
-	if(uwDetLvl < 0x01)
+	if(uwDetLvl <= 0x01)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
 	}
-	else if(uwDetLvl > 0x3C)
+	else if(uwDetLvl >= 0x3C)
 	{
 		ubCheckMaxIrCnt++;
 		ubCheckMinIrCnt = 0;
@@ -1728,3 +1730,32 @@ void UI_AlarmTrigger(void)
 		UI_DisableVox();
 	}
 }
+
+uint8_t UI_SendPickupVolumeToPu(uint32_t ulUI_AdcRpt)
+{
+	UI_BUReqCmd_t tUI_PickupVolueReqCmd;
+	uint8_t voice_1, voice_2, voice_3, voice_4;
+
+	voice_1 = (ulUI_AdcRpt>>24)&0xFF;
+	voice_2 = (ulUI_AdcRpt>>16)&0xFF;
+	voice_3 = (ulUI_AdcRpt>>8)&0xFF;
+	voice_4 = (ulUI_AdcRpt>>0)&0xFF;
+	
+	tUI_PickupVolueReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_REPORT;
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_ITEM] 		= UI_BU_TO_PU_CMD;
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA] 		= UI_BU_CMD_PICKUP_VOLUME;
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+1] 		= voice_1;		
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+2] 		= voice_2;		
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+3] 		= voice_3;		
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+4] 		= voice_4;			
+	tUI_PickupVolueReqCmd.ubCmd_Len  			  		= 7;
+
+	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_PickupVolueReqCmd))
+	{
+		printd(DBG_ErrorLvl, "UI_SendPickupVolumeToPu Fail!\n");
+		return rUI_FAIL;
+	}
+
+	return rUI_SUCCESS;
+}
+
