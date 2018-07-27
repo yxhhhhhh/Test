@@ -1237,7 +1237,7 @@ void UI_MenuKey(void)
 					return;
 
 			}
-			//UI_UpdateDevStatusInfo();	
+			UI_UpdateDevStatusInfo();	
 			OSD_IMG_INFO tOsdInfo;
 
 			tOsdInfo.uwHSize  = 672;
@@ -2525,7 +2525,7 @@ UI_Result_t UI_SetupPuWorMode(void)
 		APP_EventMsg_t tUI_PsMessage = {0};
 
 		tUI_PuSetting.tPsMode = PS_WOR_MODE;
-		//UI_UpdateDevStatusInfo();
+		UI_UpdateDevStatusInfo();
 		tUI_PsMessage.ubAPP_Event 	    = APP_POWERSAVE_EVENT;
 		tUI_PsMessage.ubAPP_Message[0]  = 3;		//! Message Length
 		tUI_PsMessage.ubAPP_Message[1]  = PS_WOR_MODE;
@@ -2557,7 +2557,7 @@ UI_Result_t UI_SetupBuEcoMode(UI_CamNum_t tECO_CamNum)
 		if(UI_SendRequestToBU(osThreadGetId(), &tPsCmd) == rUI_SUCCESS)
 		{
 			tUI_CamStatus[tECO_CamNum].tCamPsMode = PS_ECO_MODE;
-			//UI_UpdateDevStatusInfo();
+			UI_UpdateDevStatusInfo();
 			tUI_PsMessage.ubAPP_Message[2]  = FALSE;
 			tUI_PsMessage.ubAPP_Message[3]  = tECO_CamNum;
 			tUI_PsMessage.ubAPP_Message[4]  = FALSE;
@@ -2902,7 +2902,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						(uint8_t *)(&ubTimeMin), (uint8_t *)(&ubTimeAMPM)
 						};
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
-	uint8_t ubT_MinNum[3] = {0,  0,  0};	
+	uint8_t ubT_MinNum[3] = {1,  0,  0};	
 	UI_CamNum_t tSelCam;
 	UI_PUReqCmd_t tPsCmd;
 
@@ -2961,11 +2961,10 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 			ubSetViewCam = tCamViewSel.tCamViewPool[0];
 						
-			//UI_UpdateDevStatusInfo();
+			UI_UpdateDevStatusInfo();
 		}
 		#else
 		UI_SwitchCameraScan(1); //20180622
-		//UI_UpdateDevStatusInfo();
 		#endif
 	}
 	
@@ -3954,18 +3953,14 @@ void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey)
 	switch(tArrowKey)
 	{
 		case UP_ARROW:
-			if(ubSleepModeFlag >=1)
-				ubSleepModeFlag -= 1;
-			else
-				ubSleepModeFlag = 0 ;	
+			if(0 == ubSleepModeFlag) ubSleepModeFlag = 3;
+			else  ubSleepModeFlag--;	
 			UI_AutoLcdSubMenuDisplay(ubSleepModeFlag);
 		break;	
 
 		case DOWN_ARROW:
-			 if(ubSleepModeFlag < 3)
-				ubSleepModeFlag += 1;
-			else
-				ubSleepModeFlag = 3;
+			if(++ubSleepModeFlag>=4) ubSleepModeFlag = 0;	
+			
 			UI_AutoLcdSubMenuDisplay(ubSleepModeFlag);
 		break;	
 
@@ -4082,8 +4077,10 @@ void UI_AlarmSubMenuPage(UI_ArrowKey_t tArrowKey)
 			}	
 			else
 			{
-				break;
-			}	
+				ubSubMenuItemPreFlag = ubSubMenuItemFlag;
+				ubSubMenuItemFlag += 1;
+			}
+			
 			UI_AlarmmenuDisplay();
 		break;	
 
@@ -4095,7 +4092,8 @@ void UI_AlarmSubMenuPage(UI_ArrowKey_t tArrowKey)
 			 }	
 			else
 			{
-				break;
+				ubSubMenuItemPreFlag = ubSubMenuItemFlag;
+				ubSubMenuItemFlag -= 1;
 			}	
 			UI_AlarmmenuDisplay();
 		break;	
@@ -5174,16 +5172,8 @@ void UI_AlarmSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	switch(tArrowKey)
 	{
 		case UP_ARROW:
-			if(ubSubSubSubMenuItemFlag >=1)
-			{
-				ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				ubSubSubSubMenuItemFlag  -=  1;
-			}	
-			else
-			{
-				ubSubSubSubMenuItemFlag = 0 ;
-				ubSubSubSubMenuItemPreFlag =  1;
-			}
+			if(0 == ubSubSubSubMenuItemFlag) ubSubSubSubMenuItemFlag = ubAlarmSubSubItemNum[item_temp];
+			else  ubSubSubSubMenuItemFlag--;
 
 			if(item_temp >= 3)
 				UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);
@@ -5192,16 +5182,7 @@ void UI_AlarmSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 		break;	
 
 		case DOWN_ARROW:
-			 if(ubSubSubSubMenuItemFlag < ubAlarmSubSubItemNum[item_temp] )
-			 {
-			 	ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				ubSubSubSubMenuItemFlag += 1;
-			 }	
-			else
-			{
-				ubSubSubSubMenuItemPreFlag =  0;
-				ubSubSubSubMenuItemFlag = ubAlarmSubSubItemNum[item_temp];
-			}
+			if(++ubSubSubSubMenuItemFlag>=(ubAlarmSubSubItemNum[item_temp]+1)) ubSubSubSubMenuItemFlag = 0;	
 
 			if(item_temp >= 3)
 				UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);
@@ -5947,7 +5928,7 @@ void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 	OSD_IMG_INFO tOsdImgInfo;
 	RTC_Calendar_t tUi_Calendar;	
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
-	uint8_t ubT_MinNum[3] = {1,  0,  0};	
+	uint8_t ubT_MinNum[3] = {0,  0,  0};	
 	uint8_t *pT_Num[3] = {(uint8_t *)(&ubTimeHour),
 						(uint8_t *)(&ubTimeMin), (uint8_t *)(&ubTimeAMPM)
 						};
@@ -5986,21 +5967,62 @@ void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 		case UP_ARROW:
 			if((NULL == pT_Num[ubSubMenuItemFlag]))
 					return;
+
+			if(ubSubMenuItemFlag == 2)
+			{
+				if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
+					return;
+				if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
+					return;				
+			}
+			
 			if(*pT_Num[ubSubMenuItemFlag] == ubT_MaxNum[ubSubMenuItemFlag])
 				*pT_Num[ubSubMenuItemFlag] = ubT_MinNum[ubSubMenuItemFlag];
 			else
 				(*pT_Num[ubSubMenuItemFlag])++;
-			
+
+			if(ubSubMenuItemFlag == 0)
+			{
+				if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
+				{
+					ubTimeHour = 1;
+				}	
+				if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
+				{
+					ubTimeHour = 1;
+				}	
+			}
 			UI_TimeSubMenuDisplay(ubSubMenuItemFlag);	
 			return;
 			
 		case DOWN_ARROW:
 			if((NULL == pT_Num[ubSubMenuItemFlag]))
 				return;
+			
+			if(ubSubMenuItemFlag == 2)
+			{
+				if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
+					return;
+				if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
+					return;				
+			}
+			
 			if(*pT_Num[ubSubMenuItemFlag] == ubT_MinNum[ubSubMenuItemFlag])
 				*pT_Num[ubSubMenuItemFlag] = ubT_MaxNum[ubSubMenuItemFlag];
 			else
 				(*pT_Num[ubSubMenuItemFlag])--;
+
+			if(ubSubMenuItemFlag == 0)
+			{
+				if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
+				{
+					ubTimeHour = 11;
+				}	
+				if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
+				{
+					ubTimeHour = 12;
+				}	
+			}
 				
 			UI_TimeSubMenuDisplay(ubSubMenuItemFlag);
 			return;
@@ -6338,28 +6360,19 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 	switch(tArrowKey)
 	{
 		case UP_ARROW:
-			if(ubSubMenuItemFlag >=1)
-			{
-				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-				ubSubMenuItemFlag  -=  1;
-			}	
-			else
-			{
-				break;
-			}	
+			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+			
+			if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 2;
+			else  ubSubMenuItemFlag--;
+			
 			UI_ZoomDisplay();
 		break;	
 
 		case DOWN_ARROW:
-			if(ubSubMenuItemFlag < 2)
-			{
-			 	ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-				ubSubMenuItemFlag += 1;
-			}	
-			else
-			{
-				break;
-			}	
+			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+			
+			if(++ubSubMenuItemFlag>=3) ubSubMenuItemFlag = 0;		
+			
 			UI_ZoomDisplay();
 		break;	
 
@@ -6651,31 +6664,20 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			if(ubSubMenuItemFlag >=1)
-			{
-				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-				ubSubMenuItemFlag  -=  1;
-			}	
-			else
-			{
-				ubSubMenuItemFlag = 0 ;
-				ubSubMenuItemPreFlag =  1;
-			}	
+		case UP_ARROW:	
+			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+			
+			if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 2;
+			else  ubSubMenuItemFlag--;
+			
 			UI_CamSubmenuDisplay();
 		break;	
 
 		case DOWN_ARROW:
-			 if(ubSubMenuItemFlag < 2)
-			 {
-			 	ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-				ubSubMenuItemFlag += 1;
-			 }	
-			else
-			{
-				ubSubMenuItemPreFlag =  1;
-				ubSubMenuItemFlag = 2;
-			}	
+			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+			
+			if(++ubSubMenuItemFlag>=3) ubSubMenuItemFlag = 0;	
+
 			UI_CamSubmenuDisplay();
 		break;	
 
@@ -6784,6 +6786,7 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	int i = 0, j = 0;
 	OSD_IMG_INFO tOsdImgInfo;
 	uint8_t ubMenu_MaxNum[3] = {3,ubDelCamitem,4};
+	static uint8_t menu_minitem,menu_maxitem;
 
 	if(ubSubMenuItemFlag == 0)
 	{
@@ -6798,32 +6801,51 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 		case UP_ARROW:
 			if(ubSubMenuItemFlag == 1)
 			{
+				/*
 				if(ubSubSubMenuItemFlag == 0)
 					return;
-				
-				for(i = (ubSubSubMenuItemFlag - 1); i >= 0; i--)
+				*/
+				for(i = 0; i < 4; i++)
 				{
 					if(ubCamPairFlag[i] == 1)
 					{
-						ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-						ubSubSubMenuItemFlag 	= i;
+						menu_minitem = i;
 						break;
 					}
 				}
-
+				//printf("menu_minitem %d\n", menu_minitem);
+				if(ubSubSubMenuItemFlag != menu_minitem)
+				{
+					for(i = (ubSubSubMenuItemFlag - 1); i >= 0; i--)
+					{
+						if(ubCamPairFlag[i] == 1)
+						{
+							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+							ubSubSubMenuItemFlag 	= i;
+							break;
+						}
+					}
+				}
+				else
+				{
+					for(i = 3; i >= 0; i--)
+					{
+						if(ubCamPairFlag[i] == 1)
+						{
+							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+							ubSubSubMenuItemFlag 	= i;
+							//printf("ubSubSubMenuItemFlag %d\n", ubSubSubMenuItemFlag);
+							break;
+						}
+					}
+				}
 			}
 			else
 			{
-				if(ubSubSubMenuItemFlag >= 1)
-				{
-					ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-					ubSubSubMenuItemFlag -= 1;
-				}	
-				else
-				{
-					ubSubSubMenuItemFlag = 0;
-					ubSubSubMenuItemPreFlag = 1;
-				}
+				ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+				
+				if(0 == ubSubSubMenuItemFlag) ubSubSubMenuItemFlag = ubMenu_MaxNum[ubSubMenuItemFlag];
+				else  ubSubSubMenuItemFlag--;				
 			}
 			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
 		break;	
@@ -6831,31 +6853,49 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 		case DOWN_ARROW:
 			if(ubSubMenuItemFlag == 1)
 			{
-				if(ubSubSubMenuItemFlag >= 3)
-					return;
-
-				for(i = (ubSubSubMenuItemFlag + 1); i < 4; i++)
+				//if(ubSubSubMenuItemFlag >= 3)
+				//return;
+				for(i = 3; i >= 0; i--)
 				{
 					if(ubCamPairFlag[i] == 1)
 					{
-						ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-						ubSubSubMenuItemFlag 	= i;
+						menu_maxitem = i;
 						break;
 					}
+				}
+				//printf("menu_maxitem %d\n", menu_maxitem);
+				if(ubSubSubMenuItemFlag != menu_maxitem)
+				{
+					for(i = (ubSubSubMenuItemFlag + 1); i < 4; i++)
+					{
+						if(ubCamPairFlag[i] == 1)
+						{
+							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+							ubSubSubMenuItemFlag 	= i;
+							break;
+						}
+					}
+				}
+				else
+				{
+					for(i = 0; i < 4; i++)
+					{
+						if(ubCamPairFlag[i] == 1)
+						{
+							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+							ubSubSubMenuItemFlag 	= i;
+							//printf("ubSubSubMenuItemFlag %d\n", ubSubSubMenuItemFlag);
+							break;
+						}
+					}
+
 				}
 			}
 			else
 			{
-				if(ubSubSubMenuItemFlag < ubMenu_MaxNum[ubSubMenuItemFlag])
-				{
-				 	ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
-					ubSubSubMenuItemFlag += 1;
-				}	
-				else
-				{
-					ubSubSubMenuItemPreFlag =  0;
-					ubSubSubMenuItemFlag = ubMenu_MaxNum[ubSubMenuItemFlag];
-				}
+				ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+				if(++ubSubSubMenuItemFlag>=(ubMenu_MaxNum[ubSubMenuItemFlag]+1)) ubSubSubMenuItemFlag = 0;	
+				
 			}
 			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
 		break;	
@@ -6922,13 +6962,12 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 				tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == i)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
 				UI_ResetDevSetting(i);
-				//UI_UpdateDevStatusInfo();
+				UI_UpdateDevStatusInfo();
 				tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 				tUI_UnindBuMsg.ubAPP_Message[1] = i;
 				UI_SendMessageToAPP(&tUI_UnindBuMsg);
 				ubCamPairFlag[CameraId] = 0;
-				//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< i));
 				osDelay(200);
 			}
 		}
@@ -6940,13 +6979,12 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 		tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 		tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == CameraId)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
 		UI_ResetDevSetting(CameraId);
-		//UI_UpdateDevStatusInfo();
+		UI_UpdateDevStatusInfo();
 		tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 		tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 		tUI_UnindBuMsg.ubAPP_Message[1] = CameraId;
 		UI_SendMessageToAPP(&tUI_UnindBuMsg);
 		ubCamPairFlag[CameraId] = 0;
-		//tUI_PuSetting.NightmodeFlag = tUI_PuSetting.NightmodeFlag & (~(0x01<< CameraId));
 		osDelay(200);
 	}
 }
@@ -6959,30 +6997,15 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	switch(tArrowKey)
 	{
 		case UP_ARROW:
-			if(ubSubSubSubMenuItemFlag >=1)
-			{
 				ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				ubSubSubSubMenuItemFlag  -=  1;
-			}	
-			else
-			{
-				ubSubSubSubMenuItemFlag = 0 ;
-				ubSubSubSubMenuItemPreFlag =  1;
-			}
+				if(0 == ubSubSubSubMenuItemFlag) ubSubSubSubMenuItemFlag = 1;
+				else  ubSubSubSubMenuItemFlag--;
 				UI_DeletemenuDisplay();
 		break;	
 
 		case DOWN_ARROW:
-			 if(ubSubSubSubMenuItemFlag <1 )
-			 {
-			 	ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				ubSubSubSubMenuItemFlag += 1;
-			 }	
-			else
-			{
-				ubSubSubSubMenuItemPreFlag =  0;
-				ubSubSubSubMenuItemFlag = 1;
-			}
+				ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
+				if(++ubSubSubSubMenuItemFlag>=2) ubSubSubSubMenuItemFlag = 0;	
 				UI_DeletemenuDisplay();			
 		break;	
 
@@ -6997,7 +7020,7 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 				tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == ubSubSubMenuItemFlag)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
 				UI_ResetDevSetting(ubSubSubMenuItemFlag);
-				//UI_UpdateDevStatusInfo();
+				UI_UpdateDevStatusInfo();
 				tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 				tUI_UnindBuMsg.ubAPP_Message[1] = ubSubSubMenuItemFlag;
@@ -7037,7 +7060,7 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_SwitchCameraSource();
 			UI_ClearBuConnectStatusFlag();
 			ubSetViewCam = tCamViewSel.tCamViewPool[0];						
-			//UI_UpdateDevStatusInfo();
+			UI_UpdateDevStatusInfo();
 		break;	
 		
 		case LEFT_ARROW:
@@ -7224,7 +7247,7 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 			ubPairDisplayTime = 60; //10
 	
 			UI_ResetDevSetting(tPairInfo.tPairSelCam);
-			//UI_UpdateDevStatusInfo();
+			UI_UpdateDevStatusInfo();
 
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 48;
@@ -7345,30 +7368,16 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 	switch(tArrowKey)
 	{
 		case UP_ARROW:
-			if(ubSubMenuItemFlag >=1)
-			{
-				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-				ubSubMenuItemFlag  -=  1;
-			}	
-			else
-			{
-				ubSubMenuItemFlag = 0 ;
-				ubSubMenuItemPreFlag =  1;
-			}	
+			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+			if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 6;
+			else  ubSubMenuItemFlag--;			
 			UI_SettingSubmenuDisplay();
 		break;	
 
-		case DOWN_ARROW:
-			 if(ubSubMenuItemFlag < 6)
-			 {
-			 	ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-				ubSubMenuItemFlag += 1;
-			 }	
-			else
-			{
-				ubSubMenuItemPreFlag =  5;
-				ubSubMenuItemFlag = 6;
-			}	
+		case DOWN_ARROW:	
+			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+			if(++ubSubMenuItemFlag>=7) ubSubMenuItemFlag = 0;	
+			
 			UI_SettingSubmenuDisplay();
 		break;	
 
@@ -7709,10 +7718,20 @@ void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
 {
 	int i = 0;
+	static uint8_t subsubmenu_maxitem;
 	
 	switch(SubMenuItem)
 	{
 		case NIGHTMODE_ITEM:
+			for(i = 3; i >= 0; i--)
+			{
+				if(ubCamPairFlag[i] == 1)
+				{	
+					subsubmenu_maxitem = i;
+					break;
+				}
+			}			
+			
 			for(i = ubSubSubMenuItemFlag; i < 4; i++)
 			{
 				if(ubCamPairFlag[i])
@@ -7725,44 +7744,50 @@ void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
 			if((i == 3)&&(ubCamPairFlag[3] == 0))
 				break;
 			
-			if(ubSubSubMenuItemFlag <= 0)
-					break;
-	
-			ubSubSubMenuItemFlag -= 1;
+			//if(ubSubSubMenuItemFlag <= 0)
+			//		break;
+			if(ubSubSubMenuItemFlag != 0)
+				ubSubSubMenuItemFlag -= 1;
+			else
+				ubSubSubMenuItemFlag = subsubmenu_maxitem;
+			
 			UI_NightModeDisplay(ubSubSubMenuItemFlag);	
 			break;
 	
 		case LANGUAGESET_ITEM:	
-			if(ubSubSubMenuItemFlag < 1)
-				break;
-			ubSubSubMenuItemFlag -= 1;
+			if(0 == ubSubSubMenuItemFlag) ubSubSubMenuItemFlag = 3;
+			else  ubSubSubMenuItemFlag--;
+			
 			
 			ubLangageFlag = ubSubSubMenuItemFlag;
 			UI_LangageDisplay(ubLangageFlag);
 			break;
 
 		case FLICKER_ITEM:
-			if(ubSubSubMenuItemFlag == 0)
-				break;
-			ubSubSubMenuItemFlag = 0;
+			if(ubSubSubMenuItemFlag == 1)
+				ubSubSubMenuItemFlag = 0;
+			else
+				ubSubSubMenuItemFlag =1;
 			
 			ubFlickerFlag = ubSubSubMenuItemFlag;
 			UI_FlickerDisplay(ubFlickerFlag);
 			break;
 			
 		case DEFAULT_ITEM:
-			if(ubSubSubMenuItemFlag == 0)
-				break;
-			ubSubSubMenuItemFlag = 0;
+			if(ubSubSubMenuItemFlag == 1)
+				ubSubSubMenuItemFlag = 0;
+			else
+				ubSubSubMenuItemFlag =1;
 			
 			ubDefualtFlag = ubSubSubMenuItemFlag;		
 			UI_DefualtDisplay(ubDefualtFlag);	
 			break;
 			
 		case TEMPUNIT_ITEM:
-			if(ubSubSubMenuItemFlag == 0)
-				break;
-			ubSubSubMenuItemFlag = 0;
+			if(ubSubSubMenuItemFlag == 1)
+				ubSubSubMenuItemFlag = 0;
+			else
+				ubSubSubMenuItemFlag =1;
 			
 			ubTempunitFlag = ubSubSubMenuItemFlag;		
 			UI_TempUnitDisplay(ubTempunitFlag);	
@@ -7782,10 +7807,21 @@ void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
 void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem)
 {
 	int i = 0;
+	static uint8_t  subsubmenu_minitem;
 	
 	switch(SubMenuItem)
 	{
 		case NIGHTMODE_ITEM:
+			for(i = 0; i < 4; i++)
+			{
+				if(ubCamPairFlag[i])
+				{
+					subsubmenu_minitem = i;
+					break;
+				}
+			}			
+
+			
 			for(i = ubSubSubMenuItemFlag; i < 4; i++)
 			{
 				if(ubCamPairFlag[i])
@@ -7798,17 +7834,19 @@ void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem)
 			if((i == 3)&&(ubCamPairFlag[3] == 0))
 				break;
 			
-			if(ubSubSubMenuItemFlag >= 3)
-				break;
+			//if(ubSubSubMenuItemFlag >= 3)
+			//	break;
+
+			if(ubSubSubMenuItemFlag < 3)
+				ubSubSubMenuItemFlag += 1;	
+			else
+				ubSubSubMenuItemFlag =subsubmenu_minitem;
 			
-			ubSubSubMenuItemFlag += 1;	
 			UI_NightModeDisplay(ubSubSubMenuItemFlag);
 			break;
 	
 		case LANGUAGESET_ITEM:	
-			if(ubSubSubMenuItemFlag >= 3)
-				break;
-			ubSubSubMenuItemFlag += 1;
+			if(++ubSubSubMenuItemFlag>=4) ubSubSubMenuItemFlag = 0;	
 
 			ubLangageFlag = ubSubSubMenuItemFlag;
 			UI_LangageDisplay(ubLangageFlag);
@@ -7816,16 +7854,18 @@ void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem)
 
 		case FLICKER_ITEM:
 			if(ubSubSubMenuItemFlag == 1)
-				break;
-			ubSubSubMenuItemFlag = 1;	
+				ubSubSubMenuItemFlag = 0;
+			else
+				ubSubSubMenuItemFlag =1;
 
 			ubFlickerFlag = ubSubSubMenuItemFlag;
 			UI_FlickerDisplay(ubFlickerFlag);
 			break;
 		case DEFAULT_ITEM:
 			if(ubSubSubMenuItemFlag == 1)
-				break;
-			ubSubSubMenuItemFlag = 1;	
+				ubSubSubMenuItemFlag = 0;
+			else
+				ubSubSubMenuItemFlag =1;
 
 			ubDefualtFlag = ubSubSubMenuItemFlag;
 			UI_DefualtDisplay(ubDefualtFlag);
@@ -7833,8 +7873,9 @@ void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem)
 			
 		case TEMPUNIT_ITEM:
 			if(ubSubSubMenuItemFlag == 1)
-				break;
-			ubSubSubMenuItemFlag = 1;	
+				ubSubSubMenuItemFlag = 0;
+			else
+				ubSubSubMenuItemFlag =1;
 
 			ubTempunitFlag = ubSubSubMenuItemFlag;
 			UI_TempUnitDisplay(ubTempunitFlag);
@@ -7966,30 +8007,24 @@ void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	switch(tArrowKey)
 	{
 		case UP_ARROW:
-			if(ubSubSubSubMenuItemFlag >=1)
-			{
-				ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				ubSubSubSubMenuItemFlag  -=  1;
-			}	
+
+			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuRealItem;
+			
+			if(ubSubSubSubMenuRealItem == 1)
+				ubSubSubSubMenuRealItem = 0;
 			else
-			{
-				ubSubSubSubMenuItemFlag = 0 ;
-				ubSubSubSubMenuItemPreFlag =  1;
-			}
+				ubSubSubSubMenuRealItem =1;
+			
 			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
 		break;	
 
 		case DOWN_ARROW:
-			if(ubSubSubSubMenuItemFlag < 1 )
-			{
-			 	ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				ubSubSubSubMenuItemFlag += 1;
-			}	
+			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuRealItem;
+			
+			if(ubSubSubSubMenuRealItem == 1)
+				ubSubSubSubMenuRealItem = 0;
 			else
-			{
-				ubSubSubSubMenuItemPreFlag =  0;
-				ubSubSubSubMenuItemFlag = 1;
-			}
+				ubSubSubSubMenuRealItem =1;
 			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
 		break;	
 
@@ -12165,7 +12200,7 @@ void UI_ChangeBuPsModeToNormalMode(UI_CamNum_t tPS_CamNum)
 	if(pUI_BuConnectFlag[1])
 		*(pUI_BuConnectFlag[1]+tPS_CamNum) = FALSE;
 	tUI_CamStatus[tPS_CamNum].tCamPsMode = POWER_NORMAL_MODE;
-	//UI_UpdateDevStatusInfo();
+	UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 void UI_ReportBuConnectionStatus(void *pvConnectionSts)
@@ -12350,7 +12385,7 @@ void UI_UnBindBu(UI_CamNum_t tUI_DelCam)
 	tUI_CamStatus[tUI_DelCam].tCamConnSts = CAM_OFFLINE;
 	tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 	UI_ResetDevSetting(tUI_DelCam);
-	//UI_UpdateDevStatusInfo();
+	UI_UpdateDevStatusInfo();
 	tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
 	tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
 	tUI_UnindBuMsg.ubAPP_Message[1] = tUI_DelCam;
@@ -12400,7 +12435,7 @@ void UI_EnableVox(void)
 	tUI_PsMessage.ubAPP_Message[2] = TRUE;
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	tUI_PuSetting.tPsMode = PS_VOX_MODE;
-	//UI_UpdateDevStatusInfo();
+	UI_UpdateDevStatusInfo();
 	LCD_UnInit();
 	LCD->LCD_MODE = LCD_GPIO;
 	printd(Apk_DebugLvl, "UI_EnableVox ok.\n");
@@ -12443,7 +12478,7 @@ void UI_DisableVox(void)
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
 	tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
-	//UI_UpdateDevStatusInfo();
+	UI_UpdateDevStatusInfo();
 	printd(Apk_DebugLvl, "UI_DisableVox ok###\n");
 }
 //------------------------------------------------------------------------------
@@ -12815,6 +12850,7 @@ SWITCH_CAMERA:
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
 	UI_SwitchCameraSource();
 	UI_ClearBuConnectStatusFlag();
+	UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb)

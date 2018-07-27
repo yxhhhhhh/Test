@@ -229,7 +229,7 @@ void APP_Init(void)
 	SF_Init();
 	#ifdef VBM_PU
 	UI_LoadDevStatusInfo();
-	printf("AAAA ubFactorySettingFLag: %d.\n", ubFactorySettingFLag);
+	printd(Apk_DebugLvl, "APP_Init ubFactorySettingFLag: %d.\n", ubFactorySettingFLag);
 	if(ubFactorySettingFLag != 1)
 	{
 		APP_CheckBootStatus();
