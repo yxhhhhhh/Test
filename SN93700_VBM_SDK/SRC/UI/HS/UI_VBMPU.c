@@ -306,6 +306,8 @@ uint8_t ubCamPairOkState = 0;
 uint8_t ubAlarmWakeupType = 0;
 uint8_t ubSwitchCamWakeupSstate = 0;
 
+uint8_t ubNormalModeToBuRet = rUI_FAIL;
+
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -723,6 +725,12 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			if(ubNightModeRet == rUI_FAIL)
 				ubNightModeRet = UI_SendNightModeToBu();
 
+			if(ubPowerState == PWR_ON)
+			{
+				if(ubNormalModeToBuRet == rUI_FAIL)
+					ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
+			}
+
 			ubLinkStateCheckCount = 0;
 			UI_SetSpeaker(0, 1);
 		}
@@ -744,6 +752,9 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			ubSetAlarmRet = rUI_FAIL;
 			ubNightModeRet = rUI_FAIL;
 		}
+
+		if(ubPowerState != PWR_ON)
+			ubNormalModeToBuRet = 0;
 
 		if(ubSpeakerCount >= 1)
 			ubSpeakerCount++;
@@ -936,6 +947,7 @@ void UI_PuInit(void)
 
 void UI_PowerOnSet(void)
 {
+	printd(Apk_DebugLvl, "UI_PowerOnSet ubZoomScale: %d.\n", tUI_PuSetting.ubZoomScale);
 	UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
 }
 //------------------------------------------------------------------------------
@@ -1151,6 +1163,11 @@ void UI_PowerKey(void)
 	{
 		if((GPIO->GPIO_I9 == 0) || (GPIO->GPIO_I10 == 0))
 			return;
+	}
+
+	if(tUI_PuSetting.ubDefualtFlag == TRUE)
+	{
+		tUI_PuSetting.ubDefualtFlag = 2;
 	}
 	
 	UI_SendPwrNormalModeToBu();
@@ -8544,7 +8561,7 @@ uint8_t UI_SendAlarmSettingToBu(void)
 	return UI_SendToBUCmd(CmdData, 4);
 }
 
-void UI_SendPwrNormalModeToBu(void)
+uint8_t UI_SendPwrNormalModeToBu(void)
 {
 	UI_PUReqCmd_t tPwrCmd;
 	
@@ -8561,13 +8578,15 @@ void UI_SendPwrNormalModeToBu(void)
 			if(UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
 			{
 				printd(DBG_ErrorLvl, "UI_SendPwrNormalModeToBu Fail!\n");
-				if(CAM_ONLINE == tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts)
-					return;
+				return rUI_FAIL;
 			}
 		}
 		tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
 		printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Cam%d ok.\n", tCamViewSel.tCamViewPool[0]);
+		return rUI_SUCCESS;
 	}
+	
+	return rUI_FAIL;
 }
 
 void UI_TestCmd(uint8_t Value1, uint8_t Value2)
@@ -12414,7 +12433,7 @@ void UI_DisableVox(void)
 		}
 	}
 	#else
-	UI_SendPwrNormalModeToBu();
+	ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
 	#endif
 
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
@@ -13088,7 +13107,13 @@ void UI_SetSpeaker(uint8_t type, uint8_t State)
 			if(FALSE == ubUI_PttStartFlag)
 			{
 				if(ubSpeakerCount == 0)
-					ubSpeakerCount = 1;
+				{
+					if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL0)
+					{
+						if(APP_LINK_STATE == tUI_SyncAppState)
+							ubSpeakerCount = 1;
+					}
+				}
 			}
 		}
 	}
@@ -13149,5 +13174,11 @@ void UI_SetSpeaker(uint8_t type, uint8_t State)
 			}
 		}
 	}
+}
+
+void UI_SetFactoryFlag(uint8_t Value)
+{
+	tUI_PuSetting.ubDefualtFlag = Value;
+	UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------

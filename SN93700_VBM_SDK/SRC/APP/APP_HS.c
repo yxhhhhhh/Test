@@ -229,9 +229,15 @@ void APP_Init(void)
 	SF_Init();
 	#ifdef VBM_PU
 	UI_LoadDevStatusInfo();
-	if(ubFactorySettingFLag == 0)
+	printf("AAAA ubFactorySettingFLag: %d.\n", ubFactorySettingFLag);
+	if(ubFactorySettingFLag != 1)
 	{
 		APP_CheckBootStatus();
+		if(ubFactorySettingFLag == 2)
+		{
+			ubFactorySettingFLag = 1;
+			UI_SetFactoryFlag(1);
+		}
 	}
 	#endif
 	

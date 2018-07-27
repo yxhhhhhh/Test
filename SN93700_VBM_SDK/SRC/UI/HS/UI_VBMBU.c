@@ -1457,7 +1457,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
 	}
-	else if(uwDetLvl >= 0x3C)
+	else if(uwDetLvl >= 0x30)
 	{
 		ubCheckMaxIrCnt++;
 		ubCheckMinIrCnt = 0;
