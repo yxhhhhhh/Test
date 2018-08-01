@@ -307,6 +307,12 @@ uint8_t ubSwitchCamWakeupSstate = 0;
 
 uint8_t ubNormalModeToBuRet = rUI_FAIL;
 
+uint8_t ubAlarmOnlyAlertFlag  = 0;
+
+extern uint16_t ubTest_uwCropHsize;
+extern uint16_t ubTest_uwCropVsize;
+extern uint16_t ubTest_uwCropHstart;
+extern uint16_t ubTest_uwCropVstart;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -1038,11 +1044,11 @@ void UI_WakeUp(void)
 		tUI_PuSetting.IconSts.ubShowLostLogoFlag = FALSE;
 		ubFastShowLostLinkSta = 1;
 	}
-
-	if(LCDBL_STATE == 0)
-	{
-		LCDBL_ENABLE(UI_ENABLE);
-	}
+	
+	//if(LCDBL_STATE == 0)
+	//{
+	//	LCDBL_ENABLE(UI_ENABLE);
+	//}
 
 	UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
 	if((TRUE == tUI_PuSetting.ubScanModeEn) && (FALSE == ubUI_ScanStartFlag))
@@ -1084,22 +1090,25 @@ void UI_CheckPowerMode(void)
 	}
 	else if(ubPowerState == PWR_Prep_Wakeup)
 	{
-		//UI_DisableVox();
-		//UI_SwitchCameraSource();
-		//ubSwitchCamWakeupSstate = 1;
+		//ubWakeUpWaitCnt = 0;
+		//ubPowerState = PWR_Start_Wakeup;
+		UI_WakeUp();
 		ubWakeUpWaitCnt = 0;
-		ubPowerState = PWR_Start_Wakeup;
+		ubPowerState = PWR_ON;		
 	}
 	else if(ubPowerState == PWR_Start_Wakeup)
 	{
-		UI_WakeUp();
-		ubWakeUpWaitCnt = 0;
-		ubPowerState = PWR_ON;
+		//UI_WakeUp();
+		//ubWakeUpWaitCnt = 0;
+		//ubPowerState = PWR_ON;
 	}
 }
 
 void UI_SetSleepState(uint8_t type)
 {
+	if(tUI_PuSetting.ubDefualtFlag == TRUE)
+		return;
+	
 	if(type == 0)
 	{
 		if(ubPowerState == PWR_ON)
@@ -1112,7 +1121,7 @@ void UI_SetSleepState(uint8_t type)
 			ubPowerState = PWR_Prep_Wakeup;
 			UI_DisableVox();
 			UI_SwitchCameraSource();
-			ubSwitchCamWakeupSstate = 1;
+			ubSwitchCamWakeupSstate = 1;	
 		}
 	}
 	else
@@ -1129,6 +1138,12 @@ void UI_PowerKeyShort(void)
 {
 	if(ubFactoryModeFLag == 1)
 		return;
+
+	if(UI_CheckStopAlarm() == 1)
+	{
+		UI_StopPlayAlarm();
+		return;
+	}
 
 	#if Current_Test
 	UI_SetSleepState(0);
@@ -1248,7 +1263,7 @@ void UI_MenuKey(void)
 			tUI_PuSetting.IconSts.ubDrawStsIconFlag = FALSE;
 			if(APP_LOSTLINK_STATE == tUI_SyncAppState)
 			{
-				tLCD_JpegDecodeDisable();
+				
 				
 				if(ubNoAddCamFlag == 1)
 				{
@@ -1287,6 +1302,7 @@ void UI_MenuKey(void)
 					tOsdInfo.uwYStart =304-104;	
 					tOSD_Img2(&tOsdInfo, OSD_UPDATE);
 					*/
+					tLCD_JpegDecodeDisable();
 					OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
 					printd(Apk_DebugLvl, "UI_MenuKey OSD2IMG_MENU_NOSIGNAL1.\n");
 				}
@@ -1296,7 +1312,7 @@ void UI_MenuKey(void)
 			break;
 		}
 
-/*		
+		/*		
 		case UI_SUBMENU_STATE:
 		{
 			tUI_State = UI_MAINMENU_STATE;
@@ -1318,7 +1334,7 @@ void UI_MenuKey(void)
 			UI_DrawMenuPage();
 			break;
 		}
-*/	
+		*/	
 
 		case UI_CAM_SEL_STATE:
 		case UI_SET_VDOMODE_STATE:
@@ -2935,6 +2951,12 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 	{
 		//if(TRUE == tUI_PuSetting.ubScanModeEn)
 		//	return;
+		if(UI_CheckStopAlarm() == 1)
+		{
+			UI_StopPlayAlarm();
+			return;
+		}
+
 
 		#if 0				
 		tSelCam = tCamViewSel.tCamViewPool[0] ;
@@ -3176,12 +3198,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 		case ENTER_ARROW:
 		{
-			if(UI_CheckStopAlarm() == 1)
-			{
-				UI_StopPlayAlarm();
-				return;
-			}
-			
 			if(tUI_PuSetting.ubDefualtFlag == TRUE)
 			{
 				if(ubFS_MenuItem == 0)
@@ -5220,7 +5236,7 @@ void UI_AlarmSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 				UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);				
 		break;	
 
-		case RIGHT_ARROW:
+		//case RIGHT_ARROW:
 		case ENTER_ARROW:
 			UI_SetAlarm(item_temp);
 			
@@ -5492,7 +5508,7 @@ void UI_PlayAlarmSound(uint8_t type)
 			}
 		}
 		
-		if((ubPlayAlarmCount%3) == 0)
+		if((ubPlayAlarmCount%4) == 0)  // 3
 		{
 			printd(Apk_DebugLvl, "UI_PlayAlarmSound BUZ_PlaySingleSound###\n");
 			BUZ_PlayAlarmSound();
@@ -5532,10 +5548,15 @@ void UI_TempAlarmCheck(void)
 
 	if(tUI_State != UI_DISPLAY_STATE)
 	{
-		if(ubTempAlarmState == TEMP_ALARM_IDLE)
-			return;
+		//if(ubTempAlarmState == TEMP_ALARM_IDLE)
+		//	return;
+		//ubTempAlarmState = TEMP_ALARM_OFF;
 
-		ubTempAlarmState = TEMP_ALARM_OFF;
+		ubAlarmOnlyAlertFlag = 1;
+	}
+	else
+	{
+		ubAlarmOnlyAlertFlag = 0;
 	}
 
 	if(ubTempAlarmState == TEMP_ALARM_IDLE)
@@ -5585,12 +5606,14 @@ void UI_TempAlarmCheck(void)
 
 		if((ubShowAlarmstate == 1) || (ubShowAlarmstate == 2))
 		{
+		     if(ubAlarmOnlyAlertFlag == 0)
 			UI_ShowAlarm(3);
 		}
 	}
 	else if(ubTempAlarmState == HIGH_TEMP_ALARM_ON)
 	{
-		UI_ShowAlarm(0);
+		if(ubAlarmOnlyAlertFlag == 0)	
+			UI_ShowAlarm(0);
 		ubPlayAlarmCount = 0;
 		ubTempAlarmState = HIGH_TEMP_ALARM_ING;
 	}
@@ -5600,7 +5623,8 @@ void UI_TempAlarmCheck(void)
 	}
 	else if(ubTempAlarmState == LOW_TEMP_ALARM_ON)
 	{
-		UI_ShowAlarm(1);
+		if(ubAlarmOnlyAlertFlag == 0)
+			UI_ShowAlarm(1);
 		ubPlayAlarmCount = 0;
 		ubTempAlarmState = LOW_TEMP_ALARM_ING;
 	}
@@ -6300,6 +6324,12 @@ void UI_Zoom_SetScaleParam(uint8_t tZoomScale)
 		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart   = (ulLcd_HSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize)/2;
 		tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart   = (ulLcd_VSize - tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize)/2;
 	}
+
+	ubTest_uwCropHsize = tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHsize;
+	ubTest_uwCropVsize = tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVsize;	
+	ubTest_uwCropHstart = tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropHstart;
+	ubTest_uwCropVstart = tUI_DptzParam.tUI_LcdCropParam.tChRes.uwCropVstart;
+
 			
 	tLCD_DynamicOneChCropScale(&tUI_DptzParam.tUI_LcdCropParam);
 }
@@ -6931,6 +6961,32 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 		break;	
 
 		case RIGHT_ARROW:
+			if(ubSubMenuItemFlag == 1)
+			{
+				i = ubSubSubMenuItemFlag;
+				for(j = 0; j < 4; j++)
+				{
+					if(ubCamPairFlag[i] == 1)
+					{
+						ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+						ubSubSubMenuItemFlag 	= i;
+						break;
+					}
+					i++;
+					if(i > 3) i = 0;
+				}
+
+				if((ubCamPairFlag[0] == 0) && (ubCamPairFlag[1] == 0)&& (ubCamPairFlag[2] == 0)&& (ubCamPairFlag[3] == 0))
+					break;
+
+				ubSubSubSubMenuItemFlag = 0;
+				ubSubSubSubMenuItemPreFlag = 1;
+
+				tUI_State = UI_SUBSUBSUBMENU_STATE;	
+				UI_DeletemenuDisplay();
+			}
+		break;
+		
 		case ENTER_ARROW:
 			if(ubSubMenuItemFlag == 1)
 			{
@@ -7039,7 +7095,7 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 				UI_DeletemenuDisplay();			
 		break;	
 
-		case RIGHT_ARROW:
+		//case RIGHT_ARROW:
 		case ENTER_ARROW:
 			if(ubSubSubSubMenuItemFlag == 0) // delete	
 			{
@@ -7247,6 +7303,8 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 		case rUI_SUCCESS:
 			tPairInfo.tPairSelCam= ubPairSelCam;
 			tPairInfo.tDispLocation = ubPairSelCam;
+
+			ubCamPairOkState = 1;
 			
 			tUI_PuSetting.ubPairedBuNum += (tUI_PuSetting.ubPairedBuNum >= tUI_PuSetting.ubTotalBuNum)?0:1;
 			tUI_CamStatus[tPairInfo.tPairSelCam].ulCAM_ID = tPairInfo.tPairSelCam;
@@ -7305,7 +7363,6 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 				tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
 				UI_SwitchCameraSource();
 			}
-			ubCamPairOkState = 1;
 			#endif
 			break;
 		case rUI_FAIL:
@@ -7485,8 +7542,8 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
 			
 		case CONTACT_ITEM:
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CONTACT_INFO, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 139;
-			tOsdImgInfo.uwYStart =325;	
+			tOsdImgInfo.uwXStart= 128;
+			tOsdImgInfo.uwYStart =284;	
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
 			break;
 
@@ -7731,6 +7788,11 @@ void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 		case ENTER_ARROW:
 			UI_SettingSubSubMenuEnterKey(ubSubMenuItemFlag);				
 		break;	
+
+		case RIGHT_ARROW:	
+			if(NIGHTMODE_ITEM == ubSubMenuItemFlag)
+				UI_SettingSubSubMenuEnterKey(ubSubMenuItemFlag);			
+		break;
 		
 		case LEFT_ARROW:
 		case EXIT_ARROW:
@@ -7931,10 +7993,13 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 	switch(SubMenuItem)
 	{
 		case NIGHTMODE_ITEM:
-			tUI_State = UI_SUBSUBSUBMENU_STATE;
-			ubSubSubSubMenuItemFlag = ((tUI_PuSetting.NightmodeFlag>>ubSubSubMenuItemFlag)&0x01)?1:0;
-			ubSubSubSubMenuRealItem = 0;
-			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
+			if(ubNoAddCamFlag == 0)
+			{
+				tUI_State = UI_SUBSUBSUBMENU_STATE;
+				ubSubSubSubMenuItemFlag = ((tUI_PuSetting.NightmodeFlag>>ubSubSubMenuItemFlag)&0x01)?1:0;
+				ubSubSubSubMenuRealItem = 0;
+				UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
+			}	
 			break;
 	
 		case LANGUAGESET_ITEM:	
@@ -8086,23 +8151,22 @@ void UI_FS_LangageMenuDisplay(uint8_t value)
 	uint8_t i;
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LANGAGE+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 227;
-	tOsdImgInfo.uwYStart = 570;	
+	tOsdImgInfo.uwXStart = 184;
+	tOsdImgInfo.uwYStart = 584;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 
 	for(i =0 ; i < 4 ; i++)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ENGLISH+(i*2)+ (21*i), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 227+(i*96);
-		tOsdImgInfo.uwYStart = 260;	
+		tOsdImgInfo.uwXStart = 184+(i*96);
+		tOsdImgInfo.uwYStart = 344;	
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 	}
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ENGLISH_S+(value*2)+ (21*value), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 227+(value*96);
-	tOsdImgInfo.uwYStart = 260;	
+	tOsdImgInfo.uwXStart = 184+(value*96);
+	tOsdImgInfo.uwYStart = 344;	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
-
 }
 
 void UI_FS_SetTimeMenuDisplay(uint8_t value)
@@ -8641,7 +8705,7 @@ uint8_t UI_SendPwrNormalModeToBu(void)
 			tPwrCmd.ubCmd_Len  				= 3;
 			if(UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
 			{
-				printd(DBG_ErrorLvl, "UI_SendPwrNormalModeToBu Fail!\n");
+				printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Fail!\n");
 				return rUI_FAIL;
 			}
 		}
@@ -11624,7 +11688,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 
 	if(FALSE == ubUI_ResetPeriodFlag)
 	{
-		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3; //UI_SHOWLOSTLOGO_PERIOD * 5
+		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
 	}
 	else if(ubCamPairOkState == 1)
 	{
@@ -11632,7 +11696,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 	}
 	else
 	{
-		ubFastShowLostLinkSta = 1;
+		if(tPairInfo.ubDrawFlag == FALSE)
+			ubFastShowLostLinkSta = 1;
 	}
 
 	for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
@@ -11661,11 +11726,11 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 			{
 				tUI_State = UI_DISPLAY_STATE;
 			
-				tOsdImgInfo.uwHSize  = 1280;
-				tOsdImgInfo.uwVSize  = 720;
+				tOsdImgInfo.uwHSize  = 672;
+				tOsdImgInfo.uwVSize  = 1280;
 				tOsdImgInfo.uwXStart = 48;
 				tOsdImgInfo.uwYStart = 0;
-				OSD_EraserImg1(&tOsdImgInfo);
+				OSD_EraserImg2(&tOsdImgInfo);
 
 				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_BLANKBAR, 1, &tOsdImgInfo);
 				tOsdImgInfo.uwXStart = 0;
@@ -11674,7 +11739,6 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 
 			
 				UI_ClearStatusBarOsdIcon();
-				tLCD_JpegDecodeDisable();
 				//OSD_LogoJpeg(OSDLOGO_LOSTLINK);
 
 				ubFastShowLostLinkSta = 0;
@@ -11716,6 +11780,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwYStart =304-104;	
 					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 					*/
+					tLCD_JpegDecodeDisable();
 					OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
 					printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOSIGNAL1.\n");
 				}
@@ -11819,17 +11884,18 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 				{	
 					if(tUI_State == UI_DISPLAY_STATE)
 					{
-						tOsdImgInfo.uwHSize  = 1280;
-						tOsdImgInfo.uwVSize  = 720;
+						tOsdImgInfo.uwHSize  = 672;
+						tOsdImgInfo.uwVSize  = 1280;
 						tOsdImgInfo.uwXStart = 48;
 						tOsdImgInfo.uwYStart = 0;
-						OSD_EraserImg1(&tOsdImgInfo);
+						OSD_EraserImg2(&tOsdImgInfo);
 					}
+					
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_BLANKBAR, 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart = 0;
 					tOsdImgInfo.uwYStart = 0;
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
+					
 					//ubClearOsdFlag =1;
 				}
 			   	UI_UpdateBarIcon_Part1();
@@ -12507,6 +12573,15 @@ void UI_DisableVox(void)
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
 	tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
+
+	if(APP_LINK_EVENT == APP_UpdateLinkStatus())
+	{
+		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
+		osDelay(50);			//???
+		LCD_PWR_ENABLE;
+		osDelay(250);
+	}
+	
 	UI_UpdateDevStatusInfo();
 	printd(Apk_DebugLvl, "UI_DisableVox ok###\n");
 }
@@ -12763,6 +12838,8 @@ void UI_LoadDevStatusInfo(void)
 	ubRealTemp = tUI_PuSetting.ubTempunitFlag?ubRealTemp:UI_TempCToF(ubRealTemp);
 	printd(Apk_DebugLvl, "UI_LoadDevStatusInfo ubRealTemp: %d, ubTempunitFlag: %d.\n", ubRealTemp, tUI_PuSetting.ubTempunitFlag);
 	UI_GetPairCamInfo();
+
+	tPairInfo.ubDrawFlag 	 = FALSE;
 
 	tCamViewSel.tCamViewPool[0] = tUI_PuSetting.ubCamViewNum;
 	printd(Apk_DebugLvl, "tCamViewSel.tCamViewNum  %d \n",tCamViewSel.tCamViewPool[0]);

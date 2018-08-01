@@ -252,6 +252,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 				uint16_t uwChkType = UI_SYSVOICELVL_CHK;
 				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 			}
+			
+			UI_BrightnessCheck();
 
 			if(((*pThreadCnt)%2) == 0)
 			{
@@ -334,7 +336,7 @@ static void UI_SysCheckStatus(void const *argument)
 
 		if(uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
 		{
-			UI_BrightnessCheck();
+			//UI_BrightnessCheck();
 			uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
 		}
 	}

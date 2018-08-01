@@ -812,17 +812,20 @@ void APP_LcdDisplayOff(void)
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOn(void)
 {
-	SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
-	osDelay(20);			//???
-	LCD_PWR_ENABLE;
-	osDelay(200);
-
+	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
+	{
+		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
+		osDelay(50);			//???
+		LCD_PWR_ENABLE;
+		osDelay(400);
+	}
+	
 	GLB->LCD_FUNC_DIS  = 0;
 	LCD_Init(LCD_LCD_PANEL);
 	LCD_SetGammaLevel(4);
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
-	//LCDBL_ENABLE(UI_ENABLE);
+	LCDBL_ENABLE(UI_ENABLE);
 }
 #endif
 //------------------------------------------------------------------------------

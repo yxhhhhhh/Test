@@ -186,6 +186,13 @@ uint8_t ubKNL_StartRecFlag = 0;
 //For USB Tuning tool
 KNL_TuningMode_t tKNL_TuningMode;
 
+#ifdef VBM_PU
+uint16_t ubTest_uwCropHsize= 720;
+uint16_t ubTest_uwCropVsize= 1280;
+uint16_t ubTest_uwCropHstart= 0;
+uint16_t ubTest_uwCropVstart= 0;
+#endif
+
 static void KNL_VdoInProcThread(void const *argument);
 static void KNL_VdoCodecProcThread(void const *argument);
 static void KNL_AdoCodecProcThread(void const *argument);
@@ -2049,10 +2056,11 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 			sLcdInfor.uwLcdOutputVsize = tKNL_Info.uwDispH;
 			sLcdInfor.tChRes[0].uwChInputHsize = uwKNL_GetVdoV(ubDisp1Src);
 			sLcdInfor.tChRes[0].uwChInputVsize = uwKNL_GetVdoH(ubDisp1Src);
-			sLcdInfor.tChRes[0].uwCropHstart = 0;
-			sLcdInfor.tChRes[0].uwCropVstart = 0;
-			sLcdInfor.tChRes[0].uwCropHsize = uwKNL_GetVdoV(ubDisp1Src);
-			sLcdInfor.tChRes[0].uwCropVsize = uwKNL_GetVdoH(ubDisp1Src);
+			
+			sLcdInfor.tChRes[0].uwCropHstart = ubTest_uwCropHstart;
+			sLcdInfor.tChRes[0].uwCropVstart = ubTest_uwCropVstart;
+			sLcdInfor.tChRes[0].uwCropHsize =ubTest_uwCropHsize; //uwKNL_GetVdoV(ubDisp1Src);
+			sLcdInfor.tChRes[0].uwCropVsize = ubTest_uwCropVsize;//uwKNL_GetVdoH(ubDisp1Src);
 		}
 	}
 	else if(tKNL_GetDispType() == KNL_DISP_DUAL_U)
