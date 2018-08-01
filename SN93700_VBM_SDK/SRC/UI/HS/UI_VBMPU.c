@@ -121,13 +121,12 @@ UI_ReportFuncPtr_t tUiReportMap2Func[] =
 	[UI_BU_TO_PU_CMD]			= UI_GetBUCMDData,
 };
 
-//ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n36DB, R2R_VOL_n23p5DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
-//ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n32p4DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n8p2DB};
-//ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n36DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
+
 ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
 
-//uint32_t ulUI_BLTable[] = {0x100, 0x118, 0x200, 0x400, 0x600, 0x700, 0x800, 0x0900, 0xA00};
-uint32_t ulUI_BLTable[] = {0, 4, 16, 28, 40, 52, 64, 76, 88};
+//uint32_t ulUI_BLTable[] = {0, 4, 16, 28, 40, 52, 64, 76, 88};
+uint32_t ulUI_BLTable[] = {0, 3, 10, 17, 24, 31, 38, 45, 52};
+
 
 osMutexId UI_PUMutex;
 static UI_SubMenuCamNum_t tCamSelect;
@@ -762,10 +761,6 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 		if(ubSpeakerCount == 4)
 			UI_SetSpeaker(1, TRUE);
 
-		#if Current_Test
-		UI_CheckPowerMode();
-		#endif
-
 		if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
 		{
 			UI_TimerDeviceEventStop(TIMER1_2);
@@ -775,10 +770,14 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			if(ubTimerDevEventStopSta == 0)
 				UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
 		}
+
+		#if Current_Test
+		UI_CheckPowerMode();
+		#endif
 		
 		ubCameraOnlineNum = UI_GetCamOnLineNum(0);
 	}
-	
+
 }
 //------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
@@ -1039,7 +1038,7 @@ void UI_WakeUp(void)
 		tUI_PuSetting.IconSts.ubShowLostLogoFlag = FALSE;
 		ubFastShowLostLinkSta = 1;
 	}
-	
+
 	if(LCDBL_STATE == 0)
 	{
 		LCDBL_ENABLE(UI_ENABLE);
@@ -2902,7 +2901,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						(uint8_t *)(&ubTimeMin), (uint8_t *)(&ubTimeAMPM)
 						};
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
-	uint8_t ubT_MinNum[3] = {1,  0,  0};	
+	uint8_t ubT_MinNum[3] = {0,  0,  0};	
 	UI_CamNum_t tSelCam;
 	UI_PUReqCmd_t tPsCmd;
 
@@ -2982,11 +2981,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		case LEFT_ARROW:
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
-			{
-				#if UI_TEST_MODE
-				UI_TestCmd(0x11, 1);
-				#endif
-				
+			{				
 				UI_MotorControl(MC_LEFT_ON);
 				break;
 			}
@@ -3046,11 +3041,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 				}
 			}
 			else
-			{
-				#if UI_TEST_MODE //test
-				UI_TestCmd(0x11, 0);
-				#endif
-				
+			{				
 				UI_MotorControl(MC_RIGHT_ON);
 			}
 			break;			
@@ -3089,11 +3080,30 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 					if(NULL == pT_Num[ubFS_Timeitem])
 						return;
 
+					if(ubFS_Timeitem == 2)
+					{
+						if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
+							return;
+						if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
+							return;	
+					}
+
 					if(*pT_Num[ubFS_Timeitem] == ubT_MaxNum[ubFS_Timeitem])
 						*pT_Num[ubFS_Timeitem] = ubT_MinNum[ubFS_Timeitem];
 					else
 						(*pT_Num[ubFS_Timeitem])++;
-						
+
+					if(ubFS_Timeitem == 0)
+					{
+						if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
+						{
+							ubTimeHour = 0;
+						}	
+						if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
+						{
+							ubTimeHour = 1;
+						}
+					}
 					UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
 				}
 				break;
@@ -3133,11 +3143,31 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 					if(NULL == pT_Num[ubFS_Timeitem])
 						return;
 
+					if(ubFS_Timeitem == 2)
+					{
+						if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
+							return;
+						if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
+							return;	
+					}
+
 					if(*pT_Num[ubFS_Timeitem] == ubT_MinNum[ubFS_Timeitem])
 						*pT_Num[ubFS_Timeitem] = ubT_MaxNum[ubFS_Timeitem];
 					else
 						(*pT_Num[ubFS_Timeitem])--;
-					
+
+					if(ubFS_Timeitem == 0)
+					{
+						if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
+						{
+							ubTimeHour = 11;
+						}	
+						if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
+						{
+							ubTimeHour = 12;
+						}
+					}
+
 					UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
 				}
 				break;
@@ -8008,24 +8038,23 @@ void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	{
 		case UP_ARROW:
 
-			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuRealItem;
+			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
 			
-			if(ubSubSubSubMenuRealItem == 1)
-				ubSubSubSubMenuRealItem = 0;
+			if(ubSubSubSubMenuItemFlag == 1)
+				ubSubSubSubMenuItemFlag = 0;
 			else
-				ubSubSubSubMenuRealItem =1;
-			
-			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
+				ubSubSubSubMenuItemFlag =1;
+			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuItemFlag);
 		break;	
 
 		case DOWN_ARROW:
-			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuRealItem;
+			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
 			
-			if(ubSubSubSubMenuRealItem == 1)
-				ubSubSubSubMenuRealItem = 0;
+			if(ubSubSubSubMenuItemFlag == 1)
+				ubSubSubSubMenuItemFlag = 0;
 			else
-				ubSubSubSubMenuRealItem =1;
-			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
+				ubSubSubSubMenuItemFlag =1;
+			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuItemFlag);
 		break;	
 
 		case RIGHT_ARROW:
@@ -11423,7 +11452,7 @@ void UI_UpdateBarIcon_Part2(void)
 
 	#if PICKUP_VOLUME_TEST
 	ubPickupVolume = (ubGetVoice1<<24)+(ubGetVoice2<<16)+(ubGetVoice3<<8)+ubGetVoice4;
-	printf("AAA ubPickupVolume: %d.\n", ubPickupVolume );
+	//printd(Apk_DebugLvl, "UI_UpdateBarIcon_Part2 ubPickupVolume: %d.\n", ubPickupVolume );
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(ubPickupVolume/10000), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 685 - 19;
@@ -11595,7 +11624,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 
 	if(FALSE == ubUI_ResetPeriodFlag)
 	{
-		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
+		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3; //UI_SHOWLOSTLOGO_PERIOD * 5
 	}
 	else if(ubCamPairOkState == 1)
 	{

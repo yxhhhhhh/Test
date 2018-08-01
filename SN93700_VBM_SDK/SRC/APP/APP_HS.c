@@ -546,7 +546,7 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			}
 			tAPP_KNLInfo.tBURoleInfo[tAPP_PairRoleInfo.tPairBURole].tKNL_DispLoc = tAPP_PairRoleInfo.tPairBUDispLoc;
 			VDO_DisplayLocationSetup(tAPP_PairRoleInfo.tPairBURole, tAPP_PairRoleInfo.tPairBUDispLoc);
-			VDO_SetPlayRole(tAPP_PairRoleInfo.tPairBURole); 
+			//VDO_SetPlayRole(tAPP_PairRoleInfo.tPairBURole); 
 			VDO_UpdateDisplayParameter();
 			if(APP_UNBIND_BU_EVENT == ptEventMsg->ubAPP_Message[2])
 			{
