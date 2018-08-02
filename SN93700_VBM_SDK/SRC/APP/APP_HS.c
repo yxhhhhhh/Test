@@ -812,7 +812,7 @@ void APP_LcdDisplayOff(void)
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOn(void)
 {
-	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
+	//if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
 		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
 		osDelay(50);			//???

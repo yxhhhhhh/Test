@@ -39,7 +39,7 @@
 #define 	RECORD_PWRSTS_ADDR	0
 #define 	PWRSTS_KEEP			3
 
-#define 	ALARM_INTERVAL		300
+#define 	ALARM_INTERVAL		270
 
 typedef void (*pvUiFuncPtr)(void);
 
@@ -995,4 +995,5 @@ void UI_SetSpeaker(uint8_t type, uint8_t State);
 void UI_CameraResetCycleTime(uint8_t KeyAction);
 void UI_TriggerWakeUpAlarm(void);
 void UI_SetFactoryFlag(uint8_t Value);
+void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId);
 #endif
