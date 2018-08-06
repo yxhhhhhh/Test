@@ -1238,6 +1238,18 @@ OSD2IMGPOOL(ENG_COLONSYM,				0x3000,        0,            0)
 OSD2IMGPOOL(ENG_DASHSYM,				0x3000,        0,            0)
 OSD2IMGPOOL(ENG_DOTSYM,					0x3000,        0,            0)
 OSD2IMGPOOL(ENG_SPACESYM,				0x3000,        0,            0)
+
+OSD2IMGPOOL(SN_TITLE,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM0,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM1,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM2,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM3,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM4,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM5,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM6,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM7,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM8,					0x3000,        0,            0)
+OSD2IMGPOOL(SN_NUM9,					0x3000,        0,            0)
 //----------------------------------------------------------------------------
 
 OSD2IMGPOOL(PU_STSICON,  				0x3000,        10,         0)

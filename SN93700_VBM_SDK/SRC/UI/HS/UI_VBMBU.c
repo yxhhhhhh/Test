@@ -511,6 +511,7 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
 	switch(pPS_Mode[0])
 	{
 		case PS_VOX_MODE:
+			/*
 			tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 			tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
 			tUI_PsMessage.ubAPP_Message[1] = pPS_Mode[0];
@@ -522,6 +523,7 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
 				tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
 			}
 			ADO_SetAdcRpt(ADC_SUMRPT_VOX_THL, ADC_SUMRPT_VOX_THH, ADO_ON);
+			*/
 			tUI_BuStsInfo.tCamPsMode = PS_VOX_MODE;
 			UI_UpdateDevStatusInfo();
 			printd(DBG_InfoLvl, "		=> VOX Mode Enable\n");

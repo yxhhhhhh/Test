@@ -55,6 +55,8 @@ extern uint8_t ubClearOsdFlag_2;
 extern uint8_t ubFactoryModeFLag;
 extern uint8_t ubWorWakeUpFlag ;
 
+extern uint8_t ubSwitchNormalFlag;
+
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
@@ -812,7 +814,7 @@ void APP_LcdDisplayOff(void)
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOn(void)
 {
-	//if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
+	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
 		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
 		osDelay(50);			//???
@@ -826,6 +828,8 @@ void APP_LcdDisplayOn(void)
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
 	LCDBL_ENABLE(UI_ENABLE);
+
+	ubSwitchNormalFlag =1;
 }
 #endif
 //------------------------------------------------------------------------------

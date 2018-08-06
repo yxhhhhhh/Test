@@ -310,7 +310,7 @@ uint8_t ubNormalModeToBuRet = rUI_FAIL;
 
 uint8_t ubAlarmOnlyAlertFlag  = 0;
 uint8_t ubFactoryDeleteCam = 0;
-
+uint8_t ubSwitchNormalFlag  = 1;
 extern uint16_t ubTest_uwCropHsize;
 extern uint16_t ubTest_uwCropVsize;
 extern uint16_t ubTest_uwCropHstart;
@@ -736,8 +736,8 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 
 			if(ubPowerState == PWR_ON)
 			{
-				//if(ubNormalModeToBuRet == rUI_FAIL)
-					//ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
+				if(ubNormalModeToBuRet == rUI_FAIL)
+					ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
 			}
 
 			ubLinkStateCheckCount = 0;
@@ -1003,7 +1003,6 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 	printd(Apk_DebugLvl, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
 	if(PS_VOX_MODE == tUI_PsMode)
 	{
-		/*
 		if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
 			(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 		{
@@ -1019,7 +1018,6 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 			}
 		}
 		tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = PS_VOX_MODE;
-		*/
 		UI_EnableVox();
 	}
 	else if(PS_WOR_MODE == tUI_PsMode)
@@ -1073,10 +1071,13 @@ void UI_WakeUp(void)
 	//}
 
 	UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+
+	/*
 	if((TRUE == tUI_PuSetting.ubScanModeEn) && (FALSE == ubUI_ScanStartFlag))
 	{
 		UI_EnableScanMode();
 	}
+	*/
 
 	UI_TriggerWakeUpAlarm();
 }
@@ -1093,7 +1094,7 @@ void UI_CheckPowerMode(void)
 	{
 		if(LCDBL_STATE == 1)
 			LCDBL_ENABLE(UI_DISABLE);
-		UI_DisableScanMode();
+		//UI_DisableScanMode();
 		UI_TimerDeviceEventStop(TIMER1_2);
 		UI_SwitchMode(Current_Mode);
 		ubSleepWaitCnt = 0;
@@ -1135,7 +1136,8 @@ void UI_SetSleepState(uint8_t type)
 	{
 		if(ubPowerState == PWR_ON)
 		{
-			ubPowerState = PWR_Prep_Sleep;
+			if(ubSwitchNormalFlag == 1)
+				ubPowerState = PWR_Prep_Sleep;
 		}
 
 		if(ubPowerState == PWR_Sleep_Complete)
@@ -3326,10 +3328,11 @@ void UI_VolUpKey(void)
 	  	return;
 	*/
 
-	if(tUI_SyncAppState == APP_PAIRING_STATE)
-	{
+	if(ubUI_PttStartFlag == TRUE)
 		return;
-	}
+
+	if(tUI_SyncAppState == APP_PAIRING_STATE)
+		return;
 				
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL8)
 	{
@@ -3357,10 +3360,11 @@ void UI_VolDownKey(void)
 	}
 	*/
 
+	if(ubUI_PttStartFlag == TRUE)
+		return;	
+
 	if(tUI_SyncAppState == APP_PAIRING_STATE)
-	{
 		return;
-	}
 	
 	if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL < VOL_LVL0)
 	  return;
@@ -5733,7 +5737,8 @@ void UI_PickupAlarmCheck(void)
 
 		if(ubShowAlarmstate == 3)
 		{
-			UI_ShowAlarm(3);
+			if(ubAlarmOnlyAlertFlag == 0)
+				UI_ShowAlarm(3);
 		}
 	}
 	else if(ubPickupAlarmState == PICKUP_ALARM_ON)
@@ -7571,6 +7576,7 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
 			break;
 
 		case PRODUCT_INFO_ITEM:
+			UI_SNDisplay();
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_INFO_INFO+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 290;
 			tOsdImgInfo.uwYStart =377;	
@@ -7773,6 +7779,34 @@ void UI_NightModeSubSubSubmenuDisplay(uint8_t value)
 		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 
 	}
+}
+
+void UI_SNDisplay(void)
+{
+	OSD_IMG_INFO tOsdImgInfo;
+	uint8_t i , temp;	
+
+	for(i = 0; i < 16; i++)
+	{	
+		if(i < 10)
+		{
+			temp = i;
+		}
+		else
+		{
+			temp = i - 10;
+		}
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+temp, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 436;
+		tOsdImgInfo.uwYStart =612-(i*19);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+	}
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_TITLE, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart= 436;
+	tOsdImgInfo.uwYStart =631;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
 }
 
 //------------------------------------------------------------------------------
@@ -9145,29 +9179,6 @@ void UI_GetBatLevel(void)
 		ubBatLvLIdx = BAT_LVL4;
 
 	//printd(Apk_DebugLvl, "UI_GetBatLevel ubBatLvLIdx: %d, ubGetBatValue: %d.\n", ubBatLvLIdx, ubGetBatValue);
-	
-	#if UI_BATT_TEST
-	#define batt_offset	40 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 460 + batt_offset;	
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/100%10), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 440 + batt_offset;	
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/10%10), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 420 + batt_offset;	
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue%10), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 0;
-	tOsdImgInfo.uwYStart = 400 + batt_offset;	
-	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-	#endif
 }
 
 uint8_t UI_GetUsbDet(void)
@@ -11475,6 +11486,31 @@ void UI_UpdateBarIcon_Part1(void)
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 		ubChargShowCnt = 0;
 	}
+
+	#if UI_BATT_TEST
+	#define batt_offset	40 
+	
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 460 + batt_offset;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/100%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 440 + batt_offset;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/10%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 420 + batt_offset;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 400 + batt_offset;	
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	#endif
+
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
@@ -11731,7 +11767,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 	}
 	else if(ubCamPairOkState == 1)
 	{
-		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
+		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 5;
 	}
 	else
 	{
@@ -12585,6 +12621,11 @@ void UI_DisableVox(void)
 
 	printd(Apk_DebugLvl, "UI_DisableVox###\n");
 
+	if(ubSwitchNormalFlag == 0)
+		return;
+	
+	ubSwitchNormalFlag =0;
+
 	#if 0
 	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
 		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
@@ -12602,7 +12643,7 @@ void UI_DisableVox(void)
 		}
 	}
 	#else
-	//ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
+	ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
 	#endif
 
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
@@ -12613,7 +12654,6 @@ void UI_DisableVox(void)
 	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
 	tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
 
-	/*
 	if(APP_LINK_EVENT == APP_UpdateLinkStatus())
 	{
 		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
@@ -12621,7 +12661,6 @@ void UI_DisableVox(void)
 		LCD_PWR_ENABLE;
 		osDelay(250);
 	}
-	*/
 	
 	UI_UpdateDevStatusInfo();
 	printd(Apk_DebugLvl, "UI_DisableVox ok###\n");
@@ -12940,8 +12979,8 @@ void UI_SwitchCameraScan(uint8_t type)
 			return;
 	}
 
-	if(ubPowerState != PWR_ON)
-		return;
+	//if(ubPowerState != PWR_ON)   //20180803
+	//	return;
 
 	printd(Apk_DebugLvl, "UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
 	#if 0
@@ -13070,9 +13109,13 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 	if(TRUE == ubTimerEn)
 	{
 		if((tUI_PuSetting.ubScanTime > 0) && (tUI_PuSetting.ubScanTime < 5))
+		{
 			UI_TimerEventStart(ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000, UI_ScanModeTimerEvent);
+		}
 		else
+		{
 			UI_TimerEventStop();
+		}
 	}
 	else
 	{
@@ -13090,8 +13133,8 @@ void UI_EnableScanMode(void)
 		return;
 	}
 
-	if(ubPowerState != PWR_ON)
-		return;
+	//if(ubPowerState != PWR_ON)   //20180803
+	//	return;
 
 	if(TRUE == ubUI_PttStartFlag)
 		return;
