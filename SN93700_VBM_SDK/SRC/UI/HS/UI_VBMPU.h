@@ -39,7 +39,8 @@
 #define RECORD_PWRSTS_ADDR	0
 #define PWRSTS_KEEP			3
 
-#define ALARM_INTERVAL		270
+#define TEMP_ALARM_INTERVAL		270
+#define PICk_ALARM_INTERVAL		135
 
 typedef void (*pvUiFuncPtr)(void);
 

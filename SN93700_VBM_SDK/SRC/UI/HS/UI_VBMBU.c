@@ -710,15 +710,15 @@ void UI_VoiceCheck (void)
 
 //	printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);
 
-	if(ulUI_AdcRpt > 0x3000)
+	if(ulUI_AdcRpt > 0x1388)//0x3000
 		voice_temp = 5;
-	else if(ulUI_AdcRpt > 0x1800)
+	else if(ulUI_AdcRpt > 0xBB8)//0x1800
 		voice_temp = 4;	
-	else if(ulUI_AdcRpt > 0x1000)
+	else if(ulUI_AdcRpt > 0x5DC)//0x1000
 		voice_temp = 3;	
-	else if(ulUI_AdcRpt > 0x700)
+	else if(ulUI_AdcRpt > 0x384) //0x700
 		voice_temp = 2;	
-	else if(ulUI_AdcRpt > 0x300)
+	else if(ulUI_AdcRpt > 0x258) //0x300
 		voice_temp = 1;	
 	else
 		voice_temp = 0;	

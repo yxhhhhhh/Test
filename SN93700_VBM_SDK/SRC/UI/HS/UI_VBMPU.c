@@ -433,8 +433,11 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		{
 			if(ptKeyEvent->ubKeyID == AKEY_PTT)
 			{
+				printd(Apk_DebugLvl,"ubUI_PttStartFlag =%d.\n",ubUI_PttStartFlag);
 				if(ubUI_PttStartFlag == TRUE)
+				{
 					ubUI_KeyEventIdx = 15;
+				}
 				ubUI_PttStartFlag = FALSE;
 			}
 			if(UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr)
@@ -1176,6 +1179,7 @@ void UI_CheckPowerMode(void)
 
 void UI_SetSleepState(uint8_t type)
 {
+	//static uint8_t ubVoxstatus = false;
 	if(type == 0)
 	{
 		if(ubPowerState == PWR_ON)
@@ -1187,9 +1191,11 @@ void UI_SetSleepState(uint8_t type)
 		if(ubPowerState == PWR_Sleep_Complete)
 		{
 			ubPowerState = PWR_Prep_Wakeup;
-			UI_DisableVox();
-			UI_SwitchCameraSource();
-
+			//if(ubVoxstatus == false)
+			{
+				UI_DisableVox();
+				UI_SwitchCameraSource();
+			}
 			if(tUI_PuSetting.ubDefualtFlag == TRUE)
 				ubFactorySettingFlag = 0;		
 
@@ -2910,6 +2916,21 @@ void UI_PushTalkKeyShort(void)
 				UI_PushTalkFlag =FALSE;
 				break;
 			}
+
+			case UI_DISPLAY_STATE:
+				OSD_IMG_INFO tOsdInfo;
+				if(UI_CheckStopAlarm() == 1)
+				{
+					UI_StopPlayAlarm();
+					return;
+				}
+				
+				tOsdInfo.uwHSize  = 672;
+				tOsdInfo.uwVSize  = 1280;
+				tOsdInfo.uwXStart = 48;
+				tOsdInfo.uwYStart = 0;
+				OSD_EraserImg2(&tOsdInfo);
+				break;
 			case UI_SUBMENU_STATE:
 			case UI_SUBSUBMENU_STATE:			
 			case UI_SUBSUBSUBMENU_STATE:
@@ -2924,6 +2945,7 @@ void UI_PushTalkKeyShort(void)
 			case UI_DPTZ_CONTROL_STATE:
 			case UI_MD_WINDOW_STATE:
 			case UI_DUALVIEW_CAMSEL_STATE:
+				printd(Apk_DebugLvl,"UI_PushTalkKeyShort !!!!!!!!!!!!!!!!\n");
 				tUI_StateMap2MenuFunc[tUI_State].pvFuncPtr(EXIT_ARROW);
 				UI_PushTalkFlag =FALSE;
 				break;
@@ -5552,6 +5574,12 @@ void UI_ShowAlarm(uint8_t type)
 
 	if(ubShowAlarmstate > 0)
 	{
+
+		if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+		{
+			UI_SetSleepState(1);
+		}
+		
 		UI_TimerDeviceEventStop(TIMER1_2);
 		UI_DisableScanMode();
 		if(LCDBL_STATE == 0)
@@ -5642,8 +5670,8 @@ void UI_TempAlarmCheck(void)
 
 	if(ubPowerState != PWR_ON)
 	{
-		ubTempAlarmState = TEMP_ALARM_IDLE;
-		return;
+		//ubTempAlarmState = TEMP_ALARM_IDLE;
+		//return;
 	}
 
 	if(tUI_State != UI_DISPLAY_STATE)
@@ -5734,7 +5762,7 @@ void UI_TempAlarmCheck(void)
 	}
 	else if(ubTempAlarmState == TEMP_ALARM_OFF)
 	{
-		if(ubTempAlarmTriggerCount < ALARM_INTERVAL) //60s
+		if(ubTempAlarmTriggerCount < TEMP_ALARM_INTERVAL) //60s
 		{
 			ubTempAlarmTriggerCount++;
 		}
@@ -5756,10 +5784,15 @@ void UI_PickupAlarmCheck(void)
 
 	if(ubPowerState != PWR_ON)
 	{
-		ubPickupAlarmState = PICKUP_ALARM_IDLE;
-		return;
+		//ubPickupAlarmState = PICKUP_ALARM_IDLE;
+		//return;
 	}
 
+
+	if(ubFactoryModeFLag == 1)
+		return;
+
+	
 	if(tUI_State != UI_DISPLAY_STATE)
 	{
 		if(ubPickupAlarmState == PICKUP_ALARM_IDLE)
@@ -5788,8 +5821,8 @@ void UI_PickupAlarmCheck(void)
 
 		if(ubShowAlarmstate == 3)
 		{
-			if(ubAlarmOnlyAlertFlag == 0)
-				UI_ShowAlarm(3);
+				if(ubAlarmOnlyAlertFlag == 0)
+					UI_ShowAlarm(3);
 		}
 	}
 	else if(ubPickupAlarmState == PICKUP_ALARM_ON)
@@ -5805,7 +5838,7 @@ void UI_PickupAlarmCheck(void)
 	else if(ubPickupAlarmState == PICKUP_ALARM_OFF)
 	{
 		//printd(Apk_DebugLvl, "PICKUP: (%d) ------\n", ubPickupAlarmTriggerCount);
-		if(ubPickupAlarmTriggerCount < ALARM_INTERVAL) //60s
+		if(ubPickupAlarmTriggerCount < PICk_ALARM_INTERVAL) //30s
 		{
 			ubPickupAlarmTriggerCount++;
 		}
@@ -5826,11 +5859,11 @@ void UI_TriggerWakeUpAlarm(void)
 	switch(ubAlarmWakeupType)
 	{
 	case 1:
-		ubTempAlarmState = HIGH_TEMP_ALARM_ON;
+		//ubTempAlarmState = HIGH_TEMP_ALARM_ON;
 		break;
 			
 	case 2:
-		ubTempAlarmState = LOW_TEMP_ALARM_ON;
+		//ubTempAlarmState = LOW_TEMP_ALARM_ON;
 		break;
 
 	case 3:
@@ -7829,7 +7862,7 @@ void UI_SNDisplay(void)
 	uint8_t i ,j, temp;	
 	
 
-	for(i = 0; i < 14; i++)
+	for(i = 0; i < 16; i++)
 	{	
 
 		if(SNdata[i + 2] >= 255)
@@ -12286,10 +12319,11 @@ void UI_FactoryStatusDisplay(void)
 
 		//printd(Apk_DebugLvl,"UI_SNDisplay temp[%d] =  %d.\n",i,SNValue);
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+(SNValue - 48) *2, 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 495 + Factory_x_vol;
+		tOsdImgInfo.uwXStart = 515 + Factory_x_vol;
 		tOsdImgInfo.uwYStart = 1000 - (32 * i );
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 	}
+	
 	if(ubPUEnterAdotestFLag == 1)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXMICSPK, 1, &tOsdImgInfo);
@@ -12391,11 +12425,10 @@ void UI_FactorymodeKeyDisplay(uint8_t Value)
 void UI_EnterLocalAdoTest_RX(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXMICSPK, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 590;
+	tOsdImgInfo.uwXStart = 570 + Factory_x_vol;
 	tOsdImgInfo.uwYStart = 863;
-	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
 	ADO_SelfTest_Init(); //ADO_SelfTest_Init(5);
 	ADO_SelfTest_Record();
@@ -12406,11 +12439,11 @@ void UI_EnterLocalAdoTest_RX(void)
 void UI_SendCMDAdoTest_TX(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-
+	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TXMICSPK, 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 527;
+	tOsdImgInfo.uwXStart = 635 + Factory_x_vol;
 	tOsdImgInfo.uwYStart = 863;
-	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	
 	//UI_TestCmd(1,1);
 }
@@ -12659,7 +12692,7 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 	printd(Apk_DebugLvl, "UI_VoxTrigger tCamNum: %d, tUI_PuSetting.tPsMode: %d $$$\n", tCamNum, tUI_PuSetting.tPsMode);
 	if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 	{
-		UI_SetSleepState(1);
+		//UI_SetSleepState(1);
 	}
 #endif
 }
