@@ -185,7 +185,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 
 			if(rUI_SUCCESS == tPair_Result)
 				UI_ResetDevSetting();
-			//PAIRING_LED_IO = 0;
+//			PAIRING_LED_IO = 0;
 			break;
 		}
 		case APP_LINKSTS_RPT:
@@ -206,7 +206,7 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 void UI_StatusCheck(uint16_t pThreadCnt)
 {
 	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
-	//if(((pThreadCnt)%3) == 0)
+//	if(((pThreadCnt)%3) == 0)
 	{
 		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
 		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
@@ -244,10 +244,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			if(CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
 				UI_VoiceTrigger();
 			
-			//if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
-				//UI_MDTrigger();
+//			if(MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
+//				UI_MDTrigger();
 
-			//if(((*pThreadCnt)%3) == 0)
+//			if(((*pThreadCnt)%3) == 0)
 			{
 				uint16_t uwChkType = UI_SYSVOICELVL_CHK;
 				osMessagePut(osUI_SysChkQue, &uwChkType, 0);
@@ -336,7 +336,7 @@ static void UI_SysCheckStatus(void const *argument)
 
 		if(uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
 		{
-			//UI_BrightnessCheck();
+//			UI_BrightnessCheck();
 			uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
 		}
 	}
@@ -397,8 +397,6 @@ void UI_UpdateBUStatusToPU(void)
 	{
 		ubVersionResut = UI_SendVersionToPu();
 	}
-
-	
 }
 //------------------------------------------------------------------------------
 UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
@@ -583,7 +581,7 @@ void UI_ChangePsModeToNormalMode(void)
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_OFF);
 	tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
-	//UI_UpdateDevStatusInfo();
+//	UI_UpdateDevStatusInfo();
 	ubUI_WorModeEnFlag = FALSE;
 	ubUI_WorWakeUpCnt  = 0;
 	printd(DBG_InfoLvl, "		=> WOR Disable\n");
@@ -625,14 +623,14 @@ void UI_VoxTrigger(void)
 		return;
 	}
 
-	#if 0
+#if 0
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 	if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH) //ADC_SUMRPT_VOX_THH
 	{
 		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
 		UI_DisableVox();
 	}
-	#else
+#else
 	ubAlarmType = UI_CheckAlarmWakeUp();
 	if(ubAlarmType > 0)
 	{
@@ -641,7 +639,7 @@ void UI_VoxTrigger(void)
 		UI_SendRequestToPU(NULL, &tUI_VoxReqCmd);
 		UI_DisableVox();
 	}
-	#endif
+#endif
 }
 //------------------------------------------------------------------------------
 void UI_VoiceTrigSetting(void *pvTrigMode)
@@ -662,12 +660,12 @@ void UI_VoiceTrigger(void)
 	printd(Apk_DebugLvl, "UI_VoiceTrigger ulUI_AdcRpt: %d.\n", ulUI_AdcRpt);
 	if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
 	{
-		#if 0
+#if 0
 		if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
-		#else
+#else
 		ubAlarmType = UI_CheckAlarmWakeUp();
 		if(ubAlarmType > 0)
-		#endif
+#endif
 		{
 			UI_SendAlarmTypeToPu(ubAlarmType);
 			APP_EventMsg_t tUI_PsMessage = {0};
@@ -710,7 +708,7 @@ void UI_VoiceCheck (void)
 	ADO_SetAdcRpt(128, 256, ADO_ON);
 	ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
-	//printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);
+//	printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);
 
 	if(ulUI_AdcRpt > 0x3000)
 		voice_temp = 5;
@@ -731,7 +729,7 @@ void UI_VoiceCheck (void)
 	//if(ubVoicetemp_bak != voice_temp)
 	//{
 	//	printd(Apk_DebugLvl, "voice_temp: %d \n",voice_temp);
-	
+
 		tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_REPORT;
 		tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] 	= UI_VOICE_CHECK;
 		tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] 	= voice_temp;
@@ -745,7 +743,6 @@ void UI_VoiceCheck (void)
 	//}
 
 	UI_SendPickupVolumeToPu(ulUI_AdcRpt);
-	
 }
 //------------------------------------------------------------------------------
 typedef struct {
@@ -808,7 +805,7 @@ void UI_TempCheck(void) //20180322
 	if(ubCurTempVal == 0xFF)
 		return;
 	
-	//if(ubTemp_bak != cur_temp)
+//	if(ubTemp_bak != cur_temp)
 	{
 		tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] = UI_TEMP_CHECK;
@@ -1156,7 +1153,7 @@ void MC1_FinishHook(void)
 //------------------------------------------------------------------------------
 void UI_MotoControlInit(void)
 {
-  	#if (MC_ENABLE)
+#if (MC_ENABLE)
 	MC_Setup_t tMC_SettingApp;
 	//! MC
 	GLB->PADIO0 = 1;	// MC0
@@ -1185,9 +1182,9 @@ void UI_MotoControlInit(void)
 	tMC_SettingApp.ubMC_ClockDivider = 63;
 	tMC_SettingApp.ubMC_ClockPerPeriod = 255;
 	tMC_SettingApp.ubMC_HighPeriod = 36;	//18  64
-	tMC_SettingApp.ubMC_PeriodPerStep = 36;	//16	48
+	tMC_SettingApp.ubMC_PeriodPerStep = 36;	//16  48
 	tMC_Setup(MC_1,&tMC_SettingApp);	//up down
-	#endif
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -1217,7 +1214,7 @@ void UI_StopMotor(void)
 
 void UI_PtzControlSetting(void *pvMCParam)
 {
-  	#if (MC_ENABLE)
+#if (MC_ENABLE)
 	uint8_t *pMC_Param = (uint8_t *)pvMCParam;
 
 	//printd(Apk_DebugLvl, "UI_PtzControlSetting pMC_Param[0]: %d.\n", pMC_Param[0]);
@@ -1284,7 +1281,7 @@ void UI_PtzControlSetting(void *pvMCParam)
 		default:
 			break;
 	}
-  	#endif
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -1317,7 +1314,7 @@ void UI_MCStateCheck(void)
 //------------------------------------------------------------------------------
 void UI_UpdateMCStatus(void)
 {
-  	#if (MC_ENABLE)
+#if (MC_ENABLE)
 	if((ubUI_Mc1RunFlag == 1)||(ubUI_Mc2RunFlag == 1))
 	{
 		ubUI_Mc1RunCnt--;
@@ -1343,7 +1340,7 @@ void UI_UpdateMCStatus(void)
 			printd(Apk_DebugLvl, ">> MC1 Stop!!\r\n");
 		}
 	}
-  	#endif
+#endif
 }
 
 void UI_NightModeSetting(void *pvNMParam)
@@ -1509,7 +1506,7 @@ void UI_TestSetting(void *pvTSParam)
 	uint8_t TestData0 = pTS_Param[0];
 	uint8_t TestData1 = pTS_Param[1];
 	
-	#if 0
+#if 0
 	if(TestData0 == 0x11)
 	{
 		printd(Apk_DebugLvl, "UI_TestSetting TestData1: %d.\n", TestData1);
@@ -1518,7 +1515,7 @@ void UI_TestSetting(void *pvTSParam)
 		WDT_RST_Enable(WDT_CLK_EXTCLK, 1);
 		while(1);
 	}
-	#endif
+#endif
 }
 
 void UI_TestCheck(void)

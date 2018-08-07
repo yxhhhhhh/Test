@@ -322,7 +322,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 {
 	static uint8_t ubUI_KeyEventIdx = 0;
 	uint16_t uwUiKeyEvent_Cnt = 0, uwIdx;
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 
 	KEY_Event_t *ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
 	uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
@@ -337,16 +337,23 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	}
 	else
 	{
-		#if Current_Test
+#if Current_Test
 		if(PWR_ON != ubPowerState)
 		{
 			if(ptKeyEvent->ubKeyID != PKEY_ID0) //Powerkey
 			{
-				UI_SetSleepState(0);
-				return;
+				if((ubUI_PttStartFlag == TRUE) && (ptKeyEvent->ubKeyID == AKEY_PTT))
+				{
+					printd(Apk_DebugLvl, "AKEY_PTT###\n");
+				}
+				else
+				{
+					UI_SetSleepState(0);
+					return;
+				}
 			}
 		}
-		#endif
+#endif
 	}
 	
 	if(ubFactoryModeFLag == 1)
@@ -414,7 +421,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 			if(ubShowAlarmstate) //UI_GetAlarmStatus()
 				return;
 			
-			//UI_DPTZ_KeyRelease(ptKeyEvent->ubKeyID);
+//			UI_DPTZ_KeyRelease(ptKeyEvent->ubKeyID);
 			UI_MotorControl((ptKeyEvent->ubKeyID > AKEY_DOWN)?1:0);
 			return;
 		}
@@ -422,7 +429,11 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		   (ptKeyEvent->ubKeyID == AKEY_PTT))
 		{
 			if(ptKeyEvent->ubKeyID == AKEY_PTT)
+			{
+				if(ubUI_PttStartFlag == TRUE)
+					ubUI_KeyEventIdx = 15;
 				ubUI_PttStartFlag = FALSE;
+			}
 			if(UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr)
 			{
 				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
@@ -431,7 +442,8 @@ void UI_KeyEventExec(void *pvKeyEvent)
 					//UiKeyEventMap[ubUI_KeyEventIdx].pvKeyTone();
 			}
 		}
-		ubUI_KeyEventIdx = 0;
+		if(ubUI_PttStartFlag == FALSE)
+			ubUI_KeyEventIdx = 0;
 		return;
 	}
 	
@@ -454,7 +466,8 @@ void UI_KeyEventExec(void *pvKeyEvent)
 					UiKeyEventMap[uwIdx].KeyEventFuncPtr();
 				}
 			}	
-			ubUI_KeyEventIdx = 0;
+			if(ubUI_PttStartFlag == FALSE)
+				ubUI_KeyEventIdx = 0;
 			break;
 		}
 		
@@ -479,8 +492,8 @@ void UI_KeyEventExec(void *pvKeyEvent)
 //------------------------------------------------------------------------------
 void UI_OnInitDialog(void)
 {
-//OSD_IMG_INFO tOsdImgInfo;
-//uint8_t i = 0;
+//	OSD_IMG_INFO tOsdImgInfo;
+//	uint8_t i = 0;
 
 	if(ubWorWakeUpFlag != 1)	
 		OSD_LogoJpeg(OSDLOGO_BOOT);
@@ -523,12 +536,12 @@ void UI_OnInitDialog(void)
 			KNL_SetDispType(KNL_DISP_SINGLE); 
 		}
 	} else {
-//  tCamViewSel.tCamViewType  = (VDO_DISP_TYPE == KNL_DISP_QUAD)?QUAL_VIEW:
-//							(VDO_DISP_TYPE == KNL_DISP_DUAL_C)?DUAL_VIEW:
-//							(VDO_DISP_SCAN == TRUE)?SCAN_VIEW:SINGLE_VIEW;
-//  tCamViewSel.tCamViewPool[0] = (tCamViewSel.tCamViewType == KNL_DISP_QUAD)?CAM_4T:CAM1;
-//  tCamViewSel.tCamViewPool[1] = (tCamViewSel.tCamViewType == KNL_DISP_DUAL_C)?CAM2:NO_CAM;
-//	UI_CamNum_t tCamNum;
+//  	tCamViewSel.tCamViewType  = (VDO_DISP_TYPE == KNL_DISP_QUAD)?QUAL_VIEW:
+//									(VDO_DISP_TYPE == KNL_DISP_DUAL_C)?DUAL_VIEW:
+//									(VDO_DISP_SCAN == TRUE)?SCAN_VIEW:SINGLE_VIEW;
+//  	tCamViewSel.tCamViewPool[0] = (tCamViewSel.tCamViewType == KNL_DISP_QUAD)?CAM_4T:CAM1;
+//  	tCamViewSel.tCamViewPool[1] = (tCamViewSel.tCamViewType == KNL_DISP_DUAL_C)?CAM2:NO_CAM;
+//		UI_CamNum_t tCamNum;
 		tCamViewSel.tCamViewType = SINGLE_VIEW;
 		/*
 		for(tCamNum = CAM1; tCamNum < CAM_4T ; tCamNum++)
@@ -550,7 +563,7 @@ void UI_OnInitDialog(void)
 
 	UI_LoadDevStatusInfo();
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
-	
+
 	if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
 	{
 		printd(DBG_ErrorLvl, "Calendar base setting fail!\n");
@@ -589,6 +602,7 @@ void UI_StateReset(void)
 	tUI_SyncAppState		  = APP_STATE_NULL;
 	ulUI_LogoIndex			  = OSDLOGO_BOOT;
 	printd(Apk_DebugLvl, "UI_StateReset###\n");
+	ubLangageFlag = tUI_PuSetting.ubLangageFlag;
 
 	tUI_MenuItem.ubItemIdx 	  = BRIGHT_ITEM;
 	tUI_MenuItem.ubItemPreIdx = BRIGHT_ITEM;
@@ -597,7 +611,6 @@ void UI_StateReset(void)
 	UI_ResetSubSubMenuInfo();
 	if(tTWC_RegTransCbFunc(TWC_UI_SETTING, UI_RecvBUResponse, UI_RecvBURequest) != TWC_SUCCESS)
 		printd(DBG_ErrorLvl, "UI Setting 2-way command fail!\n");
-
 }
 //------------------------------------------------------------------------------
 void UI_UpdateAppStatus(void *ptAppStsReport)
@@ -652,10 +665,10 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 		ubUI_ResetPeriodFlag = TRUE;
 		if(FALSE == ubUI_PuStartUpFlag)
 		{
-			#if Current_Test
+#if Current_Test
 			//if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 				//UI_EnableVox();
-			#endif
+#endif
 			ubUI_PuStartUpFlag = TRUE;
 		}
 		/*
@@ -722,10 +735,10 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	{
 		if(tUI_SyncAppState == APP_LINK_STATE)
 		{			
-			#if Current_Test
+#if Current_Test
 			if((ubGetPsModeFlag == 0) && (UI_GetBuPsMode() == rUI_SUCCESS))
 				ubGetPsModeFlag = 1;
-			#endif
+#endif
 
 			if(ubSetAlarmRet == rUI_FAIL)
 				ubSetAlarmRet = UI_SendAlarmSettingToBu();
@@ -748,14 +761,14 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			if(ubSpeakerCount == 0)
 				UI_SetSpeaker(1, 0);
 
-			#if Current_Test
+#if Current_Test
 			ubGetPsModeFlag = 0;
 			if((ubLinkStateCheckCount % 15) && (ubPowerState == PWR_Sleep_Complete))
 			{
 				//ubWakeUpWaitCnt = 0;
 				//ubPowerState = PWR_Prep_Wakeup;
 			}
-			#endif
+#endif
 			
 			ubSetAlarmRet = rUI_FAIL;
 			ubNightModeRet = rUI_FAIL;
@@ -775,11 +788,47 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			UI_TimerDeviceEventStop(TIMER1_2);
 		}
 
-		#if Current_Test
+#if Current_Test
 		UI_CheckPowerMode();
-		#endif
+#endif
 		
 		ubCameraOnlineNum = UI_GetCamOnLineNum(0);
+	}
+	else
+	{
+			ubLinkStateCheckCount++;
+			if(ubSpeakerCount == 0)
+				UI_SetSpeaker(1, 0);
+
+#if Current_Test
+			ubGetPsModeFlag = 0;
+			if((ubLinkStateCheckCount % 15) && (ubPowerState == PWR_Sleep_Complete))
+			{
+				//ubWakeUpWaitCnt = 0;
+				//ubPowerState = PWR_Prep_Wakeup;
+			}
+#endif
+			
+			ubSetAlarmRet = rUI_FAIL;
+			ubNightModeRet = rUI_FAIL;
+
+			if(ubPowerState != PWR_ON)
+				ubNormalModeToBuRet = 0;
+
+			if(ubSpeakerCount >= 1)
+				ubSpeakerCount++;
+
+			if(ubSpeakerCount == 4)
+				UI_SetSpeaker(1, TRUE);
+
+			if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
+			{
+				UI_TimerDeviceEventStop(TIMER1_2);
+			}
+
+#if Current_Test
+			UI_CheckPowerMode();
+#endif			
 	}
 
 	if(ubFactoryDeleteCam == 1)
@@ -799,7 +848,6 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 			while(1);
 		}
 	}
-
 }
 //------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
@@ -860,8 +908,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwYStart =0;	
 					tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);
 					*/
-					UI_FS_LangageMenuDisplay(ubLangageFlag);
-					ubFS_MenuItem = 0;		
+//					UI_FS_LangageMenuDisplay(ubLangageFlag);
+					UI_FS_MenuDisplay(ubFS_MenuItem);
 					ubFactorySettingFlag = 1;					
 				}
 				ubUI_SendMsg2AppFlag = TRUE;
@@ -899,8 +947,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 					tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);	
 					*/
 
-					UI_FS_LangageMenuDisplay(ubLangageFlag);
-					ubFS_MenuItem = 0;		
+					UI_FS_MenuDisplay(ubFS_MenuItem);	
+//					UI_FS_LangageMenuDisplay(ubLangageFlag);
+
+//					ubFS_MenuItem = 0;		
 					ubFactorySettingFlag = 1;					
 				}
 				ubUI_SendMsg2AppFlag = TRUE;
@@ -909,6 +959,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 			break;
 		case APP_PAIRING_STATE:
 			*pThreadCnt = 0;
+			ubCamPairOkState = 1;
 			UI_DrawPairingStatusIcon();
 			osMutexRelease(UI_PUMutex);
 			return;
@@ -919,7 +970,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	tUI_PuSetting.IconSts.ubDrawStsIconFlag = FALSE;
 
 END_UPDATESTS:
-//UI_UpdateBriLvlIcon();
+//	UI_UpdateBriLvlIcon();
 	UI_UpdateVolLvlIcon();
 	UI_StatusCheck(*pThreadCnt);
 	tUI_PuSetting.IconSts.ubRdPairIconFlag 	= FALSE;
@@ -991,7 +1042,7 @@ void UI_EventHandles(UI_Event_t *ptEventPtr)
 //------------------------------------------------------------------------------
 void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	UI_PUReqCmd_t tPsCmd;
 
 	printd(Apk_DebugLvl, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
@@ -1047,7 +1098,6 @@ void UI_EnterSleep(void)
 		OSD_EraserImg2(&tOsdInfo);
 		tUI_State = UI_DISPLAY_STATE;
 	}
-	
 }
 
 void UI_WakeUp(void)
@@ -1088,7 +1138,7 @@ void UI_CheckPowerMode(void)
 	{
 		if(LCDBL_STATE == 1)
 			LCDBL_ENABLE(UI_DISABLE);
-		//UI_DisableScanMode();
+//		UI_DisableScanMode();
 		UI_TimerDeviceEventStop(TIMER1_2);
 		UI_SwitchMode(Current_Mode);
 		ubSleepWaitCnt = 0;
@@ -1123,9 +1173,6 @@ void UI_CheckPowerMode(void)
 
 void UI_SetSleepState(uint8_t type)
 {
-	if(tUI_PuSetting.ubDefualtFlag == TRUE)
-		return;
-	
 	if(type == 0)
 	{
 		if(ubPowerState == PWR_ON)
@@ -1139,6 +1186,10 @@ void UI_SetSleepState(uint8_t type)
 			ubPowerState = PWR_Prep_Wakeup;
 			UI_DisableVox();
 			UI_SwitchCameraSource();
+
+			if(tUI_PuSetting.ubDefualtFlag == TRUE)
+				ubFactorySettingFlag = 0;		
+
 			ubSwitchCamWakeupSstate = 1;	
 		}
 	}
@@ -1165,11 +1216,11 @@ void UI_PowerKeyShort(void)
 	}
 	*/
 
-	#if Current_Test
+#if Current_Test
 	UI_SetSleepState(0);
-	#else
+#else
 	UI_PowerKeyDeal();
-	#endif
+#endif
 
 	printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
 }
@@ -1180,7 +1231,7 @@ void UI_PowerOff(void)
 
 	UI_SendPwrNormalModeToBu();
 	UI_UpdateDevStatusInfo();
-	//BUZ_PlayPowerOffSound();
+//	BUZ_PlayPowerOffSound();
 	osDelay(600);//wait buzzer play finish
 	LCDBL_ENABLE(UI_DISABLE);
 	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
@@ -1206,11 +1257,11 @@ void UI_PowerKey(void)
 	
 	UI_SendPwrNormalModeToBu();
 	UI_UpdateDevStatusInfo();
-	//BUZ_PlayPowerOffSound();
+//	BUZ_PlayPowerOffSound();
 	osDelay(600);			//wait buzzer play finish
 	LCDBL_ENABLE(UI_DISABLE);
-	//POWER_LED_IO  = 0;
-	//SIGNAL_LED_IO = 0;
+//	POWER_LED_IO  = 0;
+//	SIGNAL_LED_IO = 0;
 	RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
 	RTC_SetGPO_1(0, RTC_PullDownEnable);
 	printd(Apk_DebugLvl, "UI_PowerKey Power OFF!\n");
@@ -1261,7 +1312,6 @@ void UI_MenuKey(void)
 				ubSubMenuItemPreFlag = 0;
 			}
 			//brightness_temp = tUI_PuSetting.BriLvL.tBL_UpdateLvL;
-			
 			tUI_State = UI_MAINMENU_STATE;
 			tUI_MenuItem.ubItemPreIdx = BRIGHT_ITEM;
 			tUI_MenuItem.ubItemIdx 	  = BRIGHT_ITEM;
@@ -1273,12 +1323,11 @@ void UI_MenuKey(void)
 		case UI_SUBSUBMENU_STATE:			
 		case UI_SUBSUBSUBMENU_STATE:
 		{	
-			if(tUI_SyncAppState == APP_PAIRING_STATE) 
+			if (tUI_SyncAppState == APP_PAIRING_STATE) 
 			{
-					UI_PairingControl(EXIT_ARROW);
-					tUI_SyncAppState = APP_LOSTLINK_STATE;
-					return;
-
+				UI_PairingControl(EXIT_ARROW);
+				tUI_SyncAppState = APP_LOSTLINK_STATE;
+				return;
 			}
 			UI_UpdateDevStatusInfo();	
 			OSD_IMG_INFO tOsdInfo;
@@ -1506,13 +1555,13 @@ void UI_EnterKey(void)
 //------------------------------------------------------------------------------
 void UI_EnterLongKey(void)
 {
-	#if SD_UPDATE_TEST
+#if SD_UPDATE_TEST
 	KNL_SDUpgradeFwFunc();
-	#endif
+#endif
 
-	#if ENG_MODE_TEST
+#if ENG_MODE_TEST
 	UI_EngModeKey();
-	#endif
+#endif
 }
 //------------------------------------------------------------------------------
 void UI_ShowColorSettingValue(uint8_t ubValue)
@@ -1862,7 +1911,7 @@ void UI_CameraColorSetting(UI_ArrowKey_t tArrowKey)
 //------------------------------------------------------------------------------
 UI_Result_t UI_DPTZ_KeyPress(uint8_t ubKeyID, uint8_t ubKeyMapIdx)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	/*
 	uint16_t uwUI_ArrowOsdImgIdx[] = {
 		[AKEY_UP]    = OSD2IMG_DPTZUPARROWHL_ICON,
@@ -2917,7 +2966,7 @@ void UI_PushTalkKey(void)
 	tUI_PttMessage.ubAPP_Message[0] = 1;		//! Message Length
 	tUI_PttMessage.ubAPP_Message[1] = ubUI_PttStartFlag;
 	UI_SendMessageToAPP(&tUI_PttMessage);
-	//SPEAKER_EN(((TRUE == ubUI_PttStartFlag)?UI_DISABLE:UI_ENABLE));
+//	SPEAKER_EN(((TRUE == ubUI_PttStartFlag)?UI_DISABLE:UI_ENABLE));
 	if(TRUE == ubUI_PttStartFlag)
 	{
 		UI_TimerDeviceEventStop(TIMER1_2);
@@ -2951,8 +3000,8 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						};
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
 	uint8_t ubT_MinNum[3] = {0,  0,  0};	
-//UI_CamNum_t tSelCam;
-//UI_PUReqCmd_t tPsCmd;
+//	UI_CamNum_t tSelCam;
+//	UI_PUReqCmd_t tPsCmd;
 
 	if(ubFactoryModeFLag == 1)
 	{
@@ -2991,7 +3040,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		}
 
 
-		#if 0				
+#if 0				
 		tSelCam = tCamViewSel.tCamViewPool[0] ;
 
 		if(tSelCam < (ubPairSelCam - 1))
@@ -3017,9 +3066,9 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						
 			UI_UpdateDevStatusInfo();
 		}
-		#else
+#else
 		UI_SwitchCameraScan(1); //20180622
-		#endif
+#endif
 	}
 	
 	if(tUI_PuSetting.ubDefualtFlag == FALSE)
@@ -3105,13 +3154,13 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{	
-				#if 0
+#if 0
 				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL >= VOL_LVL8)
 	  				break;
 				
 	 			tUI_PuSetting.VolLvL.tVOL_UpdateLvL++;
 				UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
-				#endif
+#endif
 				
 				UI_MotorControl(MC_UP_ON);
 				break;
@@ -3168,13 +3217,13 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		{
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{	
-				#if 0
+#if 0
 				if(tUI_PuSetting.VolLvL.tVOL_UpdateLvL <= VOL_LVL0)
 	  				break;
 			
 	 			tUI_PuSetting.VolLvL.tVOL_UpdateLvL--;
 				UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
-				#endif
+#endif
 
 				UI_MotorControl(MC_DOWN_ON);
 				break;
@@ -3448,10 +3497,10 @@ void UI_DrawMenuPage(void)
 		OSD2IMG_MENU_SETTING
 	};
 	*/
-//uint16_t uwDisplayImgIdx = 0;
-//uint8_t i;
-//OSD_IMG_INFO tOsdImgInfo[UI_MENUICON_NUM*4];
-//OSD_IMG_INFO tOsdImgInfo;
+//	uint16_t uwDisplayImgIdx = 0;
+//	uint8_t i;
+//	OSD_IMG_INFO tOsdImgInfo[UI_MENUICON_NUM*4];
+//	OSD_IMG_INFO tOsdImgInfo;
 
 	UI_ClearBuConnectStatusFlag();
 
@@ -3772,8 +3821,8 @@ void UI_AutoBrightnessAdjust(void) //20180324
 
 void UI_BrightnessSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-//OSD_IMG_INFO tOsdImgInfo;
-//UI_MenuAct_t tMenuAct;
+//	OSD_IMG_INFO tOsdImgInfo;
+//	UI_MenuAct_t tMenuAct;
 
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -3863,7 +3912,7 @@ void UI_BrightnessDisplay(uint8_t value)
 	tUI_PuSetting.BriLvL.tBL_UpdateLvL = value;
 	printd(Apk_DebugLvl, "UI_BrightnessDisplay tBL_UpdateLvL: %d.\n", tUI_PuSetting.BriLvL.tBL_UpdateLvL);
 	LCD_BACKLIGHT_CTRL(ulUI_BLTable[tUI_PuSetting.BriLvL.tBL_UpdateLvL]);
-	//UI_UpdateDevStatusInfo();
+//	UI_UpdateDevStatusInfo();
 }
 
 void UI_AutoBriDisplay(uint8_t value)
@@ -3967,15 +4016,15 @@ void UI_AutoLcdSetSleepTimerEvent(void)
 	
 	if(ubShowAlarmstate == 0)
 	{
-		#if Current_Test
+#if Current_Test
 		if(ubPowerState == PWR_ON)
 		{
 			ubPowerState = PWR_Prep_Sleep;
 		}
-		#else
+#else
 		if(LCDBL_STATE == 1)
 			LCDBL_ENABLE(UI_DISABLE);
-		#endif
+#endif
 	}
 }
 
@@ -3989,7 +4038,7 @@ void UI_AutoLcdSetSleepTime(uint8_t SleepMode)
 		return;
 	
 	tUI_PuSetting.ubSleepMode = SleepMode;
-	//UI_UpdateDevStatusInfo();
+//	UI_UpdateDevStatusInfo();
 
 	if(SleepMode == 0)
 		UI_TimerDeviceEventStop(TIMER1_2);
@@ -4004,7 +4053,7 @@ uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction) //20180319
 	if(ubFactoryModeFLag == 1)
 		return 0;
 
-	#if Current_Test
+#if Current_Test
 	if(ubPowerState == PWR_ON)
 	{
 		if(KeyAction == KEY_UP_ACT)
@@ -4016,7 +4065,7 @@ uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction) //20180319
 			UI_TimerDeviceEventStop(TIMER1_2);
 		}
 	}
-	#else
+#else
 	if(PWM->PWM_EN8 == 0)
 		ret = 1;
 	
@@ -4029,14 +4078,14 @@ uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction) //20180319
 	{
 		UI_TimerDeviceEventStop(TIMER1_2);
 	}
-	#endif
+#endif
 
 	return ret;
 }
 
 void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -4154,7 +4203,7 @@ void UI_DrawAlarmSubMenuPage(void)
 
 void UI_AlarmSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -4242,7 +4291,7 @@ void UI_AlarmmenuDisplay(void)
 void UI_DrawSubSubMenu_Alarm(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-//uint8_t i;
+//	uint8_t i;
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 48;
@@ -4414,347 +4463,404 @@ void UITempSubmenuDisplay(void)
 	
 	switch(ubSubSubMenuItemFlag)
 	{
-		case 0:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 270;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	case 0:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 270;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 346;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 346;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			if(tUI_PuSetting.ubLangageFlag  == 3)
+		if(tUI_PuSetting.ubLangageFlag  == 3)
+		{
+			if(tUI_PuSetting.ubHighTempSetting != 0)
 			{
-				if(tUI_PuSetting.ubHighTempSetting != 0)
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0_S+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 270;
+				tOsdImgInfo.uwYStart =400 + 50;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+			else
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 270;
+				tOsdImgInfo.uwYStart =400 -5;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+		}
+		else
+		{
+			if(tUI_PuSetting.ubHighTempSetting != 0)
+			{
+				if(tUI_PuSetting.ubLangageFlag  == 1)
 				{
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0_S+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart= 270;
-					tOsdImgInfo.uwYStart =400 + 50;	
+					tOsdImgInfo.uwYStart =400 -5;	
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}
+				else
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0_S+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =400;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}	
+			}
+			else
+			{
+				if(tUI_PuSetting.ubLangageFlag  == 1)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =400 - 28;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);					
 				}
 				else
 				{
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart= 270;
-					tOsdImgInfo.uwYStart =400 -5;	
+					tOsdImgInfo.uwYStart =400;	
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 				}
-			}
-			else
-			{
-				if(tUI_PuSetting.ubHighTempSetting != 0)
-				{
-					if(tUI_PuSetting.ubLangageFlag  == 1)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0_S+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =400 -5;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0_S+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =400;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}	
-				}
-				else
-				{
-					if(tUI_PuSetting.ubLangageFlag  == 1)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =400 - 28;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);					
-					}
-					else
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =400;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-				}		
-			}
+			}		
+		}
 
-			if(tUI_PuSetting.ubLangageFlag  != 2)
+		if(tUI_PuSetting.ubLangageFlag  != 2)
+		{
+			if(tUI_PuSetting.ubLowTempSetting != 0)
 			{
-				if(tUI_PuSetting.ubLowTempSetting != 0)
-				{
-					if(tUI_PuSetting.ubLangageFlag  == 3)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 346;
-						tOsdImgInfo.uwYStart =431 + 38;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{
-						if(tUI_PuSetting.ubLangageFlag  == 1)
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =431 -7 ;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}
-						else
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =431;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}	
-					}	
-				}
-				else
-				{
-					if(tUI_PuSetting.ubLangageFlag  == 3)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 346;
-						tOsdImgInfo.uwYStart =431 - 15;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{
-						if(tUI_PuSetting.ubLangageFlag  == 1)
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =431 -28;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}
-						else
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =431;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}	
-					}
-				}
-			}
-			else
-			{
-				if(tUI_PuSetting.ubLowTempSetting != 0)
+				if(tUI_PuSetting.ubLangageFlag  == 3)
 				{
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart= 346;
-					tOsdImgInfo.uwYStart =386;	
+					tOsdImgInfo.uwYStart =431 + 38;	
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 				}
 				else
 				{
-			
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 346;
-					tOsdImgInfo.uwYStart =386;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-				}
-			}
-
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S+(tUI_PuSetting.ubTempAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 422;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
-		break;
-
-		case 1:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 270;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 346;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-			if(tUI_PuSetting.ubLangageFlag  == 3)
-			{
-				if(tUI_PuSetting.ubHighTempSetting != 0)
-				{			
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 270;
-					tOsdImgInfo.uwYStart =427 + 48;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-				}
-				else
-				{
-
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 270 ;
-					tOsdImgInfo.uwYStart =427 -10;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-				}
+					if(tUI_PuSetting.ubLangageFlag  == 1)
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =431 -7 ;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+					}
+					else
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =431;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+					}	
+				}	
 			}
 			else
 			{
-				if(tUI_PuSetting.ubHighTempSetting != 0)
-				{		
-					if(tUI_PuSetting.ubLangageFlag  == 1)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427 - 2;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}	
+				if(tUI_PuSetting.ubLangageFlag  == 3)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 346;
+					tOsdImgInfo.uwYStart =431 - 15;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 				}
 				else
 				{
 					if(tUI_PuSetting.ubLangageFlag  == 1)
 					{
 						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427 -20;	
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =431 -28;	
 						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					}
 					else
 					{
 						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427;	
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =431;	
 						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					}	
 				}
 			}
-			
-			if(tUI_PuSetting.ubLangageFlag  != 2)
+		}
+		else
+		{
+			if(tUI_PuSetting.ubLowTempSetting != 0)
 			{
-				if(tUI_PuSetting.ubLowTempSetting != 0)
-				{		
-					if(tUI_PuSetting.ubLangageFlag  == 3)
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 346;
+				tOsdImgInfo.uwYStart =386;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+			else
+			{
+			
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 346;
+				tOsdImgInfo.uwYStart =386;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+		}
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S+(tUI_PuSetting.ubTempAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 422;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
+		break;
+
+	case 1:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 270;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 346;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+		if(tUI_PuSetting.ubLangageFlag  == 3)
+		{
+			if(tUI_PuSetting.ubHighTempSetting != 0)
+			{			
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 270;
+				tOsdImgInfo.uwYStart =427 + 48;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+			else
+			{
+
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 270 ;
+				tOsdImgInfo.uwYStart =427 -10;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+		}
+		else
+		{
+			if(tUI_PuSetting.ubHighTempSetting != 0)
+			{		
+				if(tUI_PuSetting.ubLangageFlag  == 1)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =427 - 2;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}
+				else
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =427;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}	
+			}
+			else
+			{
+				if(tUI_PuSetting.ubLangageFlag  == 1)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =427 -20;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}
+				else
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =427;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}	
+			}
+		}
+			
+		if(tUI_PuSetting.ubLangageFlag  != 2)
+		{
+			if(tUI_PuSetting.ubLowTempSetting != 0)
+			{		
+				if(tUI_PuSetting.ubLangageFlag  == 3)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0_S+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 346;
+					tOsdImgInfo.uwYStart =400 + 35;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}
+				else
+				{
+					if(tUI_PuSetting.ubLangageFlag  == 1)
 					{
 						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0_S+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
 						tOsdImgInfo.uwXStart= 346;
-						tOsdImgInfo.uwYStart =400 + 35;	
+						tOsdImgInfo.uwYStart =400 - 5;	
 						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					}
 					else
 					{
-						if(tUI_PuSetting.ubLangageFlag  == 1)
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0_S+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =400 - 5;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}
-						else
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0_S+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =400;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}	
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0_S+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =400;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					}	
-				}
-				else
-				{
-					if(tUI_PuSetting.ubLangageFlag  == 3)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 346 ;
-						tOsdImgInfo.uwYStart =400- 15;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{
-						if(tUI_PuSetting.ubLangageFlag  == 1)
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =400 -25;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}
-						else
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =400;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}
-					}
-				}
+				}	
 			}
 			else
 			{
-				if(tUI_PuSetting.ubLowTempSetting != 0)
-				{			
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0_S+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+				if(tUI_PuSetting.ubLangageFlag  == 3)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 346 ;
+					tOsdImgInfo.uwYStart =400- 15;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}
+				else
+				{
+					if(tUI_PuSetting.ubLangageFlag  == 1)
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =400 -25;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+					}
+					else
+					{
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =400;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+					}
+				}
+			}
+		}
+		else
+		{
+			if(tUI_PuSetting.ubLowTempSetting != 0)
+			{			
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0_S+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 346;
+				tOsdImgInfo.uwYStart =365;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+			else
+			{
+				if(tUI_PuSetting.ubLangageFlag  == 3)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 346; 
+					tOsdImgInfo.uwYStart =365- 48;;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}
+				else
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart= 346;
 					tOsdImgInfo.uwYStart =365;	
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 				}
-				else
-				{
-					if(tUI_PuSetting.ubLangageFlag  == 3)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 346; 
-						tOsdImgInfo.uwYStart =365- 48;;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 346;
-						tOsdImgInfo.uwYStart =365;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-				}			
-			}
+			}			
+		}
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S+(tUI_PuSetting.ubTempAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 422;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S+(tUI_PuSetting.ubTempAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 422;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 			
 		break;
 
-		case 2:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 270;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	case 2:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 270;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 346;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 346;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			if(tUI_PuSetting.ubHighTempSetting != 0)
+		if(tUI_PuSetting.ubHighTempSetting != 0)
+		{
+			if(tUI_PuSetting.ubLangageFlag  == 3)
 			{
-				if(tUI_PuSetting.ubLangageFlag  == 3)
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 270;
+				tOsdImgInfo.uwYStart =427 + 48;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			}
+			else
+			{
+				if(tUI_PuSetting.ubLangageFlag  == 1)
 				{
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
 					tOsdImgInfo.uwXStart= 270;
-					tOsdImgInfo.uwYStart =427 + 48;	
+					tOsdImgInfo.uwYStart =427 - 2;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);					
+				}
+				else
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =427;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				}	
+			}
+		}
+		else
+		{
+			if(tUI_PuSetting.ubLangageFlag  == 3)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 270;
+				tOsdImgInfo.uwYStart =427 - 10;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+			}
+			else
+			{
+				if(tUI_PuSetting.ubLangageFlag  == 1)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =427 - 20;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+				}
+				else
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 270;
+					tOsdImgInfo.uwYStart =427;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+				}	
+			}
+		}
+
+		if(tUI_PuSetting.ubLangageFlag  != 2)
+		{
+			if(tUI_PuSetting.ubLowTempSetting != 0)
+			{			
+				if(tUI_PuSetting.ubLangageFlag  == 3)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 346;
+					tOsdImgInfo.uwYStart =431 + 38;	
 					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 				}
 				else
 				{
 					if(tUI_PuSetting.ubLangageFlag  == 1)
 					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427 - 2;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);					
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =431 - 7;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);						
 					}
 					else
 					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_C0+((tUI_PuSetting.ubHighTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427;	
+						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =431;	
 						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					}	
 				}
@@ -4764,109 +4870,52 @@ void UITempSubmenuDisplay(void)
 				if(tUI_PuSetting.ubLangageFlag  == 3)
 				{
 					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 270;
-					tOsdImgInfo.uwYStart =427 - 10;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+					tOsdImgInfo.uwXStart= 346;
+					tOsdImgInfo.uwYStart =431- 18;	
+					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 				}
 				else
-				{
+				{	
 					if(tUI_PuSetting.ubLangageFlag  == 1)
 					{
 						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427 - 20;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+						tOsdImgInfo.uwXStart= 346;
+						tOsdImgInfo.uwYStart =431- 28;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					}
 					else
 					{
 						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 270;
-						tOsdImgInfo.uwYStart =427;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+						tOsdImgInfo.uwXStart= 346 ;
+						tOsdImgInfo.uwYStart =431;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					}	
 				}
 			}
-
-			if(tUI_PuSetting.ubLangageFlag  != 2)
-			{
-				if(tUI_PuSetting.ubLowTempSetting != 0)
-				{			
-					if(tUI_PuSetting.ubLangageFlag  == 3)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 346;
-						tOsdImgInfo.uwYStart =431 + 38;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{
-						if(tUI_PuSetting.ubLangageFlag  == 1)
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =431 - 7;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);						
-						}
-						else
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =431;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}	
-					}
-				}
-				else
-				{
-					if(tUI_PuSetting.ubLangageFlag  == 3)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 346;
-						tOsdImgInfo.uwYStart =431- 18;	
-						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					}
-					else
-					{	
-						if(tUI_PuSetting.ubLangageFlag  == 1)
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346;
-							tOsdImgInfo.uwYStart =431- 28;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}
-						else
-						{
-							tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-							tOsdImgInfo.uwXStart= 346 ;
-							tOsdImgInfo.uwYStart =431;	
-							tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-						}	
-					}
-				}
+		}
+		else
+		{
+			if(tUI_PuSetting.ubLowTempSetting != 0)
+			{			
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 346;
+				tOsdImgInfo.uwYStart =386;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 			}
 			else
 			{
-				if(tUI_PuSetting.ubLowTempSetting != 0)
-				{			
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_LOWTEMP_C0+((tUI_PuSetting.ubLowTempSetting-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 346;
-					tOsdImgInfo.uwYStart =386;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-				}
-				else
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 346 ;
-					tOsdImgInfo.uwYStart =386;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 346 ;
+				tOsdImgInfo.uwYStart =386;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-				}
 			}
-			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S_S+(tUI_PuSetting.ubTempAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 422;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		}
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S_S+(tUI_PuSetting.ubTempAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 422;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;		
 	}
 }
@@ -4876,28 +4925,28 @@ void UISoundSubmenuDisplay(void)
 
 	switch(ubSubSubMenuItemFlag)
 	{
-		case 0:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SOUND_OFF_S+(tUI_PuSetting.ubSoundLevelSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 309;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	case 0:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SOUND_OFF_S+(tUI_PuSetting.ubSoundLevelSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 309;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S+(tUI_PuSetting.ubSoundAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 306+76;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S+(tUI_PuSetting.ubSoundAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 306+76;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);		
 		break;
 
-		case 1:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SOUND_OFF+(tUI_PuSetting.ubSoundLevelSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 309;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	case 1:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SOUND_OFF+(tUI_PuSetting.ubSoundLevelSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 309;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S_S+(tUI_PuSetting.ubSoundAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 306+76;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT5S_S+(tUI_PuSetting.ubSoundAlertSetting*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 306+76;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;	
 	}
 }
@@ -4905,33 +4954,32 @@ void UI_AlarmSubSubMenuUpKey(uint8_t SubMenuItem)
 {
 	switch(SubMenuItem)
 	{
-		case 0:
-			if(ubSubSubMenuItemFlag >=1)
-			{
-				ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
-				ubSubSubMenuItemFlag  -=  1;
-			}	
-			else
-			{
-				ubSubSubMenuItemFlag = 0 ;
-				ubSubSubMenuItemPreFlag =  1;
-			}
-			UITempSubmenuDisplay();						
+	case 0:
+		if(ubSubSubMenuItemFlag >=1)
+		{
+			ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
+			ubSubSubMenuItemFlag  -=  1;
+		}	
+		else
+		{
+			ubSubSubMenuItemFlag = 0 ;
+			ubSubSubMenuItemPreFlag =  1;
+		}
+		UITempSubmenuDisplay();						
 		break;
 
-
-		case 1:
-			if(ubSubSubMenuItemFlag >=1)
-			{
-				ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
-				ubSubSubMenuItemFlag  -=  1;
-			}	
-			else
-			{
-				ubSubSubMenuItemFlag = 0 ;
-				ubSubSubMenuItemPreFlag =  1;
-			}
-			UISoundSubmenuDisplay();
+	case 1:
+		if(ubSubSubMenuItemFlag >=1)
+		{
+			ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
+			ubSubSubMenuItemFlag  -=  1;
+		}	
+		else
+		{
+			ubSubSubMenuItemFlag = 0 ;
+			ubSubSubMenuItemPreFlag =  1;
+		}
+		UISoundSubmenuDisplay();
 		break;	
 	}
 }
@@ -4939,36 +4987,36 @@ void UI_AlarmSubSubMenuDownKey(uint8_t SubMenuItem)
 {
 	switch(SubMenuItem)
 	{
-		case 0:
-			 if(ubSubSubMenuItemFlag < 2)
-			 {
-			 	ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
-				ubSubSubMenuItemFlag += 1;
-			 }	
-			else
-			{
-				ubSubSubMenuItemPreFlag =  2;
-				ubSubSubMenuItemFlag = 0;
-			}	
-			UITempSubmenuDisplay();						
+	case 0:
+		 if(ubSubSubMenuItemFlag < 2)
+		 {
+		 	ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
+			ubSubSubMenuItemFlag += 1;
+		 }	
+		else
+		{
+			ubSubSubMenuItemPreFlag =  2;
+			ubSubSubMenuItemFlag = 0;
+		}	
+		UITempSubmenuDisplay();						
 		break;
 
-
-		case 1:
-			 if(ubSubSubMenuItemFlag < 1)
-			 {
-			 	ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
-				ubSubSubMenuItemFlag += 1;
-			 }	
-			else
-			{
-				ubSubSubMenuItemPreFlag =  1;
-				ubSubSubMenuItemFlag = 0;
-			}	
-			UISoundSubmenuDisplay();
+	case 1:
+		 if(ubSubSubMenuItemFlag < 1)
+		 {
+		 	ubSubSubMenuItemPreFlag =  ubSubSubMenuItemFlag;
+			ubSubSubMenuItemFlag += 1;
+		 }	
+		else
+		{
+			ubSubSubMenuItemPreFlag =  1;
+			ubSubSubMenuItemFlag = 0;
+		}	
+		UISoundSubmenuDisplay();
 		break;	
 	}
 }
+
 void UI_AlarmSubSubMenuEnterKey(uint8_t SubMenuItem)
 {
 	OSD_IMG_INFO tOsdImgInfo;
@@ -4982,45 +5030,45 @@ void UI_AlarmSubSubMenuEnterKey(uint8_t SubMenuItem)
 	
 	switch(SubMenuItem)
 	{
-		case 0:
-			tUI_State = UI_SUBSUBSUBMENU_STATE;
-			item_temp = (ubSubMenuItemFlag*3)+ubSubSubMenuItemFlag;
-			InitAlarmSubSubSubmenu(item_temp);
+	case 0:
+		tUI_State = UI_SUBSUBSUBMENU_STATE;
+		item_temp = (ubSubMenuItemFlag*3)+ubSubSubMenuItemFlag;
+		InitAlarmSubSubSubmenu(item_temp);
 
-			switch(ubSubSubMenuItemFlag)
-			{
-				case 0:
-					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubHighTempSetting;
-					break;
-				case 1:
-					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubLowTempSetting;
-					break;
-				case 2:
-					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubTempAlertSetting;
-					break;
-				default:
-					break;
-			}
+		switch(ubSubSubMenuItemFlag)
+		{
+		case 0:
+			ubSubSubSubMenuItemFlag = tUI_PuSetting.ubHighTempSetting;
+			break;
+		case 1:
+			ubSubSubSubMenuItemFlag = tUI_PuSetting.ubLowTempSetting;
+			break;
+		case 2:
+			ubSubSubSubMenuItemFlag = tUI_PuSetting.ubTempAlertSetting;
+			break;
+		default:
+			break;
+		}
 				
-			UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);						
+		UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);						
 		break;
 
 
+	case 1:
+		tUI_State = UI_SUBSUBSUBMENU_STATE;
+		InitAlarmSubSubSubmenu(item_temp);
+		switch(ubSubSubMenuItemFlag)
+		{
+		case 0:
+			ubSubSubSubMenuItemFlag = tUI_PuSetting.ubSoundLevelSetting;
+			break;
 		case 1:
-			tUI_State = UI_SUBSUBSUBMENU_STATE;
-			InitAlarmSubSubSubmenu(item_temp);
-			switch(ubSubSubMenuItemFlag)
-			{
-				case 0:
-					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubSoundLevelSetting;
-					break;
-				case 1:
-					ubSubSubSubMenuItemFlag = tUI_PuSetting.ubSoundAlertSetting;
-					break;
-				default:
-					break;
-			}
-			UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);	
+			ubSubSubSubMenuItemFlag = tUI_PuSetting.ubSoundAlertSetting;
+			break;
+		default:
+			break;
+		}
+		UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);	
 		break;	
 	}
 }
@@ -5029,30 +5077,30 @@ void InitAlarmSubSubSubmenu(uint8_t SubMenuItem)
 {
 	switch(SubMenuItem)
 	{
-		case 0:
-			ubSubSubSubMenuItemFlag = 0;
-			ubSubSubSubMenuItemPreFlag = 1;
-			ubSubSubSubMenuRealItem = 0;			
+	case 0:
+		ubSubSubSubMenuItemFlag = 0;
+		ubSubSubSubMenuItemPreFlag = 1;
+		ubSubSubSubMenuRealItem = 0;			
 		break;	
 
-		case 1:
-			ubSubSubSubMenuItemFlag = 0;
-			ubSubSubSubMenuItemPreFlag = 1;
+	case 1:
+		ubSubSubSubMenuItemFlag = 0;
+		ubSubSubSubMenuItemPreFlag = 1;
 		break;
 		
-		case 2:
-			ubSubSubSubMenuItemFlag = 0;
-			ubSubSubSubMenuItemPreFlag = 1;
+	case 2:
+		ubSubSubSubMenuItemFlag = 0;
+		ubSubSubSubMenuItemPreFlag = 1;
 		break;
 
-		case 3:
-			ubSubSubSubMenuItemFlag = 0;
-			ubSubSubSubMenuItemPreFlag = 1;
+	case 3:
+		ubSubSubSubMenuItemFlag = 0;
+		ubSubSubSubMenuItemPreFlag = 1;
 		break;
 
-		case 4:
-			ubSubSubSubMenuItemFlag = 0;
-			ubSubSubSubMenuItemPreFlag = 1;
+	case 4:
+		ubSubSubSubMenuItemFlag = 0;
+		ubSubSubSubMenuItemPreFlag = 1;
 		break;		
 	}
 }
@@ -5064,96 +5112,95 @@ void UITempSubSubSubmenuDisplay(uint8_t SubMenuItem)
 
 	switch(SubMenuItem)
 	{
-		case 0:	
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 194;
+	case 0:	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 194;
+		tOsdImgInfo.uwYStart =0;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+			
+		for(i = 1; i < 5; i++)
+		{	
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_C0+((i-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 194+(i*76);
 			tOsdImgInfo.uwYStart =0;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			
-			for(i = 1; i < 5; i++)
-			{	
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_C0+((i-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 194+(i*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
+		}
 
-			if(ubSubSubSubMenuItemFlag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-			else
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_C0_S+((ubSubSubSubMenuItemFlag-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
+		if(ubSubSubSubMenuItemFlag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
+			tOsdImgInfo.uwYStart =0;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+		else
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_C0_S+((ubSubSubSubMenuItemFlag-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
+			tOsdImgInfo.uwYStart =0;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 227 +(tUI_PuSetting.ubHighTempSetting*76);
-			tOsdImgInfo.uwYStart =188;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 227 +(tUI_PuSetting.ubHighTempSetting*76);
+		tOsdImgInfo.uwYStart =188;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
 		break;
 
-		case 1:		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 194;
-			tOsdImgInfo.uwYStart =0;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+	case 1:		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 194;
+		tOsdImgInfo.uwYStart =0;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 			
-			for(i = 1; i < 5; i++)
-			{	
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_LOWTEMP_C0+((i-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 194+(i*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-
-			if(ubSubSubSubMenuItemFlag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-			else
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_LOWTEMP_C0_S+((ubSubSubSubMenuItemFlag-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 227 +(tUI_PuSetting.ubLowTempSetting*76);
-			tOsdImgInfo.uwYStart =188;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
-		break;	
-
-		case 2:
-			for(i = 0; i < 4; i++)
-			{	
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S+(i*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 237+(i*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-
-	
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S_S+(ubSubSubSubMenuItemFlag*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 237+(ubSubSubSubMenuItemFlag*76);
+		for(i = 1; i < 5; i++)
+		{	
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_LOWTEMP_C0+((i-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 194+(i*76);
 			tOsdImgInfo.uwYStart =0;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+
+		if(ubSubSubSubMenuItemFlag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_HIGHTEMP_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
+			tOsdImgInfo.uwYStart =0;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+		else
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SUBMENU_LOWTEMP_C0_S+((ubSubSubSubMenuItemFlag-1)*2)+(!tUI_PuSetting.ubTempunitFlag)*8, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 194+(ubSubSubSubMenuItemFlag*76);
+			tOsdImgInfo.uwYStart =0;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 227 +(tUI_PuSetting.ubLowTempSetting*76);
+		tOsdImgInfo.uwYStart =188;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		break;	
+
+	case 2:
+		for(i = 0; i < 4; i++)
+		{	
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S+(i*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 237+(i*76);
+			tOsdImgInfo.uwYStart =0;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S_S+(ubSubSubSubMenuItemFlag*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 237+(ubSubSubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =0;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 267 + (tUI_PuSetting.ubTempAlertSetting*76);
-			tOsdImgInfo.uwYStart =195 +15;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 267 + (tUI_PuSetting.ubTempAlertSetting*76);
+		tOsdImgInfo.uwYStart =195 +15;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 	}
 }
@@ -5165,66 +5212,65 @@ void UISoundSubSubSubmenuDisplay(uint8_t SubMenuItem)
 
 	switch(SubMenuItem)
 	{
-		case 0:		
-			for(i = 0; i < 6; i++)
-			{	
-				if(i == 0)
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_OFF+(i*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 159+(i*76);
-					tOsdImgInfo.uwYStart =0;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-				}
-				else
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_LVL1+((i-1)*2), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 159+(i*76);
-					tOsdImgInfo.uwYStart =0;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-				}
-			}
-
-			if(ubSubSubSubMenuItemFlag == 0)
+	case 0:		
+		for(i = 0; i < 6; i++)
+		{	
+			if(i == 0)
 			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 159+(ubSubSubSubMenuItemFlag*76);
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_OFF+(i*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 159+(i*76);
 				tOsdImgInfo.uwYStart =0;	
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			}
 			else
 			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_LVL1_S+((ubSubSubSubMenuItemFlag-1)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 159+(ubSubSubSubMenuItemFlag*76);
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_LVL1+((i-1)*2), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 159+(i*76);
 				tOsdImgInfo.uwYStart =0;	
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			}
+		}
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 191+(tUI_PuSetting.ubSoundLevelSetting*76);
-			tOsdImgInfo.uwYStart =233;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
-		break;
-
-		case 1:		
-			for(i = 0; i < 4; i++)
-			{	
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S+(i*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 237+(i*76);
-				tOsdImgInfo.uwYStart =0;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-
-	
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S_S+(ubSubSubSubMenuItemFlag*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 237+(ubSubSubSubMenuItemFlag*76);
+		if(ubSubSubSubMenuItemFlag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_OFF_S+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 159+(ubSubSubSubMenuItemFlag*76);
 			tOsdImgInfo.uwYStart =0;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+		else
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_LVL1_S+((ubSubSubSubMenuItemFlag-1)*2), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 159+(ubSubSubSubMenuItemFlag*76);
+			tOsdImgInfo.uwYStart =0;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 191+(tUI_PuSetting.ubSoundLevelSetting*76);
+		tOsdImgInfo.uwYStart =233;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		break;
+
+	case 1:		
+		for(i = 0; i < 4; i++)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S+(i*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 237+(i*76);
+			tOsdImgInfo.uwYStart =0;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_ALERT_5S_S+(ubSubSubSubMenuItemFlag*2)+ (42*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 237+(ubSubSubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =0;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 267 + (tUI_PuSetting.ubSoundAlertSetting*76);
-			tOsdImgInfo.uwYStart =195 +15;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB3_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 267 + (tUI_PuSetting.ubSoundAlertSetting*76);
+		tOsdImgInfo.uwYStart =195 +15;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 	}
 }
@@ -5235,27 +5281,27 @@ void UI_AlarmSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			UI_AlarmSubSubMenuUpKey(ubSubMenuItemFlag);
+	case UP_ARROW:
+		UI_AlarmSubSubMenuUpKey(ubSubMenuItemFlag);
+	break;	
+
+	case DOWN_ARROW:
+		UI_AlarmSubSubMenuDownKey(ubSubMenuItemFlag);
 		break;	
 
-		case DOWN_ARROW:
-			UI_AlarmSubSubMenuDownKey(ubSubMenuItemFlag);
-		break;	
-
-		case RIGHT_ARROW:
-		case ENTER_ARROW:
-			UI_AlarmSubSubMenuEnterKey(ubSubMenuItemFlag);			
+	case RIGHT_ARROW:
+	case ENTER_ARROW:
+		UI_AlarmSubSubMenuEnterKey(ubSubMenuItemFlag);			
 		break;	
 		
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			tUI_State = UI_SUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 729;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);			
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		tUI_State = UI_SUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 729;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);			
 		break;
 	}
 }
@@ -5270,91 +5316,88 @@ void UI_AlarmSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			if(0 == ubSubSubSubMenuItemFlag) ubSubSubSubMenuItemFlag = ubAlarmSubSubItemNum[item_temp];
-			else  ubSubSubSubMenuItemFlag--;
+	case UP_ARROW:
+		if(0 == ubSubSubSubMenuItemFlag) ubSubSubSubMenuItemFlag = ubAlarmSubSubItemNum[item_temp];
+		else  ubSubSubSubMenuItemFlag--;
 
-			if(item_temp >= 3)
-				UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);
-			else
-				UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);	
+		if(item_temp >= 3)
+			UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);
+		else
+			UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);	
 		break;	
 
-		case DOWN_ARROW:
-			if(++ubSubSubSubMenuItemFlag>=(ubAlarmSubSubItemNum[item_temp]+1)) ubSubSubSubMenuItemFlag = 0;	
+	case DOWN_ARROW:
+		if(++ubSubSubSubMenuItemFlag>=(ubAlarmSubSubItemNum[item_temp]+1)) ubSubSubSubMenuItemFlag = 0;	
 
-			if(item_temp >= 3)
-				UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);
-			else
-				UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);				
+		if(item_temp >= 3)
+			UISoundSubSubSubmenuDisplay(ubSubSubMenuItemFlag);
+		else
+			UITempSubSubSubmenuDisplay(ubSubSubMenuItemFlag);				
 		break;	
 
-		//case RIGHT_ARROW:
-		case ENTER_ARROW:
-			UI_SetAlarm(item_temp);
+//	case RIGHT_ARROW:
+	case ENTER_ARROW:
+		UI_SetAlarm(item_temp);
 			
-			if((tUI_PuSetting.ubHighTempSetting == 0)&&(tUI_PuSetting.ubLowTempSetting == 0)
-				&&(tUI_PuSetting.ubSoundLevelSetting == 0))
-				ubAlarmIconFlag = 0;
-			else
-				ubAlarmIconFlag = 1;
+		if((tUI_PuSetting.ubHighTempSetting == 0)&&(tUI_PuSetting.ubLowTempSetting == 0)
+			&&(tUI_PuSetting.ubSoundLevelSetting == 0))
+			ubAlarmIconFlag = 0;
+		else
+			ubAlarmIconFlag = 1;
 
-			//UI_UpdateDevStatusInfo();
+//		UI_UpdateDevStatusInfo();
 			
-			tUI_State = UI_SUBSUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 284;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);		
+		tUI_State = UI_SUBSUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 284;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);		
 
-			if(item_temp >= 3)
-				UISoundSubmenuDisplay();
-			else
-				UITempSubmenuDisplay();	
-			
+		if(item_temp >= 3)
+			UISoundSubmenuDisplay();
+		else
+			UITempSubmenuDisplay();	
 		break;	
 		
-		case LEFT_ARROW:
-		case EXIT_ARROW:	
-			tUI_State = UI_SUBSUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 284;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);			
+	case LEFT_ARROW:
+	case EXIT_ARROW:	
+		tUI_State = UI_SUBSUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 284;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);			
 		break;
 	}
-
 }
 
 void UI_SetAlarm(uint8_t SubMenuItem)
 {
 	switch(SubMenuItem)
 	{
-		case 0:
-			tUI_PuSetting.ubHighTempSetting = ubSubSubSubMenuItemFlag;			
+	case 0:
+		tUI_PuSetting.ubHighTempSetting = ubSubSubSubMenuItemFlag;			
 		break;	
 
-		case 1:
-			tUI_PuSetting.ubLowTempSetting = ubSubSubSubMenuItemFlag;
+	case 1:
+		tUI_PuSetting.ubLowTempSetting = ubSubSubSubMenuItemFlag;
 		break;	
 
-		case 2:
-			tUI_PuSetting.ubTempAlertSetting = ubSubSubSubMenuItemFlag;
+	case 2:
+		tUI_PuSetting.ubTempAlertSetting = ubSubSubSubMenuItemFlag;
 		break;	
 
-		case 3:
-			tUI_PuSetting.ubSoundLevelSetting = ubSubSubSubMenuItemFlag;
+	case 3:
+		tUI_PuSetting.ubSoundLevelSetting = ubSubSubSubMenuItemFlag;
 		break;	
 
-		case 4:
-			tUI_PuSetting.ubSoundAlertSetting = ubSubSubSubMenuItemFlag;	
+	case 4:
+		tUI_PuSetting.ubSoundAlertSetting = ubSubSubSubMenuItemFlag;	
 		break;
 
-		default:
-			break;
-		
+	default:
+		break;
 	}
 	//UI_UpdateDevStatusInfo();
 	UI_SendAlarmSettingToBu();
@@ -5371,40 +5414,40 @@ void UI_AlarmTriggerDisplay(uint8_t value)
 	
 	switch(value)
 	{
-		case 0:	//high temp
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_TITLE+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+263;
-			tOsdImgInfo.uwYStart =282+157;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 0:	//high temp
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_TITLE+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167+263;
+		tOsdImgInfo.uwYStart =282+157;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+79;
-			tOsdImgInfo.uwYStart =282+301;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167+79;
+		tOsdImgInfo.uwYStart =282+301;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		break;	
 
-		case 1:	// low temp
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_TITLE+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+263;
-			tOsdImgInfo.uwYStart =282+157;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 1:	// low temp
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_TITLE+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167+263;
+		tOsdImgInfo.uwYStart =282+157;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+79;
-			tOsdImgInfo.uwYStart =282+301;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167+79;
+		tOsdImgInfo.uwYStart =282+301;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		break;
 
-		case 2:   // sound
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON_TITLE+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+263;
-			tOsdImgInfo.uwYStart =282+157;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 2:   // sound
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON_TITLE+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167+263;
+		tOsdImgInfo.uwYStart =282+157;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167+78;
-			tOsdImgInfo.uwYStart =282+284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);							
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_ALARMON, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167+78;
+		tOsdImgInfo.uwYStart =282+284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);							
 		break;
 	}
 }
@@ -5425,83 +5468,83 @@ void UI_ShowAlarm(uint8_t type)
 	
 	switch(type)
 	{
-		case 0:
-			UI_AlarmTriggerDisplay(0);
-			if(ubRealTemp/100)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 340;
-				tOsdImgInfo.uwYStart = 600;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-			if(ubRealTemp/10%10)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 340;
-				tOsdImgInfo.uwYStart = 600-24;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 340;
-			tOsdImgInfo.uwYStart =600-24-24;	
+	case 0:
+		UI_AlarmTriggerDisplay(0);
+		if(ubRealTemp/100)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 340;
+			tOsdImgInfo.uwYStart = 600;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 334;
-			tOsdImgInfo.uwYStart = 600-72-24;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			ubShowAlarmstate = 1;
-			break;
-
-		case 1:
-			UI_AlarmTriggerDisplay(1);
-			if(ubRealTemp/100)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 340;
-				tOsdImgInfo.uwYStart = 600;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-			if(ubRealTemp/10%10)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 340;
-				tOsdImgInfo.uwYStart = 600-24;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 340;
-			tOsdImgInfo.uwYStart =600-24-24;	
+		}
+		if(ubRealTemp/10%10)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 340;
+			tOsdImgInfo.uwYStart = 600-24;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 340;
+		tOsdImgInfo.uwYStart =600-24-24;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 334;
+		tOsdImgInfo.uwYStart = 600-72-24;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		ubShowAlarmstate = 1;
+		break;
+
+	case 1:
+		UI_AlarmTriggerDisplay(1);
+		if(ubRealTemp/100)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 340;
+			tOsdImgInfo.uwYStart = 600;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+		if(ubRealTemp/10%10)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 340;
+			tOsdImgInfo.uwYStart = 600-24;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 340;
+		tOsdImgInfo.uwYStart =600-24-24;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 334;
-			tOsdImgInfo.uwYStart =600-72-24;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			ubShowAlarmstate = 2;
-			break;
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 334;
+		tOsdImgInfo.uwYStart =600-72-24;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		ubShowAlarmstate = 2;
+		break;
 
-		case 2:
-			UI_AlarmTriggerDisplay(2);
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			ubShowAlarmstate = 3;
-			break;
+	case 2:
+		UI_AlarmTriggerDisplay(2);
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		ubShowAlarmstate = 3;
+		break;
 
-		case 3:
-			if(ubShowAlarmstate)
-			{
-				tOsdImgInfo.uwHSize  = 387;
-				tOsdImgInfo.uwVSize  = 717;
-				tOsdImgInfo.uwXStart = 167;
-				tOsdImgInfo.uwYStart = 282;
-				OSD_EraserImg2(&tOsdImgInfo);
-				ubShowAlarmstate = 0;
-			}
-			return;
+	case 3:
+		if(ubShowAlarmstate)
+		{
+			tOsdImgInfo.uwHSize  = 387;
+			tOsdImgInfo.uwVSize  = 717;
+			tOsdImgInfo.uwXStart = 167;
+			tOsdImgInfo.uwYStart = 282;
+			OSD_EraserImg2(&tOsdImgInfo);
+			ubShowAlarmstate = 0;
+		}
+		return;
 //		break;
 
-		default:
-			break;
+	default:
+		break;
 	}
 
 	if(ubShowAlarmstate > 0)
@@ -5660,8 +5703,8 @@ void UI_TempAlarmCheck(void)
 
 		if((ubShowAlarmstate == 1) || (ubShowAlarmstate == 2))
 		{
-		     if(ubAlarmOnlyAlertFlag == 0)
-			UI_ShowAlarm(3);
+			if(ubAlarmOnlyAlertFlag == 0)
+				UI_ShowAlarm(3);
 		}
 	}
 	else if(ubTempAlarmState == HIGH_TEMP_ALARM_ON)
@@ -5703,7 +5746,7 @@ void UI_TempAlarmCheck(void)
 
 void UI_PickupAlarmCheck(void)
 {
-//uint8_t ubHightempMax, ubLowtempMin;
+//	uint8_t ubHightempMax, ubLowtempMin;
 
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
@@ -5779,20 +5822,20 @@ void UI_TriggerWakeUpAlarm(void)
 	printd(Apk_DebugLvl, "UI_TriggerWakeUpAlarm type: %d.\n", ubAlarmWakeupType);
 	switch(ubAlarmWakeupType)
 	{
-		case 1:
-			ubTempAlarmState = HIGH_TEMP_ALARM_ON;
-			break;
+	case 1:
+		ubTempAlarmState = HIGH_TEMP_ALARM_ON;
+		break;
 			
-		case 2:
-			ubTempAlarmState = LOW_TEMP_ALARM_ON;
-			break;
+	case 2:
+		ubTempAlarmState = LOW_TEMP_ALARM_ON;
+		break;
 
-		case 3:
-			ubPickupAlarmState = PICKUP_ALARM_ON;
-			break;
+	case 3:
+		ubPickupAlarmState = PICKUP_ALARM_ON;
+		break;
 
-		default:
-			break;
+	default:
+		break;
 	}
 
 	if(ubAlarmWakeupType > 0)
@@ -5983,7 +6026,7 @@ void UI_TimeShowSystemTime(uint8_t type)
 		tOsdImgInfo.uwYStart = 98;	
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-		#if TIME_TEST
+#if TIME_TEST
 		#define time_offset	100
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeHour/10), 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;
@@ -6024,19 +6067,17 @@ void UI_TimeShowSystemTime(uint8_t type)
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 357 - time_offset;	
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-		#endif
+#endif
 	}
 }
 
 void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	RTC_Calendar_t tUi_Calendar;	
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
 	uint8_t ubT_MinNum[3] = {0,  0,  0};	
-	uint8_t *pT_Num[3] = {(uint8_t *)(&ubTimeHour),
-						(uint8_t *)(&ubTimeMin), (uint8_t *)(&ubTimeAMPM)
-						};
+	uint8_t *pT_Num[3] = {(uint8_t *)(&ubTimeHour), (uint8_t *)(&ubTimeMin), (uint8_t *)(&ubTimeAMPM) };
 
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -6059,7 +6100,7 @@ void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 		}
 		ubTimeMin = tUi_Calendar.ubMin;
 
-		//printd(Apk_DebugLvl, "ubTimeHour  %d\n",ubTimeHour);
+//		printd(Apk_DebugLvl, "ubTimeHour  %d\n",ubTimeHour);
 		ubEnterTimeMenuFlag = 1;
 		
 		UI_DrawSubMenuPage(TIME_ITEM);
@@ -6069,108 +6110,108 @@ void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			if((NULL == pT_Num[ubSubMenuItemFlag]))
-					return;
+	case UP_ARROW:
+		if((NULL == pT_Num[ubSubMenuItemFlag]))
+				return;
 
-			if(ubSubMenuItemFlag == 2)
-			{
-				if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
-					return;
-				if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
-					return;				
-			}
+		if(ubSubMenuItemFlag == 2)
+		{
+			if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
+				return;
+			if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
+				return;				
+		}
 			
-			if(*pT_Num[ubSubMenuItemFlag] == ubT_MaxNum[ubSubMenuItemFlag])
-				*pT_Num[ubSubMenuItemFlag] = ubT_MinNum[ubSubMenuItemFlag];
-			else
-				(*pT_Num[ubSubMenuItemFlag])++;
+		if(*pT_Num[ubSubMenuItemFlag] == ubT_MaxNum[ubSubMenuItemFlag])
+			*pT_Num[ubSubMenuItemFlag] = ubT_MinNum[ubSubMenuItemFlag];
+		else
+			(*pT_Num[ubSubMenuItemFlag])++;
 
-			if(ubSubMenuItemFlag == 0)
+		if(ubSubMenuItemFlag == 0)
+		{
+			if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
 			{
-				if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
-				{
-					ubTimeHour = 1;
-				}	
-				if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
-				{
-					ubTimeHour = 1;
-				}	
-			}
-			UI_TimeSubMenuDisplay(ubSubMenuItemFlag);	
+				ubTimeHour = 1;
+			}	
+			if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
+			{
+				ubTimeHour = 1;
+			}	
+		}
+		UI_TimeSubMenuDisplay(ubSubMenuItemFlag);	
+		return;
+			
+	case DOWN_ARROW:
+		if((NULL == pT_Num[ubSubMenuItemFlag]))
 			return;
 			
-		case DOWN_ARROW:
-			if((NULL == pT_Num[ubSubMenuItemFlag]))
+		if(ubSubMenuItemFlag == 2)
+		{
+			if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
 				return;
+			if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
+				return;				
+		}
 			
-			if(ubSubMenuItemFlag == 2)
-			{
-				if((ubTimeHour == 12)&&(ubTimeAMPM == 1))
-					return;
-				if((ubTimeHour == 0)&&(ubTimeAMPM == 0))
-					return;				
-			}
-			
-			if(*pT_Num[ubSubMenuItemFlag] == ubT_MinNum[ubSubMenuItemFlag])
-				*pT_Num[ubSubMenuItemFlag] = ubT_MaxNum[ubSubMenuItemFlag];
-			else
-				(*pT_Num[ubSubMenuItemFlag])--;
+		if(*pT_Num[ubSubMenuItemFlag] == ubT_MinNum[ubSubMenuItemFlag])
+			*pT_Num[ubSubMenuItemFlag] = ubT_MaxNum[ubSubMenuItemFlag];
+		else
+			(*pT_Num[ubSubMenuItemFlag])--;
 
-			if(ubSubMenuItemFlag == 0)
+		if(ubSubMenuItemFlag == 0)
+		{
+			if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
 			{
-				if((ubTimeHour == 12)&&(ubTimeAMPM == 0))
-				{
-					ubTimeHour = 11;
-				}	
-				if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
-				{
-					ubTimeHour = 12;
-				}	
-			}
+				ubTimeHour = 11;
+			}	
+			if((ubTimeHour == 0)&&(ubTimeAMPM == 1))
+			{
+				ubTimeHour = 12;
+			}	
+		}
 				
-			UI_TimeSubMenuDisplay(ubSubMenuItemFlag);
-			return;
+		UI_TimeSubMenuDisplay(ubSubMenuItemFlag);
+		return;
 
-		case LEFT_ARROW:
-			if(ubSubMenuItemFlag >=1)
-			{
-				ubSubMenuItemFlag -= 1;
-			}	
-			else
-			{
-				ubSubMenuItemFlag = 0;
-				tUI_State = UI_MAINMENU_STATE;
-				ubEnterTimeMenuFlag = 0;
-				UI_DrawMenuPage();
-				return;
-			}	
-			UI_TimeSubMenuDisplay(ubSubMenuItemFlag);
+	case LEFT_ARROW:
+		if(ubSubMenuItemFlag >=1)
+		{
+			ubSubMenuItemFlag -= 1;
+		}	
+		else
+		{
+			ubSubMenuItemFlag = 0;
+			tUI_State = UI_MAINMENU_STATE;
+			ubEnterTimeMenuFlag = 0;
+			UI_DrawMenuPage();
+			return;
+		}	
+		UI_TimeSubMenuDisplay(ubSubMenuItemFlag);
 		break;	
 
-		case RIGHT_ARROW:
-			 if(ubSubMenuItemFlag < 2)
-			 {
-				ubSubMenuItemFlag += 1;
-			 }	
-			else
-			{
-				ubSubMenuItemFlag = 2;
-			}
-			UI_TimeSubMenuDisplay(ubSubMenuItemFlag);		
+	case RIGHT_ARROW:
+		 if(ubSubMenuItemFlag < 2)
+		 {
+			ubSubMenuItemFlag += 1;
+		 }	
+		else
+		{
+			ubSubMenuItemFlag = 2;
+		}
+		UI_TimeSubMenuDisplay(ubSubMenuItemFlag);		
 		break;
 
-		case ENTER_ARROW:
-			UI_TimeSetSystemTime();
-			UI_TimeShowSystemTime(1);
+	case ENTER_ARROW:
+		UI_TimeSetSystemTime();
+		UI_TimeShowSystemTime(1);
 		break;
 			
-		case EXIT_ARROW:
-			tUI_State = UI_MAINMENU_STATE;
+	case EXIT_ARROW:
+		tUI_State = UI_MAINMENU_STATE;
 
-			ubEnterTimeMenuFlag = 0;
+		ubEnterTimeMenuFlag = 0;
 			
-			UI_DrawMenuPage();			
+		UI_DrawMenuPage();			
 		break;
 	}
 }	
@@ -6189,145 +6230,145 @@ void UI_TimeSubMenuDisplay(uint8_t value)
 	
 	switch(value)
 	{
-		case 0:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_BLANK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 330;
-			tOsdImgInfo.uwYStart =834;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	case 0:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 330;
+		tOsdImgInfo.uwYStart =834;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 					
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_UPARROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 336;
-			tOsdImgInfo.uwYStart =1027;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_UPARROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 336;
+		tOsdImgInfo.uwYStart =1027;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_DOWNARROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 416;
-			tOsdImgInfo.uwYStart =1027;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_DOWNARROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 416;
+		tOsdImgInfo.uwYStart =1027;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			//-----------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =840 - 10;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-----------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =840 - 10;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			//-------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =917;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =943;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =917;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =943;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_SIGN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =971;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			//-----------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =1010;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =1036;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_SIGN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =971;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-----------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =1010;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =1036;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;	
 
-		case 1:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_BLANK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 330;
-			tOsdImgInfo.uwYStart =834;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 1:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 330;
+		tOsdImgInfo.uwYStart =834;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_UPARROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 336;
-			tOsdImgInfo.uwYStart =936;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_UPARROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 336;
+		tOsdImgInfo.uwYStart =936;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_DOWNARROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 416;
-			tOsdImgInfo.uwYStart =936;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_DOWNARROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 416;
+		tOsdImgInfo.uwYStart =936;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			//-----------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =840 - 10;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-----------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =840 - 10;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			//-------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =917;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =943;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =917;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0_S+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =943;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_SIGN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =971;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			//-----------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =1010;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =1036;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_SIGN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =971;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-----------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =1010;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =1036;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;
 
-		case 2:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_BLANK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 330;
-			tOsdImgInfo.uwYStart =834;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	case 2:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 330;
+		tOsdImgInfo.uwYStart =834;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_UPARROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 336;
-			tOsdImgInfo.uwYStart =864;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_UPARROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 336;
+		tOsdImgInfo.uwYStart =864;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_DOWNARROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 416;
-			tOsdImgInfo.uwYStart =864;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_DOWNARROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 416;
+		tOsdImgInfo.uwYStart =864;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			//-----------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_AM_S+(ubTimeAMPM*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =840 - 10;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-----------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_AM_S+(ubTimeAMPM*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =840 - 10;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			//-------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =917;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =943;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =917;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =943;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_SIGN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =971;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			//-----------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =1010;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 368;
-			tOsdImgInfo.uwYStart =1036;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_SIGN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =971;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		//-----------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =1010;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 368;
+		tOsdImgInfo.uwYStart =1036;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;	
 	}
 }	
@@ -6450,7 +6491,7 @@ void UI_DrawZoomSubMenuPage(void)
 }	
 void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -6470,41 +6511,39 @@ void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+	case UP_ARROW:
+		ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
 			
-			if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 2;
-			else  ubSubMenuItemFlag--;
+		if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 2;
+		else  ubSubMenuItemFlag--;
 			
-			UI_ZoomDisplay();
+		UI_ZoomDisplay();
 		break;	
 
-		case DOWN_ARROW:
-			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+	case DOWN_ARROW:
+		ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
 			
-			if(++ubSubMenuItemFlag>=3) ubSubMenuItemFlag = 0;		
+		if(++ubSubMenuItemFlag>=3) ubSubMenuItemFlag = 0;		
 			
-			UI_ZoomDisplay();
+		UI_ZoomDisplay();
 		break;	
 
 
-		case RIGHT_ARROW:
-	
+	case RIGHT_ARROW:
 		break;
 
-		case ENTER_ARROW:
-			tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
-			UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
-			UI_ZoomDisplay();
-			//UI_UpdateDevStatusInfo();
+	case ENTER_ARROW:
+		tUI_PuSetting.ubZoomScale = ubSubMenuItemFlag;
+		UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
+		UI_ZoomDisplay();
+		//UI_UpdateDevStatusInfo();
 		break;	
 
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			tUI_State = UI_MAINMENU_STATE;
-			UI_DrawMenuPage();			
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		tUI_State = UI_MAINMENU_STATE;
+		UI_DrawMenuPage();			
 		break;
-		
 	}
 }	
 
@@ -6593,64 +6632,64 @@ void UI_CamSubSubmenuDisplay(uint8_t SubMenuItem)
 
 	switch(SubMenuItem)
 	{
-		case 1:
-			for(i = 0; i < 4; i++)
-			{	
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_CAM1_NOPAIR+ubCamPairFlag[i]+(i*3)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 233+(i*76);
-				tOsdImgInfo.uwYStart =284;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
+	case 1:
+		for(i = 0; i < 4; i++)
+		{	
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_CAM1_NOPAIR+ubCamPairFlag[i]+(i*3)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 233+(i*76);
+			tOsdImgInfo.uwYStart =284;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
 
-			i = ubSubSubMenuItemFlag;
-			for(j = 0; j < 4; j++)
+		i = ubSubSubMenuItemFlag;
+		for(j = 0; j < 4; j++)
+		{
+			if(ubCamPairFlag[i] == 1)
 			{
-				if(ubCamPairFlag[i] == 1)
-				{
-					ubSubSubMenuItemFlag = i;
-					break;
-				}
-				if(i == 3)
-					i = 0;
-				else
-					i++;
+				ubSubSubMenuItemFlag = i;
+				break;
 			}
+			if(i == 3)
+				i = 0;
+			else
+				i++;
+		}
 			
-			if(ubNoAddCamFlag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_CAM1_PAIR_S+(ubSubSubMenuItemFlag*3)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 233+(ubSubSubMenuItemFlag*76);
-				tOsdImgInfo.uwYStart =284;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			}
+		if(ubNoAddCamFlag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_CAM1_PAIR_S+(ubSubSubMenuItemFlag*3)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 233+(ubSubSubMenuItemFlag*76);
+			tOsdImgInfo.uwYStart =284;	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		}
 			
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
-		case 2:
-			for(i = 0; i < 5; i++)
-			{	
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SCAN_OFF+(i*2)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart= 194+(i*76);
-				tOsdImgInfo.uwYStart =284;	
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-			}
-			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SCAN_OFF_S+(ubSubSubMenuItemFlag*2)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 194+(ubSubSubMenuItemFlag*76);
+	case 2:
+		for(i = 0; i < 5; i++)
+		{	
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SCAN_OFF+(i*2)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart= 194+(i*76);
 			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		}
+			
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SCAN_OFF_S+(ubSubSubMenuItemFlag*2)+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 194+(ubSubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 			
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB2_POINT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 225 + (tUI_PuSetting.ubScanTime*76);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUB2_POINT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 225 + (tUI_PuSetting.ubScanTime*76);
 			
-			if(tUI_PuSetting.ubLangageFlag  == 3)
-				tOsdImgInfo.uwYStart =572 +10;	
-			else
-				tOsdImgInfo.uwYStart =572 ;
+		if(tUI_PuSetting.ubLangageFlag  == 3)
+			tOsdImgInfo.uwYStart =572 +10;	
+		else
+			tOsdImgInfo.uwYStart =572 ;
 			
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
 		break;			
 	}
 }
@@ -6775,118 +6814,118 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 	switch(tArrowKey)
 	{
-		case UP_ARROW:	
-			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+	case UP_ARROW:	
+		ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
 			
-			if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 2;
-			else  ubSubMenuItemFlag--;
+		if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 2;
+		else  ubSubMenuItemFlag--;
 			
-			UI_CamSubmenuDisplay();
+		UI_CamSubmenuDisplay();
 		break;	
 
-		case DOWN_ARROW:
-			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+	case DOWN_ARROW:
+		ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
 			
-			if(++ubSubMenuItemFlag>=3) ubSubMenuItemFlag = 0;	
+		if(++ubSubMenuItemFlag>=3) ubSubMenuItemFlag = 0;	
 
-			UI_CamSubmenuDisplay();
+		UI_CamSubmenuDisplay();
 		break;	
 
-		case RIGHT_ARROW:
-		case ENTER_ARROW:
-			if(ubSubMenuItemFlag == 0)
+	case RIGHT_ARROW:
+	case ENTER_ARROW:
+		if(ubSubMenuItemFlag == 0)
+		{
+			for(i = 0; i < 4 ; i++)
 			{
-				for(i = 0; i < 4 ; i++)
+				if(tUI_CamStatus[i].ulCAM_ID == INVALID_ID)
 				{
-					if(tUI_CamStatus[i].ulCAM_ID == INVALID_ID)
-					{
-						ubPairSelCam = i;
-						break;
-					}	
-				}
-				//printd(Apk_DebugLvl, "ubPairSelCam %d \n",i,ubPairSelCam);
+					ubPairSelCam = i;
+					break;
+				}	
+			}
+			//printd(Apk_DebugLvl, "ubPairSelCam %d \n",i,ubPairSelCam);
 
-				if(ubCamFullFlag == 0)
-				{
-					ubPairDisplayTime = 60; //10
-					tPairInfo.tPairSelCam = ubPairSelCam;
-					tPairInfo.tDispLocation = ubPairSelCam;
+			if(ubCamFullFlag == 0)
+			{
+				ubPairDisplayTime = 60; //10
+				tPairInfo.tPairSelCam = ubPairSelCam;
+				tPairInfo.tDispLocation = ubPairSelCam;
 					
-					tUI_PairMessage.ubAPP_Event 	 = APP_PAIRING_START_EVENT;
-					tUI_PairMessage.ubAPP_Message[0] = 2;		//! Message Length
-					tUI_PairMessage.ubAPP_Message[1] = ubPairSelCam;//CAM1;
-					tUI_PairMessage.ubAPP_Message[2] = DISP_1T;
-					tUI_PairMessage.ubAPP_Message[2] = ubPairSelCam;					
-					UI_SendMessageToAPP(&tUI_PairMessage);
-					tPairInfo.ubDrawFlag 			 = TRUE;
-					UI_DisableScanMode();
+				tUI_PairMessage.ubAPP_Event 	 = APP_PAIRING_START_EVENT;
+				tUI_PairMessage.ubAPP_Message[0] = 2;		//! Message Length
+				tUI_PairMessage.ubAPP_Message[1] = ubPairSelCam;//CAM1;
+				tUI_PairMessage.ubAPP_Message[2] = DISP_1T;
+				tUI_PairMessage.ubAPP_Message[2] = ubPairSelCam;					
+				UI_SendMessageToAPP(&tUI_PairMessage);
+				tPairInfo.ubDrawFlag 			 = TRUE;
+				UI_DisableScanMode();
 
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 48;
-					tOsdImgInfo.uwYStart =284;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 48;
+				tOsdImgInfo.uwYStart =284;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIRING+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 200;
-					tOsdImgInfo.uwYStart =284;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIRING+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 200;
+				tOsdImgInfo.uwYStart =284;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-					if(tUI_PuSetting.ubLangageFlag == 0)
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_PAIR_SEC+ (37*1 ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 145;
-						tOsdImgInfo.uwYStart =450;	
-						tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-					}
-					else
-					{
-						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_PAIR_SEC+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-						tOsdImgInfo.uwXStart= 145;
-						tOsdImgInfo.uwYStart =450;	
-						tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-					}
+				if(tUI_PuSetting.ubLangageFlag == 0)
+				{
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_PAIR_SEC+ (37*1 ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 145;
+					tOsdImgInfo.uwYStart =450;	
+					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 				}
 				else
 				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 48;
-					tOsdImgInfo.uwYStart =284;	
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIR_FULL+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart= 200;
-					tOsdImgInfo.uwYStart =284;	
+					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_PAIR_SEC+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+					tOsdImgInfo.uwXStart= 145;
+					tOsdImgInfo.uwYStart =450;	
 					tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-					ubShowCamPairFullSta = 1;
 				}
 			}
 			else
-			{			
-				tUI_State = UI_SUBSUBMENU_STATE;
-				
-				if(ubSubMenuItemFlag == 2)
-				{
-					ubSubSubMenuItemFlag = tUI_PuSetting.ubScanTime;
-					ubUI_ScanStartFlag = FALSE;
-					ubSubSubMenuItemPreFlag = 1;
-				}
-				else
-				{
-					ubSubSubMenuItemFlag = 0;
-					ubSubSubMenuItemPreFlag = 1;	
-				}
-				UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);		
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 48;
+				tOsdImgInfo.uwYStart =284;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIR_FULL+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 200;
+				tOsdImgInfo.uwYStart =284;	
+				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+				ubShowCamPairFullSta = 1;
 			}
+		}
+		else
+		{			
+			tUI_State = UI_SUBSUBMENU_STATE;
+				
+			if(ubSubMenuItemFlag == 2)
+			{
+				ubSubSubMenuItemFlag = tUI_PuSetting.ubScanTime;
+				ubUI_ScanStartFlag = FALSE;
+				ubSubSubMenuItemPreFlag = 1;
+			}
+			else
+			{
+				ubSubSubMenuItemFlag = 0;
+				ubSubSubMenuItemPreFlag = 1;	
+			}
+			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);		
+		}
 		break;	
 
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			if(tUI_SyncAppState != APP_PAIRING_STATE)
-			{
-				tUI_State = UI_MAINMENU_STATE;
-				UI_DrawMenuPage();
-			}
-			ubShowCamPairFullSta = 0;
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		if(tUI_SyncAppState != APP_PAIRING_STATE)
+		{
+			tUI_State = UI_MAINMENU_STATE;
+			UI_DrawMenuPage();
+		}
+		ubShowCamPairFullSta = 0;
 		break;
 	}
 }
@@ -6909,113 +6948,75 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			if(ubSubMenuItemFlag == 1)
+	case UP_ARROW:
+		if(ubSubMenuItemFlag == 1)
+		{
+			/*
+			if(ubSubSubMenuItemFlag == 0)
+				return;
+			*/
+			for(i = 0; i < 4; i++)
 			{
-				/*
-				if(ubSubSubMenuItemFlag == 0)
-					return;
-				*/
-				for(i = 0; i < 4; i++)
+				if(ubCamPairFlag[i] == 1)
+				{
+					menu_minitem = i;
+					break;
+				}
+			}
+			//printf("menu_minitem %d\n", menu_minitem);
+			if(ubSubSubMenuItemFlag != menu_minitem)
+			{
+				for(i = (ubSubSubMenuItemFlag - 1); i >= 0; i--)
 				{
 					if(ubCamPairFlag[i] == 1)
 					{
-						menu_minitem = i;
+						ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+						ubSubSubMenuItemFlag 	= i;
 						break;
-					}
-				}
-				//printf("menu_minitem %d\n", menu_minitem);
-				if(ubSubSubMenuItemFlag != menu_minitem)
-				{
-					for(i = (ubSubSubMenuItemFlag - 1); i >= 0; i--)
-					{
-						if(ubCamPairFlag[i] == 1)
-						{
-							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-							ubSubSubMenuItemFlag 	= i;
-							break;
-						}
-					}
-				}
-				else
-				{
-					for(i = 3; i >= 0; i--)
-					{
-						if(ubCamPairFlag[i] == 1)
-						{
-							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-							ubSubSubMenuItemFlag 	= i;
-							//printf("ubSubSubMenuItemFlag %d\n", ubSubSubMenuItemFlag);
-							break;
-						}
 					}
 				}
 			}
 			else
 			{
-				ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-				
-				if(0 == ubSubSubMenuItemFlag) ubSubSubMenuItemFlag = ubMenu_MaxNum[ubSubMenuItemFlag];
-				else  ubSubSubMenuItemFlag--;				
-			}
-			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
-		break;	
-
-		case DOWN_ARROW:
-			if(ubSubMenuItemFlag == 1)
-			{
-				//if(ubSubSubMenuItemFlag >= 3)
-				//return;
 				for(i = 3; i >= 0; i--)
 				{
 					if(ubCamPairFlag[i] == 1)
 					{
-						menu_maxitem = i;
+						ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+						ubSubSubMenuItemFlag 	= i;
+						//printf("ubSubSubMenuItemFlag %d\n", ubSubSubMenuItemFlag);
 						break;
 					}
 				}
-				//printf("menu_maxitem %d\n", menu_maxitem);
-				if(ubSubSubMenuItemFlag != menu_maxitem)
-				{
-					for(i = (ubSubSubMenuItemFlag + 1); i < 4; i++)
-					{
-						if(ubCamPairFlag[i] == 1)
-						{
-							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-							ubSubSubMenuItemFlag 	= i;
-							break;
-						}
-					}
-				}
-				else
-				{
-					for(i = 0; i < 4; i++)
-					{
-						if(ubCamPairFlag[i] == 1)
-						{
-							ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-							ubSubSubMenuItemFlag 	= i;
-							//printf("ubSubSubMenuItemFlag %d\n", ubSubSubMenuItemFlag);
-							break;
-						}
-					}
-
-				}
 			}
-			else
-			{
-				ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-				if(++ubSubSubMenuItemFlag>=(ubMenu_MaxNum[ubSubMenuItemFlag]+1)) ubSubSubMenuItemFlag = 0;	
+		}
+		else
+		{
+			ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
 				
-			}
-			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
+			if(0 == ubSubSubMenuItemFlag) ubSubSubMenuItemFlag = ubMenu_MaxNum[ubSubMenuItemFlag];
+			else  ubSubSubMenuItemFlag--;				
+		}
+		UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
 		break;	
 
-		case RIGHT_ARROW:
-			if(ubSubMenuItemFlag == 1)
+	case DOWN_ARROW:
+		if(ubSubMenuItemFlag == 1)
+		{
+			//if(ubSubSubMenuItemFlag >= 3)
+			//return;
+			for(i = 3; i >= 0; i--)
 			{
-				i = ubSubSubMenuItemFlag;
-				for(j = 0; j < 4; j++)
+				if(ubCamPairFlag[i] == 1)
+				{
+					menu_maxitem = i;
+					break;
+				}
+			}
+			//printf("menu_maxitem %d\n", menu_maxitem);
+			if(ubSubSubMenuItemFlag != menu_maxitem)
+			{
+				for(i = (ubSubSubMenuItemFlag + 1); i < 4; i++)
 				{
 					if(ubCamPairFlag[i] == 1)
 					{
@@ -7023,64 +7024,101 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 						ubSubSubMenuItemFlag 	= i;
 						break;
 					}
-					i++;
-					if(i > 3) i = 0;
+				}
+			}
+			else
+			{
+				for(i = 0; i < 4; i++)
+				{
+					if(ubCamPairFlag[i] == 1)
+					{
+						ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+						ubSubSubMenuItemFlag 	= i;
+						//printf("ubSubSubMenuItemFlag %d\n", ubSubSubMenuItemFlag);
+						break;
+					}
 				}
 
-				if((ubCamPairFlag[0] == 0) && (ubCamPairFlag[1] == 0)&& (ubCamPairFlag[2] == 0)&& (ubCamPairFlag[3] == 0))
-					break;
-
-				ubSubSubSubMenuItemFlag = 0;
-				ubSubSubSubMenuItemPreFlag = 1;
-
-				tUI_State = UI_SUBSUBSUBMENU_STATE;	
-				UI_DeletemenuDisplay();
 			}
+		}
+		else
+		{
+			ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+			if(++ubSubSubMenuItemFlag>=(ubMenu_MaxNum[ubSubMenuItemFlag]+1)) ubSubSubMenuItemFlag = 0;	
+				
+		}
+		UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);			
+		break;	
+
+	case RIGHT_ARROW:
+		if(ubSubMenuItemFlag == 1)
+		{
+			i = ubSubSubMenuItemFlag;
+			for(j = 0; j < 4; j++)
+			{
+				if(ubCamPairFlag[i] == 1)
+				{
+					ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+					ubSubSubMenuItemFlag 	= i;
+					break;
+				}
+				i++;
+				if(i > 3) i = 0;
+			}
+
+			if((ubCamPairFlag[0] == 0) && (ubCamPairFlag[1] == 0)&& (ubCamPairFlag[2] == 0)&& (ubCamPairFlag[3] == 0))
+				break;
+
+			ubSubSubSubMenuItemFlag = 0;
+			ubSubSubSubMenuItemPreFlag = 1;
+
+			tUI_State = UI_SUBSUBSUBMENU_STATE;	
+			UI_DeletemenuDisplay();
+		}
 		break;
 		
-		case ENTER_ARROW:
-			if(ubSubMenuItemFlag == 1)
+	case ENTER_ARROW:
+		if(ubSubMenuItemFlag == 1)
+		{
+			i = ubSubSubMenuItemFlag;
+			for(j = 0; j < 4; j++)
 			{
-				i = ubSubSubMenuItemFlag;
-				for(j = 0; j < 4; j++)
+				if(ubCamPairFlag[i] == 1)
 				{
-					if(ubCamPairFlag[i] == 1)
-					{
-						ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-						ubSubSubMenuItemFlag 	= i;
-						break;
-					}
-					i++;
-					if(i > 3) i = 0;
-				}
-
-				if((ubCamPairFlag[0] == 0) && (ubCamPairFlag[1] == 0)&& (ubCamPairFlag[2] == 0)&& (ubCamPairFlag[3] == 0))
+					ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+					ubSubSubMenuItemFlag 	= i;
 					break;
-
-				ubSubSubSubMenuItemFlag = 0;
-				ubSubSubSubMenuItemPreFlag = 1;
-
-				tUI_State = UI_SUBSUBSUBMENU_STATE;	
-				UI_DeletemenuDisplay();
+				}
+				i++;
+				if(i > 3) i = 0;
 			}
-			else
-			{
-				UI_SetScanMenu(ubSubSubMenuItemFlag);			
-			}
+
+			if((ubCamPairFlag[0] == 0) && (ubCamPairFlag[1] == 0)&& (ubCamPairFlag[2] == 0)&& (ubCamPairFlag[3] == 0))
+				break;
+
+			ubSubSubSubMenuItemFlag = 0;
+			ubSubSubSubMenuItemPreFlag = 1;
+
+			tUI_State = UI_SUBSUBSUBMENU_STATE;	
+			UI_DeletemenuDisplay();
+		}
+		else
+		{
+			UI_SetScanMenu(ubSubSubMenuItemFlag);			
+		}
 		break;	
 		
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			UI_GetPairCamInfo();
-			tUI_State = UI_SUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 729;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);			
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		UI_GetPairCamInfo();
+		tUI_State = UI_SUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 729;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);			
 		break;
 	}
-
 }
 
 void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
@@ -7128,84 +7166,83 @@ void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-				ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				if(0 == ubSubSubSubMenuItemFlag) ubSubSubSubMenuItemFlag = 1;
-				else  ubSubSubSubMenuItemFlag--;
-				UI_DeletemenuDisplay();
+	case UP_ARROW:
+		ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
+		if(0 == ubSubSubSubMenuItemFlag) ubSubSubSubMenuItemFlag = 1;
+		else ubSubSubSubMenuItemFlag--;
+		UI_DeletemenuDisplay();
 		break;	
 
-		case DOWN_ARROW:
-				ubSubSubSubMenuItemPreFlag =  ubSubSubSubMenuItemFlag;
-				if(++ubSubSubSubMenuItemFlag>=2) ubSubSubSubMenuItemFlag = 0;	
-				UI_DeletemenuDisplay();			
+	case DOWN_ARROW:
+		ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
+		if(++ubSubSubSubMenuItemFlag>=2) ubSubSubSubMenuItemFlag = 0;	
+		UI_DeletemenuDisplay();			
 		break;	
 
-		//case RIGHT_ARROW:
-		case ENTER_ARROW:
-			if(ubSubSubSubMenuItemFlag == 0) // delete	
-			{
-				APP_EventMsg_t tUI_UnindBuMsg = {0};
+//	case RIGHT_ARROW:
+	case ENTER_ARROW:
+		if(ubSubSubSubMenuItemFlag == 0) // delete	
+		{
+			APP_EventMsg_t tUI_UnindBuMsg = {0};
 	
-				tUI_CamStatus[ubSubSubMenuItemFlag].ulCAM_ID 	= INVALID_ID;
-				tUI_CamStatus[ubSubSubMenuItemFlag].tCamConnSts = CAM_OFFLINE;
-				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
-				tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == ubSubSubMenuItemFlag)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
-				UI_ResetDevSetting(ubSubSubMenuItemFlag);
-				UI_UpdateDevStatusInfo();
-				tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
-				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
-				tUI_UnindBuMsg.ubAPP_Message[1] = ubSubSubMenuItemFlag;
-				UI_SendMessageToAPP(&tUI_UnindBuMsg);
-				ubCamPairFlag[ubSubSubMenuItemFlag] = 0;
-				UI_GetPairCamInfo();
-				if(ubNoAddCamFlag == 1)
-				{
-					ubFastShowLostLinkSta = 1;
-				}
-			}
-			tUI_State = UI_SUBSUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 284;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);						
-			UI_GetPairCamInfo();
-
-			for(i = 0; i < 4 ; i++)
-			{
-				if(tUI_CamStatus[i].ulCAM_ID != INVALID_ID)
-				{
-					tCamViewSel.tCamViewPool[0] = i;
-					ubSubSubMenuItemFlag = i;
-					break;
-				}					
-			}
-			
-			UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);
-			
-			if(ubNoAddCamFlag == 1)
-				tCamViewSel.tCamViewPool[0] = CAM1;
-					
-			tCamViewSel.tCamViewType	= SINGLE_VIEW;
-			tUI_PuSetting.tAdoSrcCamNum = tCamViewSel.tCamViewPool[0];
-			UI_SwitchCameraSource();
-			UI_ClearBuConnectStatusFlag();
-			ubSetViewCam = tCamViewSel.tCamViewPool[0];						
+			tUI_CamStatus[ubSubSubMenuItemFlag].ulCAM_ID 	= INVALID_ID;
+			tUI_CamStatus[ubSubSubMenuItemFlag].tCamConnSts = CAM_OFFLINE;
+			tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
+			tUI_PuSetting.tAdoSrcCamNum  = (tUI_PuSetting.tAdoSrcCamNum == ubSubSubMenuItemFlag)?NO_CAM:tUI_PuSetting.tAdoSrcCamNum;
+			UI_ResetDevSetting(ubSubSubMenuItemFlag);
 			UI_UpdateDevStatusInfo();
+			tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
+			tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
+			tUI_UnindBuMsg.ubAPP_Message[1] = ubSubSubMenuItemFlag;
+			UI_SendMessageToAPP(&tUI_UnindBuMsg);
+			ubCamPairFlag[ubSubSubMenuItemFlag] = 0;
+			UI_GetPairCamInfo();
+			if(ubNoAddCamFlag == 1)
+			{
+				ubFastShowLostLinkSta = 1;
+			}
+		}
+		tUI_State = UI_SUBSUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 284;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);						
+		UI_GetPairCamInfo();
+
+		for(i = 0; i < 4 ; i++)
+		{
+			if(tUI_CamStatus[i].ulCAM_ID != INVALID_ID)
+			{
+				tCamViewSel.tCamViewPool[0] = i;
+				ubSubSubMenuItemFlag = i;
+				break;
+			}					
+		}
+			
+		UI_CamSubSubmenuDisplay(ubSubMenuItemFlag);
+			
+		if(ubNoAddCamFlag == 1)
+			tCamViewSel.tCamViewPool[0] = CAM1;
+					
+		tCamViewSel.tCamViewType	= SINGLE_VIEW;
+		tUI_PuSetting.tAdoSrcCamNum = tCamViewSel.tCamViewPool[0];
+		UI_SwitchCameraSource();
+		UI_ClearBuConnectStatusFlag();
+		ubSetViewCam = tCamViewSel.tCamViewPool[0];						
+		UI_UpdateDevStatusInfo();
 		break;	
 		
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			tUI_State = UI_SUBSUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 284;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);			
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		tUI_State = UI_SUBSUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 284;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);			
 		break;
 	}
-
 }
 void UI_SetScanMenu(uint8_t value)
 {
@@ -7213,33 +7250,33 @@ void UI_SetScanMenu(uint8_t value)
 	
 	switch(value)
 	{
-		case 0:
-			tUI_PuSetting.ubScanTime = 0;			
-			tUI_PuSetting.ubScanModeEn = FALSE;		
+	case 0:
+		tUI_PuSetting.ubScanTime = 0;			
+		tUI_PuSetting.ubScanModeEn = FALSE;		
 		break;	
 
-		case 1:
-			tUI_PuSetting.ubScanTime = 1;
-			tUI_PuSetting.ubScanModeEn = TRUE;	
-			ubUI_ScanStartFlag = FALSE;
+	case 1:
+		tUI_PuSetting.ubScanTime = 1;
+		tUI_PuSetting.ubScanModeEn = TRUE;	
+		ubUI_ScanStartFlag = FALSE;
 		break;	
 
-		case 2:
-			tUI_PuSetting.ubScanTime = 2;	
-			tUI_PuSetting.ubScanModeEn = TRUE;	
-			ubUI_ScanStartFlag = FALSE;
+	case 2:
+		tUI_PuSetting.ubScanTime = 2;	
+		tUI_PuSetting.ubScanModeEn = TRUE;	
+		ubUI_ScanStartFlag = FALSE;
 		break;	
 
-		case 3:
-			tUI_PuSetting.ubScanTime = 3;		
-			tUI_PuSetting.ubScanModeEn = TRUE;	
-			ubUI_ScanStartFlag = FALSE;
+	case 3:
+		tUI_PuSetting.ubScanTime = 3;		
+		tUI_PuSetting.ubScanModeEn = TRUE;	
+		ubUI_ScanStartFlag = FALSE;
 		break;	
 
-		case 4:
-			tUI_PuSetting.ubScanTime = 4;	
-			tUI_PuSetting.ubScanModeEn = TRUE;
-			ubUI_ScanStartFlag = FALSE;
+	case 4:
+		tUI_PuSetting.ubScanTime = 4;	
+		tUI_PuSetting.ubScanModeEn = TRUE;
+		ubUI_ScanStartFlag = FALSE;
 		break;			
 	}
 
@@ -7250,7 +7287,7 @@ void UI_SetScanMenu(uint8_t value)
 	tOsdImgInfo.uwYStart = 0;
 	OSD_EraserImg2(&tOsdImgInfo);
 
-	//UI_UpdateDevStatusInfo();
+//	UI_UpdateDevStatusInfo();
 
 	printd(Apk_DebugLvl, "UI_SetScanMenu ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
 	if(tUI_PuSetting.ubScanTime == 0)
@@ -7346,86 +7383,86 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 
 	switch(tResult)
 	{
-		case rUI_SUCCESS:
-			tPairInfo.tPairSelCam= ubPairSelCam;
-			tPairInfo.tDispLocation = ubPairSelCam;
+	case rUI_SUCCESS:
+		tPairInfo.tPairSelCam= ubPairSelCam;
+		tPairInfo.tDispLocation = ubPairSelCam;
 
-			ubCamPairOkState = 1;
+		ubCamPairOkState = 2;
 			
-			tUI_PuSetting.ubPairedBuNum += (tUI_PuSetting.ubPairedBuNum >= tUI_PuSetting.ubTotalBuNum)?0:1;
-			tUI_CamStatus[tPairInfo.tPairSelCam].ulCAM_ID = tPairInfo.tPairSelCam;
-			tUI_CamStatus[tPairInfo.tPairSelCam].tCamDispLocation = tPairInfo.tDispLocation;
-			for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
+		tUI_PuSetting.ubPairedBuNum += (tUI_PuSetting.ubPairedBuNum >= tUI_PuSetting.ubTotalBuNum)?0:1;
+		tUI_CamStatus[tPairInfo.tPairSelCam].ulCAM_ID = tPairInfo.tPairSelCam;
+		tUI_CamStatus[tPairInfo.tPairSelCam].tCamDispLocation = tPairInfo.tDispLocation;
+		for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
+		{
+			if(tCamNum == tPairInfo.tPairSelCam)
+				continue;
+			if((INVALID_ID != tUI_CamStatus[tCamNum].ulCAM_ID) &&
+			   (tUI_CamStatus[tCamNum].tCamDispLocation == tPairInfo.tDispLocation))
 			{
-				if(tCamNum == tPairInfo.tPairSelCam)
-					continue;
-				if((INVALID_ID != tUI_CamStatus[tCamNum].ulCAM_ID) &&
-				   (tUI_CamStatus[tCamNum].tCamDispLocation == tPairInfo.tDispLocation))
-				{
-					tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
-					tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
-					tUI_UnindBuMsg.ubAPP_Message[1] = tCamNum;
-					UI_SendMessageToAPP(&tUI_UnindBuMsg);
-					tUI_CamStatus[tCamNum].ulCAM_ID    = INVALID_ID;
-					tUI_CamStatus[tCamNum].tCamConnSts = CAM_OFFLINE;
-					tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
+				tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
+				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
+				tUI_UnindBuMsg.ubAPP_Message[1] = tCamNum;
+				UI_SendMessageToAPP(&tUI_UnindBuMsg);
+				tUI_CamStatus[tCamNum].ulCAM_ID    = INVALID_ID;
+				tUI_CamStatus[tCamNum].tCamConnSts = CAM_OFFLINE;
+				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
 
-					UI_ResetDevSetting(tCamNum);
-				}
+				UI_ResetDevSetting(tCamNum);
 			}
-			if((DISPLAY_1T1R == tUI_PuSetting.ubTotalBuNum) ||
-			   (NO_CAM == tUI_PuSetting.tAdoSrcCamNum) ||
-			   (INVALID_ID == tUI_CamStatus[tUI_PuSetting.tAdoSrcCamNum].ulCAM_ID))
-				tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
+		}
+		if((DISPLAY_1T1R == tUI_PuSetting.ubTotalBuNum) ||
+		   (NO_CAM == tUI_PuSetting.tAdoSrcCamNum) ||
+		   (INVALID_ID == tUI_CamStatus[tUI_PuSetting.tAdoSrcCamNum].ulCAM_ID))
+			tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
 
-			ubPairDisplayTime = 60; //10
+		ubPairDisplayTime = 60; //10
 	
-			UI_ResetDevSetting(tPairInfo.tPairSelCam);
-			UI_UpdateDevStatusInfo();
-			UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
+		UI_ResetDevSetting(tPairInfo.tPairSelCam);
+		UI_UpdateDevStatusInfo();
+		UI_AutoLcdSetSleepTime(tUI_PuSetting.ubSleepMode);
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 48;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 48;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIR_OK+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 235;
-			tOsdImgInfo.uwYStart =284 + 31;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIR_OK+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 235;
+		tOsdImgInfo.uwYStart =284 + 31;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
 
-			UI_GetPairCamInfo();
+		UI_GetPairCamInfo();
 
-			#if 0
-			if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
-			{
-				ubPairOK_SwitchCam = 1;
-				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
-			}
-			#else
-			//if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
-			{
-				tCamViewSel.tCamViewType	= SINGLE_VIEW;
-				tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
-				tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
-				UI_SwitchCameraSource();
-			}
-			#endif
-			break;
-		case rUI_FAIL:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 48;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+#if 0
+		if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
+		{
+			ubPairOK_SwitchCam = 1;
+			tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
+		}
+#else
+//		if(tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
+		{
+			tCamViewSel.tCamViewType	= SINGLE_VIEW;
+			tCamViewSel.tCamViewPool[0] = tPairInfo.tPairSelCam;
+			tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
+			UI_SwitchCameraSource();
+		}
+#endif
+		break;
+	case rUI_FAIL:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 48;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIR_FAIL+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 234;
-			tOsdImgInfo.uwYStart =284 +31;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIR_FAIL+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 234;
+		tOsdImgInfo.uwYStart =284 +31;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 			
-			break;
-		default:
-			break;
+		break;
+	default:
+		break;
 	}
 	tUI_State = UI_SUBSUBMENU_STATE;
 }
@@ -7486,7 +7523,7 @@ void UI_SettingSubmenuDisplay(void)
 
 void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -7501,35 +7538,33 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 	
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-			if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 6;
-			else  ubSubMenuItemFlag--;			
-			UI_SettingSubmenuDisplay();
+	case UP_ARROW:
+		ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+		if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 6;
+		else  ubSubMenuItemFlag--;			
+		UI_SettingSubmenuDisplay();
 		break;	
 
-		case DOWN_ARROW:	
-			ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
-			if(++ubSubMenuItemFlag>=7) ubSubMenuItemFlag = 0;	
+	case DOWN_ARROW:	
+		ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+		if(++ubSubMenuItemFlag>=7) ubSubMenuItemFlag = 0;	
 			
-			UI_SettingSubmenuDisplay();
+		UI_SettingSubmenuDisplay();
 		break;	
 
-
-		case RIGHT_ARROW:
-		case ENTER_ARROW:
-			tUI_State = UI_SUBSUBMENU_STATE;
-			ubSubSubMenuItemFlag = 0;
-			ubSubSubMenuItemPreFlag = 1;				
-			UI_DrawSettingSubSubMenuPage(ubSubMenuItemFlag);
+	case RIGHT_ARROW:
+	case ENTER_ARROW:
+		tUI_State = UI_SUBSUBMENU_STATE;
+		ubSubSubMenuItemFlag = 0;
+		ubSubSubMenuItemPreFlag = 1;				
+		UI_DrawSettingSubSubMenuPage(ubSubMenuItemFlag);
 		break;	
-		
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			tUI_State = UI_MAINMENU_STATE;
-			UI_DrawMenuPage();			
+
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		tUI_State = UI_MAINMENU_STATE;
+		UI_DrawMenuPage();			
 		break;
-		
 	}
 }
 
@@ -7545,58 +7580,58 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
 
 	switch(SubMenuItem)
 	{
-		case NIGHTMODE_ITEM:
-			for(i = 0; i < 4; i++)
+	case NIGHTMODE_ITEM:
+		for(i = 0; i < 4; i++)
+		{
+			if(ubCamPairFlag[i])
 			{
-				if(ubCamPairFlag[i])
-				{
-					ubSubSubMenuItemFlag 	= i;
-					break;
-				}
-			}
-			if((i == 3)&&(ubCamPairFlag[3] == 0))
+				ubSubSubMenuItemFlag 	= i;
 				break;
-			
-			UI_NightModeDisplay(ubSubSubMenuItemFlag);				
+			}
+		}
+		if((i == 3)&&(ubCamPairFlag[3] == 0))
 			break;
+
+		UI_NightModeDisplay(ubSubSubMenuItemFlag);				
+		break;
 	
-		case LANGUAGESET_ITEM:				
-			ubSubSubMenuRealItem = 0;
-			ubSubSubMenuItemFlag = tUI_PuSetting.ubLangageFlag;
-			UI_LangageDisplay(ubSubSubMenuItemFlag);
-			break;
+	case LANGUAGESET_ITEM:				
+		ubSubSubMenuRealItem = 0;
+		ubSubSubMenuItemFlag = tUI_PuSetting.ubLangageFlag;
+		UI_LangageDisplay(ubSubSubMenuItemFlag);
+		break;
 
-		case FLICKER_ITEM:
-			ubSubSubMenuItemFlag = tUI_PuSetting.ubFlickerFlag;
-			UI_FlickerDisplay(ubSubSubMenuItemFlag);
-			break;
+	case FLICKER_ITEM:
+		ubSubSubMenuItemFlag = tUI_PuSetting.ubFlickerFlag;
+		UI_FlickerDisplay(ubSubSubMenuItemFlag);
+		break;
 			
-		case DEFAULT_ITEM:
-			UI_DefualtDisplay(ubSubSubMenuItemFlag);
-			break;
+	case DEFAULT_ITEM:
+		UI_DefualtDisplay(ubSubSubMenuItemFlag);
+		break;
 			
-		case TEMPUNIT_ITEM:
-			ubSubSubMenuItemFlag = tUI_PuSetting.ubTempunitFlag;
-			UI_TempUnitDisplay(ubSubSubMenuItemFlag);
-			break;
+	case TEMPUNIT_ITEM:
+		ubSubSubMenuItemFlag = tUI_PuSetting.ubTempunitFlag;
+		UI_TempUnitDisplay(ubSubSubMenuItemFlag);
+		break;
 
-		case PRODUCT_INFO_ITEM:
-			UI_SNDisplay();
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_INFO_INFO+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 290;
-			tOsdImgInfo.uwYStart =377;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
-			break;
-			
-		case CONTACT_ITEM:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CONTACT_INFO, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 128;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
-			break;
+	case PRODUCT_INFO_ITEM:
+		UI_SNDisplay();
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_INFO_INFO+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 290;
+		tOsdImgInfo.uwYStart =377;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
+		break;
 
-		default:
-			break;
+	case CONTACT_ITEM:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CONTACT_INFO, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 128;
+		tOsdImgInfo.uwYStart =284;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
+		break;
+
+	default:
+		break;
 	}
 	
 }
@@ -7782,7 +7817,6 @@ void UI_NightModeSubSubSubmenuDisplay(uint8_t value)
 		tOsdImgInfo.uwXStart= 338+(ubSubSubSubMenuItemFlag*76);
 		tOsdImgInfo.uwYStart =167;	
 		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-
 	}
 }
 
@@ -7811,7 +7845,6 @@ void UI_SNDisplay(void)
 	tOsdImgInfo.uwXStart= 436;
 	tOsdImgInfo.uwYStart =631;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
 }
 
 //------------------------------------------------------------------------------
@@ -7821,66 +7854,65 @@ void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 	switch(ubSubMenuItemFlag)
 	{
-		case NIGHTMODE_ITEM:
-			break;
+	case NIGHTMODE_ITEM:
+		break;
 	
-		case LANGUAGESET_ITEM:	
-			ubLangageFlag = ubSubSubMenuItemFlag;
-			break;
+	case LANGUAGESET_ITEM:	
+		ubLangageFlag = ubSubSubMenuItemFlag;
+		break;
 
-		case FLICKER_ITEM:
-			ubFlickerFlag = ubSubSubMenuItemFlag;
-			break;
+	case FLICKER_ITEM:
+		ubFlickerFlag = ubSubSubMenuItemFlag;
+		break;
 			
-		case DEFAULT_ITEM:
-			ubDefualtFlag = ubSubSubMenuItemFlag;
-			break;
+	case DEFAULT_ITEM:
+		ubDefualtFlag = ubSubSubMenuItemFlag;
+		break;
 			
-		case TEMPUNIT_ITEM:
-			ubTempunitFlag = ubSubSubMenuItemFlag;
-			break;
+	case TEMPUNIT_ITEM:
+		ubTempunitFlag = ubSubSubMenuItemFlag;
+		break;
 
-		case PRODUCT_INFO_ITEM:
-			break;
+	case PRODUCT_INFO_ITEM:
+		break;
 			
-		case CONTACT_ITEM:
-			break;
+	case CONTACT_ITEM:
+		break;
 
-		default:
-			break;
+	default:
+		break;
 	}
 
 	
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			UI_SettingSubSubMenuUpKey(ubSubMenuItemFlag);			
+	case UP_ARROW:
+		UI_SettingSubSubMenuUpKey(ubSubMenuItemFlag);			
 		break;	
 
-		case DOWN_ARROW:
-			UI_SettingSubSubMenuDownKey(ubSubMenuItemFlag);		
+	case DOWN_ARROW:
+		UI_SettingSubSubMenuDownKey(ubSubMenuItemFlag);		
 		break;	
 
-		case ENTER_ARROW:
-			UI_SettingSubSubMenuEnterKey(ubSubMenuItemFlag);				
+	case ENTER_ARROW:
+		UI_SettingSubSubMenuEnterKey(ubSubMenuItemFlag);				
 		break;	
 
-		case RIGHT_ARROW:	
-			if(NIGHTMODE_ITEM == ubSubMenuItemFlag)
-				UI_SettingSubSubMenuEnterKey(ubSubMenuItemFlag);			
+	case RIGHT_ARROW:	
+		if(NIGHTMODE_ITEM == ubSubMenuItemFlag)
+			UI_SettingSubSubMenuEnterKey(ubSubMenuItemFlag);			
 		break;
 		
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			tUI_State = UI_SUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 729;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);			
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		tUI_State = UI_SUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 729;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);			
 		break;
 	}
-
 }
 
 void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
@@ -7890,85 +7922,82 @@ void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
 	
 	switch(SubMenuItem)
 	{
-		case NIGHTMODE_ITEM:
-			for(i = 3; i >= 0; i--)
-			{
-				if(ubCamPairFlag[i] == 1)
-				{	
-					subsubmenu_maxitem = i;
-					break;
-				}
-			}			
-			
-			for(i = ubSubSubMenuItemFlag; i < 4; i++)
-			{
-				if(ubCamPairFlag[i])
-				{
-					ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-					ubSubSubMenuItemFlag 	= i;
-					break;
-				}
-			}
-			if((i == 3)&&(ubCamPairFlag[3] == 0))
+	case NIGHTMODE_ITEM:
+		for(i = 3; i >= 0; i--)
+		{
+			if(ubCamPairFlag[i] == 1)
+			{	
+				subsubmenu_maxitem = i;
 				break;
-			
-			//if(ubSubSubMenuItemFlag <= 0)
-			//		break;
-			if(ubSubSubMenuItemFlag != 0)
-				ubSubSubMenuItemFlag -= 1;
-			else
-				ubSubSubMenuItemFlag = subsubmenu_maxitem;
-			
-			UI_NightModeDisplay(ubSubSubMenuItemFlag);	
+			}
+		}
+
+		for(i = ubSubSubMenuItemFlag; i < 4; i++)
+		{
+			if(ubCamPairFlag[i])
+			{
+				ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+				ubSubSubMenuItemFlag 	= i;
+				break;
+			}
+		}
+		if((i == 3)&&(ubCamPairFlag[3] == 0))
 			break;
+
+		if(ubSubSubMenuItemFlag != 0)
+			ubSubSubMenuItemFlag -= 1;
+		else
+			ubSubSubMenuItemFlag = subsubmenu_maxitem;
+			
+		UI_NightModeDisplay(ubSubSubMenuItemFlag);	
+		break;
 	
-		case LANGUAGESET_ITEM:	
-			if(0 == ubSubSubMenuItemFlag) ubSubSubMenuItemFlag = 3;
-			else  ubSubSubMenuItemFlag--;
-			
-			
-			ubLangageFlag = ubSubSubMenuItemFlag;
-			UI_LangageDisplay(ubLangageFlag);
-			break;
+	case LANGUAGESET_ITEM:	
+		if(0 == ubSubSubMenuItemFlag) ubSubSubMenuItemFlag = 3;
+		else  ubSubSubMenuItemFlag--;
 
-		case FLICKER_ITEM:
-			if(ubSubSubMenuItemFlag == 1)
-				ubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubMenuItemFlag =1;
-			
-			ubFlickerFlag = ubSubSubMenuItemFlag;
-			UI_FlickerDisplay(ubFlickerFlag);
-			break;
-			
-		case DEFAULT_ITEM:
-			if(ubSubSubMenuItemFlag == 1)
-				ubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubMenuItemFlag =1;
-			
-			ubDefualtFlag = ubSubSubMenuItemFlag;		
-			UI_DefualtDisplay(ubDefualtFlag);	
-			break;
-			
-		case TEMPUNIT_ITEM:
-			if(ubSubSubMenuItemFlag == 1)
-				ubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubMenuItemFlag =1;
-			
-			ubTempunitFlag = ubSubSubMenuItemFlag;		
-			UI_TempUnitDisplay(ubTempunitFlag);	
-			break;
+		ubLangageFlag = ubSubSubMenuItemFlag;
+		UI_LangageDisplay(ubLangageFlag);
+		break;
 
-		case PRODUCT_INFO_ITEM:
-			break;
-			
-		case CONTACT_ITEM:
-			break;
+	case FLICKER_ITEM:
+		if(ubSubSubMenuItemFlag == 1)
+			ubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubMenuItemFlag =1;
 
-		default:
-			break;
+		ubFlickerFlag = ubSubSubMenuItemFlag;
+		UI_FlickerDisplay(ubFlickerFlag);
+		break;
+			
+	case DEFAULT_ITEM:
+		if(ubSubSubMenuItemFlag == 1)
+			ubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubMenuItemFlag =1;
+			
+		ubDefualtFlag = ubSubSubMenuItemFlag;		
+		UI_DefualtDisplay(ubDefualtFlag);	
+		break;
+
+	case TEMPUNIT_ITEM:
+		if(ubSubSubMenuItemFlag == 1)
+			ubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubMenuItemFlag =1;
+			
+		ubTempunitFlag = ubSubSubMenuItemFlag;		
+		UI_TempUnitDisplay(ubTempunitFlag);	
+		break;
+
+	case PRODUCT_INFO_ITEM:
+		break;
+			
+	case CONTACT_ITEM:
+		break;
+
+	default:
+		break;
 	}
 	
 }
@@ -7979,86 +8008,87 @@ void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem)
 	
 	switch(SubMenuItem)
 	{
-		case NIGHTMODE_ITEM:
-			for(i = 0; i < 4; i++)
+	case NIGHTMODE_ITEM:
+		for(i = 0; i < 4; i++)
+		{
+			if(ubCamPairFlag[i])
 			{
-				if(ubCamPairFlag[i])
-				{
-					subsubmenu_minitem = i;
-					break;
-				}
-			}			
-
-			
-			for(i = ubSubSubMenuItemFlag; i < 4; i++)
-			{
-				if(ubCamPairFlag[i])
-				{
-					ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
-					ubSubSubMenuItemFlag 	= i;
-					break;
-				}
-			}
-			if((i == 3)&&(ubCamPairFlag[3] == 0))
+				subsubmenu_minitem = i;
 				break;
-			
-			//if(ubSubSubMenuItemFlag >= 3)
-			//	break;
+			}
+		}			
 
-			if(ubSubSubMenuItemFlag < 3)
-				ubSubSubMenuItemFlag += 1;	
-			else
-				ubSubSubMenuItemFlag =subsubmenu_minitem;
 			
-			UI_NightModeDisplay(ubSubSubMenuItemFlag);
+		for(i = ubSubSubMenuItemFlag; i < 4; i++)
+		{
+			if(ubCamPairFlag[i])
+			{
+				ubSubSubMenuItemPreFlag = ubSubSubMenuItemFlag;
+				ubSubSubMenuItemFlag 	= i;
+				break;
+			}
+		}
+		if((i == 3)&&(ubCamPairFlag[3] == 0))
 			break;
+			
+		//if(ubSubSubMenuItemFlag >= 3)
+		//	break;
+
+		if(ubSubSubMenuItemFlag < 3)
+			ubSubSubMenuItemFlag += 1;	
+		else
+			ubSubSubMenuItemFlag =subsubmenu_minitem;
+			
+		UI_NightModeDisplay(ubSubSubMenuItemFlag);
+		break;
 	
-		case LANGUAGESET_ITEM:	
-			if(++ubSubSubMenuItemFlag>=4) ubSubSubMenuItemFlag = 0;	
+	case LANGUAGESET_ITEM:	
+		if(++ubSubSubMenuItemFlag>=4) ubSubSubMenuItemFlag = 0;	
 
-			ubLangageFlag = ubSubSubMenuItemFlag;
-			UI_LangageDisplay(ubLangageFlag);
-			break;
+		ubLangageFlag = ubSubSubMenuItemFlag;
+		UI_LangageDisplay(ubLangageFlag);
+		break;
 
-		case FLICKER_ITEM:
-			if(ubSubSubMenuItemFlag == 1)
-				ubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubMenuItemFlag =1;
+	case FLICKER_ITEM:
+		if(ubSubSubMenuItemFlag == 1)
+			ubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubMenuItemFlag =1;
 
-			ubFlickerFlag = ubSubSubMenuItemFlag;
-			UI_FlickerDisplay(ubFlickerFlag);
-			break;
-		case DEFAULT_ITEM:
-			if(ubSubSubMenuItemFlag == 1)
-				ubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubMenuItemFlag =1;
+		ubFlickerFlag = ubSubSubMenuItemFlag;
+		UI_FlickerDisplay(ubFlickerFlag);
+		break;
+	case DEFAULT_ITEM:
+		if(ubSubSubMenuItemFlag == 1)
+			ubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubMenuItemFlag =1;
 
-			ubDefualtFlag = ubSubSubMenuItemFlag;
-			UI_DefualtDisplay(ubDefualtFlag);
-			break;
+		ubDefualtFlag = ubSubSubMenuItemFlag;
+		UI_DefualtDisplay(ubDefualtFlag);
+		break;
 			
-		case TEMPUNIT_ITEM:
-			if(ubSubSubMenuItemFlag == 1)
-				ubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubMenuItemFlag =1;
+	case TEMPUNIT_ITEM:
+		if(ubSubSubMenuItemFlag == 1)
+			ubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubMenuItemFlag =1;
 
-			ubTempunitFlag = ubSubSubMenuItemFlag;
-			UI_TempUnitDisplay(ubTempunitFlag);
-			break;
+		ubTempunitFlag = ubSubSubMenuItemFlag;
+		UI_TempUnitDisplay(ubTempunitFlag);
+		break;
 
-		case PRODUCT_INFO_ITEM:
-			break;
+	case PRODUCT_INFO_ITEM:
+		break;
 			
-		case CONTACT_ITEM:
-			break;
+	case CONTACT_ITEM:
+		break;
 
-		default:
-			break;
+	default:
+		break;
 	}
 }
+
 void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 {
 	OSD_IMG_INFO tOsdImgInfo;
@@ -8068,99 +8098,99 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 	
 	switch(SubMenuItem)
 	{
-		case NIGHTMODE_ITEM:
-			if(ubNoAddCamFlag == 0)
-			{
-				tUI_State = UI_SUBSUBSUBMENU_STATE;
-				ubSubSubSubMenuItemFlag = ((tUI_PuSetting.NightmodeFlag>>ubSubSubMenuItemFlag)&0x01)?1:0;
-				ubSubSubSubMenuRealItem = 0;
-				UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
-			}	
-			break;
+	case NIGHTMODE_ITEM:
+		if(ubNoAddCamFlag == 0)
+		{
+			tUI_State = UI_SUBSUBSUBMENU_STATE;
+			ubSubSubSubMenuItemFlag = ((tUI_PuSetting.NightmodeFlag>>ubSubSubMenuItemFlag)&0x01)?1:0;
+			ubSubSubSubMenuRealItem = 0;
+			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuRealItem);
+		}	
+		break;
 	
-		case LANGUAGESET_ITEM:	
-			tUI_PuSetting.ubLangageFlag = ubLangageFlag;
-			UI_LangageDisplay(ubLangageFlag);
-			UI_DrawSettingSubMenuPage_NoSel(0);
-			UI_SettingSubmenuDisplay();
-			//UI_UpdateDevStatusInfo();
-			break;
+	case LANGUAGESET_ITEM:	
+		tUI_PuSetting.ubLangageFlag = ubLangageFlag;
+		UI_LangageDisplay(ubLangageFlag);
+		UI_DrawSettingSubMenuPage_NoSel(0);
+		UI_SettingSubmenuDisplay();
+		//UI_UpdateDevStatusInfo();
+		break;
 
-		case FLICKER_ITEM:
-			if(ubFlickerFlag == 0)
-			{			
-				tUI_CamStatus[tSelCamNum].tCamFlicker = CAMFLICKER_50HZ;
-			}
-			else
-			{
-				tUI_CamStatus[tSelCamNum].tCamFlicker = CAMFLICKER_60HZ;					
-			}
-			tUI_PuSetting.ubFlickerFlag = ubFlickerFlag;
-			UI_FlickerDisplay(ubFlickerFlag);
-			//UI_UpdateDevStatusInfo();
-			break;
+	case FLICKER_ITEM:
+		if(ubFlickerFlag == 0)
+		{			
+			tUI_CamStatus[tSelCamNum].tCamFlicker = CAMFLICKER_50HZ;
+		}
+		else
+		{
+			tUI_CamStatus[tSelCamNum].tCamFlicker = CAMFLICKER_60HZ;					
+		}
+		tUI_PuSetting.ubFlickerFlag = ubFlickerFlag;
+		UI_FlickerDisplay(ubFlickerFlag);
+		//UI_UpdateDevStatusInfo();
+		break;
 			
-		case DEFAULT_ITEM:
-			if(ubDefualtFlag == 1)
-			{
-				tUI_PuSetting.ubDefualtFlag = TRUE;
+	case DEFAULT_ITEM:
+		if(ubDefualtFlag == 1)
+		{
+			tUI_PuSetting.ubDefualtFlag = TRUE;
 
-				tUI_PuSetting.ubZoomScale				= 0;
-				tUI_PuSetting.VolLvL.tVOL_UpdateLvL		= VOL_LVL4;
-				tUI_PuSetting.NightmodeFlag				= 0x0F;
-				tUI_PuSetting.ubHighTempSetting 		= 0;
-				tUI_PuSetting.ubLowTempSetting 			= 0;
-				tUI_PuSetting.ubTempAlertSetting 		= 1;
-				tUI_PuSetting.ubSoundLevelSetting 		= 0;
-				tUI_PuSetting.ubSoundAlertSetting 		= 1;	
-				tUI_PuSetting.ubTempunitFlag 			= 0;
-				tUI_PuSetting.ubFlickerFlag 			= 1;
-				tUI_PuSetting.ubSleepMode				= 1;
-				tUI_PuSetting.BriLvL.tBL_UpdateLvL		= BL_LVL8;
-				tUI_PuSetting.ubScanTime 				= 2;
-				tUI_PuSetting.ubScanModeEn 				= TRUE;
+			tUI_PuSetting.ubZoomScale				= 0;
+			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		= VOL_LVL4;
+			tUI_PuSetting.NightmodeFlag				= 0x0F;
+			tUI_PuSetting.ubHighTempSetting 		= 0;
+			tUI_PuSetting.ubLowTempSetting 			= 0;
+			tUI_PuSetting.ubTempAlertSetting 		= 1;
+			tUI_PuSetting.ubSoundLevelSetting 		= 0;
+			tUI_PuSetting.ubSoundAlertSetting 		= 1;	
+			tUI_PuSetting.ubTempunitFlag 			= 0;
+			tUI_PuSetting.ubFlickerFlag 			= 1;
+			tUI_PuSetting.ubSleepMode				= 1;
+			tUI_PuSetting.BriLvL.tBL_UpdateLvL		= BL_LVL8;
+			tUI_PuSetting.ubScanTime 				= 2;
+			tUI_PuSetting.ubScanModeEn 				= TRUE;
 
-				tUI_PuSetting.ubFeatCode0			= 0x00;
-				tUI_PuSetting.ubFeatCode1			= 0x00;
-				tUI_PuSetting.ubFeatCode2			= 0x00;	
+			tUI_PuSetting.ubFeatCode0			= 0x00;
+			tUI_PuSetting.ubFeatCode1			= 0x00;
+			tUI_PuSetting.ubFeatCode2			= 0x00;	
 
-				LCDBL_ENABLE(FALSE);
-				ubFactoryDeleteCam = 1;
-				//UI_CamDeleteCamera(1, 0);
-				printd(Apk_DebugLvl, "defulat ~~~\n");			
-				UI_UpdateDevStatusInfo();	
-				ubFactorySettingFlag = 0;
+			LCDBL_ENABLE(FALSE);
+			ubFactoryDeleteCam = 1;
+			//UI_CamDeleteCamera(1, 0);
+			printd(Apk_DebugLvl, "defulat ~~~\n");			
+			UI_UpdateDevStatusInfo();	
+			ubFactorySettingFlag = 0;
 
-				tOsdImgInfo.uwHSize  = 720;
-				tOsdImgInfo.uwVSize  = 1280;
-				tOsdImgInfo.uwXStart = 0;
-				tOsdImgInfo.uwYStart = 0;
-				OSD_EraserImg2(&tOsdImgInfo); //复位重启以后OSD可能会有残留
+			tOsdImgInfo.uwHSize  = 720;
+			tOsdImgInfo.uwVSize  = 1280;
+			tOsdImgInfo.uwXStart = 0;
+			tOsdImgInfo.uwYStart = 0;
+			OSD_EraserImg2(&tOsdImgInfo); //复位重启以后OSD可能会有残留
 
-				//osDelay(100);
-				//WDT_Disable(WDT_RST);
-				//WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
-				//while(1);
-			}
-			break;
-			
-		case TEMPUNIT_ITEM:
-			if(tUI_PuSetting.ubTempunitFlag != ubTempunitFlag)
-				ubRealTemp = ubTempunitFlag?UI_TempFToC(ubRealTemp):UI_TempCToF(ubRealTemp);
-			tUI_PuSetting.ubTempunitFlag  = ubTempunitFlag;
-			UI_TempBarDisplay(ubRealTemp);
-			UI_TempUnitDisplay(ubTempunitFlag);
-			//UI_UpdateDevStatusInfo();	
-			break;
+			//osDelay(100);
+			//WDT_Disable(WDT_RST);
+			//WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
+			//while(1);
+		}
+		break;
 
-		case PRODUCT_INFO_ITEM:
-			break;
-			
-		case CONTACT_ITEM:
-			break;
+	case TEMPUNIT_ITEM:
+		if(tUI_PuSetting.ubTempunitFlag != ubTempunitFlag)
+			ubRealTemp = ubTempunitFlag?UI_TempFToC(ubRealTemp):UI_TempCToF(ubRealTemp);
+		tUI_PuSetting.ubTempunitFlag  = ubTempunitFlag;
+		UI_TempBarDisplay(ubRealTemp);
+		UI_TempUnitDisplay(ubTempunitFlag);
+		//UI_UpdateDevStatusInfo();	
+		break;
 
-		default:
-			break;
+	case PRODUCT_INFO_ITEM:
+		break;
+
+	case CONTACT_ITEM:
+		break;
+
+	default:
+		break;
 	}
 	/*
 	tUI_State = UI_SUBMENU_STATE;		
@@ -8178,50 +8208,63 @@ void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
+	case UP_ARROW:
 
-			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
+		ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
 			
-			if(ubSubSubSubMenuItemFlag == 1)
-				ubSubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubSubMenuItemFlag =1;
-			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuItemFlag);
+		if(ubSubSubSubMenuItemFlag == 1)
+			ubSubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubSubMenuItemFlag =1;
+		UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuItemFlag);
 		break;	
 
-		case DOWN_ARROW:
-			ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
+	case DOWN_ARROW:
+		ubSubSubSubMenuItemPreFlag = ubSubSubSubMenuItemFlag;
 			
-			if(ubSubSubSubMenuItemFlag == 1)
-				ubSubSubSubMenuItemFlag = 0;
-			else
-				ubSubSubSubMenuItemFlag =1;
-			UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuItemFlag);
+		if(ubSubSubSubMenuItemFlag == 1)
+			ubSubSubSubMenuItemFlag = 0;
+		else
+			ubSubSubSubMenuItemFlag =1;
+		UI_NightModeSubSubSubmenuDisplay(ubSubSubSubMenuItemFlag);
 		break;	
 
-		case RIGHT_ARROW:
-			break;
+	case RIGHT_ARROW:
+		break;
 			
-		case ENTER_ARROW:
-			tUI_PuSetting.NightmodeFlag &=(~(1<<ubSubSubMenuItemFlag));
-			tUI_PuSetting.NightmodeFlag |=(ubSubSubSubMenuItemFlag<<ubSubSubMenuItemFlag);
-			printd(Apk_DebugLvl, "UI_NightModeSubSubSubMenuPage tUI_PuSetting.NightmodeFlag: 0x%x.\n", tUI_PuSetting.NightmodeFlag);
-			//UI_UpdateDevStatusInfo();
-			UI_SendNightModeToBu();
-			UI_NightModeDisplay(ubSubSubMenuItemFlag);
+	case ENTER_ARROW:
+		tUI_PuSetting.NightmodeFlag &=(~(1<<ubSubSubMenuItemFlag));
+		tUI_PuSetting.NightmodeFlag |=(ubSubSubSubMenuItemFlag<<ubSubSubMenuItemFlag);
+		printd(Apk_DebugLvl, "UI_NightModeSubSubSubMenuPage tUI_PuSetting.NightmodeFlag: 0x%x.\n", tUI_PuSetting.NightmodeFlag);
+		//UI_UpdateDevStatusInfo();
+		UI_SendNightModeToBu();
+		UI_NightModeDisplay(ubSubSubMenuItemFlag);
 		
-		case LEFT_ARROW:
-		case EXIT_ARROW:
-			tUI_State = UI_SUBSUBMENU_STATE;		
-			tOsdImgInfo.uwHSize  = 672;
-			tOsdImgInfo.uwVSize  = 284;
-			tOsdImgInfo.uwXStart = 48;
-			tOsdImgInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdImgInfo);			
+	case LEFT_ARROW:
+	case EXIT_ARROW:
+		tUI_State = UI_SUBSUBMENU_STATE;		
+		tOsdImgInfo.uwHSize  = 672;
+		tOsdImgInfo.uwVSize  = 284;
+		tOsdImgInfo.uwXStart = 48;
+		tOsdImgInfo.uwYStart = 0;
+		OSD_EraserImg2(&tOsdImgInfo);			
 		break;
 	}
 }
+
 //------------------------------------------------------------------------------
+void UI_FS_MenuDisplay(uint8_t value)
+{
+	if(value == 0)
+	{
+		UI_FS_LangageMenuDisplay(ubLangageFlag);
+	}
+	else
+	{
+		UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
+	}
+}
+
 void UI_FS_LangageMenuDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
@@ -8250,7 +8293,7 @@ void UI_FS_SetTimeMenuDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-//EN_MODE_UI  tEnUI;
+//	EN_MODE_UI  tEnUI;
 
 /*
 	tEnUI.tStatus = EN_FIX_HOPPING;                               //固定频点模式
@@ -8278,194 +8321,194 @@ void UI_FS_SetTimeMenuDisplay(uint8_t value)
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 	switch(value)
 	{
-		case 0:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 149;
-			tOsdImgInfo.uwYStart =339;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 0:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 149;
+		tOsdImgInfo.uwYStart =339;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEUPAROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167;
-			tOsdImgInfo.uwYStart =632;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEUPAROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167;
+		tOsdImgInfo.uwYStart =632;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEDOWNAROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 288;
-			tOsdImgInfo.uwYStart =632;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEDOWNAROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 288;
+		tOsdImgInfo.uwYStart =632;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-		//-----------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =371;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =371;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-		//-------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =479;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =513;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =479;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =513;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =574;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-		//-----------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =612;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =646;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =574;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =612;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =646;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);				
 		break;
 
-		case 1:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 149;
-			tOsdImgInfo.uwYStart =339;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 1:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 149;
+		tOsdImgInfo.uwYStart =339;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEUPAROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167;
-			tOsdImgInfo.uwYStart =497;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEUPAROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167;
+		tOsdImgInfo.uwYStart =497;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEDOWNAROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 288;
-			tOsdImgInfo.uwYStart =497;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEDOWNAROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 288;
+		tOsdImgInfo.uwYStart =497;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-		//-----------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =371;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =371;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-		//-------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =479;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =513;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =479;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =513;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =574;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-		//-----------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =612;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =646;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =574;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =612;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =646;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;
 
-		case 2:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 149;
-			tOsdImgInfo.uwYStart =339;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 2:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 149;
+		tOsdImgInfo.uwYStart =339;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEUPAROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 167;
-			tOsdImgInfo.uwYStart =394;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEUPAROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 167;
+		tOsdImgInfo.uwYStart =394;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEDOWNAROW, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 288;
-			tOsdImgInfo.uwYStart =394;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIMEDOWNAROW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 288;
+		tOsdImgInfo.uwYStart =394;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-		//-----------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM_S+(ubTimeAMPM*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =371;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM_S+(ubTimeAMPM*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =371;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-		//-------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =479;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =513;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =479;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =513;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =574;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-		//-----------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =612;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =646;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =574;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =612;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =646;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;	
 
-		case 3:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 149;
-			tOsdImgInfo.uwYStart =339;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	case 3:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_FSMENU_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 149;
+		tOsdImgInfo.uwYStart =339;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			
-		//-----------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =371;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_AM+(ubTimeAMPM*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =371;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-		//-------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =479;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =513;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =479;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeMin/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =513;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =574;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-		//-----------------------------------------------------------------------
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =612;	
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 216;
-			tOsdImgInfo.uwYStart =646;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_SIGN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =574;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	//-----------------------------------------------------------------------
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour%10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =612;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_0+((ubTimeHour/10)*2), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 216;
+		tOsdImgInfo.uwYStart =646;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 			
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_BACK1+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 434;
-			tOsdImgInfo.uwYStart =679;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_BACK1+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 434;
+		tOsdImgInfo.uwYStart =679;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;	
 
-		case 4:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_FINISH1+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 434;
-			tOsdImgInfo.uwYStart =217;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+	case 4:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_TIME_FINISH1+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 434;
+		tOsdImgInfo.uwYStart =217;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
 		break;			
 	}
 	OSD_Weight(OSD_WEIGHT_8DIV8);
@@ -8511,7 +8554,7 @@ uint8_t UI_TempFToC(uint8_t fTemp)
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
-//uint8_t ubBuTemp = 0;
+//	uint8_t ubBuTemp = 0;
 
 	if((tCamViewSel.tCamViewPool[0] == tCamNum) && (CAM_ONLINE == tUI_CamStatus[tCamNum].tCamConnSts))
 	{
@@ -8532,56 +8575,55 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 	uint8_t *pvdata = (uint8_t *)pvTrig;
 	uint8_t ubBUCmdID = pvdata[0];
 
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 
 	switch(ubBUCmdID)
 	{
-		case UI_BU_CMD_VERSION:
-			ubBuHWVersion = pvdata[1];
-			ubBuSWVersion = pvdata[2]*10 + pvdata[3];
-			break;
+	case UI_BU_CMD_VERSION:
+		ubBuHWVersion = pvdata[1];
+		ubBuSWVersion = pvdata[2]*10 + pvdata[3];
+		break;
 
-		case UI_BU_CMD_PS_MODE:
-			#if Current_Test
-			if(ubGetPsModeFlag == 1)
+	case UI_BU_CMD_PS_MODE:
+#if Current_Test
+		if(ubGetPsModeFlag == 1)
+		{
+			if(pvdata[1] == PS_VOX_MODE)
 			{
-				if(pvdata[1] == PS_VOX_MODE)
-				{
-					UI_DisableVox();
-				}
+				UI_DisableVox();
 			}
-			#endif
-			break;
+		}
+#endif
+		break;
 
-		case UI_BU_CMD_ALARM_TYPE:
-			ubAlarmWakeupType = pvdata[1];
-			break;
+	case UI_BU_CMD_ALARM_TYPE:
+		ubAlarmWakeupType = pvdata[1];
+		break;
 
-		case UI_BU_CMD_PICKUP_VOLUME:
-			ubGetVoice1 = pvdata[1]; 
-			ubGetVoice2 = pvdata[2]; 
-			ubGetVoice3 = pvdata[3]; 
-			ubGetVoice4 = pvdata[4]; 
-			//printd(Apk_DebugLvl, "VolumeValue: %d.\n",(ubGetVoice1<<24)+(ubGetVoice2<<16)+(ubGetVoice3<<8)+ubGetVoice4);
-			break;
-			
-		default:
-			break;
+	case UI_BU_CMD_PICKUP_VOLUME:
+		ubGetVoice1 = pvdata[1]; 
+		ubGetVoice2 = pvdata[2]; 
+		ubGetVoice3 = pvdata[3]; 
+		ubGetVoice4 = pvdata[4]; 
+		//printd(Apk_DebugLvl, "VolumeValue: %d.\n",(ubGetVoice1<<24)+(ubGetVoice2<<16)+(ubGetVoice3<<8)+ubGetVoice4);
+		break;
+
+	default:
+		break;
 	}
-	
 }
 
 void UI_TempBarDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-	
+
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
 
 	if(value > 199)
 		value = 199;
 
-	//printf("UI_TempBarDisplay value: %d,\n", value);
+//	printf("UI_TempBarDisplay value: %d,\n", value);
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BLANK1, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
@@ -8613,7 +8655,6 @@ void UI_TempBarDisplay(uint8_t value)
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 882;  
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-
 }
 
 void UI_VolBarDisplay(uint8_t value)
@@ -8640,7 +8681,7 @@ void UI_VolBarDisplay(uint8_t value)
 				tOsdImgInfo.uwXStart = 0;
 				tOsdImgInfo.uwYStart = 823 - 30*(i-1);
 			}
-				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 		}
 	}
 	else
@@ -8776,8 +8817,8 @@ uint8_t UI_SendPwrNormalModeToBu(void)
 		{
 			tPwrCmd.tDS_CamNum 				= tCamViewSel.tCamViewPool[0];
 			tPwrCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
-			tPwrCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
-			tPwrCmd.ubCmd[UI_SETTING_DATA]   = POWER_NORMAL_MODE;
+			tPwrCmd.ubCmd[UI_SETTING_ITEM]	= UI_VOXMODE_SETTING;
+			tPwrCmd.ubCmd[UI_SETTING_DATA]	= POWER_NORMAL_MODE;
 			tPwrCmd.ubCmd_Len  				= 3;
 			if(UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
 			{
@@ -8862,132 +8903,132 @@ void UI_MotorDisplay(uint8_t value)
 
 	switch(value)
 	{
-		case MC_UP_ON:
-			if(ubFactoryModeFLag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 191;
-				tOsdImgInfo.uwYStart = 576;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			}
-			ubMotor1State = MC_UP_ON;
-			break;
-			
-		case MC_UP_TOP:
-			if(ubFactoryModeFLag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP_T, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 191;
-				tOsdImgInfo.uwYStart = 576;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			}
-			ubMotor1State = MC_UP_TOP;
-			break;
-			
-		case MC_DOWN_ON:
-			if(ubFactoryModeFLag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 516;
-				tOsdImgInfo.uwYStart = 576;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			}
-			ubMotor1State = MC_DOWN_ON;
-			break;
-			
-		case MC_DOWN_TOP:
-			if(ubFactoryModeFLag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN_T, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 516;
-				tOsdImgInfo.uwYStart = 576;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			}
-			ubMotor1State = MC_DOWN_TOP;
-			break;
+	case MC_UP_ON:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 191;
+			tOsdImgInfo.uwYStart = 576;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor1State = MC_UP_ON;
+		break;
 
-		case MC_UP_DOWN_OFF:
-			if(ubFactoryModeFLag == 0)
+	case MC_UP_TOP:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP_T, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 191;
+			tOsdImgInfo.uwYStart = 576;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor1State = MC_UP_TOP;
+		break;
+
+	case MC_DOWN_ON:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 516;
+			tOsdImgInfo.uwYStart = 576;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor1State = MC_DOWN_ON;
+		break;
+
+	case MC_DOWN_TOP:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN_T, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 516;
+			tOsdImgInfo.uwYStart = 576;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor1State = MC_DOWN_TOP;
+		break;
+
+	case MC_UP_DOWN_OFF:
+		if(ubFactoryModeFLag == 0)
+		{
+			if(ubMotor1State != MC_UP_DOWN_OFF)
 			{
-				if(ubMotor1State != MC_UP_DOWN_OFF)
-				{
-					tOsdImgInfo.uwHSize  = 386;
-					tOsdImgInfo.uwVSize  = 389;
-					tOsdImgInfo.uwXStart = 191;
-					tOsdImgInfo.uwYStart = 447;
-					OSD_EraserImg2(&tOsdImgInfo);
-				}
+				tOsdImgInfo.uwHSize  = 386;
+				tOsdImgInfo.uwVSize  = 389;
+				tOsdImgInfo.uwXStart = 191;
+				tOsdImgInfo.uwYStart = 447;
+				OSD_EraserImg2(&tOsdImgInfo);
 			}
-			ubMotor1State = MC_UP_DOWN_OFF;
-			break;
-			
-		case MC_LEFT_ON:
-			if(ubFactoryModeFLag == 0)
+		}
+		ubMotor1State = MC_UP_DOWN_OFF;
+		break;
+
+	case MC_LEFT_ON:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 322;
+			tOsdImgInfo.uwYStart = 771;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor0State = MC_LEFT_ON;
+		break;
+
+	case MC_LEFT_TOP:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT_T, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 322;
+			tOsdImgInfo.uwYStart = 771;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor0State = MC_LEFT_TOP;
+		break;
+
+	case MC_RIGHT_ON:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 322;
+			tOsdImgInfo.uwYStart = 447;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor0State = MC_RIGHT_ON;
+		break;
+
+	case MC_RIGHT_TOP:
+		if(ubFactoryModeFLag == 0)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT_T, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 322;
+			tOsdImgInfo.uwYStart = 447;	
+			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		}
+		ubMotor0State = MC_RIGHT_TOP;
+		break;
+
+	case MC_LEFT_RIGHT_OFF:
+		if(ubFactoryModeFLag == 0)
+		{
+			if(ubMotor0State != MC_LEFT_RIGHT_OFF)
 			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 322;
-				tOsdImgInfo.uwYStart = 771;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+				tOsdImgInfo.uwHSize  = 386;
+				tOsdImgInfo.uwVSize  = 389;
+				tOsdImgInfo.uwXStart = 191;
+				tOsdImgInfo.uwYStart = 447;
+				OSD_EraserImg2(&tOsdImgInfo);
 			}
-			ubMotor0State = MC_LEFT_ON;
-			break;
-			
-		case MC_LEFT_TOP:
-			if(ubFactoryModeFLag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT_T, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 322;
-				tOsdImgInfo.uwYStart = 771;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			}
-			ubMotor0State = MC_LEFT_TOP;
-			break;
-		
-		case MC_RIGHT_ON:
-			if(ubFactoryModeFLag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 322;
-				tOsdImgInfo.uwYStart = 447;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			}
-			ubMotor0State = MC_RIGHT_ON;
-			break;
-			
-		case MC_RIGHT_TOP:
-			if(ubFactoryModeFLag == 0)
-			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT_T, 1, &tOsdImgInfo);
-				tOsdImgInfo.uwXStart = 322;
-				tOsdImgInfo.uwYStart = 447;	
-				tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			}
-			ubMotor0State = MC_RIGHT_TOP;
-			break;
-			
-		case MC_LEFT_RIGHT_OFF:
-			if(ubFactoryModeFLag == 0)
-			{
-				if(ubMotor0State != MC_LEFT_RIGHT_OFF)
-				{
-					tOsdImgInfo.uwHSize  = 386;
-					tOsdImgInfo.uwVSize  = 389;
-					tOsdImgInfo.uwXStart = 191;
-					tOsdImgInfo.uwYStart = 447;
-					OSD_EraserImg2(&tOsdImgInfo);
-				}
-			}
-			ubMotor0State = MC_LEFT_RIGHT_OFF;
-			break;
-			
-		default:
-			break;
+		}
+		ubMotor0State = MC_LEFT_RIGHT_OFF;
+		break;
+
+	default:
+		break;
 	}
 }
 
 void UI_MotorControl(uint8_t Value)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 			
 	if(tUI_PuSetting.ubDefualtFlag == TRUE)
 		return;
@@ -9134,7 +9175,7 @@ void UI_GetBatLevel(void)
 	int i;
 	uint16_t ubBatAdc;
 	uint16_t ubAdjustAdc;
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 
 	BatteryMap_t tBatMap[] =
 	{
@@ -9201,8 +9242,8 @@ void UI_CheckUsbCharge(void)
 
 	//printd(Apk_DebugLvl, "### USB: %d, ChgFull: %d, USB_Config: %d.\n", UI_GetUsbDet(), UI_GetBatChgFull(), tUSBD_GetConfigStatus());
 
-	#if Current_Test
-	#else
+#if Current_Test
+#else
 	if(UI_GetUsbDet() == 1) //USB_DET
 	{
 		if(tUSBD_GetConfigStatus() == 1) //充电器
@@ -9224,7 +9265,6 @@ void UI_CheckUsbCharge(void)
 
 		if(UI_GetBatChgFull() == 0) //电池充满
 		{
-			
 		}
 	}
 	else
@@ -9232,7 +9272,7 @@ void UI_CheckUsbCharge(void)
 		if(GPIO->GPIO_O12 == 0)
 			GPIO->GPIO_O12 = 1;
 	}
-	#endif
+#endif
 
 	if((UI_GetUsbDet() == 1) && (ubUsbStatus == 0))
 	{
@@ -9274,44 +9314,44 @@ void UI_PTNDisplay(uint8_t value)
 
 	switch(value)
 	{
-		case 0:  //clean
-			tOsdImgInfo.uwHSize  = 386;
-			tOsdImgInfo.uwVSize  = 389;
-			tOsdImgInfo.uwXStart = 191;
-			tOsdImgInfo.uwYStart = 447;
-			OSD_EraserImg2(&tOsdImgInfo);	
+	case 0:  //clean
+		tOsdImgInfo.uwHSize  = 386;
+		tOsdImgInfo.uwVSize  = 389;
+		tOsdImgInfo.uwXStart = 191;
+		tOsdImgInfo.uwYStart = 447;
+		OSD_EraserImg2(&tOsdImgInfo);	
 		break;
 
-		case 1:   // up
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 191;
-			tOsdImgInfo.uwYStart = 576;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			ubDisplayPTN = 1;
+	case 1:   // up
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_UP, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 191;
+		tOsdImgInfo.uwYStart = 576;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		ubDisplayPTN = 1;
 		break;
 
-		case 2:   //down
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 516;
-			tOsdImgInfo.uwYStart = 576;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			ubDisplayPTN = 1;
+	case 2:   //down
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_DOWN, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 516;
+		tOsdImgInfo.uwYStart = 576;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		ubDisplayPTN = 1;
 		break;
 
-		case 3:   //left
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 322;
-			tOsdImgInfo.uwYStart = 771;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			ubDisplayPTN = 1;
+	case 3:   //left
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_LEFT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 322;
+		tOsdImgInfo.uwYStart = 771;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		ubDisplayPTN = 1;
 		break;
 
-		case 4:   //right
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 322;
-			tOsdImgInfo.uwYStart = 447;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			ubDisplayPTN = 1;
+	case 4:   //right
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_PTZ_RIGHT, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 322;
+		tOsdImgInfo.uwYStart = 447;	
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		ubDisplayPTN = 1;
 		break;
 	}
 }
@@ -9563,19 +9603,19 @@ void UI_SubSubSubMenu(UI_ArrowKey_t tArrowKey)
 {
 	switch(tUI_MenuItem.ubItemIdx)
 	{
-		case ALARM_ITEM:
-				UI_AlarmSubSubSubMenuPage(tArrowKey);
-			break;
+	case ALARM_ITEM:
+		UI_AlarmSubSubSubMenuPage(tArrowKey);
+		break;
 
-		case CAMERAS_ITEM:
-				UI_CamSubSubSubMenuPage(tArrowKey);
-			break;
+	case CAMERAS_ITEM:
+		UI_CamSubSubSubMenuPage(tArrowKey);
+		break;
 		
-		case SETTING_ITEM:			
-				UI_NightModeSubSubSubMenuPage(tArrowKey);
-			break;
-		default:
-			break;
+	case SETTING_ITEM:			
+		UI_NightModeSubSubSubMenuPage(tArrowKey);
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -9647,7 +9687,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubMenuInfo(&tArrowKey, &tUI_SubMenuItem[CAMERAS_ITEM]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
+	case DRAW_HIGHLIGHT_MENUICON:
 		{
 			uint16_t uwSubMenuItemOsdImg[CAMSITEM_MAX] = {OSD2IMG_ANRNOR_ITEM, OSD2IMG_ANRNOR_ITEM, OSD2IMG_THREEDNRNOR_ITEM, 
 														  OSD2IMG_vLDSNOR_ITEM, OSD2IMG_WDRNOR_ITEM, OSD2IMG_DISNOR_ITEM, 
@@ -9686,75 +9726,75 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_DrawHLandNormalIcon(uwSubMenuItemOsdImg[ubSubMenuItemPreIdx], (uwSubMenuItemOsdImg[ubSubMenuItemIdx] + ((!ubSubMenuItemIdx)?0:UI_ICON_HIGHLIGHT)));
 			break;
 		}
-		case DRAW_MENUPAGE:
-			if(tArrowKey == ENTER_ARROW)
-			{
-				UI_PUReqCmd_t tCamSetCmd;
-				UI_CamsSetMode_t tCamsSetMode;
-				UI_CamFlicker_t tCamsFlicker = tUI_CamStatus[tCamSelNum].tCamFlicker;
-				uint8_t ubSubMenuItemIdx = tUI_SubMenuItem[CAMERAS_ITEM].tSubMenuInfo.ubItemIdx;
-				uint8_t tUI_CamsSetItem[CAMSITEM_MAX] = {UI_ADOANR_SETTING,  UI_ADOANR_SETTING, UI_IMG3DNR_SETTING,
-														 UI_IMGvLDC_SETTING, UI_IMGWDR_SETTING, UI_IMGDIS_SETTING, 
-														 UI_IMGCBR_SETTING, UI_IMGCONDENSE_SETTING, UI_FLICKER_SETTING};
-				UI_CamsSetMode_t *pCamsModeSts[CAMSITEM_MAX] = {&tUI_CamStatus[tCamSelNum].tCamAnrMode, &tUI_CamStatus[tCamSelNum].tCamAnrMode,
-																&tUI_CamStatus[tCamSelNum].tCam3DNRMode, &tUI_CamStatus[tCamSelNum].tCamvLDCMode,
-																&tUI_CamStatus[tCamSelNum].tCamWdrMode, &tUI_CamStatus[tCamSelNum].tCamDisMode,
-															    &tUI_CamStatus[tCamSelNum].tCamCbrMode, &tUI_CamStatus[tCamSelNum].tCamCondenseMode};
+	case DRAW_MENUPAGE:
+		if(tArrowKey == ENTER_ARROW)
+		{
+			UI_PUReqCmd_t tCamSetCmd;
+			UI_CamsSetMode_t tCamsSetMode;
+			UI_CamFlicker_t tCamsFlicker = tUI_CamStatus[tCamSelNum].tCamFlicker;
+			uint8_t ubSubMenuItemIdx = tUI_SubMenuItem[CAMERAS_ITEM].tSubMenuInfo.ubItemIdx;
+			uint8_t tUI_CamsSetItem[CAMSITEM_MAX] = {UI_ADOANR_SETTING,  UI_ADOANR_SETTING, UI_IMG3DNR_SETTING,
+													 UI_IMGvLDC_SETTING, UI_IMGWDR_SETTING, UI_IMGDIS_SETTING, 
+													 UI_IMGCBR_SETTING, UI_IMGCONDENSE_SETTING, UI_FLICKER_SETTING};
+			UI_CamsSetMode_t *pCamsModeSts[CAMSITEM_MAX] = {&tUI_CamStatus[tCamSelNum].tCamAnrMode, &tUI_CamStatus[tCamSelNum].tCamAnrMode,
+															&tUI_CamStatus[tCamSelNum].tCam3DNRMode, &tUI_CamStatus[tCamSelNum].tCamvLDCMode,
+															&tUI_CamStatus[tCamSelNum].tCamWdrMode, &tUI_CamStatus[tCamSelNum].tCamDisMode,
+														    &tUI_CamStatus[tCamSelNum].tCamCbrMode, &tUI_CamStatus[tCamSelNum].tCamCondenseMode};
 
-				if((ubSubMenuItemIdx == CAMSSELCAM_ITEM) ||
-				   (ubSubMenuItemIdx == CAMSWDR_ITEM) || (ubSubMenuItemIdx == CAMSDIS_ITEM) ||
-				   (ubSubMenuItemIdx == CAMSCBR_ITEM) || (ubSubMenuItemIdx == CAMSCONDENSE_ITEM))
-					break;
-				tCamSetCmd.tDS_CamNum 				= tCamSelNum;
-				tCamSetCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
-				tCamSetCmd.ubCmd[UI_SETTING_ITEM]   = (ubSubMenuItemIdx == CAMSANR_ITEM)?UI_ADOANR_SETTING:UI_IMGPROC_SETTING;
+			if((ubSubMenuItemIdx == CAMSSELCAM_ITEM) ||
+			   (ubSubMenuItemIdx == CAMSWDR_ITEM) || (ubSubMenuItemIdx == CAMSDIS_ITEM) ||
+			   (ubSubMenuItemIdx == CAMSCBR_ITEM) || (ubSubMenuItemIdx == CAMSCONDENSE_ITEM))
+				break;
+			tCamSetCmd.tDS_CamNum 				= tCamSelNum;
+			tCamSetCmd.ubCmd[UI_TWC_TYPE]		= UI_SETTING;
+			tCamSetCmd.ubCmd[UI_SETTING_ITEM]   = (ubSubMenuItemIdx == CAMSANR_ITEM)?UI_ADOANR_SETTING:UI_IMGPROC_SETTING;
+			if(ubSubMenuItemIdx == CAMSFLICKER_ITEM)
+			{
+				tCamsFlicker  						= (CAMFLICKER_50HZ == tUI_CamStatus[tCamSelNum].tCamFlicker)?CAMFLICKER_60HZ:CAMFLICKER_50HZ;
+				tCamSetCmd.ubCmd[UI_SETTING_DATA]   = UI_FLICKER_SETTING;
+				tCamSetCmd.ubCmd[UI_SETTING_DATA+1] = tCamsFlicker;
+			}
+			else
+			{
+				tCamsSetMode  						= (CAMSET_OFF == tCamsModeSts[ubSubMenuItemIdx])?CAMSET_ON:CAMSET_OFF;
+				tCamSetCmd.ubCmd[UI_SETTING_DATA]   = (ubSubMenuItemIdx == CAMSANR_ITEM)?tCamsSetMode:tUI_CamsSetItem[ubSubMenuItemIdx];
+				tCamSetCmd.ubCmd[UI_SETTING_DATA+1] = (ubSubMenuItemIdx == CAMSANR_ITEM)?0:tCamsSetMode;
+			}
+			tCamSetCmd.ubCmd_Len  				= (ubSubMenuItemIdx == CAMSANR_ITEM)?3:4;
+			if(ubSubMenuItemIdx == CAMSFLICKER_ITEM)
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_CAMS50HL_ICON, 2, &tOsdImgInfo[0]);
+				tOSD_Img2(&tOsdImgInfo[tCamsFlicker], OSD_UPDATE);
+			}
+			else
+			{
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_CAMSOFFHL_ICON, 2, &tOsdImgInfo[0]);
+				tOsdImgInfo[tCamsSetMode].uwXStart += (ubSubMenuItemIdx - 1) * CAMS_SET_ITEM_OFFSET;
+				tOSD_Img2(&tOsdImgInfo[tCamsSetMode], OSD_UPDATE);
+			}
+			if(UI_SendRequestToBU(osThreadGetId(), &tCamSetCmd) != rUI_SUCCESS)
+			{
+				printd(DBG_ErrorLvl, "Camera Setting fail !\n");
 				if(ubSubMenuItemIdx == CAMSFLICKER_ITEM)
 				{
-					tCamsFlicker  						= (CAMFLICKER_50HZ == tUI_CamStatus[tCamSelNum].tCamFlicker)?CAMFLICKER_60HZ:CAMFLICKER_50HZ;
-					tCamSetCmd.ubCmd[UI_SETTING_DATA]   = UI_FLICKER_SETTING;
-					tCamSetCmd.ubCmd[UI_SETTING_DATA+1] = tCamsFlicker;
-				}
-				else
-				{
-					tCamsSetMode  						= (CAMSET_OFF == tCamsModeSts[ubSubMenuItemIdx])?CAMSET_ON:CAMSET_OFF;
-					tCamSetCmd.ubCmd[UI_SETTING_DATA]   = (ubSubMenuItemIdx == CAMSANR_ITEM)?tCamsSetMode:tUI_CamsSetItem[ubSubMenuItemIdx];
-					tCamSetCmd.ubCmd[UI_SETTING_DATA+1] = (ubSubMenuItemIdx == CAMSANR_ITEM)?0:tCamsSetMode;
-				}
-				tCamSetCmd.ubCmd_Len  				= (ubSubMenuItemIdx == CAMSANR_ITEM)?3:4;
-				if(ubSubMenuItemIdx == CAMSFLICKER_ITEM)
-				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_CAMS50HL_ICON, 2, &tOsdImgInfo[0]);
 					tOSD_Img2(&tOsdImgInfo[tCamsFlicker], OSD_UPDATE);
 				}
 				else
 				{
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_CAMSOFFHL_ICON, 2, &tOsdImgInfo[0]);
-					tOsdImgInfo[tCamsSetMode].uwXStart += (ubSubMenuItemIdx - 1) * CAMS_SET_ITEM_OFFSET;
-					tOSD_Img2(&tOsdImgInfo[tCamsSetMode], OSD_UPDATE);
+					tOsdImgInfo[tCamsModeSts[ubSubMenuItemIdx]].uwXStart += (ubSubMenuItemIdx - 1) * CAMS_SET_ITEM_OFFSET;
+					tOSD_Img2(&tOsdImgInfo[tCamsModeSts[ubSubMenuItemIdx]], OSD_UPDATE);
 				}
-				if(UI_SendRequestToBU(osThreadGetId(), &tCamSetCmd) != rUI_SUCCESS)
-				{
-					printd(DBG_ErrorLvl, "Camera Setting fail !\n");
-					if(ubSubMenuItemIdx == CAMSFLICKER_ITEM)
-					{
-						tOSD_Img2(&tOsdImgInfo[tCamsFlicker], OSD_UPDATE);
-					}
-					else
-					{
-						tOsdImgInfo[tCamsModeSts[ubSubMenuItemIdx]].uwXStart += (ubSubMenuItemIdx - 1) * CAMS_SET_ITEM_OFFSET;
-						tOSD_Img2(&tOsdImgInfo[tCamsModeSts[ubSubMenuItemIdx]], OSD_UPDATE);
-					}
-					return;
-				}
-				*pCamsModeSts[ubSubMenuItemIdx] 		= tCamsSetMode;
-				tUI_CamStatus[tCamSelNum].tCamFlicker   = tCamsFlicker;
-				//UI_UpdateDevStatusInfo();
+				return;
 			}
-			break;
-		case EXIT_MENUFUNC:
-			break;
-		default:
-			break;
+			*pCamsModeSts[ubSubMenuItemIdx] 		= tCamsSetMode;
+			tUI_CamStatus[tCamSelNum].tCamFlicker   = tCamsFlicker;
+			//UI_UpdateDevStatusInfo();
+		}
+		break;
+	case EXIT_MENUFUNC:
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -9779,7 +9819,7 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubSubMenuInfo(&tArrowKey, &tCamsSubSubMenuItem.tCameraViewPage);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
+	case DRAW_HIGHLIGHT_MENUICON:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[5] = {OSD2IMG_CAM1VIEWNOR_ICON, OSD2IMG_CAM2VIEWNOR_ICON, OSD2IMG_CAM3VIEWNOR_ICON,
 												  OSD2IMG_CAM4VIEWNOR_ICON, OSD2IMG_CAMQUALVIEWNOR_ICON};
@@ -9793,7 +9833,7 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_DrawHLandNormalIcon(uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx], (uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx] + UI_ICON_HIGHLIGHT));
 			break;
 		}
-		case EXECUTE_MENUFUNC:
+	case EXECUTE_MENUFUNC:
 		{
 			UI_CamNum_t tCamNumSel = (UI_CamNum_t)tCamsSubSubMenuItem.tCameraViewPage.tSubMenuInfo.ubItemIdx;
 
@@ -9807,7 +9847,7 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 			break;
 		}
-		case EXIT_MENUFUNC:
+	case EXIT_MENUFUNC:
 		{
 			OSD_IMG_INFO tOsdImgInfo;
 
@@ -9820,8 +9860,8 @@ void UI_CameraSettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBMENU_STATE;
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 #endif
@@ -9839,7 +9879,7 @@ void UI_PairingSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubMenuInfo(&tArrowKey, &tUI_SubMenuItem[PAIRING_ITEM]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
+	case DRAW_HIGHLIGHT_MENUICON:
 		{
 			uint16_t uwSubMenuItemOsdImg[PAIRITEM_MAX] = {OSD2IMG_PAIRCAMNOR_ITEM, OSD2IMG_DELCAMNOR_ITEM};
 			uint8_t ubSubMenuItemPreIdx = tUI_SubMenuItem[PAIRING_ITEM].tSubMenuInfo.ubItemPreIdx;
@@ -9847,7 +9887,7 @@ void UI_PairingSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_DrawHLandNormalIcon(uwSubMenuItemOsdImg[ubSubMenuItemPreIdx], (uwSubMenuItemOsdImg[ubSubMenuItemIdx] + UI_ICON_HIGHLIGHT));
 			break;
 		}
-		case DRAW_MENUPAGE:
+	case DRAW_MENUPAGE:
 		{
 			//! Draw sub sub menu page
 			OSD_IMG_INFO tOsdImgInfo, tCamRdyOsdImgInfo = {0};
@@ -9912,10 +9952,10 @@ void UI_PairingSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBSUBMENU_STATE;
 			break;
 		}
-		case EXIT_MENUFUNC:
-			break;
-		default:
-			break;
+	case EXIT_MENUFUNC:
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -9935,17 +9975,17 @@ void UI_PairingDrawSubSbuMenuItem(UI_PairSubMenuItemList_t *ptSubMenuItem, UI_Su
 	uint8_t ubSubSubMenuItemIdx    = ptSubSubMenuItem->tSubMenuInfo.ubItemIdx;
 	switch(*ptSubMenuItem)
 	{
-		case PAIRCAM_ITEM:
-		case DELCAM_ITEM:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, (uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx]+((tUI_CamStatus[ubSubSubMenuItemPreIdx].ulCAM_ID != INVALID_ID)?UI_ICON_READY:UI_ICON_NORMAL)), 1, &tOsdImgInfo);								
-			tOsdImgInfo.uwXStart += uwIconOffset;
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx]+UI_ICON_HIGHLIGHT, 1, &tOsdImgInfo);											
-			tOsdImgInfo.uwXStart += uwIconOffset;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			break;
-		default:
-			break;
+	case PAIRCAM_ITEM:
+	case DELCAM_ITEM:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, (uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx]+((tUI_CamStatus[ubSubSubMenuItemPreIdx].ulCAM_ID != INVALID_ID)?UI_ICON_READY:UI_ICON_NORMAL)), 1, &tOsdImgInfo);								
+		tOsdImgInfo.uwXStart += uwIconOffset;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx]+UI_ICON_HIGHLIGHT, 1, &tOsdImgInfo);											
+		tOsdImgInfo.uwXStart += uwIconOffset;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -9969,10 +10009,10 @@ void UI_PairingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubSubMenuInfo(&tArrowKey, &tPairSubSubMenuItem.tPairS[tSubMenuItem]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
-			UI_PairingDrawSubSbuMenuItem(&tSubMenuItem, &tPairSubSubMenuItem.tPairS[tSubMenuItem]);
-			break;
-		case EXECUTE_MENUFUNC:
+	case DRAW_HIGHLIGHT_MENUICON:
+		UI_PairingDrawSubSbuMenuItem(&tSubMenuItem, &tPairSubSubMenuItem.tPairS[tSubMenuItem]);
+		break;
+	case EXECUTE_MENUFUNC:
 		{
 			if(tSubMenuItem == PAIRCAM_ITEM)
 			{
@@ -10030,7 +10070,7 @@ void UI_PairingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			}
 			break;
 		}
-		case EXIT_MENUFUNC:
+	case EXIT_MENUFUNC:
 		{
 			OSD_IMG_INFO tOsdImgInfo;
 			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRCAM1NOR_ICON, 1, &tOsdImgInfo);
@@ -10056,8 +10096,8 @@ void UI_PairingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBMENU_STATE;
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10067,53 +10107,53 @@ void UI_PairingSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
-			{
-				if((tPairInfo.tDispLocation == DISP_UPPER_LEFT) || (tPairInfo.tDispLocation == DISP_UPPER_RIGHT))
-					return;
-				tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_LOWER_LEFT)?DISP_UPPER_LEFT:DISP_UPPER_RIGHT;
-				break;
-			}
-			return;
-		case DOWN_ARROW:
-			if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
-			{
-				if((tPairInfo.tDispLocation == DISP_LOWER_LEFT) || (tPairInfo.tDispLocation == DISP_LOWER_RIGHT))
-					return;
-				tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_UPPER_LEFT)?DISP_LOWER_LEFT:DISP_LOWER_RIGHT;
-				break;
-			}
-			return;
-		case LEFT_ARROW:
-			if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
-			{
-				if((tPairInfo.tDispLocation == DISP_UPPER_LEFT) || (tPairInfo.tDispLocation == DISP_LOWER_LEFT))
-					return;
-				tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_UPPER_RIGHT)?DISP_UPPER_LEFT:DISP_LOWER_LEFT;
-			}
-			else if(tUI_PuSetting.ubTotalBuNum == DISPLAY_2T1R)
-			{
-				if(tPairInfo.tDispLocation == DISP_LEFT)
-					return;
-				tPairInfo.tDispLocation = DISP_LEFT;
-			}
+	case UP_ARROW:
+		if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
+		{
+			if((tPairInfo.tDispLocation == DISP_UPPER_LEFT) || (tPairInfo.tDispLocation == DISP_UPPER_RIGHT))
+				return;
+			tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_LOWER_LEFT)?DISP_UPPER_LEFT:DISP_UPPER_RIGHT;
 			break;
-		case RIGHT_ARROW:
-			if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
-			{
-				if((tPairInfo.tDispLocation == DISP_UPPER_RIGHT) || (tPairInfo.tDispLocation == DISP_LOWER_RIGHT))
-					return;
-				tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_UPPER_LEFT)?DISP_UPPER_RIGHT:DISP_LOWER_RIGHT;
-			}
-			else if(tUI_PuSetting.ubTotalBuNum == DISPLAY_2T1R)
-			{
-				if(tPairInfo.tDispLocation == DISP_RIGHT)
-					return;
-				tPairInfo.tDispLocation = DISP_RIGHT;
-			}
+		}
+		return;
+	case DOWN_ARROW:
+		if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
+		{
+			if((tPairInfo.tDispLocation == DISP_LOWER_LEFT) || (tPairInfo.tDispLocation == DISP_LOWER_RIGHT))
+				return;
+			tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_UPPER_LEFT)?DISP_LOWER_LEFT:DISP_LOWER_RIGHT;
 			break;
-		case ENTER_ARROW:
+		}
+		return;
+	case LEFT_ARROW:
+		if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
+		{
+			if((tPairInfo.tDispLocation == DISP_UPPER_LEFT) || (tPairInfo.tDispLocation == DISP_LOWER_LEFT))
+				return;
+			tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_UPPER_RIGHT)?DISP_UPPER_LEFT:DISP_LOWER_LEFT;
+		}
+		else if(tUI_PuSetting.ubTotalBuNum == DISPLAY_2T1R)
+		{
+			if(tPairInfo.tDispLocation == DISP_LEFT)
+				return;
+			tPairInfo.tDispLocation = DISP_LEFT;
+		}
+		break;
+	case RIGHT_ARROW:
+		if(tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)
+		{
+			if((tPairInfo.tDispLocation == DISP_UPPER_RIGHT) || (tPairInfo.tDispLocation == DISP_LOWER_RIGHT))
+				return;
+			tPairInfo.tDispLocation = (tPairInfo.tDispLocation == DISP_UPPER_LEFT)?DISP_UPPER_RIGHT:DISP_LOWER_RIGHT;
+		}
+		else if(tUI_PuSetting.ubTotalBuNum == DISPLAY_2T1R)
+		{
+			if(tPairInfo.tDispLocation == DISP_RIGHT)
+				return;
+			tPairInfo.tDispLocation = DISP_RIGHT;
+		}
+		break;
+	case ENTER_ARROW:
 		{
 			APP_EventMsg_t tUI_PairMessage = {0};
 			uint16_t uwIconXoffset = (tUI_PuSetting.ubTotalBuNum == DISPLAY_4T1R)?((tPairInfo.tDispLocation == DISP_LOWER_LEFT) || (tPairInfo.tDispLocation == DISP_LOWER_RIGHT))?88:0:
@@ -10135,13 +10175,13 @@ void UI_PairingSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_PAIRING_STATE;
 			return;
 		}
-		case EXIT_ARROW:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRLUWINDOW_ICON, 1, &tOsdImgInfo);			
-			OSD_EraserImg2(&tOsdImgInfo);
-			tUI_State = UI_SUBSUBMENU_STATE;
-			return;
-		default:
-			return;
+	case EXIT_ARROW:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRLUWINDOW_ICON, 1, &tOsdImgInfo);			
+		OSD_EraserImg2(&tOsdImgInfo);
+		tUI_State = UI_SUBSUBMENU_STATE;
+		return;
+	default:
+		return;
 	}
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRLUWINDOW_ICON+tPairInfo.tDispLocation, 1, &tOsdImgInfo);	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
@@ -10204,49 +10244,49 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 	OSD_EraserImg2(&tOsdImgInfo);
 	switch(tResult)
 	{
-		case rUI_SUCCESS:
-			tUI_PuSetting.ubPairedBuNum += (tUI_PuSetting.ubPairedBuNum >= tUI_PuSetting.ubTotalBuNum)?0:1;
-			tUI_CamStatus[tPairInfo.tPairSelCam].ulCAM_ID = tPairInfo.tPairSelCam;
-			tUI_CamStatus[tPairInfo.tPairSelCam].tCamDispLocation = tPairInfo.tDispLocation;
-			for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
+	case rUI_SUCCESS:
+		tUI_PuSetting.ubPairedBuNum += (tUI_PuSetting.ubPairedBuNum >= tUI_PuSetting.ubTotalBuNum)?0:1;
+		tUI_CamStatus[tPairInfo.tPairSelCam].ulCAM_ID = tPairInfo.tPairSelCam;
+		tUI_CamStatus[tPairInfo.tPairSelCam].tCamDispLocation = tPairInfo.tDispLocation;
+		for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
+		{
+			if(tCamNum == tPairInfo.tPairSelCam)
+				continue;
+			if((INVALID_ID != tUI_CamStatus[tCamNum].ulCAM_ID) &&
+			   (tUI_CamStatus[tCamNum].tCamDispLocation == tPairInfo.tDispLocation))
 			{
-				if(tCamNum == tPairInfo.tPairSelCam)
-					continue;
-				if((INVALID_ID != tUI_CamStatus[tCamNum].ulCAM_ID) &&
-				   (tUI_CamStatus[tCamNum].tCamDispLocation == tPairInfo.tDispLocation))
-				{
-					tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
-					tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
-					tUI_UnindBuMsg.ubAPP_Message[1] = tCamNum;
-					UI_SendMessageToAPP(&tUI_UnindBuMsg);
-					tUI_CamStatus[tCamNum].ulCAM_ID    = INVALID_ID;
-					tUI_CamStatus[tCamNum].tCamConnSts = CAM_OFFLINE;
-					tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRRDYMASK_ICON, 1, &tOsdImgInfo);
-					tOsdImgInfo.uwXStart += (tCamNum*55);
-					OSD_EraserImg2(&tOsdImgInfo);
-					tOSD_GetOsdImgInfor(1, OSD_IMG2, ((OSD2IMG_PAIRCAM1NOR_ICON+(tCamNum*3))), 1, &tOsdImgInfo);
-					tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-					UI_ResetDevSetting(tCamNum);
-				}
+				tUI_UnindBuMsg.ubAPP_Event 		= APP_UNBIND_BU_EVENT;
+				tUI_UnindBuMsg.ubAPP_Message[0] = 1;		//! Message Length
+				tUI_UnindBuMsg.ubAPP_Message[1] = tCamNum;
+				UI_SendMessageToAPP(&tUI_UnindBuMsg);
+				tUI_CamStatus[tCamNum].ulCAM_ID    = INVALID_ID;
+				tUI_CamStatus[tCamNum].tCamConnSts = CAM_OFFLINE;
+				tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRRDYMASK_ICON, 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart += (tCamNum*55);
+				OSD_EraserImg2(&tOsdImgInfo);
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, ((OSD2IMG_PAIRCAM1NOR_ICON+(tCamNum*3))), 1, &tOsdImgInfo);
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+				UI_ResetDevSetting(tCamNum);
 			}
-			if((DISPLAY_1T1R == tUI_PuSetting.ubTotalBuNum) ||
-			   (NO_CAM == tUI_PuSetting.tAdoSrcCamNum) ||
-			   (INVALID_ID == tUI_CamStatus[tUI_PuSetting.tAdoSrcCamNum].ulCAM_ID))
-				tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, ((OSD2IMG_PAIRCAM1NOR_ICON+(tPairInfo.tPairSelCam*3))+UI_ICON_READY), 1, &tOsdImgInfo);
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRRDYMASK_ICON, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart += (tPairInfo.tPairSelCam*55);
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-			UI_PairingSubSubMenuPage(DOWN_ARROW);
-			UI_ResetDevSetting(tPairInfo.tPairSelCam);
-			//UI_UpdateDevStatusInfo();
-			break;
-		case rUI_FAIL:
-			break;
-		default:
-			break;
+		}
+		if((DISPLAY_1T1R == tUI_PuSetting.ubTotalBuNum) ||
+		   (NO_CAM == tUI_PuSetting.tAdoSrcCamNum) ||
+		   (INVALID_ID == tUI_CamStatus[tUI_PuSetting.tAdoSrcCamNum].ulCAM_ID))
+			tUI_PuSetting.tAdoSrcCamNum = tPairInfo.tPairSelCam;
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, ((OSD2IMG_PAIRCAM1NOR_ICON+(tPairInfo.tPairSelCam*3))+UI_ICON_READY), 1, &tOsdImgInfo);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_PAIRRDYMASK_ICON, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart += (tPairInfo.tPairSelCam*55);
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+		UI_PairingSubSubMenuPage(DOWN_ARROW);
+		UI_ResetDevSetting(tPairInfo.tPairSelCam);
+//		UI_UpdateDevStatusInfo();
+		break;
+	case rUI_FAIL:
+		break;
+	default:
+		break;
 	}
 	tUI_State = UI_SUBSUBMENU_STATE;
 }
@@ -10296,7 +10336,7 @@ void UI_RecordSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubMenuInfo(&tArrowKey, &tUI_SubMenuItem[RECORD_ITEM]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
+	case DRAW_HIGHLIGHT_MENUICON:
 		{
 			uint16_t uwSubMenuItemOsdImg[RECITEM_MAX] = {OSD2IMG_RECMODENOR_ITEM, OSD2IMG_RECMODENOR_ITEM, OSD2IMG_RESNOR_ITEM, OSD2IMG_SDFNOR_ITEM};
 			uint8_t ubSubMenuItemPreIdx = tUI_SubMenuItem[RECORD_ITEM].tSubMenuInfo.ubItemPreIdx;
@@ -10304,7 +10344,7 @@ void UI_RecordSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_DrawHLandNormalIcon(uwSubMenuItemOsdImg[ubSubMenuItemPreIdx], (uwSubMenuItemOsdImg[ubSubMenuItemIdx] + ((!ubSubMenuItemIdx)?0:UI_ICON_HIGHLIGHT)));
 			break;
 		}
-		case DRAW_MENUPAGE:
+	case DRAW_MENUPAGE:
 		{
 			uint8_t ubSubMenuItemIdx = tUI_SubMenuItem[RECORD_ITEM].tSubMenuInfo.ubItemIdx;			
 			//UI_CamNum_t tCamNum = tCamSelect.tCamNum4RecSub;
@@ -10353,10 +10393,10 @@ void UI_RecordSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBSUBMENU_STATE;
 			break;
 		}
-		case EXIT_MENUFUNC:
-			break;
-		default:
-			break;
+	case EXIT_MENUFUNC:
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10365,14 +10405,14 @@ void UI_RecordUpdateSubSubMenuItemIndex(UI_RecSubSubMenuItem_t *ptSubSubMenuItem
 	UI_CamNum_t tCamNum = tCamSelect.tCamNum4RecSub;
 	switch(*tSubMenuItem)
 	{
-		case RECMODE_ITEM:
-			ptSubSubMenuItem->tRecordS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tREC_Mode;
-			break;
-		case RECRES_ITEM:
-			ptSubSubMenuItem->tRecordS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tREC_Resolution;
-			break;
-		default:
-			return;
+	case RECMODE_ITEM:
+		ptSubSubMenuItem->tRecordS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tREC_Mode;
+		break;
+	case RECRES_ITEM:
+		ptSubSubMenuItem->tRecordS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tREC_Resolution;
+		break;
+	default:
+		return;
 	}
 	*Update_Flag = TRUE;
 }
@@ -10384,20 +10424,20 @@ void UI_RecordDrawSubSubMenuItem(UI_RecSubSubMenuItem_t *ptSubSubMenuItem, UI_Re
 	uint8_t ubSubSubMenuItemIdx = ptSubSubMenuItem->tRecordS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx;
 	switch(*tSubMenuItem)
 	{
-		case RECMODE_ITEM:
+	case RECMODE_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[REC_RECMODE_MAX] = {OSD2IMG_RECLOOPNOR_ICON, OSD2IMG_RECMANUNOR_ICON};
 			UI_DrawHLandNormalIcon(uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx], (uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx]+UI_ICON_HIGHLIGHT));
 			break;
 		}
-		case RECRES_ITEM:
+	case RECRES_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[RECRES_MAX] = {OSD2IMG_RESFHDNOR_ICON, OSD2IMG_RESHDNOR_ICON, OSD2IMG_RESWVGANOR_ICON};
 			UI_DrawHLandNormalIcon(uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx], (uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx]+UI_ICON_HIGHLIGHT));
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10422,10 +10462,10 @@ void UI_RecordSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubSubMenuInfo(&tArrowKey, &tRecSubSubMenuItem.tRecordS[tCamNum][tSubMenuItem]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
-			UI_RecordDrawSubSubMenuItem(&tRecSubSubMenuItem, &tSubMenuItem);
-			break;
-		case EXECUTE_MENUFUNC:
+	case DRAW_HIGHLIGHT_MENUICON:
+		UI_RecordDrawSubSubMenuItem(&tRecSubSubMenuItem, &tSubMenuItem);
+		break;
+	case EXECUTE_MENUFUNC:
 		{
 			UI_PUReqCmd_t tRecordCmd;
 
@@ -10444,7 +10484,8 @@ void UI_RecordSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 					*pUI_Mode = tRecSubSubMenuItem.tRecordS[tCamNum][tSubMenuItem].tSubMenuInfo.ubItemIdx;
 			}
 		}
-		case EXIT_MENUFUNC:
+		break;
+	case EXIT_MENUFUNC:
 		{
 			OSD_IMG_INFO tOsdImgInfo;
 			tOsdImgInfo.uwHSize  = 335;
@@ -10465,8 +10506,8 @@ void UI_RecordSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBMENU_STATE;
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10514,7 +10555,7 @@ void UI_PhotoSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubMenuInfo(&tArrowKey, &tUI_SubMenuItem[PHOTO_ITEM]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
+	case DRAW_HIGHLIGHT_MENUICON:
 		{
 			uint16_t uwSubMenuItemOsdImg[PHOTOITEM_MAX] = {OSD2IMG_PHOTOMODENOR_ITEM, OSD2IMG_PHOTOMODENOR_ITEM, OSD2IMG_PRESNOR_ITEM};
 			uint8_t ubSubMenuItemPreIdx = tUI_SubMenuItem[PHOTO_ITEM].tSubMenuInfo.ubItemPreIdx;
@@ -10522,7 +10563,7 @@ void UI_PhotoSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_DrawHLandNormalIcon(uwSubMenuItemOsdImg[ubSubMenuItemPreIdx], (uwSubMenuItemOsdImg[ubSubMenuItemIdx] + ((!ubSubMenuItemIdx)?0:UI_ICON_HIGHLIGHT)));
 			break;
 		}
-		case DRAW_MENUPAGE:
+	case DRAW_MENUPAGE:
 		{
 			uint8_t ubSubMenuItemIdx = tUI_SubMenuItem[PHOTO_ITEM].tSubMenuInfo.ubItemIdx;
 			//UI_CamNum_t tCamNum = tCamSelect.tCamNum4PhotoSub;
@@ -10560,10 +10601,10 @@ void UI_PhotoSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBSUBMENU_STATE;
 			break;
 		}
-		case EXIT_MENUFUNC:
-			break;
-		default:
-			break;
+	case EXIT_MENUFUNC:
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10572,14 +10613,14 @@ void UI_PhotoUpdateSubSubMenuItemIndex(UI_PhotoSubSubMenuItem_t *ptSubSubMenuIte
 	UI_CamNum_t tCamNum = tCamSelect.tCamNum4PhotoSub;
 	switch(*tSubMenuItem)
 	{
-		case PHOTOFUNC_ITEM:
-			ptSubSubMenuItem->tPhotoS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tPHOTO_Func;
-			break;
-		case PHOTORES_ITEM:
-			ptSubSubMenuItem->tPhotoS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tPHOTO_Resolution;
-			break;
-		default:
-			return;
+	case PHOTOFUNC_ITEM:
+		ptSubSubMenuItem->tPhotoS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tPHOTO_Func;
+		break;
+	case PHOTORES_ITEM:
+		ptSubSubMenuItem->tPhotoS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_CamStatus[tCamNum].tPHOTO_Resolution;
+		break;
+	default:
+		return;
 	}
 	*Update_Flag = TRUE;
 }
@@ -10591,16 +10632,16 @@ void UI_PhotoDrawSubSubMenuItem(UI_PhotoSubSubMenuItem_t *ptSubSubMenuItem, UI_P
 	uint8_t ubSubSubMenuItemIdx = ptSubSubMenuItem->tPhotoS[tCamNum][*tSubMenuItem].tSubMenuInfo.ubItemIdx;
 	switch(*tSubMenuItem)
 	{
-		case PHOTOFUNC_ITEM:
-			break;
-		case PHOTORES_ITEM:
+	case PHOTOFUNC_ITEM:
+		break;
+	case PHOTORES_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[PHOTORES_MAX] = {OSD2IMG_PRES3MNOR_ICON, OSD2IMG_PRES5MNOR_ICON, OSD2IMG_PRES12MNOR_ICON};
 			UI_DrawHLandNormalIcon(uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx], (uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx]+UI_ICON_HIGHLIGHT));
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10625,10 +10666,10 @@ void UI_PhotoSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubSubMenuInfo(&tArrowKey, &tPhotoSubSubMenuItem.tPhotoS[tCamNum][tSubMenuItem]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
-			UI_PhotoDrawSubSubMenuItem(&tPhotoSubSubMenuItem, &tSubMenuItem);
-			break;
-		case EXECUTE_MENUFUNC:
+	case DRAW_HIGHLIGHT_MENUICON:
+		UI_PhotoDrawSubSubMenuItem(&tPhotoSubSubMenuItem, &tSubMenuItem);
+		break;
+	case EXECUTE_MENUFUNC:
 		{
 			UI_PUReqCmd_t   tPhotoCmd;
 			UI_PhotoFunction_t tPHOTO_Func = (tUI_CamStatus[tCamNum].tPHOTO_Func == PHOTOFUNC_OFF)?PHOTOFUNC_ON:PHOTOFUNC_OFF;
@@ -10649,7 +10690,8 @@ void UI_PhotoSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 					tUI_CamStatus[tCamNum].tPHOTO_Resolution = (UI_PhotoResolution_t)tPhotoSubSubMenuItem.tPhotoS[tCamNum][tSubMenuItem].tSubMenuInfo.ubItemIdx;
 			}
 		}
-		case EXIT_MENUFUNC:
+		break;
+	case EXIT_MENUFUNC:
 		{
 			OSD_IMG_INFO tOsdImgInfo;
 
@@ -10677,8 +10719,8 @@ void UI_PhotoSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBMENU_STATE;
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10717,80 +10759,80 @@ void UI_DrawSysDateTime(UI_CalendarItem_t tShowItem, UI_IconType_t tIconType, RT
 	}
 	switch(tShowItem)
 	{
-		case ALLCALE_ITEM:
-		case YEAR_ITEM:
-			tNumOsdImgArrayInfo[4+tIconType].uwXStart = 170;
-			tNumOsdImgArrayInfo[4+tIconType].uwYStart = 390;
-			tOSD_Img2(&tNumOsdImgArrayInfo[4+tIconType], OSD_QUEUE);
-			tNumOsdImgArrayInfo[tIconType].uwXStart = 170;
-			tNumOsdImgArrayInfo[tIconType].uwYStart = 360;
-			tOSD_Img2(&tNumOsdImgArrayInfo[tIconType], OSD_QUEUE);
-			ubDateOffset[0] = (ptSysCalendar->uwYear - 2000) / 10;
-			ubDateOffset[1] = (ptSysCalendar->uwYear - 2000) - (ubDateOffset[0] * 10);
-			for(i = 0; i < 2; i++)
-			{
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 170;
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 330 - (i * 30);
-				tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
-			}
-			if(tShowItem != ALLCALE_ITEM)
-				break;
-		case MONTH_ITEM:
-			ubDateOffset[0] = ptSysCalendar->ubMonth / 10;
-			ubDateOffset[1] = ptSysCalendar->ubMonth - (ubDateOffset[0] * 10);
-			for(i = 0; i < 2; i++)
-			{
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 170;
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 248 - (i * 30);
-				tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
-			}
-			if(tShowItem != ALLCALE_ITEM)
-				break;
-		case DATE_ITEM:
-			ubDateOffset[0] = ptSysCalendar->ubDate / 10;
-			ubDateOffset[1] = ptSysCalendar->ubDate - (ubDateOffset[0] * 10);
-			for(i = 0; i < 2; i++)
-			{
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 170;
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 166 - (i * 30);
-				tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
-			}
-			if(tShowItem != ALLCALE_ITEM)
-				break;
-		case HOUR_ITEM:
-			ubDateOffset[0] = ptSysCalendar->ubHour / 10;
-			ubDateOffset[1] = ptSysCalendar->ubHour - (ubDateOffset[0] * 10);
-			for(i = 0; i < 2; i++)
-			{
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 220;
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 390 - (i * 30);
-				tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
-			}
-			if(tShowItem != ALLCALE_ITEM)
-				break;
-		case MIN_ITEM:
-			ubDateOffset[0] = ptSysCalendar->ubMin / 10;
-			ubDateOffset[1] = ptSysCalendar->ubMin - (ubDateOffset[0] * 10);
-			for(i = 0; i < 2; i++)
-			{
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 220;
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 306 - (i * 30);
-				tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
-			}
-			if(tShowItem != ALLCALE_ITEM)
-				break;
-		case SEC_ITEM:
-			ubDateOffset[0] = ptSysCalendar->ubSec / 10;
-			ubDateOffset[1] = ptSysCalendar->ubSec - (ubDateOffset[0] * 10);
-			for(i = 0; i < 2; i++)
-			{
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 220;
-				tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 222 - (i * 30);
-				tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
-			}
+	case ALLCALE_ITEM:
+	case YEAR_ITEM:
+		tNumOsdImgArrayInfo[4+tIconType].uwXStart = 170;
+		tNumOsdImgArrayInfo[4+tIconType].uwYStart = 390;
+		tOSD_Img2(&tNumOsdImgArrayInfo[4+tIconType], OSD_QUEUE);
+		tNumOsdImgArrayInfo[tIconType].uwXStart = 170;
+		tNumOsdImgArrayInfo[tIconType].uwYStart = 360;
+		tOSD_Img2(&tNumOsdImgArrayInfo[tIconType], OSD_QUEUE);
+		ubDateOffset[0] = (ptSysCalendar->uwYear - 2000) / 10;
+		ubDateOffset[1] = (ptSysCalendar->uwYear - 2000) - (ubDateOffset[0] * 10);
+		for(i = 0; i < 2; i++)
+		{
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 170;
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 330 - (i * 30);
+			tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
+		}
+		if(tShowItem != ALLCALE_ITEM)
 			break;
-		default:
-			return;
+	case MONTH_ITEM:
+		ubDateOffset[0] = ptSysCalendar->ubMonth / 10;
+		ubDateOffset[1] = ptSysCalendar->ubMonth - (ubDateOffset[0] * 10);
+		for(i = 0; i < 2; i++)
+		{
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 170;
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 248 - (i * 30);
+			tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
+		}
+		if(tShowItem != ALLCALE_ITEM)
+			break;
+	case DATE_ITEM:
+		ubDateOffset[0] = ptSysCalendar->ubDate / 10;
+		ubDateOffset[1] = ptSysCalendar->ubDate - (ubDateOffset[0] * 10);
+		for(i = 0; i < 2; i++)
+		{
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 170;
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 166 - (i * 30);
+			tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
+		}
+		if(tShowItem != ALLCALE_ITEM)
+			break;
+	case HOUR_ITEM:
+		ubDateOffset[0] = ptSysCalendar->ubHour / 10;
+		ubDateOffset[1] = ptSysCalendar->ubHour - (ubDateOffset[0] * 10);
+		for(i = 0; i < 2; i++)
+		{
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 220;
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 390 - (i * 30);
+			tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
+		}
+		if(tShowItem != ALLCALE_ITEM)
+			break;
+	case MIN_ITEM:
+		ubDateOffset[0] = ptSysCalendar->ubMin / 10;
+		ubDateOffset[1] = ptSysCalendar->ubMin - (ubDateOffset[0] * 10);
+		for(i = 0; i < 2; i++)
+		{
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 220;
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 306 - (i * 30);
+			tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
+		}
+		if(tShowItem != ALLCALE_ITEM)
+			break;
+	case SEC_ITEM:
+		ubDateOffset[0] = ptSysCalendar->ubSec / 10;
+		ubDateOffset[1] = ptSysCalendar->ubSec - (ubDateOffset[0] * 10);
+		for(i = 0; i < 2; i++)
+		{
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwXStart = 220;
+			tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType].uwYStart = 222 - (i * 30);
+			tOSD_Img2(&tNumOsdImgArrayInfo[(ubDateOffset[i]*2)+tIconType], (i)?(tShowItem != ALLCALE_ITEM)?OSD_UPDATE:OSD_QUEUE:OSD_QUEUE);
+		}
+		break;
+	default:
+		return;
 	}
 	if(tShowItem == ALLCALE_ITEM)
 	{
@@ -10823,7 +10865,7 @@ int UI_DrawSettingSubSubMenuPage(UI_SettingSubMenuItemList_t *tSubMenuItem)
 	tOsdImgInfo.uwYStart = 312;
 	switch(*tSubMenuItem)
 	{
-		case DATETIME_ITEM:
+	case DATETIME_ITEM:
 		{
 			tOsdImgInfo.uwXStart = 150;
 			OSD_EraserImg2(&tOsdImgInfo);
@@ -10833,7 +10875,7 @@ int UI_DrawSettingSubSubMenuPage(UI_SettingSubMenuItemList_t *tSubMenuItem)
 			UI_DrawSysDateTime(ALLCALE_ITEM, UI_ICON_NORMAL, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
 			break;
 		}
-		case AECSET_ITEM:
+	case AECSET_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[AECFUNC_MAX] = {OSD2IMG_AECOFFNOR_ICON, OSD2IMG_AECONNOR_ICON};
 			uwSubSubMenuItemOsdImg[tUI_PuSetting.ubAEC_Mode] += UI_ICON_HIGHLIGHT;
@@ -10846,8 +10888,8 @@ int UI_DrawSettingSubSubMenuPage(UI_SettingSubMenuItemList_t *tSubMenuItem)
 			}
 			iRet = 0;
 			break;
-			}
-		case CCASET_ITEM:
+		}
+	case CCASET_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[CCAMODE_MAX] = {OSD2IMG_AECOFFNOR_ICON, OSD2IMG_AECONNOR_ICON};
 			uwSubSubMenuItemOsdImg[tUI_PuSetting.ubCCA_Mode] += UI_ICON_HIGHLIGHT;
@@ -10862,7 +10904,7 @@ int UI_DrawSettingSubSubMenuPage(UI_SettingSubMenuItemList_t *tSubMenuItem)
 			iRet = 0x40;
 			break;
 		}
-		case DEFUSET_ITEM:
+	case DEFUSET_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[2] = {OSD2IMG_DEFUNOTHL_ICON, OSD2IMG_DEFUEXECNOR_ICON};
 			for(i = 0; i < 2; i++)
@@ -10873,8 +10915,8 @@ int UI_DrawSettingSubSubMenuPage(UI_SettingSubMenuItemList_t *tSubMenuItem)
 			iRet = 0x100;
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 	return iRet;
 }
@@ -10892,7 +10934,7 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubMenuInfo(&tArrowKey, &tUI_SubMenuItem[SETTING_ITEM]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
+	case DRAW_HIGHLIGHT_MENUICON:
 		{
 			uint16_t uwSubMenuItemOsdImg[SETTINGITEM_MAX] = {OSD2IMG_DTNOR_ITEM, OSD2IMG_AECNOR_ITEM, OSD2IMG_CCANOR_ITEM,
 															 OSD2IMG_STORAGENOR_ITEM, OSD2IMG_LANGUAGENOR_ITEM, OSD2IMG_DEFUNOR_ITEM};
@@ -10908,7 +10950,7 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 			UI_DrawHLandNormalIcon(uwSubMenuItemOsdImg[ubSubMenuItemPreIdx], (uwSubMenuItemOsdImg[ubSubMenuItemIdx] + UI_ICON_HIGHLIGHT));
 			break;
 		}
-		case DRAW_MENUPAGE:
+	case DRAW_MENUPAGE:
 		{
 			//! Draw sub sub menu page
 			UI_SettingSubMenuItemList_t tSubMenuItemIdx = (UI_SettingSubMenuItemList_t)tUI_SubMenuItem[SETTING_ITEM].tSubMenuInfo.ubItemIdx;
@@ -10925,10 +10967,10 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 			tUI_State = UI_SUBSUBMENU_STATE;
 			break;
 		}
-		case EXIT_MENUFUNC:
-			break;
-		default:
-			break;
+	case EXIT_MENUFUNC:
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -10936,14 +10978,14 @@ void UI_SettingUpdateSubSubMenuItemIndex(UI_SettingSubSubMenuItem_t *ptSubSubMen
 {
 	switch(*tSubMenuItem)
 	{
-		case AECSET_ITEM:
-			ptSubSubMenuItem->tSettingS[*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_PuSetting.ubAEC_Mode;
-			break;
-		case CCASET_ITEM:
-			ptSubSubMenuItem->tSettingS[*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_PuSetting.ubCCA_Mode;
-			break;
-		default:
-			return;
+	case AECSET_ITEM:
+		ptSubSubMenuItem->tSettingS[*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_PuSetting.ubAEC_Mode;
+		break;
+	case CCASET_ITEM:
+		ptSubSubMenuItem->tSettingS[*tSubMenuItem].tSubMenuInfo.ubItemIdx = tUI_PuSetting.ubCCA_Mode;
+		break;
+	default:
+		return;
 	}
 	*Update_Flag = TRUE;
 }
@@ -10954,13 +10996,13 @@ void UI_SettingDrawSubSubMenuItem(UI_SettingSubSubMenuItem_t *ptSubSubMenuItem, 
 	uint8_t ubSubSubMenuItemIdx = ptSubSubMenuItem->tSettingS[*tSubMenuItem].tSubMenuInfo.ubItemIdx;
 	switch(*tSubMenuItem)
 	{
-		case AECSET_ITEM:
+	case AECSET_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[AECFUNC_MAX] = {OSD2IMG_AECOFFNOR_ICON, OSD2IMG_AECONNOR_ICON};
 			UI_DrawHLandNormalIcon(uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx], (uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx]+UI_ICON_HIGHLIGHT));
 			break;
 		}
-		case CCASET_ITEM:
+	case CCASET_ITEM:
 		{
 			OSD_IMG_INFO tOsdImgInfo;
 			uint16_t uwSubSubMenuItemOsdImg[AECFUNC_MAX] = {OSD2IMG_AECOFFNOR_ICON, OSD2IMG_AECONNOR_ICON};
@@ -10972,14 +11014,14 @@ void UI_SettingDrawSubSubMenuItem(UI_SettingSubSubMenuItem_t *ptSubSubMenuItem, 
 			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 			break;
 		}
-		case DEFUSET_ITEM:
+	case DEFUSET_ITEM:
 		{
 			uint16_t uwSubSubMenuItemOsdImg[2] = {OSD2IMG_DEFUNOTNOR_ICON, OSD2IMG_DEFUEXECNOR_ICON};
 			UI_DrawHLandNormalIcon(uwSubSubMenuItemOsdImg[ubSubSubMenuItemPreIdx], (uwSubSubMenuItemOsdImg[ubSubSubMenuItemIdx]+UI_ICON_HIGHLIGHT));
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -11005,12 +11047,12 @@ void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	tMenuAct = UI_KeyEventMap2SubSubMenuInfo(&tArrowKey, &tSettingSubSubMenuItem.tSettingS[tSubMenuItem]);
 	switch(tMenuAct)
 	{
-		case DRAW_HIGHLIGHT_MENUICON:
-			UI_SettingDrawSubSubMenuItem(&tSettingSubSubMenuItem, &tSubMenuItem);
-			break;
-		case EXECUTE_MENUFUNC:
-			break;
-		case EXIT_MENUFUNC:
+	case DRAW_HIGHLIGHT_MENUICON:
+		UI_SettingDrawSubSubMenuItem(&tSettingSubSubMenuItem, &tSubMenuItem);
+		break;
+	case EXECUTE_MENUFUNC:
+		break;
+	case EXIT_MENUFUNC:
 		{
 			OSD_IMG_INFO tOsdImgInfo;
 			tUI_State = UI_SUBMENU_STATE;
@@ -11044,13 +11086,13 @@ void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 			ubUI_SettingStsUpdateFlag = FALSE;
 			break;
 		}
-		default:
-			if((tSubMenuItem == DATETIME_ITEM) && (tArrowKey == RIGHT_ARROW))
-			{
-				UI_DrawSysDateTime(YEAR_ITEM, UI_ICON_HIGHLIGHT, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-				tUI_State = UI_SUBSUBSUBMENU_STATE;
-			}
-			break;
+	default:
+		if((tSubMenuItem == DATETIME_ITEM) && (tArrowKey == RIGHT_ARROW))
+		{
+			UI_DrawSysDateTime(YEAR_ITEM, UI_ICON_HIGHLIGHT, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+			tUI_State = UI_SUBSUBSUBMENU_STATE;
+		}
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -11067,62 +11109,62 @@ void UI_SettingSysDateTimeSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 	uint8_t ubDT_UpdateItem = tSysDtSubSubSubItem.ubItemIdx;
 	switch(tArrowKey)
 	{
-		case UP_ARROW:
-			if(ubDT_UpdateItem == YEAR_ITEM)
-			{
-				if((NULL == pDT_YearNum) || (*pDT_YearNum >= uwDT_MaxYearNum))
-					return;
-				(*pDT_YearNum)++;
-			}
-			else
-			{
-				if((NULL == pDT_Num[ubDT_UpdateItem]) || (*pDT_Num[ubDT_UpdateItem] >= ubDT_MaxNum[ubDT_UpdateItem]))
-					return;
-				(*pDT_Num[ubDT_UpdateItem])++;
-			}
-			UI_DrawSysDateTime((UI_CalendarItem_t)ubDT_UpdateItem, UI_ICON_HIGHLIGHT, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-			return;
-		case DOWN_ARROW:
-			if(ubDT_UpdateItem == YEAR_ITEM)
-			{
-				if((NULL == pDT_YearNum) || (*pDT_YearNum == uwDT_MinYearNum))
-					return;
-				(*pDT_YearNum)--;
-			}
-			else
-			{
-				if((NULL == pDT_Num[ubDT_UpdateItem]) || (*pDT_Num[ubDT_UpdateItem] == ubDT_MinNum[ubDT_UpdateItem]))
-					return;
-				(*pDT_Num[ubDT_UpdateItem])--;
-			}
-			UI_DrawSysDateTime((UI_CalendarItem_t)ubDT_UpdateItem, UI_ICON_HIGHLIGHT, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-			return;
-		case ENTER_ARROW:
-		case LEFT_ARROW:
-			if((tSysDtSubSubSubItem.ubItemIdx == YEAR_ITEM) || (ENTER_ARROW == tArrowKey))
-			{
-				UI_DrawSysDateTime((UI_CalendarItem_t)tSysDtSubSubSubItem.ubItemIdx, UI_ICON_NORMAL, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-				tSysDtSubSubSubItem.ubItemPreIdx = YEAR_ITEM;
-				tSysDtSubSubSubItem.ubItemIdx    = YEAR_ITEM;
-				if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
-					printd(DBG_ErrorLvl, "Calendar base setting fail !\n");
-				else
-					RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
-				//UI_UpdateDevStatusInfo();
-				tUI_State = UI_SUBSUBMENU_STATE;
+	case UP_ARROW:
+		if(ubDT_UpdateItem == YEAR_ITEM)
+		{
+			if((NULL == pDT_YearNum) || (*pDT_YearNum >= uwDT_MaxYearNum))
 				return;
-			}
-			tSysDtSubSubSubItem.ubItemPreIdx = tSysDtSubSubSubItem.ubItemIdx;
-			tSysDtSubSubSubItem.ubItemIdx--;
-			break;
-		case RIGHT_ARROW:
-			if(tSysDtSubSubSubItem.ubItemIdx == SEC_ITEM)
+			(*pDT_YearNum)++;
+		}
+		else
+		{
+			if((NULL == pDT_Num[ubDT_UpdateItem]) || (*pDT_Num[ubDT_UpdateItem] >= ubDT_MaxNum[ubDT_UpdateItem]))
 				return;
-			tSysDtSubSubSubItem.ubItemPreIdx = tSysDtSubSubSubItem.ubItemIdx;
-			tSysDtSubSubSubItem.ubItemIdx++;
-			break;
-		default:
+			(*pDT_Num[ubDT_UpdateItem])++;
+		}
+		UI_DrawSysDateTime((UI_CalendarItem_t)ubDT_UpdateItem, UI_ICON_HIGHLIGHT, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+		return;
+	case DOWN_ARROW:
+		if(ubDT_UpdateItem == YEAR_ITEM)
+		{
+			if((NULL == pDT_YearNum) || (*pDT_YearNum == uwDT_MinYearNum))
+				return;
+			(*pDT_YearNum)--;
+		}
+		else
+		{
+			if((NULL == pDT_Num[ubDT_UpdateItem]) || (*pDT_Num[ubDT_UpdateItem] == ubDT_MinNum[ubDT_UpdateItem]))
+				return;
+			(*pDT_Num[ubDT_UpdateItem])--;
+		}
+		UI_DrawSysDateTime((UI_CalendarItem_t)ubDT_UpdateItem, UI_ICON_HIGHLIGHT, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+		return;
+	case ENTER_ARROW:
+	case LEFT_ARROW:
+		if((tSysDtSubSubSubItem.ubItemIdx == YEAR_ITEM) || (ENTER_ARROW == tArrowKey))
+		{
+			UI_DrawSysDateTime((UI_CalendarItem_t)tSysDtSubSubSubItem.ubItemIdx, UI_ICON_NORMAL, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+			tSysDtSubSubSubItem.ubItemPreIdx = YEAR_ITEM;
+			tSysDtSubSubSubItem.ubItemIdx    = YEAR_ITEM;
+			if(iRTC_SetBaseCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar)) != RTC_OK)
+				printd(DBG_ErrorLvl, "Calendar base setting fail !\n");
+			else
+				RTC_SetCalendar((RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
+			//UI_UpdateDevStatusInfo();
+			tUI_State = UI_SUBSUBMENU_STATE;
 			return;
+		}
+		tSysDtSubSubSubItem.ubItemPreIdx = tSysDtSubSubSubItem.ubItemIdx;
+		tSysDtSubSubSubItem.ubItemIdx--;
+		break;
+	case RIGHT_ARROW:
+		if(tSysDtSubSubSubItem.ubItemIdx == SEC_ITEM)
+			return;
+		tSysDtSubSubSubItem.ubItemPreIdx = tSysDtSubSubSubItem.ubItemIdx;
+		tSysDtSubSubSubItem.ubItemIdx++;
+		break;
+	default:
+		return;
 	}
 	UI_DrawSysDateTime((UI_CalendarItem_t)tSysDtSubSubSubItem.ubItemIdx,    UI_ICON_HIGHLIGHT, (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
 	UI_DrawSysDateTime((UI_CalendarItem_t)tSysDtSubSubSubItem.ubItemPreIdx, UI_ICON_NORMAL,    (RTC_Calendar_t *)(&tUI_PuSetting.tSysCalendar));
@@ -11152,51 +11194,51 @@ UI_CamNum_t UI_ChangeSelectCamNum4UiMenu(UI_CamNum_t *tCurrentCamNum, UI_ArrowKe
 		return NO_CAM;
 	switch(*ptArrowKey)
 	{
-		case LEFT_ARROW:
-			if(tCamNum == CAM1)
-				return NO_CAM;
+	case LEFT_ARROW:
+		if(tCamNum == CAM1)
+			return NO_CAM;
+		if(DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)
+		{
+			if((tUI_PuSetting.ubPairedBuNum > 1) && (tCamNum > DUAL_TYPE_ITEM))
+				return (UI_CamNum_t)(tCamNum-1);
+			else if((tUI_PuSetting.ubPairedBuNum == 1) && (tCamNum > DUAL_TYPE_ITEM))
+				return (UI_CamNum_t)(tCamNum-2);
+			if(tCamNum == DUAL_TYPE_ITEM)
+				tCamNum = CAM_4T;
+		}
+		for(;tCamNum > CAM1; tCamNum--)
+		{
+			if((tUI_CamStatus[tCamNum-1].ulCAM_ID != INVALID_ID) &&
+			   (tUI_CamStatus[tCamNum-1].tCamConnSts == CAM_ONLINE))
+			{
+				tChangeCamNum = (UI_CamNum_t)(tCamNum-1);
+				break;
+			}
+		}
+		break;
+	case RIGHT_ARROW:
+		if((tCamNum+1) >= tMaxCamNum)
+		{
 			if(DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)
+				return ((tCamNum+1) > QUAL_TYPE_ITEM)?NO_CAM:(tUI_PuSetting.ubPairedBuNum > 1)?((UI_CamNum_t)(tCamNum+1)):(UI_CamNum_t)QUAL_TYPE_ITEM;
+			else
+				return tMaxCamNum;
+		}
+		tChangeCamNum = tMaxCamNum;
+		for(;tCamNum < (tMaxCamNum - 1); tCamNum++)
+		{
+			if((tUI_CamStatus[tCamNum+1].ulCAM_ID != INVALID_ID) &&
+			   (tUI_CamStatus[tCamNum+1].tCamConnSts == CAM_ONLINE))
 			{
-				if((tUI_PuSetting.ubPairedBuNum > 1) && (tCamNum > DUAL_TYPE_ITEM))
-					return (UI_CamNum_t)(tCamNum-1);
-				else if((tUI_PuSetting.ubPairedBuNum == 1) && (tCamNum > DUAL_TYPE_ITEM))
-					return (UI_CamNum_t)(tCamNum-2);
-				if(tCamNum == DUAL_TYPE_ITEM)
-					tCamNum = CAM_4T;
+				tChangeCamNum = (UI_CamNum_t)(tCamNum+1);
+				break;
 			}
-			for(;tCamNum > CAM1; tCamNum--)
-			{
-				if((tUI_CamStatus[tCamNum-1].ulCAM_ID != INVALID_ID) &&
-				   (tUI_CamStatus[tCamNum-1].tCamConnSts == CAM_ONLINE))
-				{
-					tChangeCamNum = (UI_CamNum_t)(tCamNum-1);
-					break;
-				}
-			}
-			break;
-		case RIGHT_ARROW:
-			if((tCamNum+1) >= tMaxCamNum)
-			{
-				if(DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum)
-					return ((tCamNum+1) > QUAL_TYPE_ITEM)?NO_CAM:(tUI_PuSetting.ubPairedBuNum > 1)?((UI_CamNum_t)(tCamNum+1)):(UI_CamNum_t)QUAL_TYPE_ITEM;
-				else
-					return tMaxCamNum;
-			}
-			tChangeCamNum = tMaxCamNum;
-			for(;tCamNum < (tMaxCamNum - 1); tCamNum++)
-			{
-				if((tUI_CamStatus[tCamNum+1].ulCAM_ID != INVALID_ID) &&
-				   (tUI_CamStatus[tCamNum+1].tCamConnSts == CAM_ONLINE))
-				{
-					tChangeCamNum = (UI_CamNum_t)(tCamNum+1);
-					break;
-				}
-			}
-			if((DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum) && (tChangeCamNum == tMaxCamNum))
-				tChangeCamNum = (tUI_PuSetting.ubPairedBuNum >= 1)?(UI_CamNum_t)DUAL_TYPE_ITEM:(UI_CamNum_t)QUAL_TYPE_ITEM;
-			break;
-		default:
-			break;
+		}
+		if((DISPLAY_4T1R == tUI_PuSetting.ubTotalBuNum) && (tChangeCamNum == tMaxCamNum))
+			tChangeCamNum = (tUI_PuSetting.ubPairedBuNum >= 1)?(UI_CamNum_t)DUAL_TYPE_ITEM:(UI_CamNum_t)QUAL_TYPE_ITEM;
+		break;
+	default:
+		break;
 	}
 	return tChangeCamNum;
 }
@@ -11220,26 +11262,26 @@ UI_MenuAct_t UI_KeyEventMap2SubMenuInfo(UI_ArrowKey_t *ptArrowKey, UI_SubMenuIte
 
 	switch(*ptArrowKey)
 	{
-		case UP_ARROW:
-			if(ubCurrentSubMenuItemIdx <= ptSubMenu->ubFirstItem)
-				return NOT_ACTION;
-			ubNextSubMenuItemIdx = ubCurrentSubMenuItemIdx - 1;
-			break;
-		case DOWN_ARROW:
-			if((ubCurrentSubMenuItemIdx+1) >= ptSubMenu->ubItemCount)
-				return NOT_ACTION;
-			ubNextSubMenuItemIdx = ubCurrentSubMenuItemIdx + 1;
-			break;
-		case RIGHT_ARROW:
-		case ENTER_ARROW:
-			return DRAW_MENUPAGE;
-			
-		case LEFT_ARROW:			
-		case EXIT_ARROW:
-			return EXIT_MENUFUNC;
-			
-		default:
+	case UP_ARROW:
+		if(ubCurrentSubMenuItemIdx <= ptSubMenu->ubFirstItem)
 			return NOT_ACTION;
+		ubNextSubMenuItemIdx = ubCurrentSubMenuItemIdx - 1;
+		break;
+	case DOWN_ARROW:
+		if((ubCurrentSubMenuItemIdx+1) >= ptSubMenu->ubItemCount)
+			return NOT_ACTION;
+		ubNextSubMenuItemIdx = ubCurrentSubMenuItemIdx + 1;
+		break;
+	case RIGHT_ARROW:
+	case ENTER_ARROW:
+		return DRAW_MENUPAGE;
+
+	case LEFT_ARROW:			
+	case EXIT_ARROW:
+		return EXIT_MENUFUNC;
+
+	default:
+		return NOT_ACTION;
 	}
 	ptSubMenu->tSubMenuInfo.ubItemPreIdx = ubCurrentSubMenuItemIdx;
 	ptSubMenu->tSubMenuInfo.ubItemIdx    = ubNextSubMenuItemIdx;
@@ -11254,22 +11296,22 @@ UI_MenuAct_t UI_KeyEventMap2SubSubMenuInfo(UI_ArrowKey_t *ptArrowKey, UI_SubMenu
 	ubCurrentSubSubMenuItemIdx = ptSubSubMenuItem->tSubMenuInfo.ubItemIdx;
 	switch(*ptArrowKey)
 	{
-		case UP_ARROW:
-			if(ubCurrentSubSubMenuItemIdx <= ptSubSubMenuItem->ubFirstItem)
-				return NOT_ACTION;
-			ubNextSubSubMenuItemIdx = ubCurrentSubSubMenuItemIdx - 1;
-			break;
-		case DOWN_ARROW:
-			if((ubCurrentSubSubMenuItemIdx+1) >= ptSubSubMenuItem->ubItemCount)
-				return NOT_ACTION;
-			ubNextSubSubMenuItemIdx = ubCurrentSubSubMenuItemIdx + 1;
-			break;
-		case ENTER_ARROW:
-			return EXECUTE_MENUFUNC;
-		case LEFT_ARROW:
-			return EXIT_MENUFUNC;
-		default:
+	case UP_ARROW:
+		if(ubCurrentSubSubMenuItemIdx <= ptSubSubMenuItem->ubFirstItem)
 			return NOT_ACTION;
+		ubNextSubSubMenuItemIdx = ubCurrentSubSubMenuItemIdx - 1;
+		break;
+	case DOWN_ARROW:
+		if((ubCurrentSubSubMenuItemIdx+1) >= ptSubSubMenuItem->ubItemCount)
+			return NOT_ACTION;
+		ubNextSubSubMenuItemIdx = ubCurrentSubSubMenuItemIdx + 1;
+		break;
+	case ENTER_ARROW:
+		return EXECUTE_MENUFUNC;
+	case LEFT_ARROW:
+		return EXIT_MENUFUNC;
+	default:
+		return NOT_ACTION;
 	}
 	ptSubSubMenuItem->tSubMenuInfo.ubItemPreIdx = ubCurrentSubSubMenuItemIdx;
 	ptSubSubMenuItem->tSubMenuInfo.ubItemIdx    = ubNextSubSubMenuItemIdx;
@@ -11353,43 +11395,43 @@ void UI_DrawPUStatusIcon(void)
 	}
 	switch(tUI_CamViewType)
 	{
-		case SINGLE_VIEW:
-		case SCAN_VIEW:
-			tPuOsdImgInfo[1].uwYStart = ulBatLvL_YStart;
-			if(TRUE == tUI_PuSetting.IconSts.ubDrawStsIconFlag)
-			{
-				//tOSD_Img2(&tPuOsdImgInfo[1], OSD_UPDATE);
-				break;
-			}
-			//tOSD_GetOsdImgInfor(1, OSD_IMG1, OSD1IMG_HDSTATUSMASK, 1, &tOsdImgInfo);
-			//tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);
-			//tOSD_Img2(&tPuOsdImgInfo[0], OSD_QUEUE);
+	case SINGLE_VIEW:
+	case SCAN_VIEW:
+		tPuOsdImgInfo[1].uwYStart = ulBatLvL_YStart;
+		if(TRUE == tUI_PuSetting.IconSts.ubDrawStsIconFlag)
+		{
 			//tOSD_Img2(&tPuOsdImgInfo[1], OSD_UPDATE);
-			//OSD_Weight(OSD_WEIGHT_8DIV8);
-			
-			//tOSD_Img1(&tOsdImgInfo, OSD_UPDATE);
-			
-			tUI_PuSetting.IconSts.ubDrawStsIconFlag = TRUE;
 			break;
-		case DUAL_VIEW:
-		case QUAL_VIEW:
-			if(TRUE == tUI_PuSetting.IconSts.ubDrawStsIconFlag)
-			{
-				tPuOsdImgInfo[1].uwYStart = ulBatLvL_YStart;
-				UI_UpdateOsdImg4MultiView(tCamViewSel.tCamViewType, tOSD_Img2, &tPuOsdImgInfo[1]);
-				break;
-			}
-			tOSD_GetOsdImgInfor(1, OSD_IMG1, OSD1IMG_QUALSTATUSMASK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwYStart = ulQualMask_YStart;
-			UI_UpdateOsdImg4MultiView(tCamViewSel.tCamViewType, tOSD_Img1, &tOsdImgInfo);
-			UI_UpdateOsdImg4MultiView(tCamViewSel.tCamViewType, tOSD_Img2, &tPuOsdImgInfo[0]);
+		}
+		//tOSD_GetOsdImgInfor(1, OSD_IMG1, OSD1IMG_HDSTATUSMASK, 1, &tOsdImgInfo);
+		//tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);
+		//tOSD_Img2(&tPuOsdImgInfo[0], OSD_QUEUE);
+		//tOSD_Img2(&tPuOsdImgInfo[1], OSD_UPDATE);
+		//OSD_Weight(OSD_WEIGHT_8DIV8);
+			
+		//tOSD_Img1(&tOsdImgInfo, OSD_UPDATE);
+			
+		tUI_PuSetting.IconSts.ubDrawStsIconFlag = TRUE;
+		break;
+	case DUAL_VIEW:
+	case QUAL_VIEW:
+		if(TRUE == tUI_PuSetting.IconSts.ubDrawStsIconFlag)
+		{
 			tPuOsdImgInfo[1].uwYStart = ulBatLvL_YStart;
 			UI_UpdateOsdImg4MultiView(tCamViewSel.tCamViewType, tOSD_Img2, &tPuOsdImgInfo[1]);
-			OSD_Weight(OSD_WEIGHT_6DIV8);
-			tUI_PuSetting.IconSts.ubDrawStsIconFlag = TRUE;
 			break;
-		default:
-			break;
+		}
+		tOSD_GetOsdImgInfor(1, OSD_IMG1, OSD1IMG_QUALSTATUSMASK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwYStart = ulQualMask_YStart;
+		UI_UpdateOsdImg4MultiView(tCamViewSel.tCamViewType, tOSD_Img1, &tOsdImgInfo);
+		UI_UpdateOsdImg4MultiView(tCamViewSel.tCamViewType, tOSD_Img2, &tPuOsdImgInfo[0]);
+		tPuOsdImgInfo[1].uwYStart = ulBatLvL_YStart;
+		UI_UpdateOsdImg4MultiView(tCamViewSel.tCamViewType, tOSD_Img2, &tPuOsdImgInfo[1]);
+		OSD_Weight(OSD_WEIGHT_6DIV8);
+		tUI_PuSetting.IconSts.ubDrawStsIconFlag = TRUE;
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -11404,7 +11446,7 @@ void UI_UpdateBuStatusOsdImg(OSD_IMG_INFO *pOsdImgInfo, OSD_UPDATE_TYP tUpdateMo
 
 	if(UI_OsdUpdate == tOsdImgFnType)
 		tOSD_Img2(pOsdImgInfo, tUpdateMode);
-//else if(UI_OsdErase == tOsdImgFnType)
+//	else if(UI_OsdErase == tOsdImgFnType)
 		OSD_EraserImg2(pOsdImgInfo);
 }
 //------------------------------------------------------------------------------
@@ -11481,7 +11523,7 @@ void UI_UpdateBarIcon_Part1(void)
 		ubChargShowCnt = 0;
 	}
 
-	#if UI_BATT_TEST
+#if UI_BATT_TEST
 	#define batt_offset	40 
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
@@ -11503,7 +11545,7 @@ void UI_UpdateBarIcon_Part1(void)
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 400 + batt_offset;	
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-	#endif
+#endif
 
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
@@ -11583,7 +11625,7 @@ void UI_UpdateBarIcon_Part2(void)
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	}
 
-	#if PICKUP_VOLUME_TEST
+#if PICKUP_VOLUME_TEST
 	ubPickupVolume = (ubGetVoice1<<24)+(ubGetVoice2<<16)+(ubGetVoice3<<8)+ubGetVoice4;
 	//printd(Apk_DebugLvl, "UI_UpdateBarIcon_Part2 ubPickupVolume: %d.\n", ubPickupVolume );
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(ubPickupVolume/10000), 1, &tOsdImgInfo);
@@ -11610,7 +11652,7 @@ void UI_UpdateBarIcon_Part2(void)
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 685 - 19*5;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-	#endif
+#endif
 
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
@@ -11626,9 +11668,9 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 	static uint8_t ubUI_NoSignalOsdFlag[CAM_4T] = {FALSE, FALSE, FALSE, FALSE};
 	uint16_t uwCamNumOsdIdx[CAM_4T] = {OSD2IMG_BAR_CAM1, OSD2IMG_BAR_CAM2,
 									   OSD2IMG_BAR_CAM3, OSD2IMG_BAR_CAM4};
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	UI_DisplayLocation_t tUI_DispLoc;
-//uint16_t uwAntLvLIdx = ANT_NOSIGNAL, uwBatLvLIdx = BAT_LVL0;
+//	uint16_t uwAntLvLIdx = ANT_NOSIGNAL, uwBatLvLIdx = BAT_LVL0;
 
 
 
@@ -11669,31 +11711,30 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 	}
 	switch(tUI_CamStatus[tCamNum].tCamConnSts)
 	{
-		case CAM_ONLINE:
-			//printd(Apk_DebugLvl, "dis osd 2\n");
+	case CAM_ONLINE:
+		//printd(Apk_DebugLvl, "dis osd 2\n");
 
-			if(TRUE == ubUI_BuOnlineFlag[tCamNum])
-				break;
+		if(TRUE == ubUI_BuOnlineFlag[tCamNum])
+			break;
 
-		
-			//! Audio Source
-			//if(tUI_PuSetting.tAdoSrcCamNum == tCamNum)
-			//	UI_UpdateBuStatusOsdImg(&tAdoSrcOsdImgInfo, OSD_QUEUE, UI_OsdUpdate, tUI_DispLoc);
+		//! Audio Source
+		//if(tUI_PuSetting.tAdoSrcCamNum == tCamNum)
+		//	UI_UpdateBuStatusOsdImg(&tAdoSrcOsdImgInfo, OSD_QUEUE, UI_OsdUpdate, tUI_DispLoc);
 			
-			ubUI_NoSignalOsdFlag[tCamNum] 	= FALSE;
-			ubUI_BuOnlineFlag[tCamNum]  	= TRUE;
-			ubUI_BuOfflineFlag[tCamNum] 	= FALSE;
-			break;
-		case CAM_OFFLINE:
-			if(TRUE == ubUI_BuOfflineFlag[tCamNum])
-				return;
-			
-			ubUI_NoSignalOsdFlag[tCamNum] 	= TRUE;
-			ubUI_BuOfflineFlag[tCamNum] 	= TRUE;
-			ubUI_BuOnlineFlag[tCamNum]  	= FALSE;
-			break;
-		default:
-			break;
+		ubUI_NoSignalOsdFlag[tCamNum] 	= FALSE;
+		ubUI_BuOnlineFlag[tCamNum]  	= TRUE;
+		ubUI_BuOfflineFlag[tCamNum] 	= FALSE;
+		break;
+	case CAM_OFFLINE:
+		if(TRUE == ubUI_BuOfflineFlag[tCamNum])
+			return;
+
+		ubUI_NoSignalOsdFlag[tCamNum] 	= TRUE;
+		ubUI_BuOfflineFlag[tCamNum] 	= TRUE;
+		ubUI_BuOnlineFlag[tCamNum]  	= FALSE;
+		break;
+	default:
+		break;
 	}
 
 /*
@@ -11712,33 +11753,33 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 //------------------------------------------------------------------------------
 void UI_DrawBUStatusIcon(void)
 {
-//OSD_IMG_INFO tOsdImgInfo;
+//	OSD_IMG_INFO tOsdImgInfo;
 	UI_CamNum_t tCamNum, tDrawCamNum;
 	UI_CamViewType_t tUI_CamViewType = (TRUE == tUI_PuSetting.ubDualModeEn)?DUAL_VIEW:tCamViewSel.tCamViewType;
 	uint8_t ubUI_TotalBuNum = (TRUE == tUI_PuSetting.ubDualModeEn)?CAM_2T:tUI_PuSetting.ubTotalBuNum;
 
 	switch(tUI_CamViewType)
 	{
-		case SINGLE_VIEW:
-		case SCAN_VIEW:
-			if(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID)
-				UI_RedrawBuConnectStatusIcon(tCamViewSel.tCamViewPool[0]);
-			break;
-		case DUAL_VIEW:
-		case QUAL_VIEW:
-			for(tCamNum = CAM1; tCamNum < ubUI_TotalBuNum; tCamNum++)
-			{
-				tDrawCamNum = tCamNum;
-				if(tCamViewSel.tCamViewType == DUAL_VIEW) {
-					tDrawCamNum = (tCamNum == CAM1)?tCamViewSel.tCamViewPool[0]:tCamViewSel.tCamViewPool[1];
-				}
-				if(tUI_CamStatus[tDrawCamNum].ulCAM_ID != INVALID_ID) {
-					UI_RedrawBuConnectStatusIcon(tDrawCamNum);
-				}
+	case SINGLE_VIEW:
+	case SCAN_VIEW:
+		if(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID)
+			UI_RedrawBuConnectStatusIcon(tCamViewSel.tCamViewPool[0]);
+		break;
+	case DUAL_VIEW:
+	case QUAL_VIEW:
+		for(tCamNum = CAM1; tCamNum < ubUI_TotalBuNum; tCamNum++)
+		{
+			tDrawCamNum = tCamNum;
+			if(tCamViewSel.tCamViewType == DUAL_VIEW) {
+				tDrawCamNum = (tCamNum == CAM1)?tCamViewSel.tCamViewPool[0]:tCamViewSel.tCamViewPool[1];
 			}
-			break;
-		default:
-			break;
+			if(tUI_CamStatus[tDrawCamNum].ulCAM_ID != INVALID_ID) {
+				UI_RedrawBuConnectStatusIcon(tDrawCamNum);
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -11757,8 +11798,9 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 	{
 		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
 	}
-	else if(ubCamPairOkState == 1)
+	else if(ubCamPairOkState >= 1)
 	{
+		ubFastShowLostLinkSta = 0;
 		uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 5;
 	}
 	else
@@ -12050,8 +12092,6 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 
 			UI_VolBarDisplay(OSD_QUEUE);				
 		}
-
-		
 	}
 	//if(TRUE == ubUI_ShowTimeFlag)
 	//	UI_ShowSysTime();
@@ -12183,7 +12223,6 @@ void UI_FactoryStatusDisplay(void)
 		tOsdImgInfo.uwXStart = 340;
 		tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32;
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-		
 	}
 	
 	//---------------------------------------------		
@@ -12234,74 +12273,74 @@ void UI_FactorymodeKeyDisplay(uint8_t Value)
 
 	switch(Value)
 	{
-		case AKEY_MENU:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_MENUKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 238;
-			tOsdImgInfo.uwYStart = 254;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case AKEY_MENU:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_MENUKEY ,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 238;
+		tOsdImgInfo.uwYStart = 254;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 
-		case AKEY_ENTER:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_ENTERKEY,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 431;
-			tOsdImgInfo.uwYStart = 254;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case AKEY_ENTER:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_ENTERKEY,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 431;
+		tOsdImgInfo.uwYStart = 254;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
-		case AKEY_UP:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_UPKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 336;
-			tOsdImgInfo.uwYStart = 254;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case AKEY_UP:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_UPKEY ,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 336;
+		tOsdImgInfo.uwYStart = 254;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 
-		case AKEY_DOWN:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_DOWNKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 527;
-			tOsdImgInfo.uwYStart = 254;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case AKEY_DOWN:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_DOWNKEY ,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 527;
+		tOsdImgInfo.uwYStart = 254;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 		
-		case AKEY_RIGHT:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_LEFTKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 431;
-			tOsdImgInfo.uwYStart = 30;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case AKEY_RIGHT:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_LEFTKEY ,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 431;
+		tOsdImgInfo.uwYStart = 30;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;
 
-		case AKEY_LEFT:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RIGHTKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 431;
-			tOsdImgInfo.uwYStart = 477;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case AKEY_LEFT:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RIGHTKEY ,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 431;
+		tOsdImgInfo.uwYStart = 477;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
-		case AKEY_PTT:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PTTKEY,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 623;
-			tOsdImgInfo.uwYStart = 254;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case AKEY_PTT:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PTTKEY,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 623;
+		tOsdImgInfo.uwYStart = 254;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
-		case PKEY_ID0:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PKEY ,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 143;
-			tOsdImgInfo.uwYStart = 30;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case PKEY_ID0:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PKEY ,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 143;
+		tOsdImgInfo.uwYStart = 30;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 
-		case GKEY_ID0:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_VOLUKEY,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 143;
-			tOsdImgInfo.uwYStart = 477;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case GKEY_ID0:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_VOLUKEY,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 143;
+		tOsdImgInfo.uwYStart = 477;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;	
 		
-		case GKEY_ID1:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_VOLDKEY,1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 143;
-			tOsdImgInfo.uwYStart = 254;
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	case GKEY_ID1:
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_VOLDKEY,1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 143;
+		tOsdImgInfo.uwYStart = 254;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		break;					
 	}	
 }
@@ -12403,48 +12442,48 @@ void UI_ReportBuConnectionStatus(void *pvConnectionSts)
 		{
 			switch(tUI_CamStatus[tCamNum].tCamConnSts)
 			{
-				case CAM_ONLINE:
-					if(TRUE == ulUI_MonitorPsFlag[tCamNum])
-					{
-						APP_EventMsg_t tUI_PsMessage = {0};
+			case CAM_ONLINE:
+				if(TRUE == ulUI_MonitorPsFlag[tCamNum])
+				{
+					APP_EventMsg_t tUI_PsMessage = {0};
 
-						tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
-						tUI_PsMessage.ubAPP_Message[0] = 4;		//! Message Length
-						tUI_PsMessage.ubAPP_Message[1] = PS_ECO_MODE;
-						tUI_PsMessage.ubAPP_Message[2] = FALSE;
-						tUI_PsMessage.ubAPP_Message[3] = tCamNum;
-						tUI_PsMessage.ubAPP_Message[4] = TRUE;
-						UI_SendMessageToAPP(&tUI_PsMessage);
-						UI_ChangeBuPsModeToNormalMode(tCamNum);
-						ulUI_MonitorPsFlag[tCamNum] = FALSE;
-					}
-					else
-					{
+					tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+					tUI_PsMessage.ubAPP_Message[0] = 4;		//! Message Length
+					tUI_PsMessage.ubAPP_Message[1] = PS_ECO_MODE;
+					tUI_PsMessage.ubAPP_Message[2] = FALSE;
+					tUI_PsMessage.ubAPP_Message[3] = tCamNum;
+					tUI_PsMessage.ubAPP_Message[4] = TRUE;
+					UI_SendMessageToAPP(&tUI_PsMessage);
+					UI_ChangeBuPsModeToNormalMode(tCamNum);
+					ulUI_MonitorPsFlag[tCamNum] = FALSE;
+				}
+				else
+				{
 					#define	UI_CHKBUECOSTS_PERIOD (2000 / UI_TASK_PERIOD)
-						if(++ulUI_EcoStsCnt[tCamNum] > UI_CHKBUECOSTS_PERIOD)
-						{
-							ulUI_EcoStsCnt[tCamNum] = 0;
-							UI_ChangeBuPsModeToNormalMode(tCamNum);
-						}
-					}
-					break;
-				case CAM_OFFLINE:
-					if(FALSE == ulUI_MonitorPsFlag[tCamNum])
+					if(++ulUI_EcoStsCnt[tCamNum] > UI_CHKBUECOSTS_PERIOD)
 					{
 						ulUI_EcoStsCnt[tCamNum] = 0;
-						ulUI_MonitorPsFlag[tCamNum] = TRUE;
+						UI_ChangeBuPsModeToNormalMode(tCamNum);
 					}
-					tUI_CamStatus[tCamNum].tCamConnSts = CAM_ONLINE;
-					if(FALSE == ubUI_PsStsFlag)
-					{
-						tLCD_JpegDecodeDisable();
-						UI_DrawPUStatusIcon();
-						UI_DrawBUStatusIcon();
-						ubUI_PsStsFlag = TRUE;
-					}
-					continue;
-				default:
-					break;
+				}
+				break;
+			case CAM_OFFLINE:
+				if(FALSE == ulUI_MonitorPsFlag[tCamNum])
+				{
+					ulUI_EcoStsCnt[tCamNum] = 0;
+					ulUI_MonitorPsFlag[tCamNum] = TRUE;
+				}
+				tUI_CamStatus[tCamNum].tCamConnSts = CAM_ONLINE;
+				if(FALSE == ubUI_PsStsFlag)
+				{
+					tLCD_JpegDecodeDisable();
+					UI_DrawPUStatusIcon();
+					UI_DrawBUStatusIcon();
+					ubUI_PsStsFlag = TRUE;
+				}
+				continue;
+			default:
+				break;
 			}
 		}
 		else
@@ -12561,7 +12600,7 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 	if(tCamNum > CAM4)
 		return;
 
-	#if 0
+#if 0
 	if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 	{
 		tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
@@ -12573,13 +12612,13 @@ void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 		tUI_CamStatus[tCamNum].tCamPsMode = POWER_NORMAL_MODE;
 		//UI_UpdateDevStatusInfo();
 	}
-	#else
+#else
 	printd(Apk_DebugLvl, "UI_VoxTrigger tCamNum: %d, tUI_PuSetting.tPsMode: %d $$$\n", tCamNum, tUI_PuSetting.tPsMode);
 	if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 	{
 		UI_SetSleepState(1);
 	}
-	#endif
+#endif
 }
 //------------------------------------------------------------------------------
 void UI_EnableVox(void)
@@ -12618,7 +12657,7 @@ void UI_DisableVox(void)
 	
 	ubSwitchNormalFlag =0;
 
-	#if 0
+#if 0
 	if((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) && 
 		(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
 	{
@@ -12634,9 +12673,9 @@ void UI_DisableVox(void)
 				return;
 		}
 	}
-	#else
+#else
 	ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
-	#endif
+#endif
 
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
@@ -12745,7 +12784,7 @@ void UI_RecvBURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data)
 {
 	switch(pTwc_Data[UI_TWC_TYPE])
 	{
-		case UI_REPORT:
+	case UI_REPORT:
 		{
 			UI_CamNum_t tCamNum = NO_CAM;
 
@@ -12754,8 +12793,8 @@ void UI_RecvBURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data)
 				tUiReportMap2Func[pTwc_Data[UI_REPORT_ITEM]].pvAction(tCamNum, (uint8_t *)(&pTwc_Data[UI_REPORT_DATA]));
 			break;
 		}
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------
@@ -12861,45 +12900,44 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.NightmodeFlag				= 0x0F;
 	}
 
-			tUI_PuSetting.ubPairedBuNum = 0;
-			for(tCamNum = CAM1; tCamNum < CAM_4T; tCamNum++)
-			{
-				//tCamViewSel.tCamViewPool[tCamNum]      = NO_CAM;
-				//if(0x93701 == tUI_DevStsInfo.ulUI_DevStsTag)
-				if ((strncmp(tUI_DevStsInfo.cbUI_DevStsTag, SF_AP_UI_SECTOR_TAG, sizeof(tUI_DevStsInfo.cbUI_DevStsTag) - 1) == 0)
-				&& (strncmp(tUI_DevStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_DevStsInfo.cbUI_FwVersion) - 1) == 0)) {
-					ulUI_MonitorPsFlag[tCamNum]   = FALSE;
-					tUI_CamStatus[tCamNum].tCamConnSts = CAM_OFFLINE;
-					if(tCamNum >= tUI_PuSetting.ubTotalBuNum)
-						tUI_CamStatus[tCamNum].ulCAM_ID = INVALID_ID;
-					if(INVALID_ID != tUI_CamStatus[tCamNum].ulCAM_ID)
-						tUI_PuSetting.ubPairedBuNum += 1;
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamAnrMode,  		CAMSET_OFF);
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCam3DNRMode, 		CAMSET_ON);
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamvLDCMode, 		CAMSET_ON);
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamWdrMode,  		CAMSET_OFF);
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamDisMode,  		CAMSET_OFF);
-					UI_CHK_CAMFLICKER(tUI_CamStatus[tCamNum].tCamFlicker);
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamCbrMode,  		CAMSET_ON);
-					UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamCondenseMode,   CAMSET_OFF);
-					UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorBL, 		 64);
-					UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorContrast,   64);
-					UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorSaturation, 64);
-					UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorHue, 		 64);
-					UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tCamPsMode, POWER_NORMAL_MODE, POWER_NORMAL_MODE);
-					UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tREC_Mode, REC_RECMODE_MAX, REC_MANUAL);
-					UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tREC_Resolution, RECRES_MAX, RECRES_HD);
-					UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tPHOTO_Func, PHOTOFUNC_MAX, PHOTOFUNC_OFF);
-					UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tPHOTO_Resolution, PHOTORES_MAX, PHOTORES_3M);
-					//tUI_CamStatus[tCamNum].tCamPsMode = POWER_NORMAL_MODE;
-				} else {
-					//if(tCamNum >= tUI_PuSetting.ubTotalBuNum) {
-						tUI_CamStatus[tCamNum].ulCAM_ID = INVALID_ID;
-					//}
-					UI_ResetDevSetting(tCamNum);
-				}
-			}
-
+	tUI_PuSetting.ubPairedBuNum = 0;
+	for(tCamNum = CAM1; tCamNum < CAM_4T; tCamNum++)
+	{
+		//tCamViewSel.tCamViewPool[tCamNum]      = NO_CAM;
+		//if(0x93701 == tUI_DevStsInfo.ulUI_DevStsTag)
+		if ((strncmp(tUI_DevStsInfo.cbUI_DevStsTag, SF_AP_UI_SECTOR_TAG, sizeof(tUI_DevStsInfo.cbUI_DevStsTag) - 1) == 0)
+		&& (strncmp(tUI_DevStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_DevStsInfo.cbUI_FwVersion) - 1) == 0)) {
+			ulUI_MonitorPsFlag[tCamNum]   = FALSE;
+			tUI_CamStatus[tCamNum].tCamConnSts = CAM_OFFLINE;
+			if(tCamNum >= tUI_PuSetting.ubTotalBuNum)
+				tUI_CamStatus[tCamNum].ulCAM_ID = INVALID_ID;
+			if(INVALID_ID != tUI_CamStatus[tCamNum].ulCAM_ID)
+				tUI_PuSetting.ubPairedBuNum += 1;
+			UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamAnrMode,  		CAMSET_OFF);
+			UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCam3DNRMode, 		CAMSET_ON);
+			UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamvLDCMode, 		CAMSET_ON);
+			UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamWdrMode,  		CAMSET_OFF);
+			UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamDisMode,  		CAMSET_OFF);
+			UI_CHK_CAMFLICKER(tUI_CamStatus[tCamNum].tCamFlicker);
+			UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamCbrMode,  		CAMSET_ON);
+			UI_CHK_CAMSFUNCS(tUI_CamStatus[tCamNum].tCamCondenseMode,   CAMSET_OFF);
+			UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorBL, 		 64);
+			UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorContrast,   64);
+			UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorSaturation, 64);
+			UI_CHK_CAMPARAM(tUI_CamStatus[tCamNum].tCamColorParam.ubColorHue, 		 64);
+			UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tCamPsMode, POWER_NORMAL_MODE, POWER_NORMAL_MODE);
+			UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tREC_Mode, REC_RECMODE_MAX, REC_MANUAL);
+			UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tREC_Resolution, RECRES_MAX, RECRES_HD);
+			UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tPHOTO_Func, PHOTOFUNC_MAX, PHOTOFUNC_OFF);
+			UI_CHK_BUSYS(tUI_CamStatus[tCamNum].tPHOTO_Resolution, PHOTORES_MAX, PHOTORES_3M);
+			//tUI_CamStatus[tCamNum].tCamPsMode = POWER_NORMAL_MODE;
+		} else {
+			//if(tCamNum >= tUI_PuSetting.ubTotalBuNum) {
+				tUI_CamStatus[tCamNum].ulCAM_ID = INVALID_ID;
+			//}
+			UI_ResetDevSetting(tCamNum);
+		}
+	}
 
 	if((tUI_PuSetting.ubHighTempSetting == 0)&&(tUI_PuSetting.ubLowTempSetting == 0)
 		&&(tUI_PuSetting.ubSoundLevelSetting == 0))
@@ -12975,10 +13013,10 @@ void UI_SwitchCameraScan(uint8_t type)
 	//	return;
 
 	printd(Apk_DebugLvl, "UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
-	#if 0
+#if 0
 	if(ubCamOnlineNum < 2)
 		return;
-	#else
+#else
 	if(ubCameraOnlineNum == 0)
 		return;
 
@@ -12999,7 +13037,7 @@ void UI_SwitchCameraScan(uint8_t type)
 		}
 		return;
 	}
-	#endif
+#endif
 
 	if(tSearchCam == 3)
 		i = 0;
@@ -13149,7 +13187,7 @@ void UI_DisableScanMode(void)
 void UI_ScanModeExec(void)
 {
 	printd(Apk_DebugLvl, "UI_ScanModeExec###\n");
-	#if 0
+#if 0
 	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 	uint8_t ubSearchCnt;
 
@@ -13173,10 +13211,10 @@ void UI_ScanModeExec(void)
 		}
 	}
 	UI_SetupScanModeTimer(TRUE);
-	#else
+#else
 	UI_SwitchCameraScan(0);
 	UI_SetupScanModeTimer(TRUE);
-	#endif
+#endif
 }
 //------------------------------------------------------------------------------
 UI_Result_t UI_CheckCameraSource4SV(void)
@@ -13278,17 +13316,17 @@ void UI_EngModeCtrl(UI_ArrowKey_t tArrowKey)
 								   NULL};
 	switch(tArrowKey)
 	{
-		case EXIT_ARROW:
-		{
-			EN_OpenEnMode(FALSE);
-			UI_ClearBuConnectStatusFlag();
-			tUI_State = UI_DISPLAY_STATE;
-			break;
-		}
-		default:
-			if(UI_EngFuncPrt[tArrowKey])
-				UI_EngFuncPrt[tArrowKey]();
-			break;
+	case EXIT_ARROW:
+	{
+		EN_OpenEnMode(FALSE);
+		UI_ClearBuConnectStatusFlag();
+		tUI_State = UI_DISPLAY_STATE;
+		break;
+	}
+	default:
+		if(UI_EngFuncPrt[tArrowKey])
+			UI_EngFuncPrt[tArrowKey]();
+		break;
 	}
 }
 //------------------------------------------------------------------------------

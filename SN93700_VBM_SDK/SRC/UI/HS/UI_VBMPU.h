@@ -36,10 +36,10 @@
 #define SCAN_TYPE_ITEM				5
 #define DUAL_TYPE_ITEM				4
 
-#define 	RECORD_PWRSTS_ADDR	0
-#define 	PWRSTS_KEEP			3
+#define RECORD_PWRSTS_ADDR	0
+#define PWRSTS_KEEP			3
 
-#define 	ALARM_INTERVAL		270
+#define ALARM_INTERVAL		270
 
 typedef void (*pvUiFuncPtr)(void);
 
@@ -920,6 +920,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem);
 
 void UI_ShowSysVolume(uint8_t value);
 
+void UI_FS_MenuDisplay(uint8_t value);
 void UI_FS_LangageMenuDisplay(uint8_t value);
 void UI_FS_SetTimeMenuDisplay(uint8_t value);
 

@@ -134,7 +134,7 @@ void VDO_SetPlayRole(KNL_ROLE tKnlRole)
 //------------------------------------------------------------------------------
 void VDO_UpdateDisplayParameter(void)
 {
-	#if	(DISPLAY_MODE != DISPLAY_1T1R)
+#if	(DISPLAY_MODE != DISPLAY_1T1R)
 	/*
 	KNL_ROLE tKNL_Role = tVDO_SvPlayRole;
 	KNL_DISP_TYPE tVDO_DisplayType = tVDO_Status.tVdoDispType;
@@ -158,7 +158,7 @@ void VDO_UpdateDisplayParameter(void)
 	   (KNL_NONE == tKNL_Role[1]))
 		return;
 	VDO_SwitchDisplayType(tVDO_DisplayType, tKNL_Role);
-	#endif
+#endif
 }
 //------------------------------------------------------------------------------
 void VDO_DisplayLocationSetup(KNL_ROLE tVDO_BURole, KNL_DISP_LOCATION tVDO_DispLocation)

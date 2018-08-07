@@ -25,7 +25,7 @@
 #ifdef BSP_BOARD_VBMPU_DEMO
 void BSP_BoardInit(void)
 {
-	#if 1
+#if 1
 	GLB->PADIO9  = 3;
 	GLB->PADIO10 = 3;
 	GLB->PADIO37 = 3;
@@ -110,7 +110,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO42 = 3;
 	GLB->PADIO56 = 0;
 	
-	#else //DEMO
+#else //DEMO
 	//! UART
 	GLB->PADIO22 = 2;
 	GLB->PADIO23 = 2;
@@ -166,8 +166,7 @@ void BSP_BoardInit(void)
 
 	// LCD POWER
 	GLB->PADIO52 = 0;
-	#endif
-	
+#endif
 }
 #endif
 //------------------------------------------------------------------------------
@@ -251,10 +250,9 @@ void BSP_BoardInit(void)
 	GLB->PADIO13 = 4;
 	GLB->PADIO14 = 4;
 
-		
 	//! Speaker
 	GLB->PADIO16 = 0;
-	
+
 	//! IR LED
 	GLB->PADIO32 = 0;
 

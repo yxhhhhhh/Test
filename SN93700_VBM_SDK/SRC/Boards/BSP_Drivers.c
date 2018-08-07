@@ -43,13 +43,13 @@ void BSP_DriversInit(void)
 	CQ_Init();
     APBC_Init();
 	SD_Init();
-	#if 1
+#if 1
 	//! LED
 	//GPIO->GPIO_OE3 	= 1;
 	//GPIO->GPIO_O3 	= 0;
 	//GPIO->GPIO_OE13	= 1;
 	//GPIO->GPIO_OE0	= 0;
-	GPIO->GPIO_OE1	= 1;
+	GPIO->GPIO_OE1		= 1;
 
 	//! BackLight Control
 	PWM->PWM8_RATE  	= 120;
@@ -81,7 +81,7 @@ void BSP_DriversInit(void)
 	//! CHG_FULL
 	GPIO->GPIO_OE0	= 0;
 
-	#else //DEMO
+#else //DEMO
 	//! LED
 	GPIO->GPIO_OE2 	= 1;
 	GPIO->GPIO_O2  	= 1;
@@ -106,14 +106,14 @@ void BSP_DriversInit(void)
 	//! LCD POWER	
 	GPIO->GPIO_OE10 = 1;
 	GPIO->GPIO_O10  = 0;
-	#endif
+#endif
 	
 	//! RTC GPIO1
 	RTC_SetGPO_1(1, RTC_PullDownDisable);	
 
-	#if Current_Test
-	GPIO->GPIO_O12 = 1; //LCD Power
-	#endif	
+#if Current_Test
+	GPIO->GPIO_O12 = 1; // LCD Power
+#endif	
 	
 	printd(DBG_CriticalLvl, "SONiX SN9370X High Speed Mode Start!\n");
 }
@@ -156,10 +156,10 @@ void BSP_DriversInit(void)
 	//! LED
 	GPIO->GPIO_OE1 	= 1;
 	GPIO->GPIO_O1	= 1;
-	//GPIO->GPIO_OE2 	= 1;
-	//GPIO->GPIO_O2	= 0;
+//	GPIO->GPIO_OE2 	= 1;
+//	GPIO->GPIO_O2	= 0;
 	GPIO->GPIO_OE3 	= 1;
-	//GPIO->GPIO_O3	= 0;
+//	GPIO->GPIO_O3	= 0;
 
 	//! Speaker
 	GPIO->GPIO_OE2 	= 1;
@@ -168,7 +168,7 @@ void BSP_DriversInit(void)
 	GPIO->GPIO_OE4 	= 1;
 
 	//! RTC GPIO1
-	//RTC_SetGPO_1(1, RTC_PullDownDisable);
+//	RTC_SetGPO_1(1, RTC_PullDownDisable);
 
 	printd(DBG_CriticalLvl, "SONiX SN9370X High Speed Mode Start!\n");
 }

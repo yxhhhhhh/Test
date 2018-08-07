@@ -2059,8 +2059,8 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 			
 			sLcdInfor.tChRes[0].uwCropHstart = ubTest_uwCropHstart;
 			sLcdInfor.tChRes[0].uwCropVstart = ubTest_uwCropVstart;
-			sLcdInfor.tChRes[0].uwCropHsize =ubTest_uwCropHsize; //uwKNL_GetVdoV(ubDisp1Src);
-			sLcdInfor.tChRes[0].uwCropVsize = ubTest_uwCropVsize;//uwKNL_GetVdoH(ubDisp1Src);
+			sLcdInfor.tChRes[0].uwCropHsize  = ubTest_uwCropHsize; //uwKNL_GetVdoV(ubDisp1Src);
+			sLcdInfor.tChRes[0].uwCropVsize  = ubTest_uwCropVsize;//uwKNL_GetVdoH(ubDisp1Src);
 		}
 	}
 	else if(tKNL_GetDispType() == KNL_DISP_DUAL_U)

@@ -106,24 +106,24 @@ void PKEY_Thread(void)
 //--------------------------------------------------------------
 void GKEY_Init(void)
 {	
-	#ifdef VBM_BU
-	GLB->PADIO34 = 0;
+#ifdef VBM_BU
+	GLB->PADIO34   = 0;
 	GPIO->GPIO_OE6 = 0;
-	#endif
+#endif
 
-	#ifdef VBM_PU
+#ifdef VBM_PU
 	tGKEY_LastID = GKEY_UNKNOW;
 
-	#if 1
+#if 1
 	GLB->PADIO51 = 0; 	//! AUDIO+
 	GLB->PADIO52 = 0; 	//! AUDIO-	
 	
 	GPIO->GPIO_OE9  = 0; //! AUDIO+
 	GPIO->GPIO_OE10 = 0; //! AUDIO-
-	#endif
+#endif
 
-	#endif
-	
+#endif
+
 	tGKEY_Scan.uwGKEY_KeyScanTime  = GKEY_DET_TIME;
 	tGKEY_Scan.ubGKEY_KeyScanState = KEY_DET_STATE;
 	tGKEY_Scan.uwGKEY_KeyScanCnt   = 0;
@@ -133,7 +133,7 @@ void GKEY_Thread(void)
 {
 	static uint16_t uwGKEY_ThreadCnt = 0;
 
-	#ifdef VBM_BU
+#ifdef VBM_BU
 	if(uwGKEY_ThreadCnt % tGKEY_Scan.uwGKEY_KeyScanTime == 0)
 	{
 		uwGKEY_ThreadCnt = 0;
@@ -196,9 +196,9 @@ void GKEY_Thread(void)
 				break;
 		}
 	}
-	#endif
+#endif
 
-	#ifdef VBM_PU
+#ifdef VBM_PU
 	GKEY_ID_t tGKEY_DetID;
 
 	tGKEY_DetID = GKEY_Detection();
@@ -260,7 +260,7 @@ void GKEY_Thread(void)
 			}
 		tGKEY_LastID = tGKEY_DetID;
 	}
-	#endif
+#endif
 	
 	uwGKEY_ThreadCnt++;
 }

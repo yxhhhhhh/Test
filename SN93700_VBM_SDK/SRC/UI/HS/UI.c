@@ -46,11 +46,11 @@ void UI_Init(osMessageQId *pvMsgQId)
     osMessageQDef(UI_EventQueue, UI_Q_SIZE, UI_Event_t);
     UI_EventQueue = osMessageCreate(osMessageQ(UI_EventQueue), NULL);
 	KEY_Init(&UI_EventQueue);
-	#ifdef VBM_BU
+#ifdef VBM_BU
 	UI_BuInit();
-	#endif
+#endif
 
-	#ifdef VBM_PU
+#ifdef VBM_PU
 	if((GPIO->GPIO_I9 == 0)&&(ubRTC_GetKey() == 1))
 	{
 		ubFactoryModeFLag = 1;
@@ -61,9 +61,9 @@ void UI_Init(osMessageQId *pvMsgQId)
 		ubFactoryModeFLag = 0;
 		printd(Apk_DebugLvl, "no factorymode\n");
 	}
-	#endif
+#endif
 
-	#ifdef VBM_BU //test
+#ifdef VBM_BU //test
 	uint8_t ubCamUVCMode = UI_GetCamUVCMode();
 	printd(Apk_DebugLvl, "UI_Init ubCamUVCMode: %d.\n", ubCamUVCMode);
 	if(GPIO->GPIO_I6 == 0)
@@ -94,7 +94,7 @@ void UI_Init(osMessageQId *pvMsgQId)
 			while(1);
 		}
 	}
-	#endif
+#endif
 
 	osThreadDef(UI_EventThread, UI_EventThread, THREAD_PRIO_UIEVENT_HANDLER, 1, THREAD_STACK_UIEVENT_HANDLER);
 	osThreadCreate(osThread(UI_EventThread), NULL);
@@ -173,7 +173,7 @@ void UI_FrameTRXFinish(uint8_t ubFrmRpt)
 	#ifdef VBM_BU
 		case 0xF:
 	#endif
-		//SIGNAL_LED_IO = !SIGNAL_LED_IO;
+//		SIGNAL_LED_IO = !SIGNAL_LED_IO;
 		break;
 		default:
 			break;

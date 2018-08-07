@@ -56,6 +56,7 @@ extern uint8_t ubFactoryModeFLag;
 extern uint8_t ubWorWakeUpFlag ;
 
 extern uint8_t ubSwitchNormalFlag;
+extern uint8_t ubPowerState;
 
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ uint8_t APP_CheckBootStatus(void)
 				checkCount++;
 				if (checkCount >= CHECK_COUNT)
 				{
-          break;
+					break;
 				}
 			}
 			else
@@ -231,19 +232,19 @@ void APP_Init(void)
 	}
 	SF_SetWpPin(ubAPP_SfWpGpioPin);
 	SF_Init();
-	#ifdef VBM_PU
+#ifdef VBM_PU
 	UI_LoadDevStatusInfo();
 	printd(Apk_DebugLvl, "APP_Init ubFactorySettingFLag: %d.\n", ubFactorySettingFLag);
-	if(ubFactorySettingFLag != 1)
+	if (ubFactorySettingFLag != 1)
 	{
 		APP_CheckBootStatus();
-		if(ubFactorySettingFLag == 2)
+		if (ubFactorySettingFLag == 2)
 		{
 			ubFactorySettingFLag = 1;
 			UI_SetFactoryFlag(1);
 		}
 	}
-	#endif
+#endif
 	
 	PROF_Init();
 	MMU_Init();
@@ -803,7 +804,8 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 		tAPP_KNLInfo.tAdoSrcRole = tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum;
 		ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 	}
-	VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
+	if(ubPowerState == PWR_ON)
+		VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
 }
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOff(void)
@@ -831,7 +833,7 @@ void APP_LcdDisplayOn(void)
 	LCD_Start();
 	LCDBL_ENABLE(UI_ENABLE);
 
-	ubSwitchNormalFlag =1;
+	ubSwitchNormalFlag = 1;
 }
 #endif
 //------------------------------------------------------------------------------
@@ -857,7 +859,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 				tAPP_VoxFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
 		#ifdef VBM_PU
 			SYS_SetPowerStates(tAPP_PsState[ubAPP_PsFlag]);
-			//SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE; 
+//			SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE; 
 			tAPP_StsReport.tAPP_ReportType = APP_VOXMODESTS_RPT;
 			tAPP_StsReport.ubAPP_Report[0] = ubAPP_PsFlag;
 			UI_UpdateAppStatus(&tAPP_StsReport);
@@ -934,16 +936,16 @@ void APP_Start(void)
 	KNL_BlockInit();
 
 	//! Video Start
-	#ifdef VBM_BU	
+#ifdef VBM_BU	
 	VDO_Start();
-	#endif
+#endif
 	
-	#ifdef VBM_PU	
+#ifdef VBM_PU	
 	if(ubFactorySettingFLag == 0)	
 		VDO_Start();
 	else
 		VDO_Stop();
-	#endif
+#endif
 	
 	//! Audio Start
 	ADO_Start(tAPP_KNLInfo.tAdoSrcRole);

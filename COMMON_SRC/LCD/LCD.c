@@ -650,7 +650,7 @@ void LCD_Init (LCD_OUTPUT_TYP tLcdOutput)
 			GLB->LCDPLL_SDM_EN = 1;
 			TIMER_Delay_us(1);
 		}
-		
+
 		//reset pin 20180704
 		#if 1
 		GPIO->GPIO_OE3= 1;
@@ -661,7 +661,7 @@ void LCD_Init (LCD_OUTPUT_TYP tLcdOutput)
 		GPIO->GPIO_O3 = 1;
 		TIMER_Delay_ms(100);
 		#endif
-			
+
 		switch (tLcdOutput)
 		{
 			case LCD_LCD_PANEL:
