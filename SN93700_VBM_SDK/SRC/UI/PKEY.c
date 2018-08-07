@@ -267,7 +267,7 @@ void GKEY_Thread(void)
 
 GKEY_ID_t GKEY_Detection(void)
 {
-	#ifdef VBM_PU
+#ifdef VBM_PU
 	if((GPIO->GPIO_I9 == 1)&&(GPIO->GPIO_I10 == 1))
 	{
 		return GKEY_UNKNOW;
@@ -282,9 +282,8 @@ GKEY_ID_t GKEY_Detection(void)
 	{
 		return GKEY_ID1;
 	}
-	
 	return GKEY_UNKNOW;
-	#endif
-
-	return 0;
+#else
+	return (GKEY_ID_t)0;
+#endif
 }

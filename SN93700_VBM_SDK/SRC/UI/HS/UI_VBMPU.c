@@ -322,7 +322,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 {
 	static uint8_t ubUI_KeyEventIdx = 0;
 	uint16_t uwUiKeyEvent_Cnt = 0, uwIdx;
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 
 	KEY_Event_t *ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
 	uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
@@ -479,8 +479,8 @@ void UI_KeyEventExec(void *pvKeyEvent)
 //------------------------------------------------------------------------------
 void UI_OnInitDialog(void)
 {
-	OSD_IMG_INFO tOsdImgInfo;
-	uint8_t i = 0;
+//OSD_IMG_INFO tOsdImgInfo;
+//uint8_t i = 0;
 
 	if(ubWorWakeUpFlag != 1)	
 		OSD_LogoJpeg(OSDLOGO_BOOT);
@@ -523,12 +523,12 @@ void UI_OnInitDialog(void)
 			KNL_SetDispType(KNL_DISP_SINGLE); 
 		}
 	} else {
-//		tCamViewSel.tCamViewType  = (VDO_DISP_TYPE == KNL_DISP_QUAD)?QUAL_VIEW:
-//									(VDO_DISP_TYPE == KNL_DISP_DUAL_C)?DUAL_VIEW:
-//									(VDO_DISP_SCAN == TRUE)?SCAN_VIEW:SINGLE_VIEW;
-//		tCamViewSel.tCamViewPool[0] = (tCamViewSel.tCamViewType == KNL_DISP_QUAD)?CAM_4T:CAM1;
-//		tCamViewSel.tCamViewPool[1] = (tCamViewSel.tCamViewType == KNL_DISP_DUAL_C)?CAM2:NO_CAM;
-		UI_CamNum_t tCamNum;
+//  tCamViewSel.tCamViewType  = (VDO_DISP_TYPE == KNL_DISP_QUAD)?QUAL_VIEW:
+//							(VDO_DISP_TYPE == KNL_DISP_DUAL_C)?DUAL_VIEW:
+//							(VDO_DISP_SCAN == TRUE)?SCAN_VIEW:SINGLE_VIEW;
+//  tCamViewSel.tCamViewPool[0] = (tCamViewSel.tCamViewType == KNL_DISP_QUAD)?CAM_4T:CAM1;
+//  tCamViewSel.tCamViewPool[1] = (tCamViewSel.tCamViewType == KNL_DISP_DUAL_C)?CAM2:NO_CAM;
+//	UI_CamNum_t tCamNum;
 		tCamViewSel.tCamViewType = SINGLE_VIEW;
 		/*
 		for(tCamNum = CAM1; tCamNum < CAM_4T ; tCamNum++)
@@ -541,7 +541,6 @@ void UI_OnInitDialog(void)
 		}
 		*/
 	}
-
 
 	if (tCamViewSel.tCamViewType == SCAN_VIEW) {
 		UI_EnableScanMode();
@@ -861,11 +860,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwYStart =0;	
 					tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);
 					*/
-						
 					UI_FS_LangageMenuDisplay(ubLangageFlag);
-
 					ubFS_MenuItem = 0;		
-					
 					ubFactorySettingFlag = 1;					
 				}
 				ubUI_SendMsg2AppFlag = TRUE;
@@ -894,8 +890,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwXStart = 48;
 					tOsdImgInfo.uwYStart = 0;
 					OSD_EraserImg1(&tOsdImgInfo);
-					
-					
+
 					OSD_LogoJpeg(OSDLOGO_LOGO_BG);
 					/*
 					tOSD_GetOsdImgInfor(1, OSD_IMG1, OSD1IMG_ANKER_LOGO28, 1, &tOsdImgInfo);
@@ -903,11 +898,9 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 					tOsdImgInfo.uwYStart =0;	
 					tOSD_Img1(&tOsdImgInfo, OSD_QUEUE);	
 					*/
-						
-					UI_FS_LangageMenuDisplay(ubLangageFlag);
 
+					UI_FS_LangageMenuDisplay(ubLangageFlag);
 					ubFS_MenuItem = 0;		
-					
 					ubFactorySettingFlag = 1;					
 				}
 				ubUI_SendMsg2AppFlag = TRUE;
@@ -922,10 +915,11 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 		default:
 			break;
 	}
-	*pThreadCnt 	    					= 0;
+	*pThreadCnt = 0;
 	tUI_PuSetting.IconSts.ubDrawStsIconFlag = FALSE;
+
 END_UPDATESTS:
-	//UI_UpdateBriLvlIcon();
+//UI_UpdateBriLvlIcon();
 	UI_UpdateVolLvlIcon();
 	UI_StatusCheck(*pThreadCnt);
 	tUI_PuSetting.IconSts.ubRdPairIconFlag 	= FALSE;
@@ -997,7 +991,7 @@ void UI_EventHandles(UI_Event_t *ptEventPtr)
 //------------------------------------------------------------------------------
 void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 	UI_PUReqCmd_t tPsCmd;
 
 	printd(Apk_DebugLvl, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
@@ -1226,12 +1220,11 @@ void UI_PowerKey(void)
 //------------------------------------------------------------------------------
 void UI_MenuKey(void)
 {
+	OSD_IMG_INFO tOsdInfo;
 	printd(Apk_DebugLvl, "UI_MenuKey tUI_State: 0x%x.\n", tUI_State);
 	switch(tUI_State)
 	{
 		case UI_DISPLAY_STATE:
-			OSD_IMG_INFO tOsdInfo;
-
 			if(tUI_PuSetting.VolLvL.ubVOL_UpdateCnt != 0)
 			{
 				tOsdInfo.uwXStart = 48;
@@ -1869,11 +1862,15 @@ void UI_CameraColorSetting(UI_ArrowKey_t tArrowKey)
 //------------------------------------------------------------------------------
 UI_Result_t UI_DPTZ_KeyPress(uint8_t ubKeyID, uint8_t ubKeyMapIdx)
 {
-	OSD_IMG_INFO tOsdImgInfo;
-	uint16_t uwUI_ArrowOsdImgIdx[] = {[AKEY_UP]    = OSD2IMG_DPTZUPARROWHL_ICON,
-							          [AKEY_DOWN]  = OSD2IMG_DPTZDNARROWHL_ICON,
-									  [AKEY_LEFT]  = OSD2IMG_DPTZLEFTARROWHL_ICON,
-		                              [AKEY_RIGHT] = OSD2IMG_DPTZRIGHTARROWHL_ICON};
+//OSD_IMG_INFO tOsdImgInfo;
+	/*
+	uint16_t uwUI_ArrowOsdImgIdx[] = {
+		[AKEY_UP]    = OSD2IMG_DPTZUPARROWHL_ICON,
+		[AKEY_DOWN]  = OSD2IMG_DPTZDNARROWHL_ICON,
+		[AKEY_LEFT]  = OSD2IMG_DPTZLEFTARROWHL_ICON,
+		[AKEY_RIGHT] = OSD2IMG_DPTZRIGHTARROWHL_ICON
+	};
+	*/
 
 	if(ubKeyID == UiKeyEventMap[ubKeyMapIdx].ubKeyID)
 	{
@@ -2954,8 +2951,8 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 						};
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
 	uint8_t ubT_MinNum[3] = {0,  0,  0};	
-	UI_CamNum_t tSelCam;
-	UI_PUReqCmd_t tPsCmd;
+//UI_CamNum_t tSelCam;
+//UI_PUReqCmd_t tPsCmd;
 
 	if(ubFactoryModeFLag == 1)
 	{
@@ -3440,13 +3437,21 @@ uint8_t UI_CheckStopAlarm(void)
 //------------------------------------------------------------------------------
 void UI_DrawMenuPage(void)
 {
-	uint16_t uwMenuOsdImg[UI_MENUICON_NUM] = {OSD2IMG_MENU_BRIGHTNESS,      OSD2IMG_MENU_LCD_AUTO, OSD2IMG_MENU_ALARM,
-											  OSD2IMG_MENU_TIME,    OSD2IMG_MENU_ZOOM,  OSD2IMG_MENU_CAMERA,
-											  OSD2IMG_MENU_SETTING};
-//	uint16_t uwDisplayImgIdx = 0;
-	uint8_t i;
-	//OSD_IMG_INFO tOsdImgInfo[UI_MENUICON_NUM*4];
-	OSD_IMG_INFO tOsdImgInfo;
+	/*
+	uint16_t uwMenuOsdImg[UI_MENUICON_NUM] = {
+		OSD2IMG_MENU_BRIGHTNESS,
+		OSD2IMG_MENU_LCD_AUTO,
+		OSD2IMG_MENU_ALARM,
+		OSD2IMG_MENU_TIME,
+    OSD2IMG_MENU_ZOOM,
+		OSD2IMG_MENU_CAMERA,
+		OSD2IMG_MENU_SETTING
+	};
+	*/
+//uint16_t uwDisplayImgIdx = 0;
+//uint8_t i;
+//OSD_IMG_INFO tOsdImgInfo[UI_MENUICON_NUM*4];
+//OSD_IMG_INFO tOsdImgInfo;
 
 	UI_ClearBuConnectStatusFlag();
 
@@ -3767,8 +3772,8 @@ void UI_AutoBrightnessAdjust(void) //20180324
 
 void UI_BrightnessSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	OSD_IMG_INFO tOsdImgInfo;
-	UI_MenuAct_t tMenuAct;
+//OSD_IMG_INFO tOsdImgInfo;
+//UI_MenuAct_t tMenuAct;
 
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -4031,7 +4036,7 @@ uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction) //20180319
 
 void UI_AutoLcdSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -4149,7 +4154,7 @@ void UI_DrawAlarmSubMenuPage(void)
 
 void UI_AlarmSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -4237,7 +4242,7 @@ void UI_AlarmmenuDisplay(void)
 void UI_DrawSubSubMenu_Alarm(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-	uint8_t i;
+//uint8_t i;
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 48;
@@ -5493,7 +5498,7 @@ void UI_ShowAlarm(uint8_t type)
 				ubShowAlarmstate = 0;
 			}
 			return;
-			break;
+//		break;
 
 		default:
 			break;
@@ -5698,7 +5703,7 @@ void UI_TempAlarmCheck(void)
 
 void UI_PickupAlarmCheck(void)
 {
-	uint8_t ubHightempMax, ubLowtempMin;
+//uint8_t ubHightempMax, ubLowtempMin;
 
 	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
 		return;
@@ -6025,7 +6030,7 @@ void UI_TimeShowSystemTime(uint8_t type)
 
 void UI_TimeSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 	RTC_Calendar_t tUi_Calendar;	
 	uint8_t ubT_MaxNum[3] = {12, 59, 1};
 	uint8_t ubT_MinNum[3] = {0,  0,  0};	
@@ -6445,7 +6450,7 @@ void UI_DrawZoomSubMenuPage(void)
 }	
 void UI_ZoomSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 	
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -7118,7 +7123,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 
 void UI_CamSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	int i = 0, j = 0;
+	int i = 0;
 	OSD_IMG_INFO tOsdImgInfo;
 
 	switch(tArrowKey)
@@ -7481,7 +7486,7 @@ void UI_SettingSubmenuDisplay(void)
 
 void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 
 	if(tUI_State == UI_MAINMENU_STATE)
 	{
@@ -8245,7 +8250,7 @@ void UI_FS_SetTimeMenuDisplay(uint8_t value)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
-	EN_MODE_UI  tEnUI;
+//EN_MODE_UI  tEnUI;
 
 /*
 	tEnUI.tStatus = EN_FIX_HOPPING;                               //固定频点模式
@@ -8506,7 +8511,7 @@ uint8_t UI_TempFToC(uint8_t fTemp)
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
-	uint8_t ubBuTemp = 0;
+//uint8_t ubBuTemp = 0;
 
 	if((tCamViewSel.tCamViewPool[0] == tCamNum) && (CAM_ONLINE == tUI_CamStatus[tCamNum].tCamConnSts))
 	{
@@ -8524,11 +8529,10 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 
 void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 {
-	int i;
 	uint8_t *pvdata = (uint8_t *)pvTrig;
 	uint8_t ubBUCmdID = pvdata[0];
 
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 
 	switch(ubBUCmdID)
 	{
@@ -8983,7 +8987,7 @@ void UI_MotorDisplay(uint8_t value)
 
 void UI_MotorControl(uint8_t Value)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 			
 	if(tUI_PuSetting.ubDefualtFlag == TRUE)
 		return;
@@ -9130,7 +9134,7 @@ void UI_GetBatLevel(void)
 	int i;
 	uint16_t ubBatAdc;
 	uint16_t ubAdjustAdc;
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 
 	BatteryMap_t tBatMap[] =
 	{
@@ -11393,25 +11397,15 @@ void UI_UpdateBuStatusOsdImg(OSD_IMG_INFO *pOsdImgInfo, OSD_UPDATE_TYP tUpdateMo
 {
 	uint32_t ulLcd_HSize  = uwLCD_GetLcdHoSize();
 	uint32_t ulLcd_VSize  = uwLCD_GetLcdVoSize();
-//	uint16_t uwXOffset[7] = {[DISP_UPPER_LEFT] = 0,               [DISP_UPPER_RIGHT] = 0,
-//	                         [DISP_LOWER_LEFT] = (ulLcd_HSize/2), [DISP_LOWER_RIGHT] = (ulLcd_HSize/2),
-//							 [DISP_LEFT] 	   = 0,				  [DISP_RIGHT] 		 = 0};
-//	uint16_t uwYOffset[7] = {[DISP_UPPER_LEFT] = 0,               [DISP_UPPER_RIGHT] = (ulLcd_VSize/2),
-//	                         [DISP_LOWER_LEFT] = 0, 			  [DISP_LOWER_RIGHT] = (ulLcd_VSize/2),
-//							 [DISP_LEFT] 	   = 0, 		      [DISP_RIGHT] 		 = (ulLcd_VSize/2)};
 	uint16_t uwXStart = 0, uwYStart = 0;
 
 	uwXStart = pOsdImgInfo->uwXStart;
 	uwYStart = pOsdImgInfo->uwYStart;
-	//pOsdImgInfo->uwXStart += uwXOffset[tDispLoc];
-	//pOsdImgInfo->uwYStart -= uwYOffset[tDispLoc];
+
 	if(UI_OsdUpdate == tOsdImgFnType)
 		tOSD_Img2(pOsdImgInfo, tUpdateMode);
-	//else if(UI_OsdErase == tOsdImgFnType)
+//else if(UI_OsdErase == tOsdImgFnType)
 		OSD_EraserImg2(pOsdImgInfo);
-	
-	//pOsdImgInfo->uwXStart = uwXStart;
-	//pOsdImgInfo->uwYStart = uwYStart;
 }
 //------------------------------------------------------------------------------
 void UI_ClearBuConnectStatusFlag(void)
@@ -11632,9 +11626,9 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 	static uint8_t ubUI_NoSignalOsdFlag[CAM_4T] = {FALSE, FALSE, FALSE, FALSE};
 	uint16_t uwCamNumOsdIdx[CAM_4T] = {OSD2IMG_BAR_CAM1, OSD2IMG_BAR_CAM2,
 									   OSD2IMG_BAR_CAM3, OSD2IMG_BAR_CAM4};
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 	UI_DisplayLocation_t tUI_DispLoc;
-	uint16_t uwAntLvLIdx = ANT_NOSIGNAL, uwBatLvLIdx = BAT_LVL0;
+//uint16_t uwAntLvLIdx = ANT_NOSIGNAL, uwBatLvLIdx = BAT_LVL0;
 
 
 
@@ -11654,7 +11648,6 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 		}
 
 		//printd(Apk_DebugLvl, "osd 1\n");
-	
 		*/
 		
 		pUI_BuConnectFlag[0] = &ubUI_BuOnlineFlag[0];
@@ -11719,7 +11712,7 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 //------------------------------------------------------------------------------
 void UI_DrawBUStatusIcon(void)
 {
-	OSD_IMG_INFO tOsdImgInfo;
+//OSD_IMG_INFO tOsdImgInfo;
 	UI_CamNum_t tCamNum, tDrawCamNum;
 	UI_CamViewType_t tUI_CamViewType = (TRUE == tUI_PuSetting.ubDualModeEn)?DUAL_VIEW:tCamViewSel.tCamViewType;
 	uint8_t ubUI_TotalBuNum = (TRUE == tUI_PuSetting.ubDualModeEn)?CAM_2T:tUI_PuSetting.ubTotalBuNum;
@@ -11759,7 +11752,6 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 	UI_CamNum_t tCamNum;
 	uint16_t uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
 	OSD_IMG_INFO tOsdImgInfo;
-	uint8_t i;
 
 	if(FALSE == ubUI_ResetPeriodFlag)
 	{

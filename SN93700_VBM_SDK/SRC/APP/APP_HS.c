@@ -108,10 +108,10 @@ uint8_t APP_GetBatteryValue(void)
 
 uint8_t APP_CheckBootStatus(void)
 {
-	#ifdef VBM_PU
+#ifdef VBM_PU
 	
-	#if 1
-	#define CHECK_COUNT		10
+#if 1
+	#define CHECK_COUNT  10
 	uint16_t checkCount = 0;
 	uint8_t ubWorWakepValue;
 	
@@ -120,7 +120,7 @@ uint8_t APP_CheckBootStatus(void)
 	ubWorWakepValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
 	ubWorWakepValue &= 0xF0;	
 
-	if((!ubRTC_GetKey()) && (ubWorWakepValue == RTC_PS_WOR_TAG))
+	if ((!ubRTC_GetKey()) && (ubWorWakepValue == RTC_PS_WOR_TAG))
 	{			
 		ubWorWakeUpFlag = 1;
 	}
@@ -131,21 +131,21 @@ uint8_t APP_CheckBootStatus(void)
 	
 	printf("ubWorWakeUpFlag~~~~ %d \n",ubWorWakeUpFlag);
 
-	if(ubWorWakeUpFlag == 0)
+	if (ubWorWakeUpFlag == 0)
 	{
-		while(1)
+		while (1)
 		{
-			if(ubRTC_GetKey() == 1)
+			if (ubRTC_GetKey() == 1)
 			{
 				checkCount++;
-				if(checkCount >= CHECK_COUNT)
+				if (checkCount >= CHECK_COUNT)
 				{
-					break;
+          break;
 				}
 			}
 			else
 			{
-				if(checkCount >= CHECK_COUNT)
+				if (checkCount >= CHECK_COUNT)
 				{
 					break;
 				}
@@ -155,35 +155,35 @@ uint8_t APP_CheckBootStatus(void)
 					RTC_PowerOff();
 				}
 			}
-			
+
 			TIMER_Delay_ms(200);
 			WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 		}
 	}
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
-	#else
-	#define CHECK_COUNT		10
+#else
+	#define CHECK_COUNT  10
 	uint16_t checkCount = 0;
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, ubRTC_GetKey(): %d.\n", UI_GetUsbDet(), ubRTC_GetKey());
 
 	while(1)
 	{
-		if(UI_GetUsbDet() == 1) //Usb On
+		if (UI_GetUsbDet() == 1) //Usb On
 		{
 			TIMER_Delay_ms(1000);
 			break;
 		}
 		else
 		{
-			if(APP_GetBatteryValue() <= 10)
+			if (APP_GetBatteryValue() <= 10)
 			{
 				break;
 			}
 			
-			if(ubRTC_GetKey() == 1)
+			if (ubRTC_GetKey() == 1)
 			{
 				checkCount++;
-				if(checkCount >= CHECK_COUNT)
+				if (checkCount >= CHECK_COUNT)
 				{
 					printd(Apk_DebugLvl, "break@@@\n");
 					break;
@@ -199,11 +199,13 @@ uint8_t APP_CheckBootStatus(void)
 		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	}
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
-	#endif
-	
-	//LCDBL_ENABLE(UI_ENABLE);
-	#endif
+#endif
+
+//LCDBL_ENABLE(UI_ENABLE);
+#endif
+	return 0;
 }
+
 //------------------------------------------------------------------------------
 void APP_Init(void)
 {

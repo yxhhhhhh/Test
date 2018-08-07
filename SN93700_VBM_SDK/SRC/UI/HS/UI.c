@@ -21,7 +21,12 @@
 #include "LCD.h"
 #include "OSD.h"
 #include "BUF.h"
+#ifdef VBM_BU
 #include "UI_VBMBU.h"
+#endif
+#ifdef VBM_PU
+#include "UI_VBMPU.h"
+#endif
 #include "WDT.h"
 
 
