@@ -318,7 +318,7 @@ extern uint16_t ubTest_uwCropVsize;
 extern uint16_t ubTest_uwCropHstart;
 extern uint16_t ubTest_uwCropVstart;
 
-uint8_t  SNdata[32] = {0};
+uint8_t  SNdata[16] = {0};
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -1298,17 +1298,6 @@ void UI_MenuKey(void)
 			if(ubFactoryModeFLag == 1)
 				return;
 
-			if(UI_CheckStopAlarm() == 1)
-			{
-				UI_StopPlayAlarm();
-				return;
-			}
-			
-			tOsdInfo.uwHSize  = 672;
-			tOsdInfo.uwVSize  = 1280;
-			tOsdInfo.uwXStart = 48;
-			tOsdInfo.uwYStart = 0;
-			OSD_EraserImg2(&tOsdInfo);
 
 			if(ubAutoBrightnessFlag == 0)
 			{
@@ -7862,25 +7851,23 @@ void UI_SNDisplay(void)
 	uint8_t i ,j, temp;	
 	
 
-	for(i = 0; i < 16; i++)
+	for(i = 0; i < sizeof(SNdata); i++)
 	{	
-
-		if(SNdata[i + 2] >= 255)
-			temp = 48;
-		else
-			temp = SNdata[i + 2];
 		
-
+		temp = SNdata[i] <= '9' ? SNdata[i] - '0' : SNdata[i] - 'A' + 10;
+		
 		printd(Apk_DebugLvl,"UI_SNDisplay temp[%d] =  %d.\n",i,temp);
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+(temp - 48), 1, &tOsdImgInfo);
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+temp, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart= 436;
-		tOsdImgInfo.uwYStart =602-(i*19);
-		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
+		tOsdImgInfo.uwYStart =605-(i*20);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		
 	}
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_TITLE, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 436;
-	tOsdImgInfo.uwYStart =621;	
+	tOsdImgInfo.uwYStart =631;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 }
 
@@ -12305,6 +12292,7 @@ void UI_FactoryStatusDisplay(void)
 	tOsdImgInfo.uwYStart = 750;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
+#if 0
 	//------------------------------
 	//	RX SN	
 	
@@ -12323,6 +12311,7 @@ void UI_FactoryStatusDisplay(void)
 		tOsdImgInfo.uwYStart = 1000 - (32 * i );
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 	}
+#endif
 	
 	if(ubPUEnterAdotestFLag == 1)
 	{
@@ -12901,16 +12890,14 @@ void UI_LoadDevStatusInfo(void)
 {
 
 	//Read SN	
-	uint8_t  data[32] = {0};
 	uint8_t i =0;
 	uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
-	SF_Read(ubUI_SFAddr, 32, SNdata);
+	SF_Read(ubUI_SFAddr, sizeof(SNdata), SNdata);
 	printd(Apk_DebugLvl,"UI_LoadDevStatusInfo  SNdata= %s.\n",SNdata);
 
-	for( uint8_t i = 0; i<16; i++)
+	for( uint8_t i = 0; i<sizeof(SNdata); i++)
 	{
 		printd(Apk_DebugLvl,"UI_LoadDevStatusInfo SNDATA[%d] =  %d.\n",i,*(SNdata+i));
-		printd(Apk_DebugLvl,"UI_LoadDevStatusInfo SNDATA[%d] =  %d.\n",i,(SNdata[i]));
 	}
 	uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
 	UI_DeviceStatusInfo_t tUI_DevStsInfo = {{0}, {0}, {0}, {0}};
