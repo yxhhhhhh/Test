@@ -31,7 +31,6 @@ void KEY_Init(osMessageQId *pEventQueueHandle)
 {	
 	PKEY_Init();
 	AKEY_Init();
-
 	GKEY_Init();
 	
 	pKEY_EventQH = pEventQueueHandle;

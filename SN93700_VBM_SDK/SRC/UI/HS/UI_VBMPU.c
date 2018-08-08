@@ -435,7 +435,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		{
 			if(ptKeyEvent->ubKeyID == AKEY_PTT)
 			{
-				printd(Apk_DebugLvl,"ubUI_PttStartFlag =%d.\n",ubUI_PttStartFlag);
 				if(ubUI_PttStartFlag == TRUE)
 				{
 					ubUI_KeyEventIdx = 15;
@@ -3011,7 +3010,6 @@ void UI_PushTalkKeyShort(void)
 			case UI_DPTZ_CONTROL_STATE:
 			case UI_MD_WINDOW_STATE:
 			case UI_DUALVIEW_CAMSEL_STATE:
-				printd(Apk_DebugLvl,"UI_PushTalkKeyShort !!!!!!!!!!!!!!!!\n");
 				tUI_StateMap2MenuFunc[tUI_State].pvFuncPtr(EXIT_ARROW);
 				UI_PushTalkFlag =FALSE;
 				break;
@@ -5640,7 +5638,6 @@ void UI_ShowAlarm(uint8_t type)
 
 	if(ubShowAlarmstate > 0)
 	{
-
 		if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 		{
 			UI_SetSleepState(1);
@@ -7926,15 +7923,12 @@ void UI_NightModeSubSubSubmenuDisplay(uint8_t value)
 void UI_SNDisplay(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
-	uint8_t i ,j, temp;	
+	uint8_t i, temp;	
 	
 
 	for(i = 0; i < sizeof(SNdata); i++)
 	{	
-		
 		temp = SNdata[i] <= '9' ? SNdata[i] - '0' : SNdata[i] - 'A' + 10;
-		
-		//printd(Apk_DebugLvl,"UI_SNDisplay temp[%d] =  %d.\n",i,temp);
 		
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+temp, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart= 436;
@@ -12265,9 +12259,6 @@ void UI_FactoryStatusDisplay(void)
 	tOsdImgInfo.uwYStart = 1055;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	
-
-
-
 	if(ubPUEnterAdotestFLag == 1)
 	{
 		printd(Apk_DebugLvl,"@@@@@@@@@@@@@@@@@@@@\n");
@@ -12400,6 +12391,7 @@ void UI_FactoryStatusDisplay(void)
 	tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
+<<<<<<< HEAD
 
 	//------------------------------
 	//SD
@@ -12469,6 +12461,20 @@ void UI_FactoryStatusDisplay(void)
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 	}
 #endif
+=======
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NIG_OFF_S+(ubSD_ChkCardIn(SD_1) *2), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 375;
+	tOsdImgInfo.uwYStart = 750;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	
+	if(ubPUEnterAdotestFLag == 1)
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXMICSPK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 570 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 863;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	}
+>>>>>>> origin/T8300
 
 	for(i = 0; i < sizeof(FromTXSNdata); i++)
 	{	
@@ -13070,15 +13076,10 @@ void UI_LoadDevStatusInfo(void)
 {
 
 	//Read SN	
-	uint8_t i =0;
+	uint8_t i = 0;
 	uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
 	SF_Read(ubUI_SFAddr, sizeof(SNdata), SNdata);
-	printd(Apk_DebugLvl,"UI_LoadDevStatusInfo  SNdata= %s.\n",SNdata);
 
-	for( uint8_t i = 0; i<sizeof(SNdata); i++)
-	{
-		printd(Apk_DebugLvl,"UI_LoadDevStatusInfo SNDATA[%d] =  %d.\n",i,*(SNdata+i));
-	}
 	uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
 	UI_DeviceStatusInfo_t tUI_DevStsInfo = {{0}, {0}, {0}, {0}};
 	UI_CamNum_t tCamNum;

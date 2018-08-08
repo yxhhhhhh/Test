@@ -164,19 +164,19 @@ void UI_FrameTRXFinish(uint8_t ubFrmRpt)
 {
 	switch(ubFrmRpt)
 	{
-	#ifdef VBM_PU
-		case 0x0:
-		case 0x1:
-		case 0x2:
-		case 0x3:
-	#endif
-	#ifdef VBM_BU
-		case 0xF:
-	#endif
+#ifdef VBM_PU
+	case 0x0:
+	case 0x1:
+	case 0x2:
+	case 0x3:
+#endif
+#ifdef VBM_BU
+	case 0xF:
+#endif
 //		SIGNAL_LED_IO = !SIGNAL_LED_IO;
 		break;
-		default:
-			break;
+	default:
+		break;
 	}
 }
 //------------------------------------------------------------------------------

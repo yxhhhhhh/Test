@@ -143,7 +143,7 @@ void VDO_UpdateDisplayParameter(void)
 	tVDO_Status.tVdoDispType = KNL_DISP_NONSUP;
 	VDO_SwitchDisplayType(tVDO_DisplayType, &tKNL_Role);
 	*/
-	
+
 	KNL_ROLE tKNL_Role[2] = {tKNL_DualBURole[0], tKNL_DualBURole[1]};
 	KNL_DISP_TYPE tVDO_DisplayType = tVDO_Status.tVdoDispType;
 
