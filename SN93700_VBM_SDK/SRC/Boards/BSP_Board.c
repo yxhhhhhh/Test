@@ -79,9 +79,7 @@ void BSP_BoardInit(void)
 	//! LED
 	GLB->PADIO17 = 0;
 	GLB->PADIO55 = 0;
-	//GLB->PADIO56 = 0;
-	//GLB->PADIO57 = 0;
-	
+
 	//! BackLight
 	GLB->PADIO24 = 7;
 
@@ -98,8 +96,8 @@ void BSP_BoardInit(void)
 	GLB->PADIO53 = 0;
 
 	//! FCHG_ON
-	GLB->PADIO12  = 3;
-	GLB->PADIO40  = 3;	
+	GLB->PADIO12 = 3;
+	GLB->PADIO40 = 3;	
 	GLB->PADIO54 = 0;
 
 	//! CHG_ON
@@ -109,7 +107,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO14 = 3;
 	GLB->PADIO42 = 3;
 	GLB->PADIO56 = 0;
-	
+
 #else //DEMO
 	//! UART
 	GLB->PADIO22 = 2;

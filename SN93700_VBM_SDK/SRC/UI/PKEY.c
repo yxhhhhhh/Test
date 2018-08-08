@@ -26,7 +26,8 @@ PKEY_SCAN_t tPKEY_Scan;
 
 KEY_Event_t tGKEY_Event;
 GKEY_SCAN_t tGKEY_Scan;
-GKEY_ID_t tGKEY_LastID;
+GKEY_ID_t   tGKEY_LastID;
+
 //----------------------------------------------------------
 void PKEY_Init(void)
 {

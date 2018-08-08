@@ -187,10 +187,10 @@ uint8_t ubKNL_StartRecFlag = 0;
 KNL_TuningMode_t tKNL_TuningMode;
 
 #ifdef VBM_PU
-uint16_t ubTest_uwCropHsize= 720;
-uint16_t ubTest_uwCropVsize= 1280;
-uint16_t ubTest_uwCropHstart= 0;
-uint16_t ubTest_uwCropVstart= 0;
+uint16_t ubTest_uwCropHsize  = 720;
+uint16_t ubTest_uwCropVsize  = 1280;
+uint16_t ubTest_uwCropHstart = 0;
+uint16_t ubTest_uwCropVstart = 0;
 #endif
 
 static void KNL_VdoInProcThread(void const *argument);
@@ -652,21 +652,20 @@ static void KNL_AdoDecMonitThread(void const *argument)
 #if defined(BPC_RX) || defined(BPC_CAM)
 				//ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, OFF);
 #endif
-				#ifdef VBM_PU
+
+#ifdef VBM_PU
 				SPEAKER_EN(FALSE);
 				TIMER_Delay_us(1000);
 				SPEAKER_EN(TRUE);
 				TIMER_Delay_us(2);
 				SPEAKER_EN(FALSE);
 				TIMER_Delay_us(2);
-
 				SPEAKER_EN(TRUE);
-				#endif
+#endif
 
-				#if VBM_BU
+#if VBM_BU
 				SPEAKER_EN(TRUE);
-				//SPEAKER_EN(FALSE);
-				#endif
+#endif
 				break;
 			case PLAY_BUF_EMP:
 				printf("-Dac play empty-\n");
@@ -1448,17 +1447,15 @@ void KNL_BlockInit(void)
 		//---------------------------------
 		// Sigma-delta ADC gain
 		//---------------------------------
-       	//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_37DB, ADO_SIG_PGA_33DB);
-       		#ifdef VBM_PU
-			ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_3DB); //20180524
-		#endif
+//		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_37DB, ADO_SIG_PGA_33DB);
+#ifdef VBM_PU
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_3DB); // 20180524
+#endif
 
-		#ifdef VBM_BU
-			ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_16p5DB); //20180524
-		#endif
-
+#ifdef VBM_BU
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_16p5DB); // 20180524
+#endif
 		SDADC->AGC_OFF = 1;
-		//ADO_SetAdcMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
 		
 		//---------------------------------
 		// ADC djust functions
@@ -2059,8 +2056,8 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 			
 			sLcdInfor.tChRes[0].uwCropHstart = ubTest_uwCropHstart;
 			sLcdInfor.tChRes[0].uwCropVstart = ubTest_uwCropVstart;
-			sLcdInfor.tChRes[0].uwCropHsize  = ubTest_uwCropHsize; //uwKNL_GetVdoV(ubDisp1Src);
-			sLcdInfor.tChRes[0].uwCropVsize  = ubTest_uwCropVsize;//uwKNL_GetVdoH(ubDisp1Src);
+			sLcdInfor.tChRes[0].uwCropHsize  = ubTest_uwCropHsize; // uwKNL_GetVdoV(ubDisp1Src);
+			sLcdInfor.tChRes[0].uwCropVsize  = ubTest_uwCropVsize; // uwKNL_GetVdoH(ubDisp1Src);
 		}
 	}
 	else if(tKNL_GetDispType() == KNL_DISP_DUAL_U)

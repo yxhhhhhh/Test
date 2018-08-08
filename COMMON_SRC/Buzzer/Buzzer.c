@@ -208,7 +208,7 @@ void BUZ_PlayAlarmSound(void) {
 		{50,	H_DO_1, 3,		0,		63},
 		{50,	H_DO_1, 3,		15,		63},
 	};
-	
+
 	BUZ_PlayStart(1, 8, BUZ_AlarmSound, sizeof(BUZ_AlarmSound) / sizeof(BUZ_ToneParam_t));
 }
 
