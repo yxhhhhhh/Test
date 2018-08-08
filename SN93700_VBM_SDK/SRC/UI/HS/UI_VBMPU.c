@@ -12391,7 +12391,6 @@ void UI_FactoryStatusDisplay(void)
 	tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-<<<<<<< HEAD
 
 	//------------------------------
 	//SD
@@ -12461,20 +12460,7 @@ void UI_FactoryStatusDisplay(void)
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 	}
 #endif
-=======
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NIG_OFF_S+(ubSD_ChkCardIn(SD_1) *2), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 375;
-	tOsdImgInfo.uwYStart = 750;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-	
-	if(ubPUEnterAdotestFLag == 1)
-	{
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXMICSPK, 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 570 + Factory_x_vol;
-		tOsdImgInfo.uwYStart = 863;
-		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-	}
->>>>>>> origin/T8300
+
 
 	for(i = 0; i < sizeof(FromTXSNdata); i++)
 	{	
