@@ -662,6 +662,7 @@ typedef enum
 	UI_BU_CMD_PS_MODE,
 	UI_BU_CMD_ALARM_TYPE,
 	UI_BU_CMD_PICKUP_VOLUME,
+	UI_BU_CMD_SN_VALUE,
 }UI_BUTOPUCmdID_t;
 
 typedef enum

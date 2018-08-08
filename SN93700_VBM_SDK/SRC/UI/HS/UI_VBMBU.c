@@ -119,6 +119,7 @@ uint8_t ubCurSoundVal = 0;
 uint8_t ubHighAlarm = 0;
 uint8_t ubLowAlarm = 0;
 uint8_t ubSoundAlarm = 0;
+uint8_t TXSNdata[16] = {0};
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -393,11 +394,18 @@ void UI_UpdateBUStatusToPU(void)
 	//	UI_SendRequestToPU(NULL, &tUI_BuSts);
 
 	static uint8_t ubVersionResut = rUI_FAIL;
+	static uint8_t ubSNValueResut = 0;
+	
 	if(ubVersionResut == rUI_FAIL)
 	{
 		ubVersionResut = UI_SendVersionToPu();
 	}
+	if(ubSNValueResut == 0 || ubSNValueResut ==1)
+	{
+		ubSNValueResut = UI_SendSnValueToPu();
+	}
 }
+
 //------------------------------------------------------------------------------
 UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
 {
@@ -1498,6 +1506,7 @@ void UI_BuInit(void)
 	pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
 	GPIO->GPIO_O4 = 0;
 	tUI_BuStsInfo.tNightModeFlag = 1;
+	UI_readSN();
 }
 
 void UI_TestSetting(void *pvTSParam)
@@ -1759,4 +1768,68 @@ uint8_t UI_SendPickupVolumeToPu(uint32_t ulUI_AdcRpt)
 
 	return rUI_SUCCESS;
 }
+
+uint8_t UI_readSN(void)
+{	
+	uint8_t i =0;
+	uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
+	SF_Read(ubUI_SFAddr, sizeof(TXSNdata), TXSNdata);
+	printd(Apk_DebugLvl,"UI_readSN  data= %s.\n",TXSNdata);
+
+	for(i = 0; i < sizeof(TXSNdata); i++)
+	{
+			printd(Apk_DebugLvl,"UI_readSN  data= %d.\n",TXSNdata[i]);//TXSNdata[i] = TXSNdata[i] -48;
+	}
+}
+ 
+
+
+uint8_t UI_SendSnValueToPu(void)
+{
+	UI_BUReqCmd_t tUI_PickupVolueReqCmd;
+	uint8_t Snvalue_1, Snvalue_2, Snvalue_3, Snvalue_4;
+	static uint8_t time = 0;
+	printd(Apk_DebugLvl,"UI_SendSnValueToPu\n");
+	//Read SN	
+	uint8_t i =0,n = 0;
+	uint32_t sum =0;
+	
+	
+	tUI_PickupVolueReqCmd.ubCmd[UI_TWC_TYPE]	  			= UI_REPORT;
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_ITEM] 			= UI_BU_TO_PU_CMD;
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA] 			= UI_BU_CMD_SN_VALUE;
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+1] 		= TXSNdata[time+0];		
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+2] 		= TXSNdata[time+1];		
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+3] 		= TXSNdata[time+2];		
+	tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+4] 		= TXSNdata[time+3];	
+	//tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+5] 		= time;
+	tUI_PickupVolueReqCmd.ubCmd_Len  			  			= 7;
+	printd(Apk_DebugLvl,"UI_LoadDevStatusInfo  TXSNdata[time+0]= %d.TXSNdata[time+1]= %d.TXSNdata[time+2]= %d.TXSNdata[time+3]= %d\n",TXSNdata[time+0],TXSNdata[time+1],TXSNdata[time+2],TXSNdata[time+3]);
+
+	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_PickupVolueReqCmd))
+	{
+		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Fail!\n");
+		return 0;
+	}
+
+	time +=4;
+
+	if(time == 16)
+	{
+		time = 0;
+		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu end!\n");
+		return 2;
+	}
+	else
+	{
+		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Success!\n");
+		return 1;
+	}
+}
+
+
+
+
+
+
 

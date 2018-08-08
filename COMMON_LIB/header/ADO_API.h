@@ -24,7 +24,7 @@
 #define ADO_AUDIO32 			1
 #define ADO_AUDIO32_MAX_NUM 	7
 #define ADO_SRC_NUM				4
-#define ADO_SELF_TEST_LENGTH	5
+#define ADO_SELF_TEST_LENGTH	30  //5
 
 extern osMessageQId tADO_EncodeQueue;       //!< Audio event queue for external
 extern osMessageQId tADO_EncodeQueueHandle;

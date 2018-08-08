@@ -319,6 +319,7 @@ extern uint16_t ubTest_uwCropHstart;
 extern uint16_t ubTest_uwCropVstart;
 
 uint8_t  SNdata[16] = {0};
+uint8_t  FromTXSNdata[16] = {0};
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -365,8 +366,9 @@ void UI_KeyEventExec(void *pvKeyEvent)
 		{
 			if(ubPUEnterAdotestFLag == 0)
 			{
+				printd(Apk_DebugLvl,"if(ubPUEnterAdotestFLag == 0)!!!!!\n");
 				ubPUEnterAdotestFLag = 1;
-				//UI_EnterLocalAdoTest_RX();
+				UI_EnterLocalAdoTest_RX();
 			}
 		}
 
@@ -1019,6 +1021,8 @@ void UI_PuInit(void)
 		UI_FactoryStatusDisplay();
 	}
 	printd(Apk_DebugLvl, "UI_PuInit ok.\n");
+	printd(Apk_DebugLvl,"FromTXSNdata =%s\n",FromTXSNdata);
+
 }
 
 void UI_PowerOnSet(void)
@@ -1134,7 +1138,7 @@ void UI_WakeUp(void)
 
 void UI_CheckPowerMode(void)
 {
-	printd(Apk_DebugLvl, "UI_CheckPowerMode ubPowerState: %d, Sleep: %d, Wakeup: %d.\n", ubPowerState, ubSleepWaitCnt, ubWakeUpWaitCnt);
+	//printd(Apk_DebugLvl, "UI_CheckPowerMode ubPowerState: %d, Sleep: %d, Wakeup: %d.\n", ubPowerState, ubSleepWaitCnt, ubWakeUpWaitCnt);
 	if(ubPowerState == PWR_ON)
 	{
 		ubSleepWaitCnt = 0;
@@ -1285,6 +1289,10 @@ void UI_MenuKey(void)
 	switch(tUI_State)
 	{
 		case UI_DISPLAY_STATE:
+			if(ubShowAlarmstate >0)
+			{
+					return;
+			}
 			if(tUI_PuSetting.VolLvL.ubVOL_UpdateCnt != 0)
 			{
 				tOsdInfo.uwXStart = 48;
@@ -1551,11 +1559,77 @@ void UI_EnterKey(void)
 	}
 }
 //------------------------------------------------------------------------------
+void DisplayStatus(uint8_t  type)
+{
+	OSD_IMG_INFO tOsdImgInfo;
+	if(type == 1)
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_P, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 600;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_A, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 600 - 22*1;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_I, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 600 - 22*2;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_R, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 600 - 22*3;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_I, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 600 - 22*4;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_N, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 600 - 22*5;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_G, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 600 - 22*6;
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);	
+		}
+}
+
 void UI_EnterLongKey(void)
 {
+/*
+	if(ubFactoryModeFLag == 1)
+	{
+		APP_EventMsg_t tUI_PairMessage = {0};
+
+		
+		//ubPairDisplayTime = 20; //10
+		tPairInfo.tPairSelCam = ubPairSelCam;
+		tPairInfo.tDispLocation = ubPairSelCam;
+			
+		tUI_PairMessage.ubAPP_Event 	 = APP_PAIRING_START_EVENT;
+		tUI_PairMessage.ubAPP_Message[0] = 2;		//! Message Length
+		tUI_PairMessage.ubAPP_Message[1] = ubPairSelCam;//CAM1;
+		tUI_PairMessage.ubAPP_Message[2] = DISP_1T;
+		tUI_PairMessage.ubAPP_Message[2] = ubPairSelCam;					
+		UI_SendMessageToAPP(&tUI_PairMessage);
+		tPairInfo.ubDrawFlag 			 = TRUE;
+		UI_DisableScanMode();
+
+		DisplayStatus(1);
+		
+	}
+	*/
 #if SD_UPDATE_TEST
 	KNL_SDUpgradeFwFunc();
 #endif
+
 
 #if ENG_MODE_TEST
 	UI_EngModeKey();
@@ -2907,19 +2981,22 @@ void UI_PushTalkKeyShort(void)
 			}
 
 			case UI_DISPLAY_STATE:
-				OSD_IMG_INFO tOsdInfo;
-				if(UI_CheckStopAlarm() == 1)
+				if(ubFactoryModeFLag == 0)
 				{
-					UI_StopPlayAlarm();
-					return;
-				}
-				
-				tOsdInfo.uwHSize  = 672;
-				tOsdInfo.uwVSize  = 1280;
-				tOsdInfo.uwXStart = 48;
-				tOsdInfo.uwYStart = 0;
-				OSD_EraserImg2(&tOsdInfo);
-				break;
+					OSD_IMG_INFO tOsdInfo;
+					if(UI_CheckStopAlarm() == 1)
+					{
+						UI_StopPlayAlarm();
+						return;
+					}
+					
+					tOsdInfo.uwHSize  = 672;
+					tOsdInfo.uwVSize  = 1280;
+					tOsdInfo.uwXStart = 48;
+					tOsdInfo.uwYStart = 0;
+					OSD_EraserImg2(&tOsdInfo);
+					break;
+					}
 			case UI_SUBMENU_STATE:
 			case UI_SUBSUBMENU_STATE:			
 			case UI_SUBSUBSUBMENU_STATE:
@@ -6885,6 +6962,7 @@ void UI_CameraSettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				tPairInfo.ubDrawFlag 			 = TRUE;
 				UI_DisableScanMode();
 
+				printd(Apk_DebugLvl,"111111111111111111\n");
 				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
 				tOsdImgInfo.uwXStart= 48;
 				tOsdImgInfo.uwYStart =284;	
@@ -7856,7 +7934,7 @@ void UI_SNDisplay(void)
 		
 		temp = SNdata[i] <= '9' ? SNdata[i] - '0' : SNdata[i] - 'A' + 10;
 		
-		printd(Apk_DebugLvl,"UI_SNDisplay temp[%d] =  %d.\n",i,temp);
+		//printd(Apk_DebugLvl,"UI_SNDisplay temp[%d] =  %d.\n",i,temp);
 		
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+temp, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart= 436;
@@ -8597,7 +8675,8 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
-	uint8_t ubBUCmdID = pvdata[0];
+	uint8_t i,ubBUCmdID = pvdata[0];
+	static uint8_t time; 
 
 //	OSD_IMG_INFO tOsdImgInfo;
 
@@ -8632,6 +8711,19 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 		//printd(Apk_DebugLvl, "VolumeValue: %d.\n",(ubGetVoice1<<24)+(ubGetVoice2<<16)+(ubGetVoice3<<8)+ubGetVoice4);
 		break;
 
+	case UI_BU_CMD_SN_VALUE:
+		for(i = 1; i<5; i++)
+		{
+		
+			FromTXSNdata[time -1+i] = pvdata[i]; 
+	
+		}
+		time +=4;
+		//printd(Apk_DebugLvl,"1111111111111UI_GetBUCMDData FromTXSNdata =%s.\n",FromTXSNdata);
+		if(time == 16)
+			time = 0;
+		break;
+		
 	default:
 		break;
 	}
@@ -12126,13 +12218,13 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 
 void UI_FactoryStatusDisplay(void)
 {
-	int i, SNValue;
+	int i, RXSNValue,TXSNValue;
 	uint8_t data[3] = {0};
 	OSD_IMG_INFO tOsdImgInfo;
 	uint8_t  ubper_temp, ubir_temp1,ubir_temp2;
 	uint16_t  ubir_temp;
 	
-	printd(Apk_DebugLvl, "UI_FactoryStatusDisplay.\n");
+	//printd(Apk_DebugLvl, "UI_FactoryStatusDisplay.\n");
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PER, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 50 + Factory_x_vol;
 	tOsdImgInfo.uwYStart = 1055;
@@ -12173,7 +12265,28 @@ void UI_FactoryStatusDisplay(void)
 	tOsdImgInfo.uwYStart = 1055;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	
-	
+
+
+
+	if(ubPUEnterAdotestFLag == 1)
+	{
+		printd(Apk_DebugLvl,"@@@@@@@@@@@@@@@@@@@@\n");
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXMICSPK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 570 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 863;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	}
+
+	if(tUI_SyncAppState == APP_LINK_STATE)
+	{
+		if(ubBUEnterAdotestFLag == 1)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TXMICSPK, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 635 + Factory_x_vol;
+			tOsdImgInfo.uwYStart = 863;
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		}
+	}
 	//-----------------------------------------------------------------
 	if(tUI_SyncAppState == APP_LINK_STATE)
 	{
@@ -12287,11 +12400,55 @@ void UI_FactoryStatusDisplay(void)
 	tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_NIG_OFF_S+(ubSD_ChkCardIn(SD_1) *2), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart = 375;
-	tOsdImgInfo.uwYStart = 750;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
+	//------------------------------
+	//SD
+	if(ubSD_ChkCardIn(SD_1))
+	{		
+		for(int i = 0;i<5; i++)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_ENG_SPACESYM, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 395;
+			tOsdImgInfo.uwYStart = 900 - 20 - 15*i+ Factory_y_vol;
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		}
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_O, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 395;
+		tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_N, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 395;
+		tOsdImgInfo.uwYStart = 900 - 53+ Factory_y_vol;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	}
+	else
+	{
+		for(int i = 0;i<5; i++)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_ENG_SPACESYM, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 395;
+			tOsdImgInfo.uwYStart = 900 - 20 - 15*i+ Factory_y_vol;
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		}
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_O, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 395;
+		tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_F, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 395;
+		tOsdImgInfo.uwYStart = 900 - 51+ Factory_y_vol;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_F, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 395;
+		tOsdImgInfo.uwYStart = 900 - 70+ Factory_y_vol;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	}
 #if 0
 	//------------------------------
 	//	RX SN	
@@ -12312,25 +12469,47 @@ void UI_FactoryStatusDisplay(void)
 		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);		
 	}
 #endif
-	
-	if(ubPUEnterAdotestFLag == 1)
-	{
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_RXMICSPK, 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart = 570 + Factory_x_vol;
-		tOsdImgInfo.uwYStart = 863;
-		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	for(i = 0; i < sizeof(FromTXSNdata); i++)
+	{	
+		if(FromTXSNdata[i] == 0)
+		{	
+			//printd(Apk_DebugLvl,"FromTXSNdata[i] ==  NULL",i);
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_X, 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 455 + Factory_x_vol;
+			tOsdImgInfo.uwYStart = 1000 - (20 * i );
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+			continue;
+		}
+
+		//printd(Apk_DebugLvl,"FromTXSNdata =%s\n",FromTXSNdata);
+		TXSNValue = FromTXSNdata[i] <= '9' ? FromTXSNdata[i] - '0' : FromTXSNdata[i] - 'A' + 10;
+		
+		//printd(Apk_DebugLvl,"UI_SNDisplay temp[%d] =  %d.\n",i,TXSNValue);
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+TXSNValue, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 455 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 1000 - (20 * i );
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		
+	}
+	for(i = 0; i < sizeof(SNdata); i++)
+	{	
+		
+		RXSNValue = SNdata[i] <= '9' ? SNdata[i] - '0' : SNdata[i] - 'A' + 10;
+		
+		//printd(Apk_DebugLvl,"UI_SNDisplay temp[%d] =  %d.\n",i,RXSNValue);
+		
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+RXSNValue, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 515 + Factory_x_vol;
+		tOsdImgInfo.uwYStart = 1000 - (20 * i );
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+		
 	}
 
-	if(tUI_SyncAppState == APP_LINK_STATE)
-	{
-		if(ubBUEnterAdotestFLag == 1)
-		{
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TXMICSPK, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart = 635 + Factory_x_vol;
-			tOsdImgInfo.uwYStart = 863;
-			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-		}
-	}
+
+	
+
 }
 
 void UI_FactorymodeKeyDisplay(uint8_t Value)
@@ -12419,6 +12598,7 @@ void UI_EnterLocalAdoTest_RX(void)
 	tOsdImgInfo.uwYStart = 863;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
+	printd(Apk_DebugLvl,"UI_EnterLocalAdoTest_RX\n");
 	ADO_SelfTest_Init(); //ADO_SelfTest_Init(5);
 	ADO_SelfTest_Record();
 	ADO_SelfTest_Play();
@@ -13150,14 +13330,14 @@ void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *
 	tUI_TimerParam.tEM 			= TIMER_CB;
 	tUI_TimerParam.pvEvent 		= pvRegCb;
 
-	printd(Apk_DebugLvl, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
+	//printd(Apk_DebugLvl, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
 	TIMER_Start(tDevice, tUI_TimerParam);
 	ubTimerDevEventStopSta = 1;
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice)
 {
-	printd(Apk_DebugLvl, "UI_TimerDeviceEventStop tDevice: %d.\n", tDevice);
+	///printd(Apk_DebugLvl, "UI_TimerDeviceEventStop tDevice: %d.\n", tDevice);
 	if(ubTimerDevEventStopSta == 1)
 	{
 		TIMER_Stop(tDevice);
@@ -13169,7 +13349,7 @@ void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb)
 {
 	TIMER_SETUP_t tUI_TimerParam;
 
-	printd(Apk_DebugLvl, "UI_TimerEventStart TIMER2_1.\n");
+	//printd(Apk_DebugLvl, "UI_TimerEventStart TIMER2_1.\n");
 	tUI_TimerParam.tCLK 		= TIMER_CLK_EXTCLK;	
 	tUI_TimerParam.ulTmLoad 	= 10000 * ulTime_ms;
 	tUI_TimerParam.ulTmCounter 	= tUI_TimerParam.ulTmLoad;
@@ -13183,7 +13363,7 @@ void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb)
 //------------------------------------------------------------------------------
 void UI_TimerEventStop(void)
 {
-	printd(Apk_DebugLvl, "UI_TimerEventStop TIMER2_1.\n");
+	//printd(Apk_DebugLvl, "UI_TimerEventStop TIMER2_1.\n");
 	TIMER_Stop(TIMER2_1);
 }
 //------------------------------------------------------------------------------
@@ -13192,7 +13372,7 @@ void UI_ScanModeTimerEvent(void)
 	UI_Event_t tScanEvent;
 	osMessageQId *pUI_ScanEventQH = NULL;
 
-	printd(Apk_DebugLvl, "UI_ScanModeTimerEvent###\n");
+	//printd(Apk_DebugLvl, "UI_ScanModeTimerEvent###\n");
 	UI_TimerEventStop();
 	tScanEvent.tEventType = SCANMODE_EVENT;
 	tScanEvent.pvEvent 	  = NULL;
@@ -13202,7 +13382,7 @@ void UI_ScanModeTimerEvent(void)
 //------------------------------------------------------------------------------
 void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 {
-	printd(Apk_DebugLvl, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
+	//printd(Apk_DebugLvl, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
 	ubUI_ScanStartFlag = ubTimerEn;
 	if(TRUE == ubTimerEn)
 	{
@@ -13223,7 +13403,7 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 //------------------------------------------------------------------------------
 void UI_EnableScanMode(void)
 {
-	printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
+	//printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
 	
 	if(tUI_PuSetting.ubScanTime == 0)
 	{
@@ -13246,7 +13426,7 @@ void UI_EnableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_DisableScanMode(void)
 {
-	printd(Apk_DebugLvl, "UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
+	//printd(Apk_DebugLvl, "UI_DisableScanMode ubUI_ScanStartFlag: %d #\n", ubUI_ScanStartFlag);
 	if(FALSE == ubUI_ScanStartFlag)
 		return;
 	UI_SetupScanModeTimer(FALSE);
@@ -13254,7 +13434,7 @@ void UI_DisableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_ScanModeExec(void)
 {
-	printd(Apk_DebugLvl, "UI_ScanModeExec###\n");
+	//printd(Apk_DebugLvl, "UI_ScanModeExec###\n");
 #if 0
 	UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 	uint8_t ubSearchCnt;

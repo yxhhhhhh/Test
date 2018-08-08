@@ -142,6 +142,7 @@ typedef enum
 	UI_BU_CMD_PS_MODE,
 	UI_BU_CMD_ALARM_TYPE,
 	UI_BU_CMD_PICKUP_VOLUME,
+	UI_BU_CMD_SN_VALUE,
 }UI_BUTOPUCmdID_t;
 
 typedef enum
@@ -311,4 +312,6 @@ uint8_t UI_SendPickupVolumeToPu(uint32_t ulUI_AdcRpt);
 void UI_RecvPUCmdSetting(void *pvRecvPuParam);
 uint8_t UI_CheckAlarmWakeUp(void);
 void UI_AlarmTrigger(void);
+uint8_t UI_readSN(void);
+uint8_t UI_SendSnValueToPu(void);
 #endif
