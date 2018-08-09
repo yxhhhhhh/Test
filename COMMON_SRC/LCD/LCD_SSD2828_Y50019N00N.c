@@ -287,7 +287,7 @@ static uint8_t panel0_init_regs[] = {
     0, 0x35,
     0, 0x11,
     0xff, 120,
-    1, 0x36, 0x03,
+    1, 0x36, 0x03, // vflip & hflip
     1, 0xCC, 0x05,
     0xff, 1,
     0, 0x29,
@@ -366,7 +366,7 @@ static uint8_t panel1_init_regs[] = {
 
     0,  0x11,
     0xFF, 120,
-
+    1,  0x36, 0x03, // vflip & hflip
     0,  0x29,
     0xFF, 20,
 
