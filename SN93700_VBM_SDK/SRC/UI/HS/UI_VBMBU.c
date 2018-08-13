@@ -400,10 +400,11 @@ void UI_UpdateBUStatusToPU(void)
 	{
 		ubVersionResut = UI_SendVersionToPu();
 	}
-	if(ubSNValueResut == 0 || ubSNValueResut ==1)
+/*	if(ubSNValueResut == 0 || ubSNValueResut ==1)
 	{
 		ubSNValueResut = UI_SendSnValueToPu();
 	}
+	*/
 }
 
 //------------------------------------------------------------------------------
@@ -1774,7 +1775,7 @@ uint8_t UI_readSN(void)
 	uint8_t i =0;
 	uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
 	SF_Read(ubUI_SFAddr, sizeof(TXSNdata), TXSNdata);
-	printd(Apk_DebugLvl,"UI_readSN  data= %s.\n",TXSNdata);
+	//printd(Apk_DebugLvl,"UI_readSN  data= %s.\n",TXSNdata);
 
 	for(i = 0; i < sizeof(TXSNdata); i++)
 	{
@@ -1826,7 +1827,6 @@ uint8_t UI_SendSnValueToPu(void)
 		return 1;
 	}
 }
-
 
 
 
