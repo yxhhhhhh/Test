@@ -663,6 +663,7 @@ typedef enum
     UI_BU_CMD_ALARM_TYPE,
     UI_BU_CMD_PICKUP_VOLUME,
     UI_BU_CMD_SN_VALUE,
+	UI_BU_CMD_IR_VALUE,
 } UI_BUTOPUCmdID_t;
 
 typedef enum
@@ -1000,6 +1001,7 @@ void UI_CameraResetCycleTime(uint8_t KeyAction);
 void UI_TriggerWakeUpAlarm(void);
 void UI_SetFactoryFlag(uint8_t Value);
 void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId);
-
+void UI_WakeUp(void);
+void UI_PowerOff(void);
 #endif
 

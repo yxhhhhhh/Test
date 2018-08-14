@@ -82,7 +82,7 @@ void UI_Init(osMessageQId *pvMsgQId)
 	}
 	else
 	{
-		if(ubCamUVCMode == 0xCC)
+		if(ubCamUVCMode != 0)
 		{
 			UI_SetCamUVCMode(0);
 			UI_UpdateDevStatusInfo();

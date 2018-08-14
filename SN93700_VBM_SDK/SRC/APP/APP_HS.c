@@ -57,6 +57,7 @@ extern uint8_t ubWorWakeUpFlag ;
 
 extern uint8_t ubSwitchNormalFlag;
 extern uint8_t ubPowerState;
+extern uint8_t ubShowAlarmstate;
 
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
@@ -468,6 +469,8 @@ void APP_LinkStateFunc(APP_EventMsg_t *ptEventMsg)
 					}
 					else
 					{
+						if(ubShowAlarmstate > 0)
+							return;
 						tOsdImgInfo.uwHSize  = 250;
 						tOsdImgInfo.uwVSize  = 250;
 						tOsdImgInfo.uwXStart = 259;
@@ -827,10 +830,13 @@ void APP_LcdDisplayOn(void)
 	}
 	
 	GLB->LCD_FUNC_DIS  = 0;
-	LCD_Init(LCD_LCD_PANEL);
+	VDO_Stop();	
+	LCD_Init(LCD_LCD_PANEL);	
 	LCD_SetGammaLevel(4);
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
+	osDelay(30);
+	VDO_Start();
 	LCDBL_ENABLE(UI_ENABLE);
 
 	ubSwitchNormalFlag = 1;
@@ -935,6 +941,13 @@ void APP_Start(void)
 	//! Kernel Setup
 	KNL_BlockInit();
 
+	#ifdef VBM_PU
+	BB_SetTxPwr(1, 0x3D);
+	#endif
+
+	#ifdef VBM_BU
+	BB_SetTxPwr(1, 0x35);
+	#endif
 	//! Video Start
 #ifdef VBM_BU	
 	VDO_Start();

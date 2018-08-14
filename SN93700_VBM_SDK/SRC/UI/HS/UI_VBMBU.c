@@ -708,8 +708,8 @@ void UI_VoiceCheck (void)
     uint32_t ulUI_AdcRpt = 0;
     uint8_t voice_temp,  ir_temp1,ir_temp2;
 
-    uint16_t uwDetLvl = 0x3FF;
-    uwDetLvl = uwSADC_GetReport(1);
+	//uint16_t uwDetLvl = 0x3FF;
+	//uwDetLvl = uwSADC_GetReport(1);
 
     ADO_SetAdcRpt(128, 256, ADO_ON);
     ulUI_AdcRpt = ulADO_GetAdcSumHigh();
@@ -729,8 +729,8 @@ void UI_VoiceCheck (void)
     else
         voice_temp = 0;
 
-    ir_temp1 = uwDetLvl >>8;
-    ir_temp2 = uwDetLvl & 0xff;
+	//ir_temp1 = uwDetLvl >>8;
+	//ir_temp2 = uwDetLvl & 0xff;
 
     //if (ubVoicetemp_bak != voice_temp)
     //{
@@ -739,9 +739,9 @@ void UI_VoiceCheck (void)
         tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]      = UI_REPORT;
         tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM]   = UI_VOICE_CHECK;
         tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA]   = voice_temp;
-        tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+1] = ir_temp1;
-        tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;
-        tUI_VoiceReqCmd.ubCmd_Len               = 5;
+		//tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+1] = ir_temp1;
+		//tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;			
+		tUI_VoiceReqCmd.ubCmd_Len  			  	= 3;
         UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
 
         ubCurSoundVal = voice_temp;
@@ -802,7 +802,13 @@ void UI_TempCheck(void) //20180322
     //pI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
     ret = bI2C_MasterProcess (pTempI2C,  0x40, &ubReg, 1, ubData, 2);
 
-    tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
+	if(ret == false)
+		return;
+
+	if((17572*(ubData[0]*256+ubData[1])/65536-4685) >= 0)
+		tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
+	else
+		tem = 0;
 
     ubCurTempVal = tem;
 
@@ -1352,7 +1358,7 @@ void UI_UpdateMCStatus(void)
 void UI_NightModeSetting(void *pvNMParam)
 {
     uint8_t *pNM_Param = (uint8_t *)pvNMParam;
-//  uint8_t CameraId = pNM_Param[0];
+	uint8_t CameraId = pNM_Param[0];
     uint8_t NightMode = pNM_Param[1];
 
     printd(Apk_DebugLvl, "UI_NightModeSetting NightMode: %d.\n", NightMode);
@@ -1362,7 +1368,7 @@ void UI_NightModeSetting(void *pvNMParam)
 void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 {
     static uint8_t BuPlayRecordState = 0;
-//  static uint8_t BuTalkSpkState = 0;
+	static uint8_t BuTalkSpkState = 0;	
     uint8_t *pRecvPuParam = (uint8_t *)pvRecvPuParam;
     uint8_t ubPuCmd = pRecvPuParam[0];
 
@@ -1413,20 +1419,21 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 }
 void UI_SetIrMode(uint8_t mode)
 {
-    if (mode == 1)
-    {
-        AWB_Stop();
-        osDelay(500);
-        SEN_SetIrMode(1);
-        ISP_SetIQSaturation(0);
-    }
-    else
-    {
-        //osDelay(500);
-        AWB_Start();
-        SEN_SetIrMode(0);
-        ISP_SetIQSaturation(128);
-    }
+	if(mode == 1)
+	{
+		AWB_Stop();
+		osDelay(500);
+		SEN_SetIrMode(1);
+		ISP_SetIQSaturation(0);
+	}
+	else
+	{
+		//osDelay(500);
+		AWB_Start();
+		SEN_SetIrMode(0);
+		ISP_SetIQSaturation(128);
+	}
+
 }
 
 void UI_SetIRLed(uint8_t LedState)
@@ -1434,8 +1441,10 @@ void UI_SetIRLed(uint8_t LedState)
     //printd(Apk_DebugLvl, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
     if ((GPIO->GPIO_O4 == 0) && (LedState == 1))
     {
-        GPIO->GPIO_O4 = 1;
-        UI_SetIrMode(1); //¿ªIR, ºÚ°×É«
+ 
+        GPIO->GPIO_O4 = 1;	   	
+         UI_SetIrMode(1); //¿ªIR, ºÚ°×
+
         printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
     }
@@ -1452,18 +1461,19 @@ void UI_SetIRLed(uint8_t LedState)
 void UI_BrightnessCheck(void) //20180408
 {
     #define IR_CHECK_CNT    5
+	int i;
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
 
     uwDetLvl = uwSADC_GetReport(1);
 
-    if (uwDetLvl <= 0x03)
-    {
-        ubCheckMinIrCnt++;
-        ubCheckMaxIrCnt = 0;
-    }
-    else if (uwDetLvl >= 0x0A)
+	if(uwDetLvl < 0x7D) //0x03
+	{
+		ubCheckMinIrCnt++;
+		ubCheckMaxIrCnt = 0;
+	}
+	else if(uwDetLvl >= 0x1C2) //0x0A
     {
         ubCheckMaxIrCnt++;
         ubCheckMinIrCnt = 0;
@@ -1474,6 +1484,7 @@ void UI_BrightnessCheck(void) //20180408
         ubCheckMinIrCnt = 0;
     }
 
+	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
     //printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
@@ -1508,11 +1519,11 @@ void UI_BuInit(void)
 
 void UI_TestSetting(void *pvTSParam)
 {
+	uint8_t *pTS_Param = (uint8_t *)pvTSParam;
+	uint8_t TestData0 = pTS_Param[0];
+	uint8_t TestData1 = pTS_Param[1];
+	
 #if 0
-    uint8_t *pTS_Param = (uint8_t *)pvTSParam;
-    uint8_t TestData0 = pTS_Param[0];
-    uint8_t TestData1 = pTS_Param[1];
-
     if (TestData0 == 0x11)
     {
         printd(Apk_DebugLvl, "UI_TestSetting TestData1: %d.\n", TestData1);
@@ -1720,10 +1731,29 @@ uint8_t UI_SendAlarmTypeToPu(uint8_t AlarmType)
     return rUI_SUCCESS;
 }
 
+uint8_t UI_SendIRValueToPu(uint8_t ubHIr, uint8_t ubLIr)
+{
+	UI_BUReqCmd_t tUI_IRValueReqCmd;
+	
+	tUI_IRValueReqCmd.ubCmd[UI_TWC_TYPE]	  		= UI_REPORT;
+	tUI_IRValueReqCmd.ubCmd[UI_REPORT_ITEM] 		= UI_BU_TO_PU_CMD;
+	tUI_IRValueReqCmd.ubCmd[UI_REPORT_DATA] 		= UI_BU_CMD_IR_VALUE;
+	tUI_IRValueReqCmd.ubCmd[UI_REPORT_DATA+1] 		= ubHIr;
+	tUI_IRValueReqCmd.ubCmd[UI_REPORT_DATA+2] 		= ubLIr;
+	tUI_IRValueReqCmd.ubCmd_Len  			  		= 5;
+
+	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_IRValueReqCmd))
+	{
+		printd(DBG_ErrorLvl, "UI_SendIRValueToPu Fail!\n");
+		return rUI_FAIL;
+	}
+
+	return rUI_SUCCESS;
+}
 void UI_AlarmTrigger(void)
 {
     UI_BUReqCmd_t tUI_AlarmReqCmd;
-//  uint32_t ulUI_AdcRpt = 0;
+	uint32_t ulUI_AdcRpt = 0;
 
     tUI_AlarmReqCmd.ubCmd[UI_TWC_TYPE]    = UI_REPORT;
     tUI_AlarmReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOX_TRIG;
@@ -1768,6 +1798,7 @@ uint8_t UI_SendPickupVolumeToPu(uint32_t ulUI_AdcRpt)
 
 uint8_t UI_readSN(void)
 {
+	uint8_t i =0;
     uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
     SF_Read(ubUI_SFAddr, sizeof(TXSNdata), TXSNdata);
     return 0;
