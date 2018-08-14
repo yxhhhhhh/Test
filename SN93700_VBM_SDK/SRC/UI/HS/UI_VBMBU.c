@@ -613,7 +613,7 @@ void UI_DisableVox(void)
 void UI_VoxTrigger(void)
 {
     UI_BUReqCmd_t tUI_VoxReqCmd;
-//  uint32_t ulUI_AdcRpt = 0;
+	uint32_t ulUI_AdcRpt = 0;
     uint8_t ubAlarmType = 0;
 
     tUI_VoxReqCmd.ubCmd[UI_TWC_TYPE]    = UI_REPORT;
@@ -1441,10 +1441,9 @@ void UI_SetIRLed(uint8_t LedState)
     //printd(Apk_DebugLvl, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
     if ((GPIO->GPIO_O4 == 0) && (LedState == 1))
     {
- 
-        GPIO->GPIO_O4 = 1;	   	
-         UI_SetIrMode(1); //¿ªIR, ºÚ°×
-
+		UI_SetIrMode(1); //¿ªIR, ºÚ°×É«
+		osDelay(50);
+		GPIO->GPIO_O4 = 1;
         printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
     }
@@ -1460,7 +1459,7 @@ void UI_SetIRLed(uint8_t LedState)
 
 void UI_BrightnessCheck(void) //20180408
 {
-    #define IR_CHECK_CNT    5
+	#define IR_CHECK_CNT	3
 	int i;
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;

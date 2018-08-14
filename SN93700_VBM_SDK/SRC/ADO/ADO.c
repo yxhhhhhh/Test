@@ -115,6 +115,7 @@ void ADO_PTTStart(void)
 	
 	KNL_AdoStart(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	printd(DBG_InfoLvl, "		=>PTT Play\n");
+	printd(Apk_DebugLvl, "		=>PTT Play\n");
 }
 //------------------------------------------------------------------------------
 void ADO_PTTStop(void)
@@ -122,6 +123,7 @@ void ADO_PTTStop(void)
 	KNL_AdoStop(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	ubKNL_WaitNodeFinish(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	printd(DBG_InfoLvl, "		=>PTT Stop\n");
+	printd(Apk_DebugLvl, "		=>PTT Stop\n");
 }
 #endif
 //------------------------------------------------------------------------------

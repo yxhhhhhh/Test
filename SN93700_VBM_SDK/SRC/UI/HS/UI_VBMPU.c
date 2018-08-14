@@ -36,15 +36,15 @@
 //#define Current_Test  0
 //#define Current_Mode  PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
 
-#define SD_UPDATE_TEST  1
+#define SD_UPDATE_TEST	0
 
-#define TIME_TEST       1
+#define TIME_TEST		0
 
-#define ENG_MODE_TEST   0
+#define ENG_MODE_TEST 	0
 
-#define PICKUP_VOLUME_TEST  1
+#define PICKUP_VOLUME_TEST 	0
 
-#define UI_BATT_TEST    1
+#define UI_BATT_TEST	0
 
 #define Factory_x_vol   10
 #define Factory_y_vol   80
@@ -327,7 +327,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 {
     static uint8_t ubUI_KeyEventIdx = 0;
     uint16_t uwUiKeyEvent_Cnt = 0, uwIdx;
-//  OSD_IMG_INFO tOsdImgInfo;
+	OSD_IMG_INFO tOsdImgInfo;
 
     KEY_Event_t *ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
     uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
@@ -708,6 +708,25 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
     osMutexRelease(UI_PUMutex);
 }
 
+void UI_PairStateCheck(uint16_t ubCheckCount)
+{
+	if(tUI_PuSetting.ubDefualtFlag == FALSE)
+	{
+		if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
+		{
+			//UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+			UI_TimerDeviceEventStop(TIMER1_2);
+		}
+	}
+	else
+	{
+		if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
+		{
+			//UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+			UI_TimerDeviceEventStop(TIMER1_2);
+		}
+	}
+}
 //------------------------------------------------------------------------------
 void UI_LinkStatusCheck(uint16_t ubLinkCheckCount)
 {
@@ -724,10 +743,10 @@ void UI_LinkStatusCheck(uint16_t ubLinkCheckCount)
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t ubCheckCount)
 {
+	OSD_IMG_INFO tOsdInfo;
     static uint8_t ubSetAlarmRet = rUI_FAIL;
     static uint8_t ubNightModeRet = rUI_FAIL;
 
-    OSD_IMG_INFO tOsdInfo;
 
 
     if (ubFactoryModeFLag == 1)
@@ -820,10 +839,12 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         if (ubSpeakerCount == 4)
             UI_SetSpeaker(1, TRUE);
 
-        if ((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
-        {
-            UI_TimerDeviceEventStop(TIMER1_2);
-        }
+		/*
+		if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
+		{
+			UI_TimerDeviceEventStop(TIMER1_2);
+		}
+		*/
 
 #if Current_Test
         UI_CheckPowerMode();
@@ -840,8 +861,8 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 				tOsdInfo.uwXStart = 48;
 				tOsdInfo.uwYStart = 0;
 				OSD_EraserImg2(&tOsdInfo);
-				tUI_State = UI_DISPLAY_STATE;
 				ubMenuKeyPairing = 0;
+				tUI_State = UI_DISPLAY_STATE;
 				return;
 			}
 		}
@@ -873,10 +894,12 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         if (ubSpeakerCount == 4)
             UI_SetSpeaker(1, TRUE);
 
-        if ((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
-        {
-            UI_TimerDeviceEventStop(TIMER1_2);
-        }
+			/*
+			if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
+			{
+				UI_TimerDeviceEventStop(TIMER1_2);
+			}
+			*/
 
 #if Current_Test
         UI_CheckPowerMode();
@@ -1010,9 +1033,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         }
         break;
     case APP_PAIRING_STATE:
-	UI_UpdateBarIcon_Part1();
-        *pThreadCnt = 0;
-        ubCamPairOkState = 1;
+			*pThreadCnt = 0;
+			UI_PairStateCheck(*pThreadCnt);
+			ubCamPairOkState = 1;
+			UI_UpdateBarIcon_Part1();
         UI_DrawPairingStatusIcon();
         osMutexRelease(UI_PUMutex);
         return;
@@ -1158,8 +1182,10 @@ void UI_WakeUp(void)
     printd(Apk_DebugLvl, "UI_WakeUp.\n");
     if (APP_LOSTLINK_STATE == tUI_SyncAppState)
     {
-        tUI_PuSetting.IconSts.ubShowLostLogoFlag = FALSE;
-        ubFastShowLostLinkSta = 1;
+		//tUI_PuSetting.IconSts.ubShowLostLogoFlag = FALSE;
+		//ubFastShowLostLinkSta = 1;
+
+		ubEnterTimeMenuFlag =0;
     }
 
     //if (LCDBL_STATE == 0)
@@ -1177,7 +1203,6 @@ void UI_WakeUp(void)
     */
 
 	//UI_TriggerWakeUpAlarm();
-	ubEnterTimeMenuFlag = 0;
 }
 
 void UI_CheckPowerMode(void)
@@ -1229,24 +1254,6 @@ void UI_SetSleepState(uint8_t type)
 {
     //static uint8_t ubVoxstatus = false;
     if (type == 0)
-	{
-	   if(tUI_SyncAppState != APP_LINK_STATE)
-	   {
-		  if(LCDBL_STATE == 0)
-		  {
-			LCDBL_ENABLE(UI_ENABLE);
-			ubAdoOnlyFlag =0;	
-			ubAdoOnlyCnt =0;
-			UI_WakeUp();
-		  }
-		  else
-		  {
-			LCDBL_ENABLE(UI_DISABLE);
-			ubAdoOnlyFlag =1;
-			ubAdoOnlyCnt =0;
-		  }	   	
-	   }
-	   else
     {
         if (ubPowerState == PWR_ON)
         {
@@ -1267,7 +1274,7 @@ void UI_SetSleepState(uint8_t type)
 
             ubSwitchCamWakeupSstate = 1;
 		}
-        }
+        
     }
     else
     {
@@ -13236,6 +13243,7 @@ void UI_LoadDevStatusInfo(void)
             tUI_PuSetting.NightmodeFlag              = 0x0F;
     }
 
+	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
     tUI_PuSetting.ubPairedBuNum = 0;
     for (tCamNum = CAM1; tCamNum < CAM_4T; tCamNum++)
     {

@@ -59,6 +59,7 @@ extern uint8_t ubSwitchNormalFlag;
 extern uint8_t ubPowerState;
 extern uint8_t ubShowAlarmstate;
 
+extern uint8_t ubFastShowLostLinkSta;
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
@@ -170,7 +171,7 @@ uint8_t APP_CheckBootStatus(void)
 
 	while(1)
 	{
-		if (UI_GetUsbDet() == 1) //Usb On
+		if (UI_GetUsbDet() == 0) //Usb On
 		{
 			TIMER_Delay_ms(1000);
 			break;
@@ -650,10 +651,13 @@ uint8_t APP_UpdateLinkStatus(void)
 
 	if((ubAPP_Event == APP_LINK_EVENT)&&(ubLinkonceflag == 0))
 	{
-		if(LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus())
+		if(ubPowerState == PWR_ON)
 		{
-			UI_PowerOnSet();
-			ubLinkonceflag = 1;
+			if(LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus())
+			{
+					UI_PowerOnSet();
+				ubLinkonceflag = 1;
+			}
 		}
 	}
 	
@@ -814,8 +818,11 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 void APP_LcdDisplayOff(void)
 {
 	LCD_Suspend();
+	LCD_UnInit();
+	LCD->LCD_MODE = LCD_GPIO;
 	LCD_Stop();
 	GLB->LCD_FUNC_DIS  = 1;
+	SSP->SSP_GPIO_MODE = 1;
 	LCD_PWR_DISABLE;
 }
 //------------------------------------------------------------------------------
@@ -833,10 +840,16 @@ void APP_LcdDisplayOn(void)
 	VDO_Stop();	
 	LCD_Init(LCD_LCD_PANEL);	
 	LCD_SetGammaLevel(4);
+	UI_PowerOnSet();
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
 	osDelay(30);
 	VDO_Start();
+	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
+	{
+		UI_RemoveLostLinkLogo();
+		ubFastShowLostLinkSta = 1;
+	}	
 	LCDBL_ENABLE(UI_ENABLE);
 
 	ubSwitchNormalFlag = 1;
