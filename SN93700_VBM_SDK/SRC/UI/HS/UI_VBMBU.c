@@ -399,7 +399,14 @@ void UI_UpdateBUStatusToPU(void)
     if (ubVersionResut == rUI_FAIL) {
         ubVersionResut = UI_SendVersionToPu();
     }
-    if (ubSNValueResut < 16) {
+	
+//	if(ubSNValueResut == 0 || ubSNValueResut ==1)
+	{
+//		ubSNValueResut = UI_SendSnValueToPu();
+	}
+
+
+   if (ubSNValueResut < 16) {
         ubSNValueResut+= UI_SendSnValueToPu(ubSNValueResut);
     }
 }
@@ -1800,28 +1807,76 @@ uint8_t UI_readSN(void)
 	uint8_t i =0;
     uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
     SF_Read(ubUI_SFAddr, sizeof(TXSNdata), TXSNdata);
+	for (int i=0; i<sizeof(TXSNdata); i++)
+		{
+	printd(Apk_DebugLvl,"UI_readSN TXSNdata= %d\n",TXSNdata[i]);
+
+	}
     return 0;
 }
+/*
+uint8_t UI_SendSnValueToPu(void)
+{
+	UI_BUReqCmd_t tUI_SNVolueReqCmd;
+	static uint8_t time = 0;
+	
+	
+	tUI_SNVolueReqCmd.ubCmd[UI_TWC_TYPE]	  			= UI_REPORT;
+	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_ITEM] 			= UI_BU_TO_PU_CMD;
+	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA] 			= UI_BU_CMD_SN_VALUE;
+	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+1] 		= TXSNdata[time+0];		
+	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+2] 		= TXSNdata[time+1];		
+	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+3] 		= TXSNdata[time+2];		
+	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+4] 		= TXSNdata[time+3];	
+	tUI_SNVolueReqCmd.ubCmd_Len  			  			= 7;
+	printd(Apk_DebugLvl,"UI_LoadDevStatusInfo  TXSNdata[time+0]= %d.TXSNdata[time+1]= %d.TXSNdata[time+2]= %d.TXSNdata[time+3]= %d\n",TXSNdata[time+0],TXSNdata[time+1],TXSNdata[time+2],TXSNdata[time+3]);
+
+	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_SNVolueReqCmd))
+	{
+		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Fail!\n");
+		return 0;
+	}
+
+	time +=4;
+
+	if(time == 16)
+	{
+		time = 0;
+		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu end!\n");
+		return 2;
+	}
+	else
+	{
+		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Success!\n");
+		return 1;
+	}
+}
+*/
 
 uint8_t UI_SendSnValueToPu(uint8_t n)
 {
-    UI_BUReqCmd_t tUI_PickupVolueReqCmd;
+    UI_BUReqCmd_t tUI_SNVolueReqCmd;
 
-    tUI_PickupVolueReqCmd.ubCmd[UI_TWC_TYPE]        = UI_REPORT;
-    tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_ITEM]     = UI_BU_TO_PU_CMD;
-    tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA]     = UI_BU_CMD_SN_VALUE;
-    tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+1]   = TXSNdata[n+0];
-    tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+2]   = TXSNdata[n+1];
-    tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+3]   = TXSNdata[n+2];
-    tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+4]   = TXSNdata[n+3];
-    tUI_PickupVolueReqCmd.ubCmd[UI_REPORT_DATA+5]   = n;
-    tUI_PickupVolueReqCmd.ubCmd_Len                 = 8;
+    tUI_SNVolueReqCmd.ubCmd[UI_TWC_TYPE]        = UI_REPORT;
+    tUI_SNVolueReqCmd.ubCmd[UI_REPORT_ITEM]     = UI_BU_TO_PU_CMD;
+    tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA]     = UI_BU_CMD_SN_VALUE;
+    tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+1]   = TXSNdata[n+0];
+    tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+2]   = TXSNdata[n+1];
+    tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+3]   = TXSNdata[n+2];
+    tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+4]   = TXSNdata[n+3];
+    tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+5]   = n;
+    tUI_SNVolueReqCmd.ubCmd_Len                 = 8;
 
-    if (rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_PickupVolueReqCmd))
+	printd(Apk_DebugLvl,"UI_SendSnValueToPu n = %d TXSNdata[n+0] = %d. TXSNdata[n+1] = %d TXSNdata[n+2] = %d TXSNdata[n+3] = %d \n",n,TXSNdata[n+0],TXSNdata[n+1],TXSNdata[n+2],TXSNdata[n+3]);
+	
+
+    if (rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_SNVolueReqCmd))
     {
         printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Fail!\n");
         return 0;
     }
+	printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Success!!\n");
+
     return 4;
 }
 

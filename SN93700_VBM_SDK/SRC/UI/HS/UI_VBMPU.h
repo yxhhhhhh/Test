@@ -1003,5 +1003,6 @@ void UI_SetFactoryFlag(uint8_t Value);
 void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId);
 void UI_WakeUp(void);
 void UI_PowerOff(void);
+void UI_ShowAlarm(uint8_t type);
 #endif
 
