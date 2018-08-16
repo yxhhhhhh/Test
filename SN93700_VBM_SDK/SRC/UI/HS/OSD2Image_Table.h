@@ -1276,6 +1276,8 @@ OSD2IMGPOOL(SN_W,						0x3000,        0,            0)
 OSD2IMGPOOL(SN_X,						0x3000,        0,            0)
 OSD2IMGPOOL(SN_Y,						0x3000,        0,            0)
 OSD2IMGPOOL(SN_Z,						0x3000,        0,            0)
+OSD2IMGPOOL(TEMP_BELOW,					0x3000,        0,            0)
+OSD2IMGPOOL(TEMP_BLANK,					0x3000,        0,            0)
 //----------------------------------------------------------------------------
 
 OSD2IMGPOOL(PU_STSICON,  				0x3000,        10,         0)

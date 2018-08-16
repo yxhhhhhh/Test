@@ -222,7 +222,7 @@ uint8_t ubEnterTimeMenuFlag = 0;
 uint8_t ubDisplaymodeFlag = 0;
 
 uint8_t ubGetTempData = 25;
-uint8_t ubRealTemp = 25;
+uint8_t ubRealTemp = 0xFF;
 uint8_t ubRealTempCheckCnt = 0;
 uint8_t ubHighAlarmOn = 0;
 uint8_t ubLowAlarmOn = 0;
@@ -253,6 +253,8 @@ uint8_t ubPlayAlarmCount = 0;
 uint8_t ubTempAlarmCheckCount = 0;
 uint8_t ubTempAlarmState = TEMP_ALARM_IDLE;
 uint16_t ubTempAlarmTriggerCount = 0;
+uint8_t ubTempBelowZoreSta = 0;
+uint8_t ubTempInvalidSta = 1;
 
 uint8_t ubPickupAlarmCheckCount = 0;
 uint8_t ubPickupAlarmState = PICKUP_ALARM_IDLE;
@@ -923,8 +925,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
     osMutexWait(UI_PUMutex, osWaitForever);
     UI_CLEAR_THREADCNT(tUI_PuSetting.IconSts.ubClearThdCntFlag, *pThreadCnt);
-    	printd(Apk_DebugLvl, "UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
-	printd(Apk_DebugLvl, "UI_UpdateStatus :tUI_PuSetting.tPsMode %d.\n", tUI_PuSetting.tPsMode);
+    //	printd(Apk_DebugLvl, "UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
+	//printd(Apk_DebugLvl, "UI_UpdateStatus :tUI_PuSetting.tPsMode %d.\n", tUI_PuSetting.tPsMode);
     WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
     switch (tUI_SyncAppState)
     {
@@ -3691,6 +3693,16 @@ uint8_t UI_CheckStopAlarm(void)
         return 1;
     }
 
+	if(ubShowAlarmstate)
+	{
+		 OSD_EraserImg2(&tOsdImgInfo);
+	        ubShowAlarmstate = 0;
+	        ubTempAlarmState = TEMP_ALARM_OFF;
+		ubPickupAlarmState == PICKUP_ALARM_OFF;
+	        return 1;
+
+	}
+
     return 0;
 }
 //------------------------------------------------------------------------------
@@ -5928,21 +5940,21 @@ void UI_TempAlarmCheck(void)
             {
                 if ((ubPickupAlarmState == PICKUP_ALARM_IDLE) || (ubPickupAlarmState == PICKUP_ALARM_OFF))
                 {
-					if(TRUE == ubUI_PttStartFlag)
-						return;
+			if(TRUE == ubUI_PttStartFlag)
+				return;
                     ubTempAlarmCheckCount++;
                     if (ubTempAlarmCheckCount == 5)
                     {
-						if(tUI_State != UI_DISPLAY_STATE)
-						{
-							tUI_State = UI_DISPLAY_STATE;
-							
-							tOsdInfo.uwHSize  = 672;
-							tOsdInfo.uwVSize  = 1280;
-							tOsdInfo.uwXStart = 48;
-							tOsdInfo.uwYStart = 0;
-							OSD_EraserImg2(&tOsdInfo);
-						}
+				if(tUI_State != UI_DISPLAY_STATE)
+				{
+					tUI_State = UI_DISPLAY_STATE;
+					
+					tOsdInfo.uwHSize  = 672;
+					tOsdInfo.uwVSize  = 1280;
+					tOsdInfo.uwXStart = 48;
+					tOsdInfo.uwYStart = 0;
+					OSD_EraserImg2(&tOsdInfo);
+				}
                         ubTempAlarmState = HIGH_TEMP_ALARM_ON;
                         ubTempAlarmCheckCount = 0;
                     }
@@ -5956,22 +5968,23 @@ void UI_TempAlarmCheck(void)
             {
                 if ((ubPickupAlarmState == PICKUP_ALARM_IDLE) || (ubPickupAlarmState == PICKUP_ALARM_OFF))
                 {
-					if(TRUE == ubUI_PttStartFlag)
-						return;
+			if(TRUE == ubUI_PttStartFlag)
+				return;
                     ubTempAlarmCheckCount++;
                     if (ubTempAlarmCheckCount == 5)
                     {
-						if(tUI_State != UI_DISPLAY_STATE)
-						{
-							tUI_State = UI_DISPLAY_STATE;
-							tOsdInfo.uwHSize  = 672;
-							tOsdInfo.uwVSize  = 1280;
-							tOsdInfo.uwXStart = 48;
-							tOsdInfo.uwYStart = 0;
-							OSD_EraserImg2(&tOsdInfo);
-						}
+				if(tUI_State != UI_DISPLAY_STATE)
+				{
+					tUI_State = UI_DISPLAY_STATE;
+					tOsdInfo.uwHSize  = 672;
+					tOsdInfo.uwVSize  = 1280;
+					tOsdInfo.uwXStart = 48;
+					tOsdInfo.uwYStart = 0;
+					OSD_EraserImg2(&tOsdInfo);
+				}
                         ubTempAlarmState = LOW_TEMP_ALARM_ON;
                         ubTempAlarmCheckCount = 0;
+			
                     }
                 }
             }
@@ -5980,7 +5993,8 @@ void UI_TempAlarmCheck(void)
         if ((ubShowAlarmstate == 1) || (ubShowAlarmstate == 2))
         {
 		     //if(ubAlarmOnlyAlertFlag == 0)
-                UI_ShowAlarm(3);
+		     if(ubTempAlarmState == LOW_TEMP_ALARM_ON || ubTempAlarmState == HIGH_TEMP_ALARM_ON)
+                		UI_ShowAlarm(3);
 			ubAlarmOnlyAlertFlag = 0;
         }
     }
@@ -6071,20 +6085,20 @@ void UI_PickupAlarmCheck(void)
             {
                 if ((ubTempAlarmState == TEMP_ALARM_IDLE) || (ubTempAlarmState == TEMP_ALARM_OFF))
                 {
-					if(TRUE == ubUI_PttStartFlag)
-						return;
+			if(TRUE == ubUI_PttStartFlag)
+				return;
                     ubPickupAlarmCheckCount++;
                     if (ubPickupAlarmCheckCount == 5)
                     {
-						if(tUI_State != UI_DISPLAY_STATE)
-						{
-							tUI_State = UI_DISPLAY_STATE;
-							tOsdInfo.uwHSize  = 672;
-							tOsdInfo.uwVSize  = 1280;
-							tOsdInfo.uwXStart = 48;
-							tOsdInfo.uwYStart = 0;
-							OSD_EraserImg2(&tOsdInfo);
-						}
+				if(tUI_State != UI_DISPLAY_STATE)
+				{
+					tUI_State = UI_DISPLAY_STATE;
+					tOsdInfo.uwHSize  = 672;
+					tOsdInfo.uwVSize  = 1280;
+					tOsdInfo.uwXStart = 48;
+					tOsdInfo.uwYStart = 0;
+					OSD_EraserImg2(&tOsdInfo);
+				}
                         ubPickupAlarmState = PICKUP_ALARM_ON;
                         ubPickupAlarmCheckCount = 0;
                     }
@@ -6095,6 +6109,7 @@ void UI_PickupAlarmCheck(void)
         if (ubShowAlarmstate == 3)
         {
 			//if(ubAlarmOnlyAlertFlag == 0)
+		if(ubPickupAlarmState == PICKUP_ALARM_ON)
                 UI_ShowAlarm(3);
 			ubAlarmOnlyAlertFlag = 0;
         }
@@ -8895,8 +8910,19 @@ uint8_t UI_TempFToC(uint8_t fTemp)
 
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
-    uint8_t *pvdata = (uint8_t *)pvTrig;
-//  uint8_t ubBuTemp = 0;
+	OSD_IMG_INFO tOsdImgInfo;
+	uint8_t *pvdata = (uint8_t *)pvTrig;
+
+	ubTempBelowZoreSta = pvdata[1];
+	ubTempInvalidSta = pvdata[2];
+
+	printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, %d, %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
+	if(ubTempInvalidSta == 1)
+	{
+		ubRealTemp = 0xFF;
+		UI_TempBarDisplay(ubRealTemp);
+		return;
+	}
 
     if ((tCamViewSel.tCamViewPool[0] == tCamNum) && (CAM_ONLINE == tUI_CamStatus[tCamNum].tCamConnSts))
     {
@@ -8986,36 +9012,69 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 
 void UI_TempBarDisplay(uint8_t value)
 {
+	printd(Apk_DebugLvl,"UI_TempBarDisplay!!!!!!!\n");
     OSD_IMG_INFO tOsdImgInfo;
 
     if (LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
         return;
 
-	if(value >= 199)
+	for(int i = 0;i < 3; i++)
 	{
-		value = 199;
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TEMP_BLANK, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 920-(19*i);
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		
+	}
+	if(value == 0xFF)
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TEMP_BELOW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 920;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TEMP_BELOW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 901;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TEMP_BELOW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 882;  
+		tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 		return;
 	}
 
-//  printf("UI_TempBarDisplay value: %d,\n", value);
+	if(value >= 199)
+	{
+		return;
+	}
 
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_BLANK1, 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 901;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+  printf("UI_TempBarDisplay value: %d,\n", value);
 
-    if (value/100)
-    {
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(value/100), 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 920;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-    }
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BLANK1, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 869; //901
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_TEMPC+(!tUI_PuSetting.ubTempunitFlag), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 851;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	if(ubTempInvalidSta == 1)
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TEMP_BELOW, 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart = 0;
+		tOsdImgInfo.uwYStart = 920;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	}
+	else
+	{
+		if(value/100)
+		{
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_NUM_0+(value/100), 1, &tOsdImgInfo);
+			tOsdImgInfo.uwXStart = 0;
+			tOsdImgInfo.uwYStart = 920;
+			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		}
+	}
 
     if (value/10%10)
     {
@@ -9028,6 +9087,11 @@ void UI_TempBarDisplay(uint8_t value)
     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 +(value%10), 1, &tOsdImgInfo);
     tOsdImgInfo.uwXStart = 0;
     tOsdImgInfo.uwYStart = 882;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC+(!tUI_PuSetting.ubTempunitFlag), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 0;
+	tOsdImgInfo.uwYStart = 851;
     tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
@@ -11928,7 +11992,7 @@ void UI_UpdateBarIcon_Part1(void)
     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue%10), 1, &tOsdImgInfo);
     tOsdImgInfo.uwXStart = 0;
     tOsdImgInfo.uwYStart = 400 + batt_offset;
-    tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 #endif
 
     tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);

@@ -109,7 +109,7 @@ uint8_t ubTemp_bak = 25;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint32_t ubBuSWVersion = 11;
+uint32_t ubBuSWVersion = 12;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -120,6 +120,9 @@ uint8_t ubHighAlarm = 0;
 uint8_t ubLowAlarm = 0;
 uint8_t ubSoundAlarm = 0;
 uint8_t TXSNdata[16] = {0};
+uint8_t ubTempBelowZore = 0;
+uint32_t ubTempAdjustVlue = 0;
+uint8_t ubTempInvalid = 0;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -211,6 +214,7 @@ void UI_StatusCheck(uint16_t pThreadCnt)
         uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
         osMessagePut(osUI_SysChkQue, &uwChkType, 0);
     }
+	ubTempAdjustVlue += 1;
 
     if (ubTalkCnt == 0)
     {
@@ -805,22 +809,52 @@ void UI_TempCheck(void) //20180322
     uint8_t   ubReg = 0xE3;
     bool      ret = 0;
     uint32_t  tem = 0;
+	static uint8_t ubTempInvalidCnt = 0;
 
     //pI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
     ret = bI2C_MasterProcess (pTempI2C,  0x40, &ubReg, 1, ubData, 2);
 
 	if(ret == false)
-		return;
+	{
+		ubTempInvalidCnt++;
+		if(ubTempInvalidCnt >= 5)
+		{
+			ubTempInvalid = 1;
+			ubTempInvalidCnt = 0;
+		}
+		else
+		{
+			return;
+		}
+	}
+	else
+	{
+		ubTempInvalid = 0;
+		ubTempInvalidCnt = 0;
+	}
 
 	if((17572*(ubData[0]*256+ubData[1])/65536-4685) >= 0)
-		tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
+	{
+		ubTempBelowZore = 0;
+		tem = (17572*(ubData[0]*256+ubData[1])/65536) - 4685;
+		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
+	}
 	else
-		tem = 0;
-
-    ubCurTempVal = tem;
+	{
+		ubTempBelowZore = 1;
+		tem = 4685 - (17572*(ubData[0]*256+ubData[1])/65536);
+		ubCurTempVal = (tem/100) - (((tem%100) >= 50)?1:0);
+	}
 
     ubCurTempVal = UI_GetTempAverVal(ubCurTempVal);
     printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d.\n", tem, ubCurTempVal);
+
+	if(ubTempAdjustVlue/18000 == 1)
+		ubCurTempVal -= 1;
+	else if(ubTempAdjustVlue/18000 >= 2)
+		ubCurTempVal -= 2;
+
+	
     if (ubCurTempVal == 0xFF)
         return;
 
@@ -829,7 +863,9 @@ void UI_TempCheck(void) //20180322
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]     = UI_REPORT;
         tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] = UI_TEMP_CHECK;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA] = ubCurTempVal;
-        tUI_TempReqCmd.ubCmd_Len              = 3;
+		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1] 	= ubTempBelowZore;
+		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubTempInvalid;
+		tUI_TempReqCmd.ubCmd_Len  			  	= 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
 
         ubTemp_bak = ubCurTempVal;
