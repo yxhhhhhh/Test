@@ -5726,13 +5726,24 @@ void UI_ShowAlarm(uint8_t type)
 
     case 1:
         UI_AlarmTriggerDisplay(1);
-        if (ubRealTemp/100)
-        {
-            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
-            tOsdImgInfo.uwXStart = 340;
-            tOsdImgInfo.uwYStart = 600;
-            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-        }
+/*	if(ubTempBelowZoreSta == 1)
+	{
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TEMP_BELOW, 1, &tOsdImgInfo);
+	            tOsdImgInfo.uwXStart = 340;
+	            tOsdImgInfo.uwYStart = 600;
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	}
+	else
+*/	{
+	        if (ubRealTemp/100)
+	        {
+	            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
+	            tOsdImgInfo.uwXStart = 340;
+	            tOsdImgInfo.uwYStart = 600;
+	            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	        }
+	}
+
         if (ubRealTemp/10%10)
         {
             tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
@@ -8902,25 +8913,26 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 	OSD_IMG_INFO tOsdImgInfo;
 	uint8_t *pvdata = (uint8_t *)pvTrig;
 
-	ubTempBelowZoreSta = pvdata[1];
-	ubTempInvalidSta = pvdata[2];
 
-	printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, %d, %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
-	if(ubTempInvalidSta == 1)
-	{
-		ubRealTemp = 0xFF;
-		UI_TempBarDisplay(ubRealTemp);
-		return;
-	}
 
     if ((tCamViewSel.tCamViewPool[0] == tCamNum) && (CAM_ONLINE == tUI_CamStatus[tCamNum].tCamConnSts))
     {
-        ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+	    	ubTempBelowZoreSta = pvdata[1];
+		ubTempInvalidSta = pvdata[2];
+
+		printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, %d, %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
+		if(ubTempInvalidSta == 1)
+		{
+			ubRealTemp = 0xFF;
+			UI_TempBarDisplay(ubRealTemp);
+			return;
+		}
+	        ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
     }
 
     if (ubRealTemp > 199)
-        ubRealTemp = 199;
-    //printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+       return;
+    printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
     if ((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
     {
         UI_TempBarDisplay(ubRealTemp);
@@ -9026,14 +9038,13 @@ void UI_TempBarDisplay(uint8_t value)
 		return;
 	}
 
-  printf("UI_TempBarDisplay value: %d,\n", value);
 
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_BLANK1, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 0;
 	tOsdImgInfo.uwYStart = 869; //901
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-	if(ubTempInvalidSta == 1)
+	if(ubTempBelowZoreSta == 1)
 	{
 		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TEMP_BELOW, 1, &tOsdImgInfo);
 		tOsdImgInfo.uwXStart = 0;

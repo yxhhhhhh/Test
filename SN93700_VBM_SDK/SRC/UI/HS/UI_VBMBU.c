@@ -847,7 +847,7 @@ void UI_TempCheck(void) //20180322
 	}
 
     ubCurTempVal = UI_GetTempAverVal(ubCurTempVal);
-    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d.\n", tem, ubCurTempVal);
+    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
 
 	if(ubTempAdjustVlue/18000 == 1)
 		ubCurTempVal -= 1;
@@ -867,7 +867,7 @@ void UI_TempCheck(void) //20180322
 		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubTempInvalid;
 		tUI_TempReqCmd.ubCmd_Len  			  	= 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
-
+    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
         ubTemp_bak = ubCurTempVal;
     }
 }
