@@ -5554,6 +5554,9 @@ void UI_TempAlarmCheck(void)
     uint8_t ubHightempMax,ubLowtempMin;
   printd(Apk_DebugLvl, "UI_TempAlarmCheck ubUI_PttStartFlag: %d.\n", ubUI_PttStartFlag);
 
+	if(ubRealTemp == 0xFF)
+      		return;
+	
     if (LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
         return;
 
@@ -9345,11 +9348,11 @@ void UI_GetBatLevel(void)
 
 	BatteryMap_t tBatMap[] =
 	{
-		{3500, 		3598, 	BAT_LVL0},
-		{3598, 	 	3665, 	BAT_LVL1},
-		{3665, 	 	3788,	BAT_LVL2},
-		{3788, 		3984, 	BAT_LVL3},
-		{3984, 	 	4350, 	BAT_LVL4},
+		{3500, 		3598, 	BAT_LVL0},  	 //10%
+		{3598, 	 	3665, 	BAT_LVL1},	//25%
+		{3665, 	 	3788,	BAT_LVL2},	//50%
+		{3788, 		3984, 	BAT_LVL3},	//75%
+		{3984, 	 	4350, 	BAT_LVL4},	//100%
 	};
 	
 	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
@@ -13770,8 +13773,8 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.ubTotalBuNum 				 = DISPLAY_MODE;
 			tUI_PuSetting.ubCamViewNum	  =    		CAM1;
 			tUI_PuSetting.tAdoSrcCamNum				 = (tUI_PuSetting.tAdoSrcCamNum > CAM4)?CAM1:tUI_PuSetting.tAdoSrcCamNum;
-			tUI_PuSetting.BriLvL.tBL_UpdateLvL		 = BL_LVL8; //BL_LVL5
-			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL4; //VOL_LVL4
+			tUI_PuSetting.BriLvL.tBL_UpdateLvL		 = BL_LVL6; //BL_LVL5
+			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL3; //VOL_LVL4
 			ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 			
 			tUI_PuSetting.IconSts.ubDrawStsIconFlag  = FALSE;
@@ -13791,9 +13794,9 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.ubScanTime 				= 2;
 			tUI_PuSetting.ubHighTempSetting 		= 0;
 			tUI_PuSetting.ubLowTempSetting 			= 0;
-			tUI_PuSetting.ubTempAlertSetting 		= 1;
+			tUI_PuSetting.ubTempAlertSetting 		= 2;
 			tUI_PuSetting.ubSoundLevelSetting 		= 0;
-			tUI_PuSetting.ubSoundAlertSetting 		= 1;	
+			tUI_PuSetting.ubSoundAlertSetting 		= 2;	
 			tUI_PuSetting.ubTempunitFlag 			= 0;
 			tUI_PuSetting.ubSleepMode				= 1;
 			tUI_PuSetting.ubZoomScale				= 0;
