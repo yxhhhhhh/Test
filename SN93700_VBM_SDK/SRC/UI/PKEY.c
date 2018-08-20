@@ -284,7 +284,7 @@ GKEY_ID_t GKEY_Detection(void)
 		return GKEY_ID1;
 	}
 	return GKEY_UNKNOW;
-#else
-	return (GKEY_ID_t)0;
-#endif
+	#endif
+
+	return 0;
 }

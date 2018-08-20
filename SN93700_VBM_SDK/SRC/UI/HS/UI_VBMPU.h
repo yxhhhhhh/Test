@@ -234,17 +234,31 @@ typedef enum
 	PHOTORES_MAX,
 }UI_PhotoResolution_t;
 
+#if UI_NOTIMEMENU
 typedef enum
 {
-    NIGHTMODE_ITEM,
-    FLICKER_ITEM,
-    LANGUAGESET_ITEM,
-    DEFAULT_ITEM,
-    TEMPUNIT_ITEM,
-    PRODUCT_INFO_ITEM,
-    CONTACT_ITEM,
-    SETTINGITEM_MAX
-} UI_SettingSubMenuItemList_t;
+	NIGHTMODE_ITEM,
+	FLICKER_ITEM,		
+	LANGUAGESET_ITEM,
+	DEFAULT_ITEM,
+	TEMPUNIT_ITEM,
+	PRODUCT_INFO_ITEM,
+	CONTACT_ITEM,
+	SETTINGITEM_MAX
+}UI_SettingSubMenuItemList_t;
+#else
+typedef enum
+{
+	NIGHTMODE_ITEM,
+	FLICKER_ITEM,		
+	LANGUAGESET_ITEM,
+	DEFAULT_ITEM,
+	PRODUCT_INFO_ITEM,
+	CONTACT_ITEM,
+	SETTINGITEM_MAX,
+	TEMPUNIT_ITEM,	
+}UI_SettingSubMenuItemList_t;
+#endif
 
 typedef enum
 {
@@ -1026,6 +1040,7 @@ void UI_DefualtDisplay(uint8_t value);
 void UI_TempUnitDisplay(uint8_t value);
 void UI_DrawSettingSubMenuPage_NoSel(uint8_t type);
 void UI_SNDisplay(void);
+void UI_VerDisplay(void);
 
 void UI_NightModeSubSubSubmenuDisplay(uint8_t value);
 void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
@@ -1116,6 +1131,10 @@ void UI_SetFactoryFlag(uint8_t Value);
 void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId);
 void UI_WakeUp(void);
 void UI_PowerOff(void);
+void UI_TempUnitSubMenuPage(UI_ArrowKey_t tArrowKey);
+void UI_DrawTempSubMenuPage_NoSel(void);
+void UI_TempUnitSubMenuDisplay(void);
+
 void UI_ShowAlarm(uint8_t type);
 #endif
 

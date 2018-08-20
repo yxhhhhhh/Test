@@ -122,7 +122,8 @@ uint8_t ubLowAlarm = 0;
 uint8_t ubSoundAlarm = 0;
 uint8_t TXSNdata[16] = {0};
 uint8_t ubTempBelowZore = 0;
-uint32_t ubTempAdjustVlue = 0;
+uint32_t ubTempAdjustValue = 0;
+uint8_t ubTempAdjustTime = 0;
 uint8_t ubTempInvalid = 0;
 
 //------------------------------------------------------------------------------
@@ -213,13 +214,14 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t pThreadCnt)
 {
-    WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
-//  if (((pThreadCnt)%3) == 0)
-    {
-        uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
-        osMessagePut(osUI_SysChkQue, &uwChkType, 0);
-    }
-	ubTempAdjustVlue += 1;
+	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
+	//if(((pThreadCnt)%3) == 0)
+	{
+		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
+		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
+	}
+	ubTempAdjustValue ++;
+	printd(Apk_DebugLvl,"UI_StatusCheck ubTempAdjustValue =%d.\n",ubTempAdjustValue);
 
     if (ubTalkCnt == 0)
     {
@@ -865,36 +867,51 @@ void UI_TempCheck(void) //20180322
 		ubTempInvalidCnt = 0;
 	}
 
+	//tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
+	//ubCurTempVal = tem;
+	
 	if((17572*(ubData[0]*256+ubData[1])/65536-4685) >= 0)
 	{
 		ubTempBelowZore = 0;
 		tem = (17572*(ubData[0]*256+ubData[1])/65536) - 4685;
+		if(ubTempAdjustValue >=9000)
+			tem -=50;
+		else if(ubTempAdjustValue >=18000)
+			tem -=100;
+		else if(ubTempAdjustValue >=27000)
+			tem -=150;
+		else if(ubTempAdjustValue >=36000)
+			tem -=200;
+		
 		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
 	}
 	else
 	{
 		ubTempBelowZore = 1;
 		tem = 4685 - (17572*(ubData[0]*256+ubData[1])/65536);
-		ubCurTempVal = (tem/100) - (((tem%100) >= 50)?1:0);
+		if(ubTempAdjustValue >=9000)
+			tem -=50;
+		else if(ubTempAdjustValue >=18000)
+			tem -=100;
+		else if(ubTempAdjustValue >=27000)
+			tem -=150;
+		else if(ubTempAdjustValue >=36000)
+			tem -=200;
+		
+		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
 	}
 
     ubCurTempVal = UI_GetTempAverVal(ubCurTempVal);
     printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
 
-	if(ubTempAdjustVlue/18000 == 1)
-		ubCurTempVal -= 1;
-	else if(ubTempAdjustVlue/18000 >= 2)
-		ubCurTempVal -= 2;
-
+	if(ubCurTempVal == 0xFF)
+		return;
 	
-    if (ubCurTempVal == 0xFF)
-        return;
-
-//  if (ubTemp_bak != cur_temp)
-    {
-        tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]     = UI_REPORT;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] = UI_TEMP_CHECK;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA] = ubCurTempVal;
+//	if(ubTemp_bak != cur_temp)
+	{
+		tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_REPORT;
+		tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] 	= UI_TEMP_CHECK;
+		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA] 	= ubCurTempVal;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1] 	= ubTempBelowZore;
 		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubTempInvalid;
 		tUI_TempReqCmd.ubCmd_Len  			  	= 5;
@@ -941,52 +958,54 @@ void UI_ImageProcSetting(void *pvImgProc)
 {
     uint8_t *pUI_ImgProc = (uint8_t *)pvImgProc;
 
-    switch(pUI_ImgProc[0])
-    {
-    case UI_IMG3DNR_SETTING:
-        tUI_BuStsInfo.tCam3DNRMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
-        ISP_NR3DSwitch(tUI_BuStsInfo.tCam3DNRMode);
-        break;
-    case UI_IMGvLDC_SETTING:
-        tUI_BuStsInfo.tCamvLDCMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
-        ISP_VLDCSwitch(tUI_BuStsInfo.tCamvLDCMode);
-        break;
-    case UI_IMGWDR_SETTING:
-        break;
-    case UI_IMGDIS_SETTING:
-        tUI_BuStsInfo.tCamDisMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
-        break;
-    case UI_IMGCBR_SETTING:
-        tUI_BuStsInfo.tCamCbrMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
-        break;
-    case UI_IMGCONDENSE_SETTING:
-        tUI_BuStsInfo.tCamCondenseMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
-        break;
-    case UI_FLICKER_SETTING:
-        tUI_BuStsInfo.tCamFlicker = (UI_CamFlicker_t)pUI_ImgProc[1];
-        ISP_SetAePwrFreq((CAMFLICKER_50HZ == tUI_BuStsInfo.tCamFlicker)?SENSOR_PWR_FREQ_50HZ:SENSOR_PWR_FREQ_60HZ);
-        printd(DBG_InfoLvl, "       => Flicker: %s\n", (CAMFLICKER_50HZ == tUI_BuStsInfo.tCamFlicker)?"50Hz":"60Hz");
-        break;
-    case UI_IMGBL_SETTING:
-        tUI_BuStsInfo.tCamColorParam.ubColorBL = pUI_ImgProc[1];
-        ISP_SetIQBrightness((tUI_BuStsInfo.tCamColorParam.ubColorBL*2));
-        break;
-    case UI_IMGCONTRAST_SETTING:
-        tUI_BuStsInfo.tCamColorParam.ubColorContrast = pUI_ImgProc[1];
-        ISP_SetIQContrast((tUI_BuStsInfo.tCamColorParam.ubColorContrast*2));
-        break;
-    case UI_IMGSATURATION_SETTING:
-        tUI_BuStsInfo.tCamColorParam.ubColorSaturation = pUI_ImgProc[1];
-        ISP_SetIQSaturation((tUI_BuStsInfo.tCamColorParam.ubColorSaturation*2));
-        break;
-    case UI_IMGHUE_SETTING:
-        tUI_BuStsInfo.tCamColorParam.ubColorHue = pUI_ImgProc[1];
-        ISP_SetIQChroma(tUI_BuStsInfo.tCamColorParam.ubColorHue*2);
-        break;
-    default:
-        return;
-    }
-    UI_UpdateDevStatusInfo();
+	switch(pUI_ImgProc[0])
+	{
+		case UI_IMG3DNR_SETTING:
+			tUI_BuStsInfo.tCam3DNRMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
+			ISP_NR3DSwitch(tUI_BuStsInfo.tCam3DNRMode);
+			break;
+		case UI_IMGvLDC_SETTING:
+			tUI_BuStsInfo.tCamvLDCMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
+			ISP_VLDCSwitch(tUI_BuStsInfo.tCamvLDCMode);
+			break;
+		case UI_IMGWDR_SETTING:
+			tUI_BuStsInfo.tCamAecMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
+			ISP_DRCSwitch(tUI_BuStsInfo.tCamAecMode);
+			break;
+		case UI_IMGDIS_SETTING:
+			tUI_BuStsInfo.tCamDisMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
+			break;
+		case UI_IMGCBR_SETTING:
+			tUI_BuStsInfo.tCamCbrMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
+			break;
+		case UI_IMGCONDENSE_SETTING:
+			tUI_BuStsInfo.tCamCondenseMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
+			break;
+		case UI_FLICKER_SETTING:
+			tUI_BuStsInfo.tCamFlicker = (UI_CamFlicker_t)pUI_ImgProc[1];
+			ISP_SetAePwrFreq((CAMFLICKER_50HZ == tUI_BuStsInfo.tCamFlicker)?SENSOR_PWR_FREQ_50HZ:SENSOR_PWR_FREQ_60HZ);
+			printd(DBG_InfoLvl, "		=> Flicker: %s\n", (CAMFLICKER_50HZ == tUI_BuStsInfo.tCamFlicker)?"50Hz":"60Hz");
+			break;
+		case UI_IMGBL_SETTING:
+			tUI_BuStsInfo.tCamColorParam.ubColorBL = pUI_ImgProc[1];
+			ISP_SetIQBrightness((tUI_BuStsInfo.tCamColorParam.ubColorBL*2));
+			break;
+		case UI_IMGCONTRAST_SETTING:
+			tUI_BuStsInfo.tCamColorParam.ubColorContrast = pUI_ImgProc[1];
+			ISP_SetIQContrast((tUI_BuStsInfo.tCamColorParam.ubColorContrast*2));
+			break;
+		case UI_IMGSATURATION_SETTING:
+			tUI_BuStsInfo.tCamColorParam.ubColorSaturation = pUI_ImgProc[1];
+			ISP_SetIQSaturation((tUI_BuStsInfo.tCamColorParam.ubColorSaturation*2));
+			break;
+		case UI_IMGHUE_SETTING:
+			tUI_BuStsInfo.tCamColorParam.ubColorHue = pUI_ImgProc[1];
+			ISP_SetIQChroma(tUI_BuStsInfo.tCamColorParam.ubColorHue*2);
+			break;
+		default:
+			return;
+	}
+	UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 #define MD_TRIG_LVL 16
@@ -1532,21 +1551,21 @@ void UI_BrightnessCheck(void) //20180408
 
     uwDetLvl = uwSADC_GetReport(1);
 
-	if(uwDetLvl < 0x7D) //0x03
+	if(uwDetLvl < 0x28)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
 	}
-	else if(uwDetLvl >= 0x1C2) //0x0A
-    {
-        ubCheckMaxIrCnt++;
-        ubCheckMinIrCnt = 0;
-    }
-    else if (uwDetLvl > 0x3FF)
-    {
-        ubCheckMaxIrCnt = 0;
-        ubCheckMinIrCnt = 0;
-    }
+	else if(uwDetLvl >= 0xFA)
+	{
+		ubCheckMaxIrCnt++;
+		ubCheckMinIrCnt = 0;
+	}
+	else if(uwDetLvl > 0x3FF)
+	{
+		ubCheckMaxIrCnt = 0;
+		ubCheckMinIrCnt = 0;
+	}
 
 	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
     //printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
