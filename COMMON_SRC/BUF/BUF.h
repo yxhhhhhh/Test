@@ -11,8 +11,8 @@
 	\file		BUF.h
 	\brief		Buffer header function
 	\author		Justin Chen
-	\version	0.2
-	\date		2017/03/13
+	\version	0.3
+	\date		2018/07/25
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -26,7 +26,7 @@
 //-----------------------------------------------------
 #define BUF_NUM_SEN_YUV				5
 
-#define BUF_NUM_VDO_BS				10
+#define BUF_NUM_VDO_BS				9
 #define BUF_NUM_VDO_BS0				BUF_NUM_VDO_BS	//10
 #define BUF_NUM_VDO_BS1				BUF_NUM_VDO_BS	//10
 #define BUF_NUM_VDO_BS2				BUF_NUM_VDO_BS	//10
@@ -103,7 +103,11 @@ typedef enum
     
     BUF_USBH_IP			= 33,	//Used for USBH IP (Internal)
 	
-	BUF_USE_MAX			 = 0xFF
+	BUF_JPG_BS			= 34,
+	BUF_JPG_RAW			= 35,
+	BUF_RESV_YUV		= 36,
+	
+	BUF_USE_MAX			= 0xFF
 }BUF_MODE;
 
 //------------------------------------------------------------------------------

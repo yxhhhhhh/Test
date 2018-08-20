@@ -123,7 +123,7 @@ uint8_t APP_CheckBootStatus(void)
 	ubWorWakepValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
 	ubWorWakepValue &= 0xF0;	
 
-	if ((!ubRTC_GetKey()) && (ubWorWakepValue == RTC_PS_WOR_TAG))
+	if((!ubRTC_GetKey()) && (ubWorWakepValue == 0x40))
 	{			
 		ubWorWakeUpFlag = 1;
 	}
@@ -603,7 +603,7 @@ void APP_doPairingStart(void *pvPairInfo)
 #endif
 	VDO_Stop();
 	ADO_Stop();
-	PAIR_Start(tPair_Tag, APP_PAIRING_TIMEOUT);
+	PAIR_Start(tPair_Tag, APP_PAIRING_TIMEOUT, 0);
 }
 //------------------------------------------------------------------------------
 #ifdef VBM_PU
@@ -764,6 +764,36 @@ void APP_KNLParamSetup(void)
 	KNL_SetOpMode(tAPP_KNLInfo.tKNL_OpMode);
 }
 //------------------------------------------------------------------------------
+void APP_FWUgradeStatusReport(uint8_t ubStsReport)
+{
+#define PROGRESS_BAR_SCALE	25
+	APP_StatusReport_t tAPP_UpgStsReport;
+
+	tAPP_UpgStsReport.ubAPP_Report[0] = ubStsReport;
+	tAPP_UpgStsReport.ubAPP_Report[1] = PROGRESS_BAR_SCALE;
+	UI_UpdateFwUpgStatus(&tAPP_UpgStsReport);
+	switch(ubStsReport)
+	{
+		case FWU_UPG_INPROGRESS:
+			UI_StopUpdateThread();
+			KNL_Stop();
+			VDO_Stop();
+			ADO_Stop();
+			break;
+		case FWU_UPG_SUCCESS:
+			SYS_Reboot();
+			break;
+		case FWU_UPG_FAIL:
+			KNL_ReStart();
+			VDO_Start();
+			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
+			UI_StartUpdateThread();
+			break;
+		default:
+			break;
+	}
+}
+//------------------------------------------------------------------------------
 void APP_FWUgradeSetup(void)
 {
 	FWU_MODE_t tAPP_FwuMode = FWU_USBDMSC;
@@ -780,9 +810,14 @@ void APP_FWUgradeSetup(void)
 	if(FWU_USBDMSC == tAPP_FwuMode)
 		tAPP_FwuMode = FWU_DISABLE;
 #endif
+	//! USBD UPG Parameter Setup
+	tAPP_FWUParam.pStsRptCbFunc = APP_FWUgradeStatusReport;
 	FWU_Setup(tAPP_FwuMode, &tAPP_FWUParam);
+	//! SD UPG Parameter Setup
 	tAPP_FWUSdParam.ubTargetFileNameLen = 9;
-	strncpy(tAPP_FWUSdParam.cTargetFileName, "SN937XXFW", tAPP_FWUSdParam.ubTargetFileNameLen);	
+	strncpy(tAPP_FWUSdParam.cTargetFileName, "SN937XXFW", tAPP_FWUSdParam.ubTargetFileNameLen);
+	tAPP_FWUSdParam.pStsRptCbFunc = APP_FWUgradeStatusReport;
+	tAPP_FWUSdParam.ubIncrementProgressBy = PROGRESS_BAR_SCALE;
 	FWU_Setup(FWU_SDCARD, &tAPP_FWUSdParam);
 	FWU_Enable();
 }
@@ -818,16 +853,23 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 void APP_LcdDisplayOff(void)
 {
 	LCD_Suspend();
+#if (LCD_PM == LCD_PWR_OFF)
+	LCD_Suspend();
 	LCD_UnInit();
 	LCD->LCD_MODE = LCD_GPIO;
 	LCD_Stop();
 	GLB->LCD_FUNC_DIS  = 1;
 	SSP->SSP_GPIO_MODE = 1;
 	LCD_PWR_DISABLE;
+#endif
 }
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOn(void)
 {
+#if (LCD_PM == LCD_PM_SUSPEND)
+	LCD_Resume();
+#endif
+#if (LCD_PM == LCD_PWR_OFF)
 	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
 		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
@@ -845,6 +887,7 @@ void APP_LcdDisplayOn(void)
 	LCD_Start();
 	osDelay(30);
 	VDO_Start();
+	
 	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
 		UI_RemoveLostLinkLogo();
@@ -853,6 +896,8 @@ void APP_LcdDisplayOn(void)
 	LCDBL_ENABLE(UI_ENABLE);
 
 	ubSwitchNormalFlag = 1;
+	
+#endif
 }
 #endif
 //------------------------------------------------------------------------------

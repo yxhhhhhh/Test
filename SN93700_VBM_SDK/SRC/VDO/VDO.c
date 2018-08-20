@@ -65,7 +65,11 @@ void VDO_Init(void)
 #ifdef VBM_BU
 	ubVDO_SysSetupFlag = FALSE;
 	tVDO_KNLRole = (KNL_ROLE)ubKNL_GetRole();
-	tVDO_KNLRole = (KNL_NONE != tVDO_KNLRole)?tVDO_KNLRole:KNL_STA1;
+	if(KNL_NONE == tVDO_KNLRole)
+	{
+		tVDO_KNLRole = KNL_STA1;
+		KNL_SetRole(tVDO_KNLRole);
+	}
 #endif
 #ifdef VBM_PU
 	ubVDO_PathRstFlag  = (DISPLAY_MODE != DISPLAY_1T1R)?TRUE:FALSE;
@@ -422,6 +426,19 @@ void VDO_ChangePlayState(KNL_ROLE tVDO_KNLRole, VDO_PlayState_t tVdoPlySte)
 KNL_SRC VDO_GetSourceNumber(KNL_ROLE tVDO_KNLRole)
 {
 	return tVDO_KNLRoleInfo[tVDO_KNLRole].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum;
+}
+//------------------------------------------------------------------------------
+KNL_ROLE VDO_KNLSrcNumMap2KNLRoleNum(KNL_SRC tVDO_SrcNum)
+{
+	KNL_ROLE tVDO_KNLRole;
+
+	for(tVDO_KNLRole = KNL_STA1; tVDO_KNLRole <= KNL_STA4; tVDO_KNLRole++)
+	{
+		if((tVDO_KNLRoleInfo[tVDO_KNLRole].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum == tVDO_SrcNum) ||
+		   (tVDO_KNLRoleInfo[tVDO_KNLRole].tVDO_KNLParam[VDO_SUB_SRC].tKNL_SrcNum == tVDO_SrcNum))
+			return tVDO_KNLRole;
+	}
+	return KNL_NONE;
 }
 //------------------------------------------------------------------------------
 void VDO_Start(void)

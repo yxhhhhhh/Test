@@ -11,8 +11,8 @@
 	\file		OV9715.c
 	\brief		Sensor OV9715 relation function
 	\author		BoCun
-	\version	1.1
-	\date		2018-07-06
+	\version	1.2
+	\date		2018-07-17
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -23,10 +23,9 @@
 #include "SEN.h"
 #include "I2C.h"
 #include "TIMER.h"
+#include "IQ_PARSER_API.h"
 #include "CQ_API.h"
 #include "CQI2C.h"
-#include "USBD_API.h"
-#include "APP_HS.h"
 
 #if (SEN_USE == SEN_OV9715)
 //CQI2C_WrDataSet_t* pWrDataSet[3];
@@ -34,6 +33,45 @@ struct SENSOR_SETTING sensor_cfg;
 tfSENObj xtSENInst;
 I2C1_Type *pI2C_type;
 I2C_TYP I2C_Sel = I2C_2;
+
+struct AE_ExpLineTblObj {
+	unsigned char ubExpIdx;
+	unsigned int swExpLineOffset;
+};
+
+static struct AE_ExpLineTblObj ctAE_MaxExpLTbl[] = {
+	//FPS(DEC),	Max Exposure Offset(DEC, Sign),
+	{30,        0},
+	{29,	    0},
+	{28,	    0},
+	{27,	    0},
+	{26,	    0},
+	{25,	    0},
+	{24,	    0},
+	{23,	    0},
+	{22,	    0},
+	{21,	    0},
+	{20,	    0},
+	{19,	    0},
+	{18,	    0},
+	{17,	    0},
+	{16,	    0},
+	{15,	    0},
+	{14,	    0},
+	{13,	    0},
+	{12,	    0},
+	{11,	    0},
+	{10,	    0},
+	{9,         0},
+	{8,	        0},
+	{7,	        0},
+	{6,	        0},
+	{5,	        0},
+	{4,	        0},
+	{3,	        0},
+	{2,	        0},
+	{1,	        0},
+};
 
 uint8_t ubSEN_InitTable[] = {
 	//------------------------------
@@ -130,394 +168,48 @@ uint8_t ubSEN_InitTable[] = {
 	0x82, 0x56, 0x1f,  // PCLK/ VSYC/ HREF out
 };
 
-uint8_t ubSEN_PckSettingTable[] = {
-	// 1.5MHz 1fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x1B,	
-	// 3MHz 2fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x0D,	
-	// 4.2MHz 3fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x08,	
-	// 6MHz 4fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x06,	
-	// 7MHz 5fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x05,	
-	// 8.4MHz 6fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x04,	
-	// 10.5MHz 7fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x03,	
-	// 14MHz 8fps
-	0x82, 0x2a, 0xec,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x02,	
-	// 14MHz 9fps
-	0x82, 0x2a, 0x56,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x02,	
-	// 14MHz 10fps
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x02,	
-	// 21MHz 11P
-	0x82, 0x2a, 0x01,
-	0x82, 0x2b, 0x09,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x01,		
-	// 21MHz 12P
-	0x82, 0x2a, 0x41,
-	0x82, 0x2b, 0x08,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x01,	
-	// 21MHz 13P
-	0x82, 0x2a, 0x9E,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x01,	
-	// 21MHz 14P
-	0x82, 0x2a, 0x13,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x01,	
-	// 21MHz 15P
-	0x82, 0x2a, 0x98,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x01,	
-	// 42MHz 16P
-	0x82, 0x2a, 0x62,
-	0x82, 0x2b, 0x0C,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 17P
-	0x82, 0x2a, 0xA7,
-	0x82, 0x2b, 0x0B,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 18P
-	0x82, 0x2a, 0x02,
-	0x82, 0x2b, 0x0B,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 19P
-	0x82, 0x2a, 0x6D,
-	0x82, 0x2b, 0x0A,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 20P
-	0x82, 0x2a, 0xe8,
-	0x82, 0x2b, 0x09,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 20P
-	0x82, 0x2a, 0xe8,
-	0x82, 0x2b, 0x09,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 21P
-	0x82, 0x2a, 0x6f,
-	0x82, 0x2b, 0x09,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 22P
-	0x82, 0x2a, 0x01,
-	0x82, 0x2b, 0x09,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 23P
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x08,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 24P
-	0x82, 0x2a, 0x41,
-	0x82, 0x2b, 0x08,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 25P
-	0x82, 0x2a, 0xec,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 26P
-	0x82, 0x2a, 0x9e,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 27P
-	0x82, 0x2a, 0x56,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 28P
-	0x82, 0x2a, 0x13,
-	0x82, 0x2b, 0x07,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 29P
-	0x82, 0x2a, 0xd5,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,
-	// 42MHz 30P
-	0x82, 0x2a, 0x9b,
-	0x82, 0x2b, 0x06,
-	0x82, 0x5d, 0x00,
-	0x82, 0x11, 0x00,		
-};
-
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Read(uint8_t ubAddress, uint8_t *pValue)
+bool bSEN_I2C_Read(uint8_t ubAddress, uint8_t *pValue)
 {
 	return bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &ubAddress, 1, pValue, 1);
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress, uint8_t ubValue)
+bool bSEN_I2C_Write(uint8_t ubAddress, uint8_t ubValue)
 {		
-	uint8_t ubData,pBuf[2];
+	uint8_t pBuf[2];
 	
 	pBuf[0] = ubAddress;
 	pBuf[1] = ubValue;
 	
 	// write data to sensor register
-	bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, pBuf, 2, NULL, 0);
-	
-	// check if write success
-	bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &ubAddress, 1, &ubData, 1);
-	if (ubData != ubValue)
-	{
-		//printf("Sensor I2C write REG=0x%x with value=0x%x failed!\n", ubAddress, ubValue);
-		return 0;
-	}	
-	return 1;	
+	return bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, pBuf, 2, NULL, 0);	
 }
 
 //------------------------------------------------------------------------------
 void SEN_PclkSetting(uint8_t ubPclkIdx)
 {
-	uint8_t i;	
-	uint16_t uwIdx;
-	
-	switch (ubPclkIdx)
-	{
-		case SEN_FPS01:
-			uwIdx = 0;
-			sensor_cfg.ulSensorPclk = 1500000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 1;		
-			break;
-		case SEN_FPS02:
-			uwIdx = 12;
-			sensor_cfg.ulSensorPclk = 3000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 2;		
-			break;
-		case SEN_FPS03:
-			uwIdx = 24;
-			sensor_cfg.ulSensorPclk = 4200000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 3;		
-			break;
-		case SEN_FPS04:
-			uwIdx = 36;
-			sensor_cfg.ulSensorPclk = 6000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 4;		
-			break;
-		case SEN_FPS05:
-			uwIdx = 48;
-			sensor_cfg.ulSensorPclk = 7000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 5;		
-			break;	
-		case SEN_FPS06:
-			uwIdx = 60;
-			sensor_cfg.ulSensorPclk = 8400000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 6;		
-			break;
-		case SEN_FPS07:
-			uwIdx = 72;
-			sensor_cfg.ulSensorPclk = 10500000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 7;		
-			break;
-		case SEN_FPS08:
-			uwIdx = 84;
-			sensor_cfg.ulSensorPclk = 14000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2028;
-			sensor_cfg.ulSensorFrameRate = 8;		
-			break;
-		case SEN_FPS09:
-			uwIdx = 96;
-			sensor_cfg.ulSensorPclk = 14000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1878;
-			sensor_cfg.ulSensorFrameRate = 9;		
-			break;
-		case SEN_FPS10:
-			uwIdx = 108;
-			sensor_cfg.ulSensorPclk = 14000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 10;		
-			break;	
-		case SEN_FPS11:
-			uwIdx = 120;
-			sensor_cfg.ulSensorPclk = 21000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2305;
-			sensor_cfg.ulSensorFrameRate = 11;		
-			break;
-		case SEN_FPS12:
-			uwIdx = 132;
-			sensor_cfg.ulSensorPclk = 21000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2113;
-			sensor_cfg.ulSensorFrameRate = 12;		
-			break;
-		case SEN_FPS13:
-			uwIdx = 144;
-			sensor_cfg.ulSensorPclk = 21000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1950;
-			sensor_cfg.ulSensorFrameRate = 13;		
-			break;
-		case SEN_FPS14:
-			uwIdx = 156;
-			sensor_cfg.ulSensorPclk = 21000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1811;
-			sensor_cfg.ulSensorFrameRate = 14;		
-			break;		
-		case SEN_FPS15:
-			uwIdx = 168;
-			sensor_cfg.ulSensorPclk = 21000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 15;		
-			break;
-		case SEN_FPS16:
-			uwIdx = 180;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 3170;
-			sensor_cfg.ulSensorFrameRate = 16;		
-			break;	
-		case SEN_FPS17:
-			uwIdx = 192;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2983;
-			sensor_cfg.ulSensorFrameRate = 17;		
-			break;
-		case SEN_FPS18:
-			uwIdx = 204;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2818;
-			sensor_cfg.ulSensorFrameRate = 18;		
-			break;
-		case SEN_FPS19:
-			uwIdx = 216;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2669;
-			sensor_cfg.ulSensorFrameRate = 19;		
-			break;		
-		case SEN_FPS20:
-			uwIdx = 228;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2536;
-			sensor_cfg.ulSensorFrameRate = 20;				
-			break;	
-		case SEN_FPS21:
-			uwIdx = 240;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2415;
-			sensor_cfg.ulSensorFrameRate = 21;		
-			break;	
-		case SEN_FPS22:
-			uwIdx = 252;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2305;
-			sensor_cfg.ulSensorFrameRate = 22;		
-			break;
-		case SEN_FPS23:
-			uwIdx = 264;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2205;
-			sensor_cfg.ulSensorFrameRate = 23;		
-			break;
-		case SEN_FPS24:
-			uwIdx = 276;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2113;
-			sensor_cfg.ulSensorFrameRate = 24;		
-			break;
-		case SEN_FPS25:
-			uwIdx = 288;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2028;
-			sensor_cfg.ulSensorFrameRate = 25;		
-			break;	
-		case SEN_FPS26:
-			uwIdx = 300;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1950;
-			sensor_cfg.ulSensorFrameRate = 26;		
-			break;
-		case SEN_FPS27:
-			uwIdx = 312;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1878;
-			sensor_cfg.ulSensorFrameRate = 27;		
-			break;
-		case SEN_FPS28:
-			uwIdx = 324;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1811;
-			sensor_cfg.ulSensorFrameRate = 28;		
-			break;	
-		case SEN_FPS29:
-			uwIdx = 336;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1749;
-			sensor_cfg.ulSensorFrameRate = 29;		
-			break;			
-		case SEN_FPS30:
-			uwIdx = 348;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 30;		
-			break;
-		default:
-			uwIdx = 348;
-			sensor_cfg.ulSensorPclk = 42000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1691;
-			sensor_cfg.ulSensorFrameRate = 30;				
-			break;
-	}
-	
-	for (i=uwIdx; i<(uwIdx+12); i+=3)
-	{
-		if (ubSEN_PckSettingTable[i] == 0x82)	// write
-		{
-			ulSEN_I2C_Write(ubSEN_PckSettingTable[i+1], ubSEN_PckSettingTable[i+2]);
-		}
-	}	
+    uint16_t uwPPL;
+    uint32_t ulPCK; 
+    // support 1-30 fps for 1280x800
+    if(ubPclkIdx > 30)
+    {
+        ubPclkIdx = 30;
+    }
+    // set sensor struct value
+    sensor_cfg.ulSensorPclk = 42000000;  
+    sensor_cfg.ulSensorPclkPerLine = 1691;
+    sensor_cfg.ulSensorFrameRate = ubPclkIdx;
+    sensor_cfg.ulSensorFrameRate = 30;
+    //auto calculat Max Exposure
+	ulPCK = sensor_cfg.ulSensorPclk;
+	uwPPL = (unsigned short)(sensor_cfg.ulSensorPclkPerLine);
+    if ((ubPclkIdx == 0) || (ubPclkIdx > 30))
+    {
+        xtSENInst.uwMaxExpLine = (ulPCK / 30 / (unsigned int)uwPPL)+ctAE_MaxExpLTbl[0].swExpLineOffset;
+    }else{
+        xtSENInst.uwMaxExpLine = (ulPCK / sensor_cfg.ulSensorFrameRate / (unsigned int)uwPPL) + ctAE_MaxExpLTbl[ubPclkIdx].swExpLineOffset;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -577,39 +269,36 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 {
 	uint8_t   *pBuf;	
 	uint16_t 	uwPID = 0;	
-	uint32_t 	i;
-	uint32_t 	ulValue;
+	uint32_t 	ulValue, i;
 		
-	pI2C_type = pI2C_MasterInit (I2C_1, I2C_SCL_400K);
-	
-_RETRY:
+	pI2C_type = pI2C_MasterInit (I2C_2, I2C_SCL_400K);
+	IQ_SetI2cType(pI2C_type);
+    
+//_RETRY:
 	pBuf = (uint8_t*)&uwPID;    
 	// I2C by read sensor ID
-	ulSEN_I2C_Read (OV9715_CHIP_ID_HIGH_ADDR, &pBuf[1]);
-	ulSEN_I2C_Read (OV9715_CHIP_ID_LOW_ADDR, &pBuf[0]);   
+	bSEN_I2C_Read (OV9715_CHIP_ID_HIGH_ADDR, &pBuf[1]);
+	bSEN_I2C_Read (OV9715_CHIP_ID_LOW_ADDR, &pBuf[0]);   
 	if (OV9715_CHIP_ID != uwPID)
 	{
 		printf("This is not OV9715 Sensor!! 0x%x 0x%x\n",OV9715_CHIP_ID, uwPID);
         TIMER_Delay_us(10000);
-        goto _RETRY;
+//        goto _RETRY;
 	}
 
 	for (i=0; i<sizeof(ubSEN_InitTable); i+=3)
 	{
 		if (ubSEN_InitTable[i] == 0x82)	// write
 		{
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2]);
+			bSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2]);
 		}
 	}
 
 	// set sensor output size
 	ulValue = setting->ulVOSize / 4;
-	ulSEN_I2C_Write(0x58, ulValue);
+	bSEN_I2C_Write(0x58, ulValue);
 	ulValue = setting->ulHOSize / 8;
-	ulSEN_I2C_Write(0x59, ulValue);	
-	// set frame rate
-	ulValue = 6;
-	ulSEN_I2C_Write(0x11, ulValue);			
+	bSEN_I2C_Write(0x59, ulValue);
 
 	// set pclk and frame rate
 	SEN_PclkSetting(ubFPS);		
@@ -646,7 +335,7 @@ uint8_t ubSEN_Open(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 	// Set parallel mode
 	SEN->MIPI_MODE = 0;	
 	// Set sensor clock
-	SEN_SetSensorRate(SENSOR_96MHz, 12);	
+	SEN_SetSensorRate(SENSOR_96MHz, 4);	
 	
 	// Set change frame at Vsync rising/falling edge
 	SEN->VSYNC_RIS = 1;
@@ -726,7 +415,7 @@ void SEN_CalExpLDmyL(uint32_t ulAlgExpTime)
 	}
 	else
 	{
-		xtSENInst.xtSENCtl.uwDmyLine = 0;
+		xtSENInst.xtSENCtl.uwDmyLine = xtSENInst.uwMaxExpLine;
 	}
    
 }
@@ -748,10 +437,10 @@ void SEN_WriteTotalLine(void)
 {
 #if 1
 	//MSB
-	ulSEN_I2C_Write(0x3E, (uint8_t)((xtSENInst.uwMaxExpLine>>8) &0x00ff));
+	bSEN_I2C_Write(OV9715_RENDL_HIGH, (uint8_t)((xtSENInst.uwMaxExpLine>>8) &0x00ff));
 	TIMER_Delay_us(20);	
 	//LSB
-	ulSEN_I2C_Write(0x3D, (uint8_t)((xtSENInst.uwMaxExpLine) &0x00ff));
+	bSEN_I2C_Write(OV9715_RENDL_LOW, (uint8_t)((xtSENInst.uwMaxExpLine) &0x00ff));
 #else
 	uint8_t ubData[2];
 //	static uint8_t testCnt;
@@ -773,10 +462,10 @@ void SEN_WriteTotalLine(void)
 void SEN_WrDummyLine(uint16_t uwDL)
 {
 	//MSB
-	ulSEN_I2C_Write(0x2E, (uint8_t)((uwDL>>8) &0x00ff));		
+	bSEN_I2C_Write(OV9715_DUMMY_LINE_HIGH, (uint8_t)((uwDL>>8) &0x00ff));		
 	TIMER_Delay_us(20);
 	//LSB
-	ulSEN_I2C_Write(0x2D, (uint8_t)(uwDL &0x00ff));		
+	bSEN_I2C_Write(OV9715_DUMMY_LINE_LOW, (uint8_t)(uwDL &0x00ff));		
 }
 
 //------------------------------------------------------------------------------
@@ -784,10 +473,10 @@ void SEN_WrExpLine(uint16_t uwExpLine)
 {
 	//Set exposure line
 	//MSB
-	ulSEN_I2C_Write(0x16, (uint8_t)((uwExpLine>>8) & 0x00ff));
+	bSEN_I2C_Write(OV9715_EXP_HIGH, (uint8_t)((uwExpLine>>8) & 0x00ff));
 	TIMER_Delay_us(20);
 	//LSB
-	ulSEN_I2C_Write(0x10, (uint8_t)((uwExpLine) & 0x00ff));
+	bSEN_I2C_Write(OV9715_EXP_LOW, (uint8_t)((uwExpLine) & 0x00ff));
 }
 
 //------------------------------------------------------------------------------
@@ -825,7 +514,7 @@ void SEN_WrGain(uint16_t uwGainX1024)
 	{
 		ubAGaintmp = 0xff;
 	}
-	ulSEN_I2C_Write(0x00, ubAGaintmp);
+	bSEN_I2C_Write(OV9715_GAIN, ubAGaintmp);
 }
 
 //------------------------------------------------------------------------------
@@ -841,7 +530,7 @@ void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
     else
         xtSENInst.ubImgMode &=  ~OV9715_FLIP;
     
-    ulSEN_I2C_Write(0x04, xtSENInst.ubImgMode);
+    bSEN_I2C_Write(0x04, xtSENInst.ubImgMode);
     //
     SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
@@ -856,9 +545,9 @@ void SEN_GroupHoldOnVSync(void)
 	CQI2C_ModifyCQ_I2C_Write(pWrDataSet[2], ubData);
 #else
 	uint8_t ubValue;
-	ulSEN_I2C_Read(0x04, &ubValue);
+	bSEN_I2C_Read(0x04, &ubValue);
 	ubValue |= 0x09;
-	ulSEN_I2C_Write(0x04, ubValue);	
+	bSEN_I2C_Write(0x04, ubValue);	
 #endif
 }
 
@@ -867,10 +556,10 @@ void SEN_GroupHoldOffVSync(void)
 {
 	uint8_t ubValue;
 
-	ulSEN_I2C_Read(0x04, &ubValue);
+	bSEN_I2C_Read(0x04, &ubValue);
 	ubValue &= 0xFE;
-	ulSEN_I2C_Write(0x04, ubValue);
-	ulSEN_I2C_Write(0xFF, 0xFF);	
+	bSEN_I2C_Write(0x04, ubValue);
+	bSEN_I2C_Write(0xFF, 0xFF);	
 }
 
 //------------------------------------------------------------------------------

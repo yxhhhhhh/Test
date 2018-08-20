@@ -205,7 +205,7 @@ void AVI_UpdateHeader(uint8_t ubCh)
 	}
 	else
 	{
-		FS_WriteFile(ubCh, (uint32_t)(AVI_Idx1[ubCh]), AVI_Idx1[ubCh]->cb + AVI_BYTE_OF_HEADER);//update index
+		FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)(AVI_Idx1[ubCh]), AVI_Idx1[ubCh]->cb + AVI_BYTE_OF_HEADER);//update index
 		
 		ulAddr = ((uint32_t)AVI_Idx1[ubCh] + AVI_Idx1[ubCh]->cb + AVI_BYTE_OF_HEADER - 16);
 		
@@ -352,7 +352,7 @@ int32_t slAVI_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType, uint16_t uwFrame
 
 	if (ulAVI_SfTotalSize[ubCh] >= AVI_SF_MAX_DRAM_SIZE)			//if dram length of skip frame is full, then save it.
 	{
-		FS_WriteFile(ubCh, ulSkipFrameBuf, ulAVI_SfTotalSize[ubCh]);
+		FS_WriteFile((FS_SRC_NUM)ubCh, ulSkipFrameBuf, ulAVI_SfTotalSize[ubCh]);
 		ulAVI_SfTotalSize[ubCh] = 0;
 	}
 	
@@ -360,11 +360,11 @@ int32_t slAVI_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType, uint16_t uwFrame
 	{
 		if (ulAVI_SfTotalSize[ubCh] > 0)							//if there is skip frame in dram
 		{
-			FS_WriteFile(ubCh, ulSkipFrameBuf, ulAVI_SfTotalSize[ubCh]);
+			FS_WriteFile((FS_SRC_NUM)ubCh, ulSkipFrameBuf, ulAVI_SfTotalSize[ubCh]);
 			ulAVI_SfTotalSize[ubCh] = 0;
 		}
 		//=== write frame size to FS ===
-		FS_WriteFile(ubCh, (uint32_t)(ubFrameTag), 8);
+		FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)(ubFrameTag), 8);
 		//=== check data after FS wrtie ===
 		ulCalSize = *(uint8_t *)(ubFrameTag+4) + (((uint32_t)*(uint8_t *)(ubFrameTag+5)) << 8) + (((uint32_t)*(uint8_t *)(ubFrameTag+6)) << 16) + (((uint32_t)*(uint8_t *)(ubFrameTag+7)) << 24);
 		if (ubStreamType == AVI_STR_V1)
@@ -441,7 +441,7 @@ int32_t slAVI_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType, uint16_t uwFrame
 				return -5;
 			}
 		}
-		FS_WriteFile(ubCh, (uint32_t)ulAddr, ulSize);
+		FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)ulAddr, ulSize);
 
 #if 0	// Mask CRC check 
 		//=== check data after FS wrtie ===
@@ -669,9 +669,9 @@ void AVI_CreateFile(uint8_t ubCh)
 	slAVI_IndexNum[ubCh] = 0;
 
 	//write avi header to FS
-	FS_WriteFile(ubCh, (uint32_t)(&AVIS_Rec[ubCh].RIFF), sizeof(AVIS_Rec[0].RIFF) + sizeof(AVIS_Rec[0].hl) + sizeof(AVIS_Rec[0].info));	// 500 Bytes
-	FS_WriteFile(ubCh, ulThumbnailAdr, AVI_THUMBNAIL_SIZE);		// 32.5K Bytes
-	FS_WriteFile(ubCh, (uint32_t)(&AVI_RecMovi[ubCh]), sizeof(AVICHUNK));	//12 Bytes
+	FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)(&AVIS_Rec[ubCh].RIFF), sizeof(AVIS_Rec[0].RIFF) + sizeof(AVIS_Rec[0].hl) + sizeof(AVIS_Rec[0].info));	// 500 Bytes
+	FS_WriteFile((FS_SRC_NUM)ubCh, ulThumbnailAdr, AVI_THUMBNAIL_SIZE);		// 32.5K Bytes
+	FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)(&AVI_RecMovi[ubCh]), sizeof(AVICHUNK));	//12 Bytes
 }
 
 //------------------------------------------------------------------------------
@@ -688,16 +688,16 @@ void AVI_Close(uint8_t ubCh)
 	if (ulAVI_SfTotalSize[ubCh] != 0)								//if the last video frame is skip frame.
 	{
 		printf("AVI_Close,Fill SkipFrm Ch:%d Sz:0x%x\n\r",ubCh, ulAVI_SfTotalSize[ubCh]);
-		FS_WriteFile(ubCh, ulSkipFrameBuf, ulAVI_SfTotalSize[ubCh]);
+		FS_WriteFile((FS_SRC_NUM)ubCh, ulSkipFrameBuf, ulAVI_SfTotalSize[ubCh]);
 		ulAVI_SfTotalSize[ubCh] = 0;
 	}
 
 	AVI_UpdateHeader(ubCh);							// Write Index table to file system
 
-	FS_UpdateAviHeader1(ubCh,(uint32_t)&AVIS_Rec[ubCh].RIFF, sizeof(AVIS_Rec[ubCh].RIFF) + sizeof(AVIS_Rec[ubCh].hl) + sizeof(AVIS_Rec[ubCh].info));
-	FS_UpdateAviHeader2(ubCh,(uint32_t)&AVI_RecMovi[ubCh], sizeof(AVICHUNK));
+	FS_UpdateAviHeader1((FS_SRC_NUM)ubCh,(uint32_t)&AVIS_Rec[ubCh].RIFF, sizeof(AVIS_Rec[ubCh].RIFF) + sizeof(AVIS_Rec[ubCh].hl) + sizeof(AVIS_Rec[ubCh].info));
+	FS_UpdateAviHeader2((FS_SRC_NUM)ubCh,(uint32_t)&AVI_RecMovi[ubCh], sizeof(AVICHUNK));
 	
-	FS_CloseFile(ubCh);
+	FS_CloseFile((FS_SRC_NUM)ubCh);
 
 	//---- clear parameter to avoid the value is invalid.-----
 	//---- clear this value in AVI_CreateFile() --------------

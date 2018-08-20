@@ -197,9 +197,10 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.Compress_method 	 = COMPRESS_NONE;
 
 	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;	
-	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_16KB;
+	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_32KB;
 	tADO_KNLParm.Audio32_En_buf_size = BUF_SIZE_8KB;
 	tADO_KNLParm.Audio32_De_buf_size = BUF_SIZE_8KB;
+	tADO_KNLParm.WavPlay_buf_size    = BUF_SIZE_8KB;
 	tADO_KNLParm.AAC_En_buf_size     = BUF_SIZE_8KB;
 	tADO_KNLParm.AAC_De_buf_size     = BUF_SIZE_8KB;
 	tADO_KNLParm.Alarm_buf_size 	 = BUF_SIZE_1KB;

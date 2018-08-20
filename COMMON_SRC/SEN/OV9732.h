@@ -11,8 +11,8 @@
 	\file		OV9732.h
 	\brief		Sensor OV9732 header
 	\author		BoCun
-	\version	1.1
-	\date		2018/07/06
+	\version	1.2
+	\date		2018/07/25
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -26,19 +26,26 @@
 // Sensor OV9732
 // SLAVE_ID is 0x10 [1:7] + [0] r/w
 #define SEN_SLAVE_ADDR              (0x10)
+//sensor per frame max total line
+#define SEN_MAX_EXPLINE             (802)
+// system control registers
 /* ID */
 #define OV9732_CHIP_ID_HIGH_ADDR    (0x300A)
 #define OV9732_CHIP_ID_LOW_ADDR     (0x300B)
 #define OV9732_CHIP_ID              (0x9732)
-//sensor per frame max total line
-#define SEN_MAX_EXPLINE             (812)
-#define	SEN_STATE_INIT              (0)
-#define	SEN_STATE_STANDBY           (1)
-#define	SEN_STATE_RUN               (2)
-
-#define SEN_IMG_NORMAL			    (0)
-#define SEN_IMG_FLIP			    (1)
-#define SEN_IMG_MIRROR			    (2)
+#define OV9732_VTS_H                (0x380E)
+#define OV9732_VTS_L                (0x380F)
+#define OV9732_AEC_H                (0x3500)
+#define OV9732_AEC_M                (0x3501)
+#define OV9732_AEC_L                (0x3502)
+#define OV9732_GAIN_H               (0x350A)
+#define OV9732_GAIN_L               (0x350B)
+#define OV9732_RGAIN_H              (0x5180)
+#define OV9732_RGAIN_L              (0x5181)
+#define OV9732_GGAIN_H              (0x5182)
+#define OV9732_GGAIN_L              (0x5183)
+#define OV9732_BGAIN_H              (0x5184)
+#define OV9732_BGAIN_L              (0x5185)
 
 #define OV9732_MIRROR		        (0x08)
 #define OV9732_FLIP		            (0x14)
@@ -53,33 +60,6 @@
 //==============================================================================
 // FUNCTION
 //==============================================================================
-//------------------------------------------------------------------------
-/*!
-\brief Read data from sensor register.
-\param 	uwAddress 	Sensor address.
-\param 	pValue 		Point of sensor register.
-\retval Value		Sensor register data.
-\retval False		0->read sensor fail.
-\par [Example]
-\code 
-		ulSEN_I2C_Read(0x04, &ubValue);
-\endcode
-*/
-uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue);
-//------------------------------------------------------------------------
-/*!
-\brief Write data to sensor register.
-\param ubAddress1 	Sensor address(MSB).
-\param ubAddress2 	Sensor address(LSB).
-\param ubValue 		data.
-\retval True		1->I2C write sensor ok.
-\retval False		0->I2C write sensor fail.
-\par [Example]
-\code 
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
-\endcode
-*/
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue);
 //------------------------------------------------------------------------
 /*!
 \brief Set frame rate and pixel clock.

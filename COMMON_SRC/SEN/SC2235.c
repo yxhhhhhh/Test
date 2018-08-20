@@ -11,8 +11,8 @@
 	\file		SC2235.c
 	\brief		Sensor SC2235 relation function
 	\author		BoCun
-	\version	1.2
-	\date		2018-07-06
+	\version	1.3
+	\date		2018-07-25
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -26,14 +26,11 @@
 #include "IQ_PARSER_API.h"
 
 #if (SEN_USE == SEN_SC2235)
+#define TRY_COUNTS 3
 struct SENSOR_SETTING sensor_cfg;
 tfSENObj xtSENInst;
 I2C1_Type *pI2C_type;
 I2C_TYP I2C_Sel = I2C_2;
-
-#define TRY_COUNTS 3
-#define cbAE_MaxExpLTblColSZ		(sizeof(ctAE_MaxExpLTbl[0]))
-#define cbAE_MaxExpLTblRowSZ		(sizeof(ctAE_MaxExpLTbl)/sizeof(ctAE_MaxExpLTbl[0]))
 
 struct AE_ExpLineTblObj {
 	unsigned char ubExpIdx;

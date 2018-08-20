@@ -11,8 +11,8 @@
 	\file		RC.h
 	\brief		Rate Control header file
 	\author		Justin Chen
-	\version	0.3
-	\date		2017/08/29
+	\version	0.6
+	\date		2018/07/26
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -219,6 +219,12 @@ void RC_MonitThread1(void const *argument);
 void RC_MonitThread2(void const *argument);
 void RC_MonitThread3(void const *argument);
 
+//------------------------------------------------------------------------
+/*!
+\brief RC system thread
+\param argument Argument for monitor thread
+\return(no)
+*/
 void RC_SysThread(void const *argument);
 
 #endif
@@ -231,4 +237,8 @@ void RC_SysThread(void const *argument);
 */
 void RC_PresetSetup(RC_Rreset_t tRC_Preset);
 
+//RC Setting for IQ-Tuning
+void RC_EngModeSet(uint8_t ubCodecIdx,uint32_t ulTarBitRate,uint8_t ubFps);
+uint32_t ulRC_GetEngModeBitRate(uint8_t ubCodecIdx);
+uint8_t ubRC_GetEngModeFps(uint8_t ubCodecIdx);
 #endif

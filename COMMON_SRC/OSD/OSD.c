@@ -11,8 +11,8 @@
 	\file		OSD.c
 	\brief		LCD OSD Funcations
 	\author		Pierce
-	\version	0.9
-	\date		2017/11/22
+	\version	1.0
+	\date		2018/07/25
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -27,8 +27,8 @@
 #include "DMAC_API.h"
 #include "BUF.h"
 //------------------------------------------------------------------------------
-#define OSD_MAJORVER    0        //!< Major version
-#define OSD_MINORVER    9        //!< Minor version
+#define OSD_MAJORVER    1        //!< Major version
+#define OSD_MINORVER    0        //!< Minor version
 //------------------------------------------------------------------------------
 //const uint16_t pFontPat[OSD_FONT_PAT_NUM] = {OSD_FONTC_BLACK, OSD_FONTC_WHITE, OSD_FONTC_RED, OSD_FONTC_GREEN,
 //											   OSD_FONTC_BLUE,  OSD_FONTC_YELLOW,OSD_FONTC_CYAN,OSD_FONTC_GRAY};
@@ -1004,7 +1004,7 @@ uint8_t OSD_ImgString2Index(char c, uint16_t *pOsdImg_Idx)
 	return 0;
 }
 //------------------------------------------------------------------------------
-void OSD_ImagePrintf(OSD_IMG_RA_TYP tRotType, uint16_t uwXStart, uint16_t uwYStart, OSD_IMGIDXARRARY_t tImgIdxArray, char* pFmt, ...)
+void OSD_ImagePrintf(OSD_IMG_RA_TYP tRotType, uint16_t uwXStart, uint16_t uwYStart, OSD_IMGIDXARRARY_t tImgIdxArray, OSD_UPDATE_TYP tMode, char* pFmt, ...)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 	uint16_t uwOsd_ImgIdx = 0, uwPrintfLen = 0, uwi;
@@ -1038,7 +1038,7 @@ void OSD_ImagePrintf(OSD_IMG_RA_TYP tRotType, uint16_t uwXStart, uint16_t uwYSta
 						uwi = uwPrintfLen;
 						break;
 					}
-					tOSD_Img2(&tOsdImgInfo, ((uwi + 1) == uwPrintfLen)?OSD_UPDATE:OSD_QUEUE);
+					tOSD_Img2(&tOsdImgInfo, ((uwi + 1) == uwPrintfLen)?tMode:OSD_QUEUE);
 					break;
 				case OSD_IMG_ROTATION_0:
 					tOsdImgInfo.uwXStart = uwTmpXStart;
@@ -1049,7 +1049,7 @@ void OSD_ImagePrintf(OSD_IMG_RA_TYP tRotType, uint16_t uwXStart, uint16_t uwYSta
 						uwi = uwPrintfLen;
 						break;
 					}
-					tOSD_Img2(&tOsdImgInfo, ((uwi + 1) == uwPrintfLen)?OSD_UPDATE:OSD_QUEUE);
+					tOSD_Img2(&tOsdImgInfo, ((uwi + 1) == uwPrintfLen)?tMode:OSD_QUEUE);
 					uwTmpXStart += ((uwi + 1) == uwPrintfLen)?0:tOsdImgInfo.uwHSize;
 					break;
 			}

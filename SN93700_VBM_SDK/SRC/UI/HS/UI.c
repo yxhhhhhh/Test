@@ -160,6 +160,18 @@ void UI_SendMessageToAPP(void *pvMessage)
 		printd(DBG_ErrorLvl, "APP Q Full\n");
 }
 //------------------------------------------------------------------------------
+void UI_StopUpdateThread(void)
+{
+	if((NULL != osUI_ThreadId) && (osOK != osThreadIsSuspended(osUI_ThreadId)))
+		osThreadSuspend(osUI_ThreadId);
+}
+//------------------------------------------------------------------------------
+void UI_StartUpdateThread(void)
+{
+	if((NULL != osUI_ThreadId) && (osOK == osThreadIsSuspended(osUI_ThreadId)))
+		osThreadResume(osUI_ThreadId);
+}
+//------------------------------------------------------------------------------
 void UI_FrameTRXFinish(uint8_t ubFrmRpt)
 {
 	switch(ubFrmRpt)

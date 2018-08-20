@@ -11,8 +11,8 @@
 	\file		ISP_API.h
 	\brief		ISP API header
 	\author			
-	\version	0.4
-	\date		2018-05-09
+	\version	0.7
+	\date		2018-08-01
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -52,8 +52,8 @@ enum
 
 enum
 {
-	DS_DS1 = 1,
-	DS_DS2,
+	DS_PATH1 = 1,
+	DS_PATH2,
 };
 
 enum
@@ -61,6 +61,18 @@ enum
 	DS_8x16 = 0,
 	DS_12x16,
 	DS_16x16,	
+};
+
+enum
+{
+	DS_GAIN8 = 0,
+	DS_GAIN1,
+	DS_GAIN2,  
+	DS_GAIN3,
+	DS_GAIN4, 
+	DS_GAIN5,
+	DS_GAIN6, 
+	DS_GAIN7,    
 };
 
 enum
@@ -110,22 +122,39 @@ enum
 \endcode
 */
 void ISP_Init(void);
-
 //------------------------------------------------------------------------------//
 //                               Date stamp                                     //
 //------------------------------------------------------------------------------//
 //------------------------------------------------------------------------
 /*!
-\brief Date stamp switch.
-\param ubSelect     Select DS1/2.
-\param ubFlag       DS on/off.
+\brief Initial ISP date stamp
 \return(no)
 \par [Example]
 \code 
-		ISP_SetOsdSwitch(DS_DS1, DS_OFF);
+		ISP_DateStampInit();
 \endcode
 */
-void ISP_SetOsdSwitch(uint8_t ubSelect, uint8_t ubFlag);
+void ISP_DateStampInit(void);
+//------------------------------------------------------------------------
+/*!
+\brief Date stamp switch.
+\param ubPath       Select path1/2.
+\param ubFlag       data stamp switch.
+\return(no)
+\par [Example]
+\code 
+    [note]
+                        |---->   Path1 output image + (data stamp)
+    --------------      |
+    |     ISP    |----->|
+    --------------      |
+                        |---->   Path2 output image + (data stamp)
+    
+    
+    ISP_SetOsdSwitch(DS_PATH1, DS_OFF);
+\endcode
+*/
+void ISP_SetOsdSwitch(uint8_t ubPath, uint8_t ubFlag);
 //------------------------------------------------------------------------
 /*!
 \brief Set date stamp color.
@@ -146,23 +175,14 @@ void ISP_SetOsdSwitch(uint8_t ubSelect, uint8_t ubFlag);
 \endcode
 */
 void ISP_SetOsdColor(uint8_t ubSelect, uint8_t ubIndex, uint8_t ubRed, uint8_t ubGreen, uint8_t ubBlue);
-//------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 /*!
-\brief Set date stamp position.
-\param ubSelect 	Select DS1/2.
-\param ubGain 		Set DS mapping gain.
-\param uwRow 		Horizontal size.
-\param uwCol		Vertical size.
+\brief Set OSD Gain
+\param ubPath DS_PATH1 or DS_PATH2
+\param ubGain DS Gain
 \return(no)
-\par [Example]
-\code
-	ubGain range is 0~7 , 0 => x8 and 1-7 => x1-x7.
-	DS column 0 and 1 window can't be overlapped.
-	
-	ISP_SetOsdPos(DS_DS1, DS_GAIN1, 0, 0);
-\endcode
 */
-void ISP_SetOsdPos(uint8_t ubSelect, uint8_t ubGain, uint16_t uwRow, uint16_t uwCol);
+void ISP_SetOsdGain(uint8_t ubPath,uint8_t ubGain);
 //------------------------------------------------------------------------
 /*!
 \brief Date stamp font table.
@@ -201,10 +221,12 @@ void ISP_SetOsdPos(uint8_t ubSelect, uint8_t ubGain, uint16_t uwRow, uint16_t uw
 void ISP_LoadOsdFontTable(uint8_t ubSelect,uint64_t *pllFontTable);
 //------------------------------------------------------------------------
 /*!
-\brief Date stamp display.
-\param ubSelect 				Select DS1/2.
-\param ubDateStampLine1 		Point of DS1 data.
-\param ubDateStampLine2 		Point of DS2 data.
+\brief Set date stamp position, length and display.
+\param ubPath 				    Select path1/2.
+\param ubDateStampLine1 		Point of Line1 data.
+\param ubLength 				show length.
+\param uwX 				        Position of X-axis.
+\param uwY 				        Position of Y-axis.
 \return(no)
 \par [Example]
 \code 
@@ -214,10 +236,31 @@ void ISP_LoadOsdFontTable(uint8_t ubSelect,uint64_t *pllFontTable);
 		};
 
 		index value mapping font table value and font value show on image.
-		ISP_OsdDisplay(DS_DS1 ,&ubISP_DSLine1[0] ,&ubISP_DSLine2[0]);
+		ISP_OsdLine1Display(DS_PATH1 ,&ubISP_DSLine1[0] ,length, PosX, PosY);
 \endcode
 */
-void ISP_OsdDisplay(uint8_t ubSelect, uint8_t *ubDateStampLine1, uint8_t *ubDateStampLine2);
+void ISP_OsdLine1Display(uint8_t ubPath, uint8_t *ubDateStampLine1, uint8_t ubLength, uint16_t uwX, uint16_t uwY);
+//------------------------------------------------------------------------
+/*!
+\brief Set date stamp position, length and display.
+\param ubPath 				    Select path1/2.
+\param ubDateStampLine2 		Point of Line2 data.
+\param ubLength 				show length.
+\param uwX 				        Position of X-axis.
+\param uwY 				        Position of Y-axis.
+\return(no)
+\par [Example]
+\code 
+		uint8_t ubISP_DSLine2[32] = {	
+			0,	 1,  2,	 3,	 4,	 5,  6,	 7,	 8,	 9,	10,	11,	12,	13, 14,	15,
+			16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+		};
+
+		index value mapping font table value and font value show on image.
+		ISP_OsdLine1Display(DS_PATH1 ,&ubISP_DSLine2[0] ,length, PosX, PosY);
+\endcode
+*/
+void ISP_OsdLine2Display(uint8_t ubPath, uint8_t *ubDateStampLine2, uint8_t ubLength, uint16_t uwX, uint16_t uwY);
 //------------------------------------------------------------------------------//
 //                               Private Mask                                   //
 //------------------------------------------------------------------------------//
@@ -614,6 +657,31 @@ void ISP_GetBlockGainTable(void);
 \endcode
 */
 void ISP_SetBlockGainTable(uint8_t ubType);
+//------------------------------------------------------------------------
+/*!
+\brief Set ISP mirror and flip.
+\param ubMirrorEn 	mirror switch.
+\param ubFlipEn 	flip switch.
+\return(no)
+\par [Example]
+\code 
+        Normal ==>  -------------   Flip ==>    -------------
+                    | 0 | 1 | 2 |               | 6 | 7 | 8 |
+                    -------------               -------------
+                    | 3 | 4 | 5 |               | 3 | 4 | 5 |
+                    -------------               -------------
+                    | 6 | 7 | 8 |               | 0 | 1 | 2 |
+                    -------------               -------------
+        Mirror ==>  -------------   M+F ==>     -------------
+                    | 2 | 1 | 0 |               | 8 | 7 | 6 |
+                    -------------               -------------
+                    | 5 | 4 | 3 |               | 5 | 4 | 3 |
+                    -------------               -------------
+                    | 8 | 7 | 6 |               | 2 | 1 | 1 |
+                    -------------               -------------
+\endcode
+*/
+void ISP_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn);
 //------------------------------------------------------------------------------
 /*!
 \brief 	Get ISP function version	

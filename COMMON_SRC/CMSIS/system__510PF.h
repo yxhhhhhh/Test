@@ -122,6 +122,7 @@ typedef enum
 void SystemStartup(void);
 void SystemInit(void);
 void SystemCoreClockUpdate(void);
+void SYS_Reboot(void);
 void SYS_SetCoreClock(SYS_CoreClkSel CoreClkSel);
 void SYS_SetPowerStates(SYS_PowerState_t tPowerState);
 void SYS_SetState(SYS_STATE state);

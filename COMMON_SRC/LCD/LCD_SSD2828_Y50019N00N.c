@@ -420,6 +420,7 @@ bool bLCD_MIPI_SSD2828_Init(void)
         while(1);
     }
     SPI_Init(&spi_setup);
+	TIMER_Delay_ms(20);
     if (0x2828 != (uwId = LCD_SSD2828_RegRd(0xB0))) {
         printd(DBG_ErrorLvl, "LCD: SSD2828 Fail %X\n", uwId);
         return false;

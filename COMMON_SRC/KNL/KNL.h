@@ -11,9 +11,9 @@
 	\file		KNL.h
 	\brief		Kernel Control header file
 	\author		Justin Chen
-	\version	1.9
-	\date		2018/06/29
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.13
+	\date		2018/08/02
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
 #ifndef __KNL_h
@@ -25,7 +25,11 @@
 #include "BB_API.h"
 #include "H264_API.h"
 #include "TWC_API.h"
+#include "FS_API.h"
 
+//Setting for IQ-Tuning
+#define KNL_RC_BITRATE					0x12C000L	//150KB, Target BitRate for Main video stream
+#define KNL_RC_FPS						15			//Target Frame-Rate
 #define KNL_AUX_CRC_FUNC				0		//!< Auxiliary CRC Function
 #define KNL_MIN_COMPRESS_RATIO			7		//!< Minimum Compression Ratio
 #define KNL_BB_RX_DON_Q_SIZE			10		//!< RX Queue Size
@@ -47,8 +51,18 @@
 #define KNL_LCD_FUNC_ENABLE				1
 #endif
 
+#define KNL_JPG_BS_SIZE                 0x40000
+#define KNL_JPG_HEADER_SIZE             0x400
+
 #define KNL_SD_FUNC_ENABLE				1
+
+#if defined(VBM_PU)
+#define KNL_PHOTOGRAPH_FUNC_ENABLE		0
 #define KNL_REC_FUNC_ENABLE				0
+#else
+#define KNL_PHOTOGRAPH_FUNC_ENABLE		0
+#define KNL_REC_FUNC_ENABLE				0
+#endif
 
 #define KNL_USBH_FUNC_ENABLE            0
 
@@ -421,6 +435,20 @@ void KNL_SetAdoInfo(ADO_KNL_PARA_t tAdoInfo);
 \return(no)
 */
 void KNL_Init(void);
+
+//------------------------------------------------------------------------
+/*!
+\brief Stop Kernel
+\return(no)
+*/
+void KNL_Stop(void);
+
+//------------------------------------------------------------------------
+/*!
+\brief Restart Kernel
+\return(no)
+*/
+void KNL_ReStart(void);
 
 //------------------------------------------------------------------------
 /*!
@@ -1510,6 +1538,83 @@ KNL_TuningMode_t KNL_GetTuningToolMode(void);
 \return no
 */
 void KNL_SDUpgradeFwFunc(void);
+
+typedef void(*pvRecordNtyFunc)(uint8_t);
+
+typedef enum
+{
+	KNL_OK,
+	KNL_ErrorNoCard,
+	KNL_ErrorTimeout,
+}KNL_Status_t;
+typedef enum
+{
+	KNL_RECORDFUNC_DISABLE,
+	KNL_PHOTO_CAPTURE,
+	KNL_PHOTO_PLAY,
+}KNL_RecordFunc_t;
+typedef struct
+{
+	KNL_RecordFunc_t tRecordFunc;
+	pvRecordNtyFunc pRecordStsNtyCb;
+	uint8_t ubPhotoCapSrc[4];
+	uint16_t uwRecordGroupIdx;
+	FS_KNL_OPEN_PROCESS_t tPhotoPlayInfo;
+}KNL_RecordAct_t;
+//------------------------------------------------------------------------
+/*!
+\brief Get Decode address if playback
+\return decode address
+*/
+uint32_t ulKNL_GetResvDecAddr(void);
+//------------------------------------------------------------------------
+/*!
+\brief Update Jpeg Header
+\return no
+*/
+void KNL_UpdateJpgHeader(void);
+//------------------------------------------------------------------------
+/*!
+\brief Search source number for capture function
+\param ubSrcNum		Source Number
+\return 0: Not match
+        1: Match
+*/
+uint8_t ubKNL_SearchCapSrcNum(uint8_t ubSrcNum);
+//------------------------------------------------------------------------
+/*!
+\brief Capture done
+\param ubCapNode	 	Capture node
+\param ubCapSrc			Source Number
+\param ulCapSize		Capture picture size
+\return no
+*/
+void KNL_PhotoCaptureFinFunc(uint8_t ubCapNode, uint8_t ubCapSrc, uint32_t ulCapSize);
+//------------------------------------------------------------------------
+/*!
+\brief Photo playback
+\return no
+*/
+void KNL_PhotoPlayFinFunc(void);
+//------------------------------------------------------------------------
+/*!
+\brief Set record function, capture or video recording
+\param tRecordFunc Record function
+\return no
+*/
+void KNL_SetRecordFunc(KNL_RecordFunc_t tRecordFunc);
+//------------------------------------------------------------------------
+/*!
+\brief Get record function, capture or video recording
+\return Record function, capture or video recording
+*/
+KNL_RecordFunc_t tKNL_GetRecordFunc(void);
+//------------------------------------------------------------------------
+/*!
+\brief Excute the record function, capture or video recording
+\return Record function, capture or video recording
+*/
+void KNL_ExecRecordFunc(KNL_RecordAct_t tRecordAct);
 
 //Extern
 extern osMessageQId KNL_ProcessQueue;

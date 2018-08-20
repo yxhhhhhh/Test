@@ -40,6 +40,7 @@
 #define THREAD_PRIO_APP_HANDLER			osPriorityAboveNormal
 #define THREAD_PRIO_PAIRING_HANDLER		osPriorityNormal
 #define THREAD_PRIO_EN_HANDLER			osPriorityBelowNormal
+#define THREAD_PRIO_KNLRECORD_HANDLER	osPriorityBelowNormal
 #define THREAD_PRIO_JPEG_MONIT			osPriorityBelowNormal
 #define THREAD_PRIO_LINK_MONIT			osPriorityBelowNormal
 #define THREAD_PRIO_RC_MONIT			osPriorityBelowNormal
@@ -70,7 +71,8 @@
 #define THREAD_STACK_IMG_MONIT		    1024
 #define THREAD_STACK_APP_HANDLER		8192
 #define THREAD_STACK_PAIRING_HANDLER	512
-#define THREAD_STACK_JPEG_MONIT			1024
+#define THREAD_STACK_KNLRECORD_HANDLER	1024
+#define THREAD_STACK_JPEG_MONIT			2048
 #define THREAD_STACK_LINK_MONIT			1024
 #define THREAD_STACK_RC_MONIT			2048
 #define THREAD_STACK_RC_SYS_MONIT		2048
@@ -141,6 +143,14 @@ typedef enum
 	VGA_WIDTH   = 640,
 	VGA_HEIGHT  = 480,
 }APP_DISPLAY_RESOLUTION;
+
+typedef enum
+{
+	LCD_PM_SUSPEND,
+	LCD_PWR_OFF
+}LCD_PM_OPT;
+
+#define LCD_PM							LCD_PM_SUSPEND
 
 #define RTC_RECORD_PWRSTS_ADDR			0
 #define RTC_PWRSTS_KEEP_TAG				0x03

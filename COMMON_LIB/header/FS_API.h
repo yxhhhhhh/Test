@@ -8,11 +8,11 @@
 	circuits described herein. All application information is advisor and does
 	not from part of the specification.
 
-	\file			FS_API.h
+	\file		FS_API.h
 	\brief		File system API header file
 	\author		Chinwei Hsu
-	\version	1.1
-	\date		2017/03/15
+	\version	1.3
+	\date		2018/08/02
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -21,18 +21,40 @@
 
 #include "_510PF.h"
 
+#define FS_MAJORVER    1		// Major version
+#define FS_MINORVER    3        // Minor version
+
 #define FS_FLD_NAME_MAX_LENGTH		8
 #define FS_FILE_NAME_MAX_LENGTH		22
 
+#define FS_FLD_MAX_NUM				100
+#define FS_FILE_MAX_NUM				1000
+
+//-----------------------------------------------------------------------------
+// fs source num, dont modify
+#pragma pack(push)
+#pragma pack(1)
+typedef enum
+{
+	FS_VDO_SRC_0 = 0,
+	FS_VDO_SRC_1 = 1,
+	FS_VDO_SRC_2 = 2,
+	FS_VDO_SRC_3 = 3,
+	
+	FS_JPG_SRC_0 = 4,
+	FS_JPG_SRC_1 = 5,
+	FS_JPG_SRC_2 = 6,
+	FS_JPG_SRC_3 = 7,
+	
+	FS_USERDEF_SRC_0 = 8
+}FS_SRC_NUM;
+#pragma pack(pop)
 //-----------------------------------------------------------------------------
 // fs create queue call status
 typedef enum
 {
 	Q_CREATE_FAIL = 0,					//!< queue create fail
 	Q_CREATE_OK,						//!< queue create ok
-	Q_CREATE_FAIL_SD_NOT_RDY,			//!< queue create fail because sd card is not ready
-	Q_CREATE_FAIL_FDB_FULL,				//!< queue create fail because FDB is full
-	Q_CREATE_FAIL_SPECIAL_FLD_FULL		//!< queue create fail because special case[loop delete mode2->case2, folder full and free size>free size threshold]
 }FS_Q_CREATE_STATUS;
 //-----------------------------------------------------------------------------
 // fs write queue call status
@@ -40,7 +62,6 @@ typedef enum
 {
 	Q_WRITE_FAIL = 0,			//!< queue write fail 
 	Q_WRITE_OK,					//!< queue write ok 
-	Q_WRITE_FAIL_SD_NOT_RDY		//!< queue write fail because sd card is not ready
 }FS_Q_WRITE_STATUS;
 //-----------------------------------------------------------------------------
 // fs close queue call status
@@ -48,7 +69,6 @@ typedef enum
 {
 	Q_CLOSE_FAIL = 0,			//!< queue close fail
 	Q_CLOSE_OK,					//!< queue close ok
-	Q_CLOSE_FAIL_SD_NOT_RDY		//!< queue close fail because sd card is not ready
 }FS_Q_CLOSE_STATUS;
 //-----------------------------------------------------------------------------
 // fs update header queue call status
@@ -56,7 +76,6 @@ typedef enum
 {
 	Q_UPDATE_VDO_HEADER_FAIL = 0,			//!< queue update video header fail
 	Q_UPDATE_VDO_HEADER_OK,					//!< queue update video header ok
-	Q_UPDATE_VDO_HEADER_FAIL_SD_NOT_RDY		//!< queue update video header fail because sd card is not ready
 }FS_Q_UPDATEHEADER_STATUS;
 //-----------------------------------------------------------------------------
 // fs update hidden file info queue call status
@@ -64,7 +83,6 @@ typedef enum
 {
 	Q_UPDATEHIDDEN_FAIL = 0,		//!< queue update hidden file info fail
 	Q_UPDATEHIDDEN_OK,				//!< queue update hidden file info ok
-	Q_UPDATEHIDDEN_FAIL_SD_NOT_RDY	//!< queue update hidden file info fail because sd card is not ready
 }FS_Q_UPDATEHIDDEN_STATUS;
 //-----------------------------------------------------------------------------
 // fs thumbnail data queue call status
@@ -72,7 +90,6 @@ typedef enum
 {
 	Q_THUMB_DATA_READ_FAIL = 0,			//!< queue thumbnail data read fail
 	Q_THUMB_DATA_READ_OK,				//!< queue thumbnail data read ok
-	Q_THUMB_DATA_ACC_FAIL_SD_NOT_RDY	//!< queue thumbnail data access fail because sd card is not ready
 }FS_Q_THUMB_STATUS;
 //-----------------------------------------------------------------------------
 // fs open file queue call status
@@ -80,7 +97,6 @@ typedef enum
 {
 	Q_OPEN_FAIL = 0,		//!< queue open file fail
 	Q_OPEN_OK,				//!< queue open file ok
-	Q_OPEN_FAIL_SD_NOT_RDY	//!< queue open file fail because sd card is not ready
 }FS_Q_OPEN_STATUS;
 //-----------------------------------------------------------------------------
 // fs read file queue call status
@@ -88,7 +104,6 @@ typedef enum
 {
 	Q_READ_FAIL = 0,		//!< queue read file fail
 	Q_READ_OK,				//!< queue read file ok
-	Q_READ_FAIL_SD_NOT_RDY	//!< queue read file fail because sd card is not ready
 }FS_Q_READ_STATUS;
 //-----------------------------------------------------------------------------
 // fs get info(folder/file) queue call status
@@ -96,7 +111,6 @@ typedef enum
 {
 	Q_GET_INFO_FAIL = 0,		//!< queue get info(folder/file) fail
 	Q_GET_INFO_OK,				//!< queue get info(folder/file) ok
-	Q_GET_INFO_FAIL_SD_NOT_RDY	//!< queue get info(folder/file) fail because sd card is not ready
 }FS_Q_GET_INFO_STATUS;
 //-----------------------------------------------------------------------------
 // fs manual delete file queue call status
@@ -104,7 +118,6 @@ typedef enum
 {
 	Q_DEL_FAIL = 0,			//!< queue manual delete file fail
 	Q_DEL_OK,				//!< queue manual delete file ok
-	Q_DEL_FAIL_SD_NOT_RDY	//!< queue manual delete file fail because sd card is not ready
 }FS_Q_DEL_STATUS;
 //-----------------------------------------------------------------------------
 // fs manual lock file queue call status
@@ -112,7 +125,6 @@ typedef enum
 {
 	Q_LOCK_FAIL = 0,			//!< queue manual lock file fail
 	Q_LOCK_OK,					//!< queue manual lock file ok
-	Q_LOCK_FAIL_SD_NOT_RDY		//!< queue manual lock file fail because sd card is not ready
 }FS_Q_LOCK_STATUS;
 //-----------------------------------------------------------------------------
 // lock file switch(when recording)
@@ -140,8 +152,8 @@ typedef enum
 	FS_GET_INFO_OK     = 12,	//!< fs queue status: get info(folder/file) ok
 	FS_MANUAL_DEL_INI  = 13,	//!< fs queue status: manual delete file initial
 	FS_MANUAL_DEL_OK   = 14,	//!< fs queue status: manual delete file ok
-	FS_LOOP_DEL_INI		 = 15,	//!< fs queue status: loop delete file initial
-	FS_LOOP_DEL_OK 		 = 16,	//!< fs queue status: loop delete file ok
+	FS_LOOP_DEL_INI    = 15,	//!< fs queue status: loop delete file initial
+	FS_LOOP_DEL_OK     = 16,	//!< fs queue status: loop delete file ok
 	FS_MANUAL_LOCK_INI = 17,	//!< fs queue status: manual lock file initial
 	FS_MANUAL_LOCK_OK  = 18,	//!< fs queue status: manual lock file ok
 	FS_UPDATE_HIDDEN_INFO_INI = 19,	//!< fs queue status: update hidden info initial
@@ -151,12 +163,12 @@ typedef enum
 // resolution access mode
 typedef enum
 {
-	FS_RES_MODE_FHDx1      = 0,			//!< resolution mode: 1T FHD
-	FS_RES_MODE_HDx1       = 1,			//!< resolution mode: 1T HD
-	FS_RES_MODE_WVGAx1     = 2,			//!< resolution mode: 1T WVGA
-	FS_RES_MODE_HDx4       = 3,			//!< resolution mode: 4T HD
-	FS_RES_MODE_FHDx1_HDx3 = 4,			//!< resolution mode: 1T FHD, 3T HD
-	FS_RES_MODE_FHDx1_HDx1_WVGAx1 = 5	//!< resolution mode: 1T FHD, 1T HD, 1T WVGA
+	FS_RES_MODE_FHDx1,	//!< resolution mode: 1T FHD
+	FS_RES_MODE_HDx1,	//!< resolution mode: 1T HD
+	FS_RES_MODE_VGAx1,	//!< resolution mode: 1T VGA
+	FS_RES_MODE_HDx2,	//!< resolution mode: 2T HD
+	FS_RES_MODE_HDx4,	//!< resolution mode: 4T HD
+	FS_RES_MODE_VGAx4,	//!< resolution mode: 4T VGA
 }FS_RESOLUTION_MODE;
 //-----------------------------------------------------------------------------
 // sd card format status
@@ -169,46 +181,33 @@ typedef enum
 // sd card in/out state
 typedef enum 
 {
-	SD_CARD_STATE_OUT = 0,	//!< sd card out
-	SD_CARD_STATE_IN		//!< sd card in
-}SD_CARD_INOUT_STATE;
+	FS_SD_CARD_OUT = 0,	//!< sd card out
+	FS_SD_CARD_IN		//!< sd card in
+}FS_SD_CARD_INOUT_STATUS;
 //------------------------------------------------------------------------------
 // sd card ready access status
 typedef enum
 {
 	FS_SD_NOT_RDY = 0,	//!< sd card not ready to access
+	FS_SD_GET_INFO_FAIL,//!< sd card info fail -> need format
 	FS_SD_RDY			//!< sd card ready to access
 }FS_SD_RDY_ACC;
-//-----------------------------------------------------------------------------
-// looping mode
-typedef enum
-{
-	LOOP_MODE_1,	//!< looping mode 1 -> ex: Dash cam/Baby monitor
-	LOOP_MODE_2		//!< looping mode 2 -> ex: Recording cam
-}FS_LOOPING_RULE;
-//-----------------------------------------------------------------------------
-// record mode
-typedef enum
-{
-	FS_RECORD = 0,		//!< record video
-	FS_SIGLE_IMAGE,		//!< record sigle image
-	FS_GROUP_IMAGE		//!< record group image
-}FS_REC_MODE;
 //-----------------------------------------------------------------------------
 // file attribute
 typedef enum
 {
-	FILE_ATTR_WR   = 0x20,	//!< file can be write/read
-	FILE_ATTR_HIDE = 0x22	//!< file is hidden
+	FILE_ATTR_READ_ONLY = 0x01,		//!< file is read-only
+	FILE_ATTR_HIDDEN    = 0x02,		//!< file is hidden
+	FILE_ATTR_ARCHIVE	= 0x20,		//!< file is archive
 }FS_FILE_ATTR;
 //-----------------------------------------------------------------------------
 // file create path
 typedef enum
 {
-	FILE_PATH1 = 0,		//!< user define file path1 -> ex: E:\DCIM\USERDEF1\FILE
-	FILE_PATH2,			//!< user define file path2 -> ex: E:\USERDEF2\FILE
-	FILE_PATH3,			//!< user define file path3 -> ex: E:\FILE
-	FILE_PATH_DEFAULT	//!< default record path -> ex: E:\DCIM\100SONIX\FILE
+	FILE_PATH1 = 0,		//!< user define file path1 -> ex: E:\DCIM\USERDEF1
+	FILE_PATH2,			//!< user define file path2 -> ex: E:\USERDEF2
+	FILE_PATH3,			//!< user define file path3 -> ex: E:
+	FILE_PATH_DEFAULT	//!< default record path -> ex: E:\DCIM\100SONIX
 }FS_FILE_PATH;
 //-----------------------------------------------------------------------------
 // manual lock file mode
@@ -218,19 +217,26 @@ typedef enum
 	FILE_LOCK   = 0x01		//!< manual lock file
 }FS_FILE_LOCK_MODE;
 //-----------------------------------------------------------------------------
-
+// manual lock file mode
+typedef enum
+{
+	FS_SD_CARD_FAIL,		//!< sd card test fail
+	FS_SD_CARD_SLOW,		//!< sd card is too slow
+	FS_SD_CARD_OK			//!< sd card is ok
+}FS_SD_CARD_SPD_RPT;
+//-----------------------------------------------------------------------------
 // for kernal call -> create process information
 #pragma pack(push)
 #pragma pack(1)
 typedef struct FS_KNL_CREATE_PROCESS
 {
-	uint8_t ubSrcNum;		//!< source number
-	FS_REC_MODE RecMode;	//!< record mode
-	uint32_t ulNeedFileNum;	//!< need how many file count
+	FS_SRC_NUM SrcNum;		//!< source number
 	
-	char chFileName[FS_FILE_NAME_MAX_LENGTH];	//!< file name
+	uint8_t ubRecGroupFileNum;			//!< how many files in this record group
+	
+	char chFileName[FS_FILE_NAME_MAX_LENGTH+1];	//!< file name
 	uint8_t ubFileNameLen;	//!< file name length
-	char chFileExtName[3];	//!< file extension name
+	char chFileExtName[3+1];	//!< file extension name
 	FS_FILE_ATTR FileAttr;	//!< file attribute
 	FS_FILE_PATH FilePath;	//!< file store path
 	
@@ -243,14 +249,11 @@ typedef struct FS_KNL_CREATE_PROCESS
 #pragma pack(1)
 typedef struct FS_KNL_HIDDEN_PROCESS
 {
-	uint8_t ubSrcNum;	//!< source number
+	FS_SRC_NUM SrcNum;	//!< source number	
 	
-	char chFolderName[FS_FLD_NAME_MAX_LENGTH];	//!< folder name
-	uint8_t ubFolderNameLen;	//!< folder name length		
-	
-	char chFileName[FS_FILE_NAME_MAX_LENGTH];	//!< file name
+	char chFileName[FS_FILE_NAME_MAX_LENGTH+1];	//!< file name
 	uint8_t ubFileNameLen;	//!< file name length
-	char chFileExtName[3];	//!< file extension name
+	char chFileExtName[3+1];	//!< file extension name
 	
 	uint16_t uwDateInfo;	//!< date information
 	uint16_t uwTimeInfo;	//!< time information
@@ -274,14 +277,14 @@ typedef struct FS_KNL_HIDDEN_PROCESS
 #pragma pack(1)
 typedef struct FS_KNL_OPEN_PROCESS
 {
-	char chFolderName[FS_FLD_NAME_MAX_LENGTH];	//!< folder name
+	char chFolderName[FS_FLD_NAME_MAX_LENGTH+1];	//!< folder name
 	uint8_t ubFolderNameLen;	//!< folder name length
 	
-	char chFileName[FS_FILE_NAME_MAX_LENGTH];	//!< file name
+	char chFileName[FS_FILE_NAME_MAX_LENGTH+1];	//!< file name
 	uint8_t ubFileNameLen;	//!< file name length	
-	char chFileExtName[3];	//!< file extension name
+	char chFileExtName[3+1];	//!< file extension name
 	
-	uint8_t ubSrcNum;	//!< source number
+	FS_SRC_NUM SrcNum;	//!< source number
 	
 	FS_FILE_PATH FilePath;	//!< file open path
 }FS_KNL_OPEN_PROCESS_t;
@@ -294,14 +297,14 @@ typedef struct FS_FILE_HIDDEN_INFO
 {
 	uint8_t ubDummyData[16];		//!< for avi/mp4/jpg compatibility
 	
-	char chFolderName[FS_FLD_NAME_MAX_LENGTH];	//!< folder name
+	char chFolderName[FS_FLD_NAME_MAX_LENGTH+1];	//!< folder name
 	uint8_t ubFolderNameLen;	//!< folder name length
 	
-	char chFileName[FS_FILE_NAME_MAX_LENGTH];	//!< file name
+	char chFileName[FS_FILE_NAME_MAX_LENGTH+1];	//!< file name
 	uint8_t ubFileNameLen;	//!< file name length
-	char chFileExtName[3];	//!< file name length
+	char chFileExtName[3+1];	//!< file name length
 	
-	uint8_t ubSrcNum;	//!< sorce number
+	FS_SRC_NUM SrcNum;	//!< sorce number
 	
 	uint16_t uwCreateYear;	//!< create year
 	uint8_t ubCreateMonth;	//!< create month
@@ -323,26 +326,14 @@ typedef struct FS_FILE_HIDDEN_INFO
 }FS_FILE_HIDDEN_INFO_t;
 #pragma pack(pop)
 //-----------------------------------------------------------------------------
-// folder hidden information
-#pragma pack(push)
-#pragma pack(1)
-typedef struct FS_FLD_HIDDEN_INFO
-{
-	char chFolderName[FS_FLD_NAME_MAX_LENGTH];	//!< folder name
-	uint8_t ubFolderNameLen;	//!< folder name length
-	
-	uint16_t uwNumOfFile;	//!< file number in this folder
-}FS_FLD_HIDDEN_INFO_t;
-#pragma pack(pop)
-//-----------------------------------------------------------------------------
 // file information
 #pragma pack(push)
 #pragma pack(1)
 typedef struct FS_FILEINFO
 {
-	char chFileName[FS_FILE_NAME_MAX_LENGTH];	//!< file name
+	char chFileName[FS_FILE_NAME_MAX_LENGTH+1];	//!< file name
 	uint8_t ubFileNameLen;	//!< file name length
-	char chFileExtName[3];	//!< file name length
+	char chFileExtName[3+1];	//!< file name length
 	
 	uint8_t ubFileAttr;
 	
@@ -365,7 +356,7 @@ typedef struct FS_FILEINFO
 #pragma pack(1)
 typedef struct FS_FLD_INFO
 {
-	char chFolderName[FS_FLD_NAME_MAX_LENGTH];	//!< folder name
+	char chFolderName[FS_FLD_NAME_MAX_LENGTH+1];	//!< folder name
 	uint8_t ubFolderNameLen;	//!< folder name length
 	
 	uint8_t ubFileAttr;
@@ -387,12 +378,12 @@ typedef struct FS_FLD_INFO
 #pragma pack(1)
 typedef struct FS_KNL_MANUAL_DEL_PROCESS
 {	
-	char chFolderName[FS_FLD_NAME_MAX_LENGTH];	//!< folder name
+	char chFolderName[FS_FLD_NAME_MAX_LENGTH+1];	//!< folder name
 	uint8_t ubFolderNameLen;					//!< folder name length
 	
-	char chFileName[FS_FILE_NAME_MAX_LENGTH];	//!< file name
+	char chFileName[FS_FILE_NAME_MAX_LENGTH+1];	//!< file name
 	uint8_t ubFileNameLen;						//!< file name length
-	char chFileExtName[3];						//!< file extension name
+	char chFileExtName[3+1];						//!< file extension name
 	
 	FS_FILE_PATH FilePath;							//!< file delete path
 }FS_KNL_MANUAL_DEL_PROCESS_t;
@@ -403,12 +394,12 @@ typedef struct FS_KNL_MANUAL_DEL_PROCESS
 #pragma pack(1)
 typedef struct FS_KNL_MANUAL_LOCK_PROCESS
 {
-	char chFolderName[FS_FLD_NAME_MAX_LENGTH];	//!< folder name
+	char chFolderName[FS_FLD_NAME_MAX_LENGTH+1];	//!< folder name
 	uint8_t ubFolderNameLen;					//!< folder name length
 	
-	char chFileName[FS_FILE_NAME_MAX_LENGTH];	//!< file name
+	char chFileName[FS_FILE_NAME_MAX_LENGTH+1];	//!< file name
 	uint8_t ubFileNameLen;						//!< file name length
-	char chFileExtName[3];						//!< file extension name
+	char chFileExtName[3+1];						//!< file extension name
 	
 	FS_FILE_LOCK_MODE FileLockMode;				//!< file lock mode
 }FS_KNL_MANUAL_LOCK_PROCESS_t;
@@ -435,6 +426,47 @@ typedef struct KNL_FS_PARAMETER
 }FS_KNL_PARA_t;
 #pragma pack(pop)
 //------------------------------------------------------------------------------
+// Sorting related
+#pragma pack(push)
+#pragma pack(1)
+typedef enum
+{	
+	SORT_BY_NAME_DESCENDING,
+    SORT_BY_NAME_ASCENDING,
+	SORT_BY_TIME_DESCENDING,
+    SORT_BY_TIME_ASCENDING,
+    SORT_BY_FILE_SIZE_DESCENDING,
+    SORT_BY_FILE_SIZE_ASCENDING,
+	SORT_INVALILD = 0xFF
+}FS_SortMode_t;
+#pragma pack(pop)
+#pragma pack(push)
+#pragma pack(1)
+typedef struct
+{
+	char cFolderName[15];		//!< folder name
+	uint8_t ubFolderNameLen;	//!< folder name length
+}FS_FoldersInfo_t;
+#pragma pack(pop)
+#pragma pack(push)
+#pragma pack(1)
+typedef struct
+{
+	char cFileName[FS_FILE_NAME_MAX_LENGTH];
+	uint8_t ubFileNameLen;		//!< file name length
+    char cFileExtName[3];
+	uint16_t uwCreateYear;		//!< create year
+	uint8_t ubCreateMonth;		//!< create month
+	uint8_t ubCreateDay;		//!< create day	
+	uint8_t uwCreateHour;		//!< create hour
+	uint8_t ubCreateMin;		//!< create minute
+	uint8_t ubCreateSec;		//!< create second	
+	uint32_t ullFileSize;
+    uint16_t uwGroupIndex;
+	FS_SRC_NUM SrcNum;
+}FS_FilesInfo_t;
+#pragma pack(pop)
+//------------------------------------------------------------------------------
 
 //==============================================================================
 // FS External API
@@ -454,46 +486,46 @@ FS_Q_CREATE_STATUS FS_CreateFile(FS_KNL_CRE_PROCESS_t KnlCreProc);
 //-----------------------------------------------------------------------------
 /*!
 \brief write file
-\param ubSrcNum 			source number
+\param SrcNum 			source number
 \param ulSrcDramAddr 	source dram address
-\param ulSize 				data size
+\param ulSize 			data size
 \return FS_Q_WRITE_STATUS
 */
-FS_Q_WRITE_STATUS FS_WriteFile(uint8_t ubSrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
+FS_Q_WRITE_STATUS FS_WriteFile(FS_SRC_NUM SrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
 //-----------------------------------------------------------------------------
 /*!
 \brief close file
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return FS_Q_CLOSE_STATUS
 */
-FS_Q_CLOSE_STATUS FS_CloseFile(uint8_t ubSrcNum);
+FS_Q_CLOSE_STATUS FS_CloseFile(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief update avi part-1 header(avi size and hdrl header); data range:0~499bytes
-\param ubSrcNum 			source number
+\param SrcNum 			source number
 \param ulSrcDramAddr 	source dram address
-\param ulSize 				data size
+\param ulSize 			data size
 \return FS_Q_UPDATEHEADER_STATUS
 */
-FS_Q_UPDATEHEADER_STATUS FS_UpdateAviHeader1(uint8_t ubSrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
+FS_Q_UPDATEHEADER_STATUS FS_UpdateAviHeader1(FS_SRC_NUM SrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
 //-----------------------------------------------------------------------------
 /*!
 \brief update avi part-2 header(movi size); data range:66548(avi header1 size+hidden info size+thumbnail size)~66559bytes
-\param ubSrcNum 			source number
+\param SrcNum 			source number
 \param ulSrcDramAddr 	source dram address
-\param ulSize 				data size
+\param ulSize 			data size
 \return FS_Q_UPDATEHEADER_STATUS
 */
-FS_Q_UPDATEHEADER_STATUS FS_UpdateAviHeader2(uint8_t ubSrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
+FS_Q_UPDATEHEADER_STATUS FS_UpdateAviHeader2(FS_SRC_NUM SrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
 //-----------------------------------------------------------------------------
 /*!
 \brief update mp4 header
-\param ubSrcNum 			source number
-\param ulSrcDramAddr		source dram address
-\param ulSize				data size
+\param SrcNum 			source number
+\param ulSrcDramAddr	source dram address
+\param ulSize			data size
 \return FS_Q_UPDATEHEADER_STATUS
 */
-FS_Q_UPDATEHEADER_STATUS FS_UpdateMp4Header(uint8_t ubSrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
+FS_Q_UPDATEHEADER_STATUS FS_UpdateMp4Header(FS_SRC_NUM SrcNum, uint32_t ulSrcDramAddr, uint32_t ulSize);
 //-----------------------------------------------------------------------------
 /*!
 \brief update hidden information
@@ -505,10 +537,10 @@ FS_Q_UPDATEHIDDEN_STATUS FS_UpdateHiddenInfo(FS_KNL_HIDDEN_PROCESS_t KnlHidProc)
 /*!
 \brief read thumbnail data
 \param ulDestDramAddr		destination dram address
-\param chFldName 				folder name
+\param chFldName 			folder name
 \param ubFldNameLen			folder name length
-\param ulOffset 				thumbnail offset: 0,1,2,...
-\param ulNum 						read number
+\param ulOffset 			thumbnail offset: 0,1,2,...
+\param ulNum 				read number
 \return FS_Q_THUMB_STATUS
 */
 FS_Q_THUMB_STATUS FS_ThumbDataRead(uint32_t ulDestDramAddr, char *chFldName, uint8_t ubFldNameLen, uint32_t ulOffset, uint32_t ulNum);
@@ -523,12 +555,12 @@ FS_Q_OPEN_STATUS FS_OpenFile(FS_KNL_OPEN_PROCESS_t KnlOpenProc);
 /*!
 \brief read file data
 \param ulDestDramAddr		destination dram address
-\param ubSrcNum 				source number
+\param SrcNum 				source number
 \param ullReadAddr			read data address->the actual data offset
-\param ulSize 					read size(the maximum limit is 16MB)
+\param ulSize 				read size(the maximum limit is 16MB)
 \return FS_Q_READ_STATUS
 */
-FS_Q_READ_STATUS FS_ReadFile(uint32_t ulDestDramAddr, uint8_t ubSrcNum, uint64_t ullReadAddr, uint32_t ulSize);
+FS_Q_READ_STATUS FS_ReadFile(uint32_t ulDestDramAddr, FS_SRC_NUM SrcNum, uint64_t ullReadAddr, uint32_t ulSize);
 //-----------------------------------------------------------------------------
 /*!
 \brief get file hidden information
@@ -540,39 +572,29 @@ FS_Q_READ_STATUS FS_ReadFile(uint32_t ulDestDramAddr, uint8_t ubSrcNum, uint64_t
 \param ulNum						read file number
 \return FS_Q_GET_INFO_STATUS
 */
-FS_Q_GET_INFO_STATUS FS_GetFileHiddenInfo(FS_FILE_HIDDEN_INFO_t *OutputFileInfo, uint32_t *OutputValidNum, char *chFldName, uint8_t ubFldNameLen, uint32_t ulOffset,	uint32_t ulNum);
+FS_Q_GET_INFO_STATUS FS_GetFileHiddenInfo(FS_FILE_HIDDEN_INFO_t *OutputFileInfo, uint32_t *OutputValidNum, char *chFldName, uint8_t ubFldNameLen, uint32_t ulOffset, uint32_t ulNum);
 //-----------------------------------------------------------------------------
 /*!
-\brief get folder hidden information
-\param OutputFldInfo		output folder information
-\param OutputValidNum		valid output number
-\param ulOffset					read folder offset: 0,1,2,...
-\param ulNum						read folder number
-\return FS_Q_GET_INFO_STATUS
-*/
-FS_Q_GET_INFO_STATUS FS_GetFldHiddenInfo(FS_FLD_HIDDEN_INFO_t *OutputFldInfo, uint32_t *OutputValidNum, uint32_t ulOffset,	uint32_t ulNum);
-//-----------------------------------------------------------------------------
-/*!
-\brief get file hidden information
+\brief get file information
 \param OutputFileInfo		output file information
 \param OutputValidNum		output valid number
-\param chFldName				folder name
+\param chFldName			folder name
 \param ubFldNameLen			folder name length
-\param ulOffset					read file offset: 0,1,2,...
-\param ulNum						read file number
+\param ulOffset				read file offset: 0,1,2,...
+\param ulNum				read file number
 \return FS_Q_GET_INFO_STATUS
 */
-FS_Q_GET_INFO_STATUS FS_GetFileInfo(FS_FILE_INFO_t *OutputFileInfo, uint32_t *OutputValidNum, char *chFldName, uint8_t ubFldNameLen, uint32_t ulOffset,	uint32_t ulNum);
+FS_Q_GET_INFO_STATUS FS_GetFileInfo(FS_FILE_INFO_t *OutputFileInfo, uint32_t *OutputValidNum, char *chFldName, uint8_t ubFldNameLen, uint32_t ulOffset, uint32_t ulNum);
 //-----------------------------------------------------------------------------
 /*!
-\brief get folder hidden information
+\brief get folder information
 \param OutputFldInfo		output folder information
 \param OutputValidNum		valid output number
-\param ulOffset					read folder offset: 0,1,2,...
-\param ulNum						read folder number
+\param ulOffset				read folder offset: 0,1,2,...
+\param ulNum				read folder number
 \return FS_Q_GET_INFO_STATUS
 */
-FS_Q_GET_INFO_STATUS FS_GetFldInfo(FS_FLD_INFO_t *OutputFldInfo, uint32_t *OutputValidNum, uint32_t ulOffset,	uint32_t ulNum);
+FS_Q_GET_INFO_STATUS FS_GetFldInfo(FS_FLD_INFO_t *OutputFldInfo, uint32_t *OutputValidNum, uint32_t ulOffset, uint32_t ulNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief manual delete file
@@ -597,31 +619,31 @@ void FS_LockFileForRecording(FS_LOCK_FILE_SWITCH LockSwitch);
 //-----------------------------------------------------------------------------
 /*!
 \brief get status of lower layer create file process
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return FS_Q_STATUS
 */
-FS_Q_STATUS FS_ChkCreateStatus(uint8_t ubSrcNum);
+FS_Q_STATUS FS_ChkCreateStatus(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief get status of lower layer close file process
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return FS_Q_STATUS
 */
-FS_Q_STATUS FS_ChkCloseStatus(uint8_t ubSrcNum);
+FS_Q_STATUS FS_ChkCloseStatus(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief get status of lower layer open file process
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return FS_Q_STATUS
 */
-FS_Q_STATUS FS_ChkOpenStatus(uint8_t ubSrcNum);
+FS_Q_STATUS FS_ChkOpenStatus(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief get status of lower layer read file process
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return FS_Q_STATUS
 */
-FS_Q_STATUS FS_ChkReadStatus(uint8_t ubSrcNum);
+FS_Q_STATUS FS_ChkReadStatus(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief get status of lower layer read thumbnail data process
@@ -661,9 +683,10 @@ FS_Q_STATUS FS_ChkManualLockStatus(void);
 //-----------------------------------------------------------------------------
 /*!
 \brief get status of lower layer update hidden information process
+\param SrcNum		source number
 \return FS_Q_STATUS
 */
-FS_Q_STATUS FS_ChkUpdateHiddenInfoStatus(uint8_t ubSrcNum);
+FS_Q_STATUS FS_ChkUpdateHiddenInfoStatus(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief file system initial function
@@ -677,13 +700,6 @@ void FS_Init(FS_KNL_PARA_t *FsPara);
 \return(no)
 */
 void FS_UnInit(void);
-//-----------------------------------------------------------------------------
-///*!
-//\brief get file system total buffer size
-//\param FS_KNL_PARA_t
-//\return total buffer size(unit:bytes)
-//*/
-//uint32_t ulFS_GetTotalBufSize(FS_KNL_PARA_t *FsPara);
 //-----------------------------------------------------------------------------
 /*!
 \brief get file system total buffer size
@@ -712,32 +728,23 @@ FS_FMT_STATUS FS_FatFormat(void);
 //-----------------------------------------------------------------------------
 /*!
 \brief get create file time of a source number(for hidden info)
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return FS_CRE_TIME_INFO_t: time information
 */
-FS_CRE_TIME_INFO_t FS_GetCreateTimeInfo(uint8_t ubSrcNum);
+FS_CRE_TIME_INFO_t FS_GetCreateTimeInfo(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief get close file size(for hidden info)
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return file size(unit:bytes)
 */
-uint64_t ullFS_GetCloseFileSize(uint8_t ubSrcNum);
-//-----------------------------------------------------------------------------
-/*!
-\brief get record folder name(for hidden info)
-\param chOutputFldName			output folder name
-\param ubOutputFldNameLen		output folder name length
-\param ubSrcNum							source number
-\return(no)
-*/
-void FS_GetRecordFldName(char *chOutputFldName, uint8_t ubOutputFldNameLen, uint8_t ubSrcNum);
+uint64_t ullFS_GetCloseFileSize(FS_SRC_NUM SrcNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief check sd card exist
 \return SD_CARD_INOUT_STATE
 */
-SD_CARD_INOUT_STATE FS_ChkSdExist(void);
+FS_SD_CARD_INOUT_STATUS FS_ChkSdExist(void);
 //-----------------------------------------------------------------------------
 /*!
 \brief check sd card ready access status
@@ -759,10 +766,10 @@ uint32_t ulFS_GetTotalSpace(void);
 //-----------------------------------------------------------------------------
 /*!
 \brief turn on the looping
-\param LoopingRule		LOOP_MODE_1/LOOP_MODE_2
+\param ulLoopingFreeSpaceTh		uint:MB; loop delete file will enable when free space is smaller than this value
 \return(no)
 */
-void FS_LoopingOn(FS_LOOPING_RULE LoopingRule);
+void FS_LoopingOn(uint32_t ulFreeSpaceTh);
 //-----------------------------------------------------------------------------
 /*!
 \brief turn off the looping
@@ -771,24 +778,18 @@ void FS_LoopingOn(FS_LOOPING_RULE LoopingRule);
 void FS_LoopingOff(void);
 //-----------------------------------------------------------------------------
 /*!
-\brief looping mode-1 parameter setting
-\param ulFreeSizeTh		looping minimum free size
-\return(no)
-*/
-void FS_SetLoopingMode1Para(uint32_t ulFreeSizeTh);
-//-----------------------------------------------------------------------------
-/*!
-\brief looping mode-2 parameter setting
-\param ulFileCountTh		looping file count
-\return(no)
-*/
-void FS_SetLoopingMode2Para(uint32_t ulFileCountTh);
-//-----------------------------------------------------------------------------
-/*!
 \brief get latest file group index
+\param SrcNum				source number
 \return group index
 */
-uint16_t uwFS_GetLatestGroupIdx(void);
+uint16_t uwFS_GetLatestGroupIdx(FS_SRC_NUM SrcNum);
+//-----------------------------------------------------------------------------
+/*!
+\brief set max rolling value of group index, max value is 65536
+\param SrcNum				source number
+\return group index
+*/
+void FS_SetMaxRollingValOfGrpIdx(uint32_t ulMaxNum);
 //-----------------------------------------------------------------------------
 /*!
 \brief get latest file name
@@ -799,8 +800,8 @@ void FS_GetLatestFileName(char *Output);
 //-----------------------------------------------------------------------------
 /*!
 \brief tempory file name handle
-\param Output				output file name
-\param Input				input file name
+\param Output			output file name
+\param Input			input file name
 \param ulNameLen		file name length
 \return(no)
 */
@@ -808,9 +809,39 @@ void FS_FileNameHandle(char *Output, char *Input, uint32_t ulNameLen);
 //-----------------------------------------------------------------------------
 /*!
 \brief get the open file size
-\param ubSrcNum		source number
+\param SrcNum		source number
 \return file size
 */
-uint64_t ullFS_GetOpenFileSize(uint8_t ubSrcNum);
+uint64_t ullFS_GetOpenFileSize(FS_SRC_NUM SrcNum);
+//-----------------------------------------------------------------------------
+/*!
+\brief sd card speed test
+\param OutputRdThrput		read output throughput, unit:KBytes/s
+\param OutputWrtThrput		write output throughput, unit:KBytes/s
+\return FS_SD_CARD_SPD_RPT
+*/
+FS_SD_CARD_SPD_RPT FS_SdCardRWTest(uint32_t *OutputRdThrput, uint32_t *OutputWrtThrput);
+//-----------------------------------------------------------------------------
+/*!
+\brief Sorting folder infomation
+\param pFoldersInfo	  Folder information
+\return Folder Number
+*/
+uint32_t ulFS_GetSortingFolders(FS_FoldersInfo_t *pFoldersInfo);
+//-----------------------------------------------------------------------------
+/*!
+\brief Sorting files infomation
+\param uwFolderIndex  Folder index
+\param tSortMode	  Soring mode
+\param pFilesInfo	  Files information
+\return File Number
+*/
+uint16_t uwFS_GetSortingFiles(uint16_t uwFolderIndex, FS_SortMode_t tSortMode, FS_FilesInfo_t *pFilesInfo);
+//-----------------------------------------------------------------------------
+/*!
+\brief Reset sorting result
+\return no
+*/
+void FS_ResetSortingResult(void);
 //-----------------------------------------------------------------------------
 #endif

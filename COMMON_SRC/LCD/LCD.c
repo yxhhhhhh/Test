@@ -11,8 +11,8 @@
 	\file		LCD.c
 	\brief		LCD Funcation
 	\author		Pierce
-	\version	1.2
-	\date		2017/11/22
+	\version	1.3
+	\date		2018/07/25
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -23,7 +23,7 @@
 #include "TIMER.h"
 //------------------------------------------------------------------------------
 #define LCD_MAJORVER    1        //!< Major version
-#define LCD_MINORVER    2        //!< Minor version
+#define LCD_MINORVER    3        //!< Minor version
 //------------------------------------------------------------------------------
 static osMessageQId 	 	LCD_SwitchModeQueue;
 static osMessageQId 	 	LCD_GpioQueue;
@@ -343,18 +343,6 @@ void LCD_Stop(void)
 void LCD_Suspend (void)
 {
 #if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
-	SSP->SSP_GPIO_MODE = 1; //1:GPIO Mode  ???
-	/*
-	SSP->SSP_CLK_GPIO_OE = 1;
-	SSP->SSP_FS_GPIO_OE = 1;
-	SSP->SSP_TX_GPIO_OE = 1;
-	SSP->SSP_RX_GPIO_OE = 1;
-
-	SSP->SSP_CLK_GPIO_O = 0;
-	SSP->SSP_FS_GPIO_O = 0;
-	SSP->SSP_TX_GPIO_O = 0;
-	SSP->SSP_RX_GPIO_O = 0;
-	*/
 	LCD_MIPI_SSD2828_Sleep();
 #endif
 	LCD->TV_LCD_EN 		= 0;

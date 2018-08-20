@@ -104,37 +104,37 @@ typedef struct
 
 typedef struct
 {
-    char                  cbUI_DevStsTag[11];
-    char                  cbUI_FwVersion[11];
-    uint32_t              ulCAM_ID;
-    UI_DisplayLocation_t  tCamDispLocation;
-    UI_CamVdoMode_t       tCamVdoMode;
-    UI_BatLvl_t           tCamBatLvl;
-    UI_SdInfo_t           tSdInfo;
-    UI_RecordMode_t       tREC_Mode;
-    UI_RecordResolution_t tREC_Resolution;
-    UI_PhotoFunction_t    tPHOTO_Func;
-    UI_PhotoResolution_t  tPHOTO_Resolution;
-    UI_CamsSetMode_t      tCamAnrMode;
-    UI_CamsSetMode_t      tCam3DNRMode;
-    UI_CamsSetMode_t      tCamvLDCMode;
-    UI_CamsSetMode_t      tCamWdrMode;
-    UI_CamsSetMode_t      tCamDisMode;
-    UI_CamFlicker_t       tCamFlicker;
-    UI_CamsSetMode_t      tCamCbrMode;
-    UI_CamsSetMode_t      tCamCondenseMode;
-    UI_ColorParam_t       tCamColorParam;
-    struct
-    {
-        uint8_t           ubMD_Mode;
-        uint8_t           ubMD_Param[4];
-    }MdParam;
-    UI_PowerSaveMode_t    tCamPsMode;
-    UI_CamsSetMode_t      tCamScanMode;
-    uint8_t               tCamUVCMode;
-    uint8_t               tNightModeFlag;
-    uint8_t               ubReserved[210];
-} UI_BUStatus_t;
+	char 		   		  cbUI_DevStsTag[11];
+	char 		  		  cbUI_FwVersion[11];
+	uint32_t 			  ulCAM_ID;
+	UI_DisplayLocation_t  tCamDispLocation;	
+	UI_CamVdoMode_t		  tCamVdoMode;	
+	UI_BatLvl_t 		  tCamBatLvl;
+	UI_SdInfo_t 		  tSdInfo;
+	UI_RecordMode_t		  tREC_Mode;
+	UI_RecordResolution_t tREC_Resolution;
+	UI_PhotoFunction_t	  tPHOTO_Func;
+	UI_PhotoResolution_t  tPHOTO_Resolution;
+	UI_CamsSetMode_t	  tCamAnrMode;
+	UI_CamsSetMode_t	  tCam3DNRMode;
+	UI_CamsSetMode_t	  tCamvLDCMode;
+	UI_CamsSetMode_t	  tCamAecMode;
+	UI_CamsSetMode_t	  tCamDisMode;
+	UI_CamFlicker_t		  tCamFlicker;
+	UI_CamsSetMode_t	  tCamCbrMode;
+	UI_CamsSetMode_t	  tCamCondenseMode;
+	UI_ColorParam_t		  tCamColorParam;
+	struct
+	{
+		uint8_t			  ubMD_Mode;
+		uint8_t 		  ubMD_Param[4];
+	}MdParam;
+	UI_PowerSaveMode_t	  tCamPsMode;
+	UI_CamsSetMode_t	  tCamScanMode;
+	uint8_t	  			  tCamUVCMode;
+	uint8_t	  			  tNightModeFlag;
+	uint8_t				  ubReserved[210];
+}UI_BUStatus_t;
 
 typedef enum
 {
@@ -169,41 +169,42 @@ typedef enum
 
 typedef enum
 {
-    UI_PTZ_SETTING = 1,
-    UI_RECMODE_SETTING,
-    UI_RECRES_SETTING,
-    UI_SDCARD_SETTING,
-    UI_PHOTOMODE_SETTING,
-    UI_PHOTORES_SETTING,
-    UI_SYSINFO_SETTING,
-    UI_VOXMODE_SETTING,
-    UI_ECOMODE_SETTING,
-    UI_WORMODE_SETTING,
-    UI_ADOANR_SETTING,
-    UI_IMGPROC_SETTING,
-    UI_MD_SETTING,
-    UI_VOICETRIG_SETTING,
-    UI_MOTOR_SETTING,
-    UI_NIGHTMODE_SETTING,
-    UI_PU_TO_BU_CMD_SETTING,
-    UI_TEST_SETTING,
-} UI_PUReqCmdID_t;
+	UI_PTZ_SETTING = 1,	
+	UI_RECMODE_SETTING,
+	UI_RECRES_SETTING,
+	UI_SDCARD_SETTING,
+	UI_PHOTOMODE_SETTING,
+	UI_PHOTORES_SETTING,
+	UI_SYSINFO_SETTING,
+	UI_VOXMODE_SETTING,
+	UI_ECOMODE_SETTING,
+	UI_WORMODE_SETTING,
+	UI_ADOANR_SETTING,
+	UI_ADOAEC_SETTING,
+	UI_IMGPROC_SETTING,
+	UI_MD_SETTING,
+	UI_VOICETRIG_SETTING,
+	UI_MOTOR_SETTING,
+	UI_NIGHTMODE_SETTING,
+	UI_PU_TO_BU_CMD_SETTING,
+	UI_TEST_SETTING,
+}UI_PUReqCmdID_t;
 
 typedef enum
 {
-    UI_IMG3DNR_SETTING,
-    UI_IMGvLDC_SETTING,
-    UI_IMGWDR_SETTING,
-    UI_IMGDIS_SETTING,
-    UI_IMGCBR_SETTING,
-    UI_IMGCONDENSE_SETTING,
-    UI_FLICKER_SETTING,
-    UI_IMGBL_SETTING,
-    UI_IMGCONTRAST_SETTING,
-    UI_IMGSATURATION_SETTING,
-    UI_IMGHUE_SETTING,
-    UI_IMGSETTING_MAX,
-} UI_ImgProcSettingItem_t;
+	UI_IMG3DNR_SETTING,
+	UI_IMGvLDC_SETTING,
+	UI_IMGWDR_SETTING,
+	UI_IMGDIS_SETTING,
+	UI_IMGCBR_SETTING,
+	UI_IMGCONDENSE_SETTING,
+	UI_FLICKER_SETTING,
+	UI_IMGBL_SETTING,
+	UI_IMGCONTRAST_SETTING,
+	UI_IMGSATURATION_SETTING,
+	UI_IMGHUE_SETTING,
+	UI_IMGSETTING_MAX = 20,
+}UI_ImgProcSettingItem_t;
 
 #define UI_CLEAR_THREADCNT(Flag, Count)         do { if(Flag == TRUE) { (Count) = 0; Flag = FALSE; } } while(0)
 #define UI_CLEAR_CAMSETTINGTODEFU(xFUNC, mDEFU) do { xFUNC = mDEFU; } while(0)
@@ -282,7 +283,8 @@ void UI_DisableVox(void);
 void UI_VoxTrigger(void);
 void UI_VoiceTrigSetting(void *pvTrigMode);
 void UI_VoiceTrigger(void);
-void UI_ANRSetting(void *pvSysInfo);
+void UI_ANRSetting(void *pvAnrMode);
+void UI_AECSetting(void *pvAecMode);
 void UI_PtzControlSetting(void *pvMCParam);
 void UI_IspSetup(void);
 void UI_ImageProcSetting(void *pvImgProc);

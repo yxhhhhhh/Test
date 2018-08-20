@@ -11,8 +11,8 @@
 	\file		OSD.h
 	\brief		LCD OSD Funcations Header
 	\author		Pierce
-	\version	0.9
-	\date		2017/11/22
+	\version	1.0
+	\date		2018/07/25
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -801,7 +801,7 @@ typedef struct
 		OSD_ImagePrintf(OSD_IMG_ROTATION_90, 100, 150, tImgArray, "Sensitivity: %d dBm", 95);
 	\endcode
 */
-void OSD_ImagePrintf(OSD_IMG_RA_TYP tRotType, uint16_t uwXStart, uint16_t uwYStart, OSD_IMGIDXARRARY_t tImgIdxArray, char* pFmt, ...);
+void OSD_ImagePrintf(OSD_IMG_RA_TYP tRotType, uint16_t uwXStart, uint16_t uwYStart, OSD_IMGIDXARRARY_t tImgIdxArray, OSD_UPDATE_TYP tMode, char* pFmt, ...);
 
 OSD_RESULT tOSD_DataCopy(uint32_t ulSrcAddr, uint32_t ulDestAddr, uint32_t ulLen);
 #endif

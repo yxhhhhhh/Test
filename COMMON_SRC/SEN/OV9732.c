@@ -11,8 +11,8 @@
 	\file		OV9732.c
 	\brief		Sensor OV9732 relation function
 	\author		BoCun
-	\version	1.1
-	\date		2018-07-06
+	\version	1.2
+	\date		2018-07-25
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------#include <stdio.h>
@@ -26,10 +26,54 @@
 #include "IQ_PARSER_API.h"
 
 #if (SEN_USE == SEN_OV9732)
+#define TRY_COUNTS      3
+#define SEN_I2C_DEBUG   1
 struct SENSOR_SETTING sensor_cfg;
 tfSENObj xtSENInst;
 I2C1_Type *pI2C_type;
 I2C_TYP I2C_Sel = I2C_2;
+#if SEN_I2C_DEBUG
+    static uint16_t uwI2C_FailCount = 0;
+#endif
+
+struct AE_ExpLineTblObj {
+	unsigned char ubExpIdx;
+	unsigned int swExpLineOffset;
+};
+
+static struct AE_ExpLineTblObj ctAE_MaxExpLTbl[] = {
+	//FPS(DEC),	Max Exposure Offset(DEC, Sign),
+	{30,        0},
+	{29,	    0},
+	{28,	    0},
+	{27,	    0},
+	{26,	    0},
+	{25,	    0},
+	{24,	    0},
+	{23,	    0},
+	{22,	    0},
+	{21,	    0},
+	{20,	    0},
+	{19,	    0},
+	{18,	    0},
+	{17,	    0},
+	{16,	    0},
+	{15,	    0},
+	{14,	    0},
+	{13,	    0},
+	{12,	    0},
+	{11,	    0},
+	{10,	    0},
+	{9,         0},
+	{8,	        0},
+	{7,	        0},
+	{6,	        0},
+	{5,	        0},
+	{4,	        0},
+	{3,	        0},
+	{2,	        0},
+	{1,	        0},
+};
 
 uint8_t ubSEN_InitTable[] = {
 	//------------------------------
@@ -223,27 +267,8 @@ uint8_t ubSEN_InitTable[] = {
 	0x83, 0x37, 0x05, 0x51,	
 };
 
-uint8_t ubSEN_PckSettingTable[] = {
-	// 18MHz 15P
-	0x83, 0x30, 0x83, 0x01,
-	0x83, 0x38, 0x0c, 0x05,	// HTS h
-	0x83, 0x38, 0x0d, 0xd8,	// HTS l 
-	// 36MHz 20P
-	0x83, 0x30, 0x83, 0x00,
-	0x83, 0x38, 0x0c, 0x08,	// HTS h
-	0x83, 0x38, 0x0d, 0xc4,	// HTS l    
-	// 36MHz 25P
-	0x83, 0x30, 0x83, 0x00,
-	0x83, 0x38, 0x0c, 0x07,	// HTS h
-	0x83, 0x38, 0x0d, 0x03,	// HTS l    
-	// 36MHz 30P
-	0x83, 0x30, 0x83, 0x00,
-	0x83, 0x38, 0x0c, 0x05,	// HTS h
-	0x83, 0x38, 0x0d, 0xd8,	// HTS l						
-};
-
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
+bool bSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
 {
 	uint8_t *pAddr,pBuf[2];
 	
@@ -255,75 +280,70 @@ uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue)
+bool bSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue)
 {	
-	uint8_t ubData, pBuf[3];
+	uint8_t pBuf[3];
 	
 	pBuf[0] = ubAddress1;
 	pBuf[1] = ubAddress2;
 	pBuf[2] = ubValue;	
 
 	// write data to sensor register
-	bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);
-	
-	// check if write success
-	bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 2, &ubData, 1);	
-	if (ubData != ubValue)
-	{
-		//printf("Sensor I2C write REG=0x%x with value=0x%x failed!\n", uwAddress, ubValue);
-		return 0;
-	}	
-	
-	return 1;	
+	return bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);	
+}
+
+//------------------------------------------------------------------------------
+bool bSEN_I2C_WriteTry(uint16_t uwAddress, uint8_t ubValue, uint8_t ubTryCnt)
+{	
+    uint8_t pBuf[3], ret, i=0;
+    
+    pBuf[0] = (uint8_t)((uwAddress>>8) & 0x00ff);        
+    pBuf[1] = (uwAddress & 0x00ff);
+    pBuf[2] = ubValue;
+       
+    do{
+        ret = bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);
+#if SEN_I2C_DEBUG       
+        if(ret == 0)
+        {
+            printf("wr fail 0x%x %d.\r\n",uwAddress, ++uwI2C_FailCount);    
+        } 
+#endif
+    }while((ret == 0) && ((i++) < ubTryCnt));
+    
+    if(i >= ubTryCnt)
+    {
+        return 0; 
+    }    
+    
+	return ret;
 }
 
 //------------------------------------------------------------------------------
 void SEN_PclkSetting(uint8_t ubPclkIdx)
 {
-	uint8_t i;	
-	uint8_t ubIdx;
-	
-	switch (ubPclkIdx)
-	{
-		case SEN_FPS15:
-			ubIdx = 0;
-			sensor_cfg.ulSensorPclk = 18000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1478;
-			sensor_cfg.ulSensorFrameRate = 15;
-			break;
-		case SEN_FPS20:
-			ubIdx = 12;
-			sensor_cfg.ulSensorPclk = 36000000;  
-			sensor_cfg.ulSensorPclkPerLine = 2244;
-			sensor_cfg.ulSensorFrameRate = 20;
-			break; 
-		case SEN_FPS25:
-			ubIdx = 24;
-			sensor_cfg.ulSensorPclk = 36000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1795;
-			sensor_cfg.ulSensorFrameRate = 25;
-			break;        
-		case SEN_FPS30:
-			ubIdx = 36;
-			sensor_cfg.ulSensorPclk = 36000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1496;
-			sensor_cfg.ulSensorFrameRate = 30;
-			break;
-		default:
-			ubIdx = 36;
-			sensor_cfg.ulSensorPclk = 36000000;  
-			sensor_cfg.ulSensorPclkPerLine = 1496;
-			sensor_cfg.ulSensorFrameRate = 30;
-			break;
-	}
-	
-	for (i=ubIdx; i<(ubIdx+12); i+=4)
-	{
-		if (ubSEN_PckSettingTable[i] == 0x83)	// write
-		{
-			ulSEN_I2C_Write(ubSEN_PckSettingTable[i+1], ubSEN_PckSettingTable[i+2], ubSEN_PckSettingTable[i+3]);
-		}
-	}
+    uint16_t uwPPL;
+    uint32_t ulPCK; 
+    // support 1-30 fps for 1280x800
+    if(ubPclkIdx > 30)
+    {
+        ubPclkIdx = 30;
+    }
+    // set sensor struct value
+    sensor_cfg.ulSensorPclk = 36000000;  
+    sensor_cfg.ulSensorPclkPerLine = 1478;
+	sensor_cfg.ulSensorFrameRate = ubPclkIdx;     
+    sensor_cfg.ulMaximumSensorFrameRate = 30;
+    //auto calculat Max Exposure
+	ulPCK = sensor_cfg.ulSensorPclk;
+	uwPPL = (unsigned short)(sensor_cfg.ulSensorPclkPerLine);
+    
+    if ((ubPclkIdx == 0) || (ubPclkIdx > 30))
+    {
+        xtSENInst.uwMaxExpLine = (ulPCK / 30 / (unsigned int)uwPPL)+ctAE_MaxExpLTbl[0].swExpLineOffset;
+    }else{
+        xtSENInst.uwMaxExpLine = (ulPCK / sensor_cfg.ulSensorFrameRate / (unsigned int)uwPPL) + ctAE_MaxExpLTbl[ubPclkIdx].swExpLineOffset;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -391,8 +411,8 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting, uint8_t ubFPS)
 _RETRY:
 	pBuf = (uint8_t*)&uwPID;    
 	// I2C by Read Sensor ID
-	ulSEN_I2C_Read (OV9732_CHIP_ID_HIGH_ADDR, &pBuf[1]);
-	ulSEN_I2C_Read (OV9732_CHIP_ID_LOW_ADDR, &pBuf[0]);
+	bSEN_I2C_Read (OV9732_CHIP_ID_HIGH_ADDR, &pBuf[1]);
+	bSEN_I2C_Read (OV9732_CHIP_ID_LOW_ADDR, &pBuf[0]);
 	if (OV9732_CHIP_ID != uwPID)
 	{
 		printf("This is not OV9732 Sensor!! 0x%x 0x%x\n", OV9732_CHIP_ID, uwPID);
@@ -404,7 +424,7 @@ _RETRY:
 	{
 		if (ubSEN_InitTable[i] == 0x83)	// write
 		{
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
+			bSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
 		}
 	}	
     
@@ -495,13 +515,13 @@ void SEN_CalExpLDmyL(uint32_t ulAlgExpTime)
 	}	
 
 	//Calculate Dummy line
-	if(xtSENInst.xtSENCtl.uwExpLine > (SEN_MAX_EXPLINE - 4))
+	if(xtSENInst.xtSENCtl.uwExpLine > (xtSENInst.uwMaxExpLine - 4))
 	{
 		xtSENInst.xtSENCtl.uwDmyLine = (xtSENInst.xtSENCtl.uwExpLine + 4);
 	}
 	else
 	{
-		xtSENInst.xtSENCtl.uwDmyLine = SEN_MAX_EXPLINE;
+		xtSENInst.xtSENCtl.uwDmyLine = xtSENInst.uwMaxExpLine;
 	}
 }
 
@@ -527,18 +547,17 @@ void SEN_WriteTotalLine(void)
 void SEN_WrDummyLine(uint16_t uwDL)
 {
 	//Set dummy lines
-	ulSEN_I2C_Write(0x38, 0x0e, (uint8_t)((uwDL>>8) &0x00ff));
-	TIMER_Delay_us(20);
-	ulSEN_I2C_Write(0x38, 0x0f, (uint8_t)(uwDL &0x00ff));		
+    bSEN_I2C_WriteTry(OV9732_VTS_H, (uint8_t)((uwDL>>8) &0x00ff), TRY_COUNTS);
+    bSEN_I2C_WriteTry(OV9732_VTS_L, (uint8_t)(uwDL &0x00ff), TRY_COUNTS);
 }
 
 //------------------------------------------------------------------------------
 void SEN_WrExpLine(uint16_t uwExpLine)
 {
     //Set long exposure
-	ulSEN_I2C_Write(0x35, 0x00, (uint8_t)((uwExpLine>>12)&0x000f));
-	ulSEN_I2C_Write(0x35, 0x01, (uint8_t)((uwExpLine>>4)&0x00ff));
-	ulSEN_I2C_Write(0x35, 0x02, (uint8_t)((uwExpLine<<4)&0x00f0));
+    bSEN_I2C_WriteTry(OV9732_AEC_H, (uint8_t)((uwExpLine>>12)&0x000f), TRY_COUNTS);
+    bSEN_I2C_WriteTry(OV9732_AEC_M, (uint8_t)((uwExpLine>>4)&0x00ff), TRY_COUNTS);
+    bSEN_I2C_WriteTry(OV9732_AEC_L, (uint8_t)((uwExpLine<<4)&0x00f0), TRY_COUNTS);
 }
 
 //------------------------------------------------------------------------------
@@ -589,17 +608,17 @@ void SEN_WrGain(uint32_t ulGainX1024)
         uwDGaintmp = 0x200+((ulGainX1024-32768)>>6);
         ubAGaintmp = 0xff;							
     }
-	// long gain	
-	ulSEN_I2C_Write(0x35, 0x0B, (ubAGaintmp & 0xff));
-	// R gain	
-	ulSEN_I2C_Write(0x51, 0x80, ((uwDGaintmp>>8) &0x000f));
-	ulSEN_I2C_Write(0x51, 0x81, (uwDGaintmp &0x00ff));
+	// long gain
+    bSEN_I2C_WriteTry(OV9732_GAIN_L, (ubAGaintmp & 0xff), TRY_COUNTS);
+	// R gain
+    bSEN_I2C_WriteTry(OV9732_RGAIN_H, ((uwDGaintmp>>8) &0x000f), TRY_COUNTS);
+    bSEN_I2C_WriteTry(OV9732_RGAIN_L, (uwDGaintmp &0x00ff), TRY_COUNTS);
     // G gain
-	ulSEN_I2C_Write(0x51, 0x82, ((uwDGaintmp>>8) &0x000f));
-	ulSEN_I2C_Write(0x51, 0x83, (uwDGaintmp &0x00ff));
+    bSEN_I2C_WriteTry(OV9732_GGAIN_H, ((uwDGaintmp>>8) &0x000f), TRY_COUNTS);
+    bSEN_I2C_WriteTry(OV9732_GGAIN_L, (uwDGaintmp &0x00ff), TRY_COUNTS);
     // B gain
-	ulSEN_I2C_Write(0x51, 0x84, ((uwDGaintmp>>8) &0x000f));
-	ulSEN_I2C_Write(0x51, 0x85, (uwDGaintmp &0x00ff));
+    bSEN_I2C_WriteTry(OV9732_BGAIN_H, ((uwDGaintmp>>8) &0x000f), TRY_COUNTS);
+    bSEN_I2C_WriteTry(OV9732_BGAIN_L, (uwDGaintmp &0x00ff), TRY_COUNTS);
 }
 
 //------------------------------------------------------------------------------
@@ -615,28 +634,28 @@ void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
     else
         xtSENInst.ubImgMode &=  ~OV9732_FLIP;
     
-    ulSEN_I2C_Write(0x38, 0x20, xtSENInst.ubImgMode);
+    bSEN_I2C_Write(0x38, 0x20, xtSENInst.ubImgMode);
     
 	if (ubMirrorEn && ubFlipEn) {
-        ulSEN_I2C_Write(0x40, 0x04, 0x01);
-        ulSEN_I2C_Write(0x40, 0x05, 0x40);
-        ulSEN_I2C_Write(0x40, 0x06, 0x00);
-        ulSEN_I2C_Write(0x40, 0x07, 0x02);
+        bSEN_I2C_Write(0x40, 0x04, 0x01);
+        bSEN_I2C_Write(0x40, 0x05, 0x40);
+        bSEN_I2C_Write(0x40, 0x06, 0x00);
+        bSEN_I2C_Write(0x40, 0x07, 0x02);
 	} else if (ubFlipEn) {
-        ulSEN_I2C_Write(0x40, 0x04, 0x00);
-        ulSEN_I2C_Write(0x40, 0x05, 0x02);
-        ulSEN_I2C_Write(0x40, 0x06, 0x01);
-        ulSEN_I2C_Write(0x40, 0x07, 0x40);
+        bSEN_I2C_Write(0x40, 0x04, 0x00);
+        bSEN_I2C_Write(0x40, 0x05, 0x02);
+        bSEN_I2C_Write(0x40, 0x06, 0x01);
+        bSEN_I2C_Write(0x40, 0x07, 0x40);
 	} else if (ubMirrorEn) {
-        ulSEN_I2C_Write(0x40, 0x04, 0x01);
-        ulSEN_I2C_Write(0x40, 0x05, 0x40);
-        ulSEN_I2C_Write(0x40, 0x06, 0x02);
-        ulSEN_I2C_Write(0x40, 0x07, 0x02);
+        bSEN_I2C_Write(0x40, 0x04, 0x01);
+        bSEN_I2C_Write(0x40, 0x05, 0x40);
+        bSEN_I2C_Write(0x40, 0x06, 0x02);
+        bSEN_I2C_Write(0x40, 0x07, 0x02);
 	} else {
-        ulSEN_I2C_Write(0x40, 0x04, 0x00);
-        ulSEN_I2C_Write(0x40, 0x05, 0x02);
-        ulSEN_I2C_Write(0x40, 0x06, 0x01);
-        ulSEN_I2C_Write(0x40, 0x07, 0x40);
+        bSEN_I2C_Write(0x40, 0x04, 0x00);
+        bSEN_I2C_Write(0x40, 0x05, 0x02);
+        bSEN_I2C_Write(0x40, 0x06, 0x01);
+        bSEN_I2C_Write(0x40, 0x07, 0x40);
 	}	
     //
     SEN_SetRawReorder(ubMirrorEn, ubFlipEn);

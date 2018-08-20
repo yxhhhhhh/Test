@@ -11,7 +11,7 @@
 	\file		PAIR.c
 	\brief		Pairing Function
 	\author		Bing
-	\version	2018/4/17
+	\version	2018/7/20
 	\date		0.4
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
@@ -29,7 +29,7 @@
 #include "APP_CFG.h"
 
 #define PAIR_MAJORVER	0
-#define PAIR_MINORVER	4
+#define PAIR_MINORVER	5
 
 uint32_t        ulPAIR_Timeout,ulPAIR_TimeCnt;
 uint8_t         ubPAIR_State,ubPAIR_Number,ubPAIR_PaapCnt;
@@ -193,9 +193,7 @@ void PAIR_LoadId(void)
 {
 	SF_Read(ulPAIR_SFAddr, sizeof(PAIR_Info_t), (uint8_t *)&tPAIR_Info);
 	memcpy(&PAIR_IdTable, &tPAIR_Info.tPAIR_Table, sizeof(PAIR_ID_TABLE));
-#if OP_AP
 	PAIR_CheckIdTable();
-#endif
 }
 //------------------------------------------------------------------------------
 void PAIR_SaveId(void)
@@ -240,13 +238,14 @@ uint8_t *PAIR_GetId(PAIR_TAG tPair_StaNum)
         return (tPair_StaNum <= PAIR_STA4)?(uint8_t *)&(PAIR_IdTable.ulSTA_ID[tPair_StaNum]):(uint8_t *)&ubPAIR_InvaildID;
 }
 //------------------------------------------------------------------------------
-void PAIR_Start(PAIR_TAG tPair_StaNum, uint32_t ulPair_Timeout)
+void PAIR_Start(PAIR_TAG tPair_StaNum, uint32_t ulPair_Timeout,uint8_t ubPairTxPower)
 {
     if( ubPAIR_State > PAIR_TIMEOUT)
     {
         printf("Not in pairing mode PAP\n");
         return;
     }
+	BB_SetPairingTxPower(ubPairTxPower);
     ulPAIR_Timeout = (ulPair_Timeout * 1000);
 	BB_HoppingPairingStart();
     printf("PAIR_Start\n");
@@ -417,26 +416,46 @@ void PAIR_Paap(TWC_TAG GetSta,uint8_t *pData)
             printf("memcmp err\n");
     }
 }
+#endif
 //------------------------------------------------------------------------------
 void PAIR_CheckIdTable(void)
 {
-#if ((DISPLAY_MODE == DISPLAY_1T1R) || (DISPLAY_MODE == DISPLAY_2T1R))
-	uint8_t i, ubChkFlag = FALSE;
+	uint8_t ubChkFlag = FALSE;
+#ifdef OP_AP
+	uint8_t i;
 
-	for(i = DISPLAY_MODE; i < 4; i++)
+	if(0xFFFFFFFF == PAIR_IdTable.ulAp_ID)
 	{
-		if((PAIR_IdTable.ulSTA_ID[i] != PAIR_INVAILD_ID) &&
-		   (PAIR_IdTable.ulSTA_ID[i] != 0xFFFFFFFF))
-		{
+		ubChkFlag = TRUE;
+		PAIR_IdTable.ulAp_ID = 0xAFAFAFAF;
+		for(i = 0; i < 4; i++)
 			PAIR_IdTable.ulSTA_ID[i] = PAIR_INVAILD_ID;
-			ubChkFlag = TRUE;
+	}
+	#if ((DISPLAY_MODE == DISPLAY_1T1R) || (DISPLAY_MODE == DISPLAY_2T1R))
+	else
+	{
+		for(i = DISPLAY_MODE; i < 4; i++)
+		{
+			if((PAIR_IdTable.ulSTA_ID[i] != PAIR_INVAILD_ID) ||
+			   (PAIR_IdTable.ulSTA_ID[i] == 0xFFFFFFFF))
+			{
+				PAIR_IdTable.ulSTA_ID[i] = PAIR_INVAILD_ID;
+				ubChkFlag = TRUE;
+			}
 		}
 	}
+	#endif
+#endif
+#ifdef OP_STA
+	if(0xFFFFFFFF == PAIR_IdTable.ulAp_ID)
+	{
+		ubChkFlag = TRUE;
+		PAIR_IdTable.ulAp_ID = 0xFAFAFAFA;
+	}
+#endif
 	if(TRUE == ubChkFlag)
 		PAIR_SaveId();
-#endif
 }
-#endif
 //------------------------------------------------------------------------------
 void PAIR_ShowDeviceID(void)
 {

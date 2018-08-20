@@ -11,8 +11,8 @@
 	\file		ADO_API.h
 	\brief		Audio header file
 	\author		Chinwei Hsu/Bruce Hsu
-	\version	2.25
-	\date		2018/07/05
+	\version	2.27
+	\date		2018/08/09
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -483,6 +483,7 @@ typedef struct KNL_ADO_PARAMETER
 	ADO_BUFFERSIZE Ply_buf_size;        //!< DAC buffer size
 	ADO_BUFFERSIZE Audio32_En_buf_size;
 	ADO_BUFFERSIZE Audio32_De_buf_size;
+	ADO_BUFFERSIZE WavPlay_buf_size;
 	ADO_BUFFERSIZE AAC_En_buf_size;
 	ADO_BUFFERSIZE AAC_De_buf_size;
 	ADO_BUFFERSIZE Alarm_buf_size;
@@ -535,6 +536,7 @@ typedef struct AUDIO_METADATA
 	ADO_BUFFERSIZE TempProcess_buf_size;	
 	ADO_BUFFERSIZE Audio32_En_buf_size;
 	ADO_BUFFERSIZE Audio32_De_buf_size;
+	ADO_BUFFERSIZE WavPlay_buf_size;
 	ADO_BUFFERSIZE AAC_En_buf_size;
 	ADO_BUFFERSIZE AAC_De_buf_size;
 	ADO_BUFFERSIZE Alarm_buf_size;
@@ -550,6 +552,8 @@ typedef struct AUDIO_METADATA
 	
 	ADO_BUF_MONIT_t Audio32_En_BufMonit;
 	ADO_BUF_MONIT_t Audio32_De_BufMonit;
+	
+	ADO_BUF_MONIT_t WavPlay_BufMonit;
 	
 	ADO_BUF_MONIT_t SelfTest_BufMonit;
 	
@@ -1026,6 +1030,28 @@ void ADO_Audio32_DecBufWrtIn(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_t Siz
 \endcode
 */
 void ADO_Audio32_DecBufRdOut(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
+//------------------------------------------------------------------------
+/*!
+\brief wav play buffer write in function
+\param AM			Audio Metadata
+\param SourAddr		source address
+\param Size			write in size
+\param Copy			Copy or not:ADO_ON/ADO_OFF.
+\return(no)
+\endcode
+*/
+void ADO_WavPlay_BufRdOut(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
+//------------------------------------------------------------------------
+/*!
+\brief wav play buffer read out function
+\param AM			Audio Metadata
+\param DestAddr		destination address
+\param Size			read out size
+\param Copy			Copy or not:ADO_ON/ADO_OFF.
+\return(no)
+\endcode
+*/
+void ADO_WavPlay_BufWrtIn(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
 //------------------------------------------------------------------------
 #endif
 //------------------------------------------------------------------------

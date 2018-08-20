@@ -11,9 +11,9 @@
 	\file		FWU_API.h
 	\brief		Firmware upgrade function header file
 	\author		Hanyi Chiu
-	\version	1.3
-	\date		2018/07/03
-	\copyright	Copyright (C) 2017 SONiX Technology Co., Ltd. All rights reserved.
+	\version	1.8
+	\date		2018/08/06
+	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _FWU_API_H_
@@ -22,7 +22,7 @@
 #include <stdint.h>
 
 //! SN937XX Firmware Version
-#define SN937XX_FW_VERSION				"01.00.01.030"
+#define SN937XX_FW_VERSION				"01.00.01.032"
 
 typedef enum
 {
@@ -33,21 +33,27 @@ typedef enum
 
 typedef enum
 {
-	FWU_UPG_FAIL,
+	FWU_UPG_FAIL 	= 120,
 	FWU_UPG_SUCCESS,
+	FWU_UPG_INPROGRESS,
 }FWU_UpgResult_t;
+
+typedef void (*pvFWU_StsRptFunc)(uint8_t);
 
 typedef struct
 {
 	char cVolumeLable[11];
-	char cFileName[8];			//! Length must be less than or equal to 8.(File system only support 8.3 filename)
-	char cFileNameExt[3];		//! Length must be less than or equal to 3.(File system only support 8.3 filename)
+	char cFileName[8];					//! Length must be less than or equal to 8.(File system only support 8.3 filename)
+	char cFileNameExt[3];				//! Length must be less than or equal to 3.(File system only support 8.3 filename)
+	pvFWU_StsRptFunc pStsRptCbFunc;
 }FWU_MSCParam_t;
 
 typedef struct
 {
 	char cTargetFileName[32];
 	uint8_t ubTargetFileNameLen;
+	pvFWU_StsRptFunc pStsRptCbFunc;
+	uint8_t ubIncrementProgressBy;		//! Progress bar scale, Unit: percent
 }FWU_SDParam_t;
 
 //------------------------------------------------------------------------------
@@ -59,8 +65,8 @@ void FWU_Init(void);
 //------------------------------------------------------------------------------
 /*!
 \brief Setup Firmware upgrade parameter.
-\param FWU_MODE_t	Setup upgrade mode.
-\param pvModeParam	Setup upgrade mode parameter setup.
+\param FWU_MODE_t		Setup upgrade mode.
+\param pvModeParam		Setup upgrade mode parameter setup.
 \return (no)
 */
 void FWU_Setup(FWU_MODE_t tModeSel, void *pvModeParam);

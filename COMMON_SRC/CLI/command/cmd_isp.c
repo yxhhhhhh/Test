@@ -11,8 +11,8 @@
 	\file		cmd_isp.c
 	\brief		ISP control command line
 	\author		Ocean
-	\version	0.1
-	\date		2017/10/13
+	\version	0.2
+	\date		2017/11/31
 	\copyright	Copyright(C) 2017 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -25,6 +25,7 @@
 #include "IQ_PARSER_API.h"
 #include "AE_API.h"
 #include "AWB_API.h"
+#include "AF_API.h"
 #include "APP_HS.h"
 #include "WDT.h"
 
@@ -116,6 +117,14 @@ int32_t cmd_isp_ctrl(int argc, char* argv[])
 			else
 			{
 				IQ_DynamicStop();
+			}
+			if(value & 0x02)
+			{	 
+				AF_Start();
+			}
+			else
+			{
+				AF_Stop();
 			}
 			if(value & 0x04)
 			{	 

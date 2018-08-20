@@ -11,8 +11,8 @@
 	\file		BUF.c
 	\brief		Buffer access function
 	\author		Justin Chen
-	\version	0.2
-	\date		2017/03/13
+	\version	0.3
+	\date		2018/07/25
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -238,6 +238,11 @@ uint32_t ulBUF_MDw0IpBufAddr;
 uint32_t ulBUF_MDw1IpBufAddr;
 uint32_t ulBUF_MDw2IpBufAddr;
 uint32_t ulBUF_IQbinBufAddr;
+
+//JPG
+uint32_t ulBUF_JpgBsBuffAddr[4];
+uint32_t ulBUF_JpgRawBuffAddr;
+uint32_t ulBUF_ResvYuvBuffAddr;
 
 //FS
 uint32_t ulBUF_FsBufAddr;
@@ -623,8 +628,7 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
 		ubBUF_Sen3YuvBufIdx = ubBufNum-1;		
 		ulBUF_Sen3YuvBufSz  = ulUnitSz;
 		ubBUF_Sen3YuvBufNum = ubBufNum;
-	}	
-	
+	}
 	else if(ubBufMode == BUF_VDO_MAIN_BS0)
 	{
 		for(i=0;i<ubBufNum;i++)
@@ -677,7 +681,6 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
 		ulBUF_VdoMainBs3BufSz	= ulUnitSz;
 		ubBUF_VdoMainBs3BufNum	= ubBufNum;
 	}
-	
 	else if(ubBufMode == BUF_VDO_AUX_BS0)
 	{		
 		for(i=0;i<ubBufNum;i++)
@@ -730,8 +733,6 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
 		ulBUF_VdoAuxBs3BufSz  = ulUnitSz;
 		ubBUF_VdoAuxBs3BufNum = ubBufNum;
 	}
-	
-	
 	else if(ubBufMode == BUF_VDO_SUB_BS00)
 	{		
 		for(i=0;i<ubBufNum;i++)
@@ -784,8 +785,6 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
 		ulBUF_VdoSubBs30BufSz	= ulUnitSz;
 		ubBUF_VdoSubBs30BufNum	= ubBufNum;
 	}
-	
-	
 	else if(ubBufMode == BUF_VDO_SUB_BS01)
 	{		
 		for(i=0;i<ubBufNum;i++)
@@ -918,6 +917,27 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
 		ulBUF_FreeBufAddr = ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
         printd(DBG_Debug3Lvl, "REC--->BUF_BufInit->ulBUF_FreeBufAddr:0x%X\n",ulBUF_FreeBufAddr); 
     }
+	else if(ubBufMode == BUF_JPG_BS)
+	{
+		for(i = 0; i < ubBufNum; i++)
+		{
+			ulBUF_JpgBsBuffAddr[i] = ulBUF_FreeBufAddr;
+			ulBUF_FreeBufAddr = ulBUF_FreeBufAddr+ulUnitSz;
+			ulBUF_FreeBufAddr = ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
+		}
+	}
+	else if(ubBufMode == BUF_JPG_RAW)
+	{
+		ulBUF_JpgRawBuffAddr = ulBUF_FreeBufAddr;
+		ulBUF_FreeBufAddr = ulBUF_FreeBufAddr+ulUnitSz;
+		ulBUF_FreeBufAddr = ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
+	}
+	else if(ubBufMode == BUF_RESV_YUV)
+	{
+		ulBUF_ResvYuvBuffAddr = ulBUF_FreeBufAddr;
+		ulBUF_FreeBufAddr = ulBUF_FreeBufAddr+ulUnitSz;
+		ulBUF_FreeBufAddr = ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
+	}
 
 	if (ulBUF_FreeBufAddr >= DDR_BSZ_MAX) {
         printd(DBG_ErrorLvl, "Buffer full:%d\n",ulBUF_FreeBufAddr); 
@@ -2109,6 +2129,18 @@ uint32_t ulBUF_GetBlkBufAddr(uint8_t ubIndex,uint8_t ubBufMode)
     else if(ubBufMode == BUF_REC)
 	{
 		return ulBUF_RecBufAddr;
+	}
+	else if(ubBufMode == BUF_JPG_BS)
+	{
+		return ulBUF_JpgBsBuffAddr[ubIndex];
+	}
+	else if(ubBufMode == BUF_JPG_RAW)
+	{
+		return ulBUF_JpgRawBuffAddr;
+	}
+	else if(ubBufMode == BUF_RESV_YUV)
+	{
+		return ulBUF_ResvYuvBuffAddr;
 	}
 	printd(DBG_ErrorLvl, "Err @ulBUF_GetBufAddr\r\n");
 	return 0;	//Error Case

@@ -94,9 +94,10 @@ void PAIR_Init(osMessageQId *pvMsgQId);
 \brief Pairing start function
 \param tPair_StaNum		Station Number
 \param ulPair_Timeout	Pairing timeout, Unit: seconds
+\param ubPairTxPower	0:Pairing TX power 0 dBm, 1:Pairing TX power by defual
 \return(no)
 */
-void PAIR_Start(PAIR_TAG tPair_StaNum, uint32_t ulPair_Timeout);
+void PAIR_Start(PAIR_TAG tPair_StaNum, uint32_t ulPair_Timeout,uint8_t ubPairTxPower);
 //------------------------------------------------------------------------------
 /*!
 \brief Pairing stop function
@@ -132,8 +133,8 @@ void PAIR_LoadPairingResult(uint8_t *pRole);
 void PAIR_PreparePap(void);
 void PAIR_Prp(TWC_TAG GetSta,uint8_t *pData);
 void PAIR_Paap(TWC_TAG GetSta,uint8_t *pData);
-void PAIR_CheckIdTable(void);
 #endif
+void PAIR_CheckIdTable(void);
 void PAIR_ShowDeviceID(void);
 //------------------------------------------------------------------------
 /*!

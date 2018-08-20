@@ -11,8 +11,8 @@
 	\file		BB_API.h
 	\brief		Baseband API header
 	\author		Bing
-	\version	1.9
-	\date		2018/05/03
+	\version	1.17
+	\date		2018/08/01
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------
@@ -806,6 +806,13 @@ uint16_t uwBB_GetVersion(void);
 \return	(no)
 */
 void BB_ToClearTxBuf(uint8_t ubSta);
+//------------------------------------------------------------------------------
+/*!
+\brief  Set pairing tx power
+\param  ubPairTxPower	0:Pairing TX power 0 dBm, 1:Pairing TX power by defual
+\return(no)
+*/
+void BB_SetPairingTxPower(uint8_t ubPairTxPower);
 //------------------------------------------------------------------------------
 EN_RETURN_STATUS tEN_Start(EN_STATUS tEnStatus,EN_SET_ROLE tRole,uint8_t *pData1,uint8_t *pData2); 
 

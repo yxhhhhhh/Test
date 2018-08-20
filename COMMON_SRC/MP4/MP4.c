@@ -1216,7 +1216,7 @@ void MP4_CreateFile(uint8_t ubCh)
 	ulSize = sizeof(MP4_FreeAtom);
 	memcpy((uint8_t *)(ulMP4_StartAddr[ubCh] + ulSize), MP4_MdatAtom, sizeof(MP4_MdatAtom));
 	
-	FS_WriteFile(ubCh, (uint32_t)(ulMP4_StartAddr[ubCh]) , ulMP4_FileSize[ubCh]);
+	FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)(ulMP4_StartAddr[ubCh]) , ulMP4_FileSize[ubCh]);
 }
 
 int32_t slMP4_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType,uint8_t ubFrameType, uint32_t ulAddr, uint32_t ulSize, uint32_t ulDesID)
@@ -1276,7 +1276,7 @@ int32_t slMP4_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType,uint8_t ubFrameTy
 		vMP4_SetLong((uint8_t *)MP4_AStszAtom[ubCh], 20 + 4*(sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSizeEntry - 1), sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
 		
 		//save audio mdat data
-		FS_WriteFile(ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
+		FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
 		ulMP4_FileSize[ubCh] += sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize;
 	}
 	else if((ubStreamType == MP4_STR_V1) || (ubStreamType == MP4_STR_V2))
@@ -1362,7 +1362,7 @@ int32_t slMP4_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType,uint8_t ubFrameTy
 			ubMP4_POC[ubCh] = 1 + 2;
 			
 			//save mdat data
-			FS_WriteFile(ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
+			FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
 			ulMP4_FileSize[ubCh] += sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize;
 		}
 		else	if((ubFrameType == MP4_V_PFRM) && (sRec_MP4Controller[ubCh].ubChunkStartFlag == 1) && (sRec_MP4Controller[ubCh].ubVideoAudioRunFg[ubStreamType] == 1))	// P frame
@@ -1400,7 +1400,7 @@ int32_t slMP4_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType,uint8_t ubFrameTy
 			ubMP4_POC[ubCh] += 2;
 
 			//save mdat data
-			FS_WriteFile(ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
+			FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
 			ulMP4_FileSize[ubCh] += sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize;
 		}
 		else if((ubFrameType == MP4_V_SFRM) && (sRec_MP4Controller[ubCh].ubChunkStartFlag == 1))		//skip frame
@@ -1464,7 +1464,7 @@ int32_t slMP4_WriteOneFrame(uint8_t ubCh, uint8_t ubStreamType,uint8_t ubFrameTy
 			}			
 
 			//save mdat data
-			FS_WriteFile(ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
+			FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)ulAddr, sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize);
 			ulMP4_FileSize[ubCh] += sRec_MP4Controller[ubCh].stStbl[ubStreamType].ulStszSampleSize;
 		}
 	}
@@ -1590,10 +1590,10 @@ void MP4_Close(uint8_t ubCh)
 	printf("Q:0x%x R:0x%x Sz:0x%x\r\n",ulQuot,ulRem,ulMP4_AtomSize[ubCh]);
 	
 	for(i = 0; i < ulQuot ; i++)
-		FS_WriteFile(ubCh, (uint32_t)(ulMP4_StartAddr[ubCh] +  (0x20000 * i)), 0x20000);	// 128K
+		FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)(ulMP4_StartAddr[ubCh] +  (0x20000 * i)), 0x20000);	// 128K
 	
 	if(ulRem > 0)
-		FS_WriteFile(ubCh, (uint32_t)(ulMP4_StartAddr[ubCh] +  (0x20000 * i)), ulRem);	// 128K
+		FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)(ulMP4_StartAddr[ubCh] +  (0x20000 * i)), ulRem);	// 128K
 
 	// write thumbnail to storeage.
 	ulMP4_ThumbnailOffset[ubCh] = ulMP4_FileSize[ubCh];
@@ -1603,15 +1603,15 @@ void MP4_Close(uint8_t ubCh)
 	
 	vMP4_SetLong(MP4_DataAtom, 0, (MP4_THUMBNAIL_SIZE - 0x08));
 	memcpy((uint8_t *)(ulMP4ThumbnailAdr+0x08), MP4_DataAtom, sizeof(MP4_DataAtom));
-	FS_WriteFile(ubCh, (uint32_t)ulMP4ThumbnailAdr, MP4_THUMBNAIL_SIZE);
+	FS_WriteFile((FS_SRC_NUM)ubCh, (uint32_t)ulMP4ThumbnailAdr, MP4_THUMBNAIL_SIZE);
 	
 
 	// update mdate size.
 	memcpy((uint8_t *)(ulMP4_StartAddr[ubCh]), MP4_FtypAtom, sizeof(MP4_FtypAtom));
 	memcpy((uint8_t *)(ulMP4_StartAddr[ubCh]+0x20),MP4_FreeAtom, sizeof(MP4_FreeAtom));
 	memcpy((uint8_t *)(ulMP4_StartAddr[ubCh] + 0x28), MP4_MdatAtom, sizeof(MP4_MdatAtom));
-	FS_UpdateMp4Header(ubCh,(uint32_t)ulMP4_StartAddr[ubCh], 0x30);
-	FS_CloseFile(ubCh);
+	FS_UpdateMp4Header((FS_SRC_NUM)ubCh,(uint32_t)ulMP4_StartAddr[ubCh], 0x30);
+	FS_CloseFile((FS_SRC_NUM)ubCh);
 	
 	printf("MP4(FSz:0x%x ASz:0x%x)\n\r", ulMP4_FileSize[ubCh], ulMP4_AtomSize[ubCh]);
 	printf("\r\n");

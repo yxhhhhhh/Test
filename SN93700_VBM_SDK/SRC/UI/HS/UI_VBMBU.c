@@ -55,24 +55,25 @@ UI_KeyEventMap_t UiKeyEventMap[] =
 };
 UI_SettingFuncPtr_t tUiSettingMap2Func[] =
 {
-    [UI_PTZ_SETTING]            = NULL,
-    [UI_RECMODE_SETTING]        = NULL,
-    [UI_RECRES_SETTING]         = NULL,
-    [UI_SDCARD_SETTING]         = NULL,
-    [UI_PHOTOMODE_SETTING]      = NULL,
-    [UI_PHOTORES_SETTING]       = NULL,
-    [UI_SYSINFO_SETTING]        = NULL,
-    [UI_VOXMODE_SETTING]        = UI_PowerSaveSetting,
-    [UI_ECOMODE_SETTING]        = UI_PowerSaveSetting,
-    [UI_WORMODE_SETTING]        = UI_PowerSaveSetting,
-    [UI_ADOANR_SETTING]         = UI_ANRSetting,
-    [UI_IMGPROC_SETTING]        = UI_ImageProcSetting,
-    [UI_MD_SETTING]             = UI_MDSetting,
-    [UI_VOICETRIG_SETTING]      = UI_VoiceTrigSetting,
-    [UI_MOTOR_SETTING]          = UI_PtzControlSetting,
-    [UI_NIGHTMODE_SETTING]      = UI_NightModeSetting,
-    [UI_PU_TO_BU_CMD_SETTING]   = UI_RecvPUCmdSetting,
-    [UI_TEST_SETTING]           = UI_TestSetting,
+	[UI_PTZ_SETTING] 			= NULL,	
+	[UI_RECMODE_SETTING] 		= NULL,
+	[UI_RECRES_SETTING] 		= NULL,
+	[UI_SDCARD_SETTING] 		= NULL,
+	[UI_PHOTOMODE_SETTING] 		= NULL,
+	[UI_PHOTORES_SETTING] 		= NULL,
+	[UI_SYSINFO_SETTING] 		= NULL,
+	[UI_VOXMODE_SETTING] 		= UI_PowerSaveSetting,
+	[UI_ECOMODE_SETTING] 		= UI_PowerSaveSetting,
+	[UI_WORMODE_SETTING] 		= UI_PowerSaveSetting,
+	[UI_ADOANR_SETTING]			= UI_ANRSetting,
+	[UI_ADOAEC_SETTING]			= UI_AECSetting,
+	[UI_IMGPROC_SETTING]		= UI_ImageProcSetting,
+	[UI_MD_SETTING]				= UI_MDSetting,
+	[UI_VOICETRIG_SETTING]		= UI_VoiceTrigSetting,
+	[UI_MOTOR_SETTING]		    = UI_PtzControlSetting,
+	[UI_NIGHTMODE_SETTING]		= UI_NightModeSetting,
+	[UI_PU_TO_BU_CMD_SETTING]	= UI_RecvPUCmdSetting,
+	[UI_TEST_SETTING]		    = UI_TestSetting,
 };
 
 //ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n36DB, R2R_VOL_n23p5DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
@@ -173,6 +174,10 @@ void UI_StateReset(void)
     ubUI_WorModeEnFlag   = (PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)?TRUE:FALSE;
     ubUI_WorWakeUpCnt    = 0;
     tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
+}
+//------------------------------------------------------------------------------
+void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
+{
 }
 //------------------------------------------------------------------------------
 void UI_UpdateAppStatus(void *ptAppStsReport)
@@ -501,14 +506,15 @@ void UI_SetMotionEvent (uint8_t ubReport)
 //------------------------------------------------------------------------------
 void UI_SystemSetup(void)
 {
-    UI_IspSetup();
-    ADO_Noise_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
-    UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
-    UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
-    if (PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
-        ubUI_SyncDisVoxFlag = TRUE;
-    else
-        UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
+	UI_IspSetup();
+	UI_ANRSetting(&tUI_BuStsInfo.tCamAnrMode);
+	UI_AECSetting(&tUI_BuStsInfo.tCamAecMode);	
+	UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
+	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
+	if(PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
+		ubUI_SyncDisVoxFlag = TRUE;
+	else
+		UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
     MD_ReportReadyCbFunc(UI_SetMotionEvent);
     MD_SetMdState(MD_UNSTABLE);
 }
@@ -713,6 +719,32 @@ void UI_VoiceTrigger(void)
     }
 }
 //------------------------------------------------------------------------------
+void UI_ANRSetting(void *pvAnrMode)
+{
+	uint8_t *pUI_AnrMode = (uint8_t *)pvAnrMode;
+	
+	ADO_Noise_Process_Type((CAMSET_ON == (UI_CamsSetMode_t)pUI_AnrMode[0])?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
+	if(tUI_BuStsInfo.tCamAnrMode != (UI_CamsSetMode_t)pUI_AnrMode[0])
+	{
+		tUI_BuStsInfo.tCamAnrMode = (UI_CamsSetMode_t)pUI_AnrMode[0];
+		UI_UpdateDevStatusInfo();
+	}
+	printd(DBG_InfoLvl, "		=> ANR %s\n", (CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?"ON":"OFF");
+}
+//------------------------------------------------------------------------------
+void UI_AECSetting(void *pvAecMode)
+{
+	uint8_t *pUI_AecMode = (uint8_t *)pvAecMode;
+
+	//! Setting AEC
+	if(tUI_BuStsInfo.tCamAecMode != (UI_CamsSetMode_t)pUI_AecMode[0])
+	{
+		tUI_BuStsInfo.tCamAecMode = (UI_CamsSetMode_t)pUI_AecMode[0];
+//		UI_UpdateDevStatusInfo();
+	}
+	printd(DBG_InfoLvl, "		=> AEC %s\n", (CAMSET_ON == tUI_BuStsInfo.tCamAecMode)?"ON":"OFF");
+}
+
 void UI_VoiceCheck (void)
 {
     UI_BUReqCmd_t tUI_VoiceReqCmd;
@@ -871,34 +903,26 @@ void UI_TempCheck(void) //20180322
         ubTemp_bak = ubCurTempVal;
     }
 }
-//------------------------------------------------------------------------------
-void UI_ANRSetting(void *pvAnrMode)
-{
-    uint8_t *pUI_AnrMode = (uint8_t *)pvAnrMode;
 
-    tUI_BuStsInfo.tCamAnrMode = (UI_CamsSetMode_t)pUI_AnrMode[0];
-    ADO_Noise_Process_Type((CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
-    UI_UpdateDevStatusInfo();
-    printd(DBG_InfoLvl, "       => ANR %s\n", (CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?"ON":"OFF");
-}
+
 //------------------------------------------------------------------------------
 void UI_IspSetup(void)
 {
-    UI_IspSettingFuncPtr_t tUI_IspFunc[UI_IMGSETTING_MAX] =
-    {
-        [UI_IMG3DNR_SETTING]        = {ISP_NR3DSwitch, (uint8_t *)&tUI_BuStsInfo.tCam3DNRMode},
-        [UI_IMGvLDC_SETTING]        = {ISP_VLDCSwitch, (uint8_t *)&tUI_BuStsInfo.tCamvLDCMode},
-        [UI_IMGWDR_SETTING]         = {ISP_DRCSwitch,  (uint8_t *)&tUI_BuStsInfo.tCamWdrMode},
-        [UI_IMGDIS_SETTING]         = {NULL, NULL},
-        [UI_IMGCBR_SETTING]         = {NULL, NULL},
-        [UI_IMGCONDENSE_SETTING]    = {NULL, NULL},
-        [UI_FLICKER_SETTING]        = {ISP_SetAePwrFreq,    (uint8_t *)&tUI_BuStsInfo.tCamFlicker},
-        [UI_IMGBL_SETTING]          = {ISP_SetIQBrightness, (uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorBL},
-        [UI_IMGCONTRAST_SETTING]    = {ISP_SetIQContrast,   (uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorContrast},
-        [UI_IMGSATURATION_SETTING]  = {ISP_SetIQSaturation, (uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorSaturation},
-        [UI_IMGHUE_SETTING]         = {ISP_SetIQChroma,     (uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorHue},
-    };
-    uint8_t ubUI_IspItem, ubUI_IspParam;
+	UI_IspSettingFuncPtr_t tUI_IspFunc[UI_IMGSETTING_MAX] = 
+	{
+		[UI_IMG3DNR_SETTING] 		= {ISP_NR3DSwitch, (uint8_t *)&tUI_BuStsInfo.tCam3DNRMode},
+		[UI_IMGvLDC_SETTING] 		= {ISP_VLDCSwitch, (uint8_t *)&tUI_BuStsInfo.tCamvLDCMode},
+		[UI_IMGWDR_SETTING] 		= {NULL, NULL},
+		[UI_IMGDIS_SETTING] 		= {NULL, NULL},
+		[UI_IMGCBR_SETTING] 		= {NULL, NULL},
+		[UI_IMGCONDENSE_SETTING] 	= {NULL, NULL},
+		[UI_FLICKER_SETTING] 		= {ISP_SetAePwrFreq, 	(uint8_t *)&tUI_BuStsInfo.tCamFlicker},
+		[UI_IMGBL_SETTING] 			= {ISP_SetIQBrightness, (uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorBL},
+		[UI_IMGCONTRAST_SETTING] 	= {ISP_SetIQContrast, 	(uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorContrast},
+		[UI_IMGSATURATION_SETTING] 	= {ISP_SetIQSaturation, (uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorSaturation},
+		[UI_IMGHUE_SETTING]			= {ISP_SetIQChroma, 	(uint8_t *)&tUI_BuStsInfo.tCamColorParam.ubColorHue},
+	};
+	uint8_t ubUI_IspItem, ubUI_IspParam;
 
     for (ubUI_IspItem = UI_IMG3DNR_SETTING; ubUI_IspItem < UI_IMGSETTING_MAX; ubUI_IspItem++)
     {
@@ -928,8 +952,6 @@ void UI_ImageProcSetting(void *pvImgProc)
         ISP_VLDCSwitch(tUI_BuStsInfo.tCamvLDCMode);
         break;
     case UI_IMGWDR_SETTING:
-        tUI_BuStsInfo.tCamWdrMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
-        ISP_DRCSwitch(tUI_BuStsInfo.tCamWdrMode);
         break;
     case UI_IMGDIS_SETTING:
         tUI_BuStsInfo.tCamDisMode = (UI_CamsSetMode_t)pUI_ImgProc[1];
@@ -1095,25 +1117,25 @@ void UI_ResetDevSetting(void)
 {
     uint8_t i;
 
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamAnrMode,        CAMSET_OFF);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCam3DNRMode,       CAMSET_ON);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamvLDCMode,       CAMSET_ON);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamWdrMode,        CAMSET_OFF);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamDisMode,        CAMSET_OFF);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamFlicker,        CAMFLICKER_60HZ);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCbrMode,        CAMSET_ON);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCondenseMode,   CAMSET_OFF);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorBL,         64);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorContrast,   64);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorHue,        64);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.MdParam.ubMD_Mode,  MD_OFF);
-    UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamPsMode,         POWER_NORMAL_MODE);
-
-    for (i = 0; i < 4; i++)
-        tUI_BuStsInfo.MdParam.ubMD_Param[i] = 0;
-    UI_UpdateDevStatusInfo();
-    UI_SystemSetup();
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_OFF);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_ON);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamAecMode,  		CAMSET_OFF);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamDisMode,  		CAMSET_OFF);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamFlicker,		CAMFLICKER_60HZ);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCbrMode,  		CAMSET_ON);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCondenseMode, 	CAMSET_OFF);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorBL, 		  64);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorContrast,	  64);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorHue, 		  64);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.MdParam.ubMD_Mode,	MD_OFF);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamPsMode,			POWER_NORMAL_MODE);
+	
+	for(i = 0; i < 4; i++)
+		tUI_BuStsInfo.MdParam.ubMD_Param[i] = 0;
+	UI_UpdateDevStatusInfo();
+	UI_SystemSetup();
 }
 //------------------------------------------------------------------------------
 void UI_LoadDevStatusInfo(void)
@@ -1130,30 +1152,30 @@ void UI_LoadDevStatusInfo(void)
     if ((strncmp(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1) == 0)
     && (strncmp(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1) == 0)) {
 
-    } else {
-        printd(DBG_ErrorLvl, "TAG no match, Reset UI\n");
-    }
-    UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,        CAMSET_OFF);
-    UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCam3DNRMode,       CAMSET_ON);
-    UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamvLDCMode,       CAMSET_ON);
-    UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamWdrMode,        CAMSET_OFF);
-    UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamDisMode,        CAMSET_OFF);
-    UI_CHK_CAMFLICER(tUI_BuStsInfo.tCamFlicker);
-    UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamCbrMode,        CAMSET_ON);
-    UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamCondenseMode,   CAMSET_OFF);
-    UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorBL,         64);
-    UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorContrast,   64);
-    UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);
-    UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorHue,        64);
-    UI_CHK_MDMODE(tUI_BuStsInfo.MdParam.ubMD_Mode,      MD_OFF);
-    UI_CHK_PSMODE(tUI_BuStsInfo.tCamPsMode,             POWER_NORMAL_MODE);
-    for (i = 0; i < 4; i++)
-    {
-        if (MD_OFF == tUI_BuStsInfo.MdParam.ubMD_Mode)
-            tUI_BuStsInfo.MdParam.ubMD_Param[i] = 0;
-        else
-            UI_CHK_CAMPARAM(tUI_BuStsInfo.MdParam.ubMD_Param[i], 0);
-    }
+	} else {
+		printd(DBG_ErrorLvl, "TAG no match, Reset UI\n");
+	}
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAnrMode,  		CAMSET_OFF);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCam3DNRMode, 		CAMSET_ON);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamvLDCMode, 		CAMSET_ON);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamAecMode,  		CAMSET_OFF);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamDisMode,  		CAMSET_OFF);
+	UI_CHK_CAMFLICER(tUI_BuStsInfo.tCamFlicker);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamCbrMode,  		CAMSET_ON);
+	UI_CHK_CAMSFUNCTS(tUI_BuStsInfo.tCamCondenseMode, 	CAMSET_OFF);
+	UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorBL, 		64);
+	UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorContrast, 	64);
+	UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);
+	UI_CHK_CAMPARAM(tUI_BuStsInfo.tCamColorParam.ubColorHue, 		64);
+	UI_CHK_MDMODE(tUI_BuStsInfo.MdParam.ubMD_Mode,		MD_OFF);
+	UI_CHK_PSMODE(tUI_BuStsInfo.tCamPsMode,				POWER_NORMAL_MODE);
+	for(i = 0; i < 4; i++)
+	{
+		if(MD_OFF == tUI_BuStsInfo.MdParam.ubMD_Mode)
+			tUI_BuStsInfo.MdParam.ubMD_Param[i] = 0;
+		else
+			UI_CHK_CAMPARAM(tUI_BuStsInfo.MdParam.ubMD_Param[i], 0);
+	}
 
     ADO_SetDacR2RVol(R2R_VOL_n0DB);
 }

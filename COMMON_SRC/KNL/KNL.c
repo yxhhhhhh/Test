@@ -11,8 +11,8 @@
 	\file		KNL.c
 	\brief		Kernel Control function
 	\author		Justin Chen
-	\version	1.8
-	\date		2018/07/09
+	\version	1.13
+	\date		2018/08/02
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -72,6 +72,7 @@ uint8_t ubKNL_ResetIFlg = 0;
 uint8_t ubKNL_SenStartFlg = 0;
 uint8_t ubKNL_ChgResFlg = 0;
 KNL_SrcLocateMap_t KNL_SwDispInfo;
+uint8_t ubKNL_SysStopFlag;
 
 //For Process
 KNL_INFO tKNL_Info;
@@ -99,6 +100,19 @@ uint8_t ubKNL_JpegPreNode;	//For BUC JPEG IP
 uint8_t ubKNL_JpegSrc;			//For BUC JPEG IP
 osMessageQId KNL_QueueJpegMonit;
 osSemaphoreId JPEG_CodecSem;
+
+//For Capture
+#define osKNL_CapFinSignal			0x33
+#define osKNL_PhotoPlyFinSignal		0x35
+osThreadId osKNL_RecordThreadId;
+osMessageQId osKNL_RecordMsgQue;
+osMutexId osKNL_RecordFuncMutex;
+KNL_RecordAct_t tKNL_RecordAct;
+LCD_BUF_TYP *pKNL_LcdPlayBuf;
+char cKNL_LatestFileName[FS_FILE_NAME_MAX_LENGTH];
+#if (KNL_PHOTOGRAPH_FUNC_ENABLE || KNL_REC_FUNC_ENABLE)
+static void KNL_RecordThread(void const *argument);
+#endif
 
 //For Img/H264
 uint8_t ubKNL_ImgSrc;			//For IMG/H264 IP
@@ -174,6 +188,8 @@ uint32_t ulKNL_InVdoFpsCntTemp[KNL_SRC_NUM];	//For Input
 uint32_t ulKNL_FrmTRxNum[KNL_MAX_ROLE];			//For Output
 uint32_t ulKNL_FrmTRxNumTemp[KNL_MAX_ROLE];		//For Output
 
+pvKNL_BbFrmOkCbFunc ptKNL_BbFrmMonitCbFunc;
+
 //WOR
 uint8_t ubKNL_WorSts;
 
@@ -187,10 +203,10 @@ uint8_t ubKNL_StartRecFlag = 0;
 KNL_TuningMode_t tKNL_TuningMode;
 
 #ifdef VBM_PU
-uint16_t ubTest_uwCropHsize  = 720;
-uint16_t ubTest_uwCropVsize  = 1280;
-uint16_t ubTest_uwCropHstart = 0;
-uint16_t ubTest_uwCropVstart = 0;
+uint16_t ubTest_uwCropHsize= 720;
+uint16_t ubTest_uwCropVsize= 1280;
+uint16_t ubTest_uwCropHstart= 0;
+uint16_t ubTest_uwCropVstart= 0;
 #endif
 
 static void KNL_VdoInProcThread(void const *argument);
@@ -217,11 +233,10 @@ static void KNL_AvgPly3Thread(void const *argument);
 
 static void KNL_SysMonitThread(void const *argument);
 static void KNL_SecMonitThread(void const *argument);
-pvKNL_BbFrmOkCbFunc ptKNL_BbFrmMonitCbFunc;
 //------------------------------------------------------------------------------
 
 #define KNL_MAJORVER    1        //!< Major version = 1
-#define KNL_MINORVER    9        //!< Minor version = 9
+#define KNL_MINORVER    13       //!< Minor version = 13
 uint16_t uwKNL_GetVersion (void)
 {
     return ((KNL_MAJORVER << 8) + KNL_MINORVER);
@@ -374,6 +389,7 @@ void KNL_SetAdoInfo(ADO_KNL_PARA_t tAdoInfo)
 	tKNL_AdoInfo.Ply_buf_size        		= tAdoInfo.Ply_buf_size;
 	tKNL_AdoInfo.Audio32_En_buf_size 		= tAdoInfo.Audio32_En_buf_size;
 	tKNL_AdoInfo.Audio32_De_buf_size 		= tAdoInfo.Audio32_De_buf_size;
+	tKNL_AdoInfo.WavPlay_buf_size 		    = tAdoInfo.WavPlay_buf_size;
 	tKNL_AdoInfo.AAC_En_buf_size     		= tAdoInfo.AAC_En_buf_size;
 	tKNL_AdoInfo.AAC_De_buf_size     		= tAdoInfo.AAC_De_buf_size;	
 	tKNL_AdoInfo.Alarm_buf_size             = tAdoInfo.Alarm_buf_size;	
@@ -402,6 +418,7 @@ void KNL_Init(void)
 {
 	KNL_ROLE tKNLRole;
 
+	ubKNL_SysStopFlag		= FALSE;
 	pLcdCropScaleParam 		= NULL;
 	ptKNL_VdoRoleSrcMapT    = NULL;
 	ptKNL_AdoRoleSrcMapT    = NULL;
@@ -421,7 +438,7 @@ void KNL_Init(void)
 		ubKNL_VdoBsBusyCnt[tKNLRole]		= 0;
 		ubKNL_VdoResendITwcFlg[tKNLRole]	= FALSE;
 		ubKNL_VdoChkSrcNumFlg[tKNLRole]	 	= FALSE;
-		ubKNL_VdoResChgTwcFlg[tKNLRole]     = FALSE;		
+		ubKNL_VdoResChgTwcFlg[tKNLRole]     = FALSE;
 		KNL_SwDispInfo.tSrcNum[tKNLRole] 	= KNL_SRC_NONE;
 		KNL_SwDispInfo.tSrcLocate[tKNLRole] = KNL_DISP_LOCATION_ERR;
 	}
@@ -436,7 +453,7 @@ void KNL_Init(void)
 	KNL_SetVdoGop(900);
 
 	osMutexDef(tKNL_LinkSem);
-	tKNL_LinkSem 	= osMutexCreate(osMutex(tKNL_LinkSem));
+	tKNL_LinkSem = osMutexCreate(osMutex(tKNL_LinkSem));
 
 	osSemaphoreDef(tKNL_ImgSem);
 	tKNL_ImgSem	= osSemaphoreCreate(osSemaphore(tKNL_ImgSem), 1);
@@ -482,6 +499,35 @@ void KNL_Init(void)
 
 	osThreadDef(KNLSecMonitThread, KNL_SecMonitThread, THREAD_PRIO_SEC_MONIT, 1, THREAD_STACK_SEC_MONIT);
 	osThreadCreate(osThread(KNLSecMonitThread), NULL);
+
+	tKNL_RecordAct.tRecordFunc = KNL_RECORDFUNC_DISABLE;
+	for(tKNLRole = KNL_STA1; tKNLRole <= KNL_STA4; tKNLRole++)
+		tKNL_RecordAct.ubPhotoCapSrc[tKNLRole] = KNL_SRC_NONE;
+	osKNL_RecordMsgQue = NULL;
+#if (KNL_PHOTOGRAPH_FUNC_ENABLE || KNL_REC_FUNC_ENABLE)
+	osMutexDef(KNL_RecordFuncMutex);
+	osKNL_RecordFuncMutex = osMutexCreate(osMutex(KNL_RecordFuncMutex));
+	osMessageQDef(KNL_RecordMsgQue, 1, KNL_RecordAct_t);
+    osKNL_RecordMsgQue = osMessageCreate(osMessageQ(KNL_RecordMsgQue), NULL);
+	osThreadDef(KNL_RecordThd, KNL_RecordThread, THREAD_PRIO_KNLRECORD_HANDLER, 1, THREAD_STACK_KNLRECORD_HANDLER);
+	osKNL_RecordThreadId = osThreadCreate(osThread(KNL_RecordThd), NULL);
+#endif
+}
+//------------------------------------------------------------------------------
+void KNL_Stop(void)
+{
+	if(TRUE == ubKNL_SysStopFlag)
+		return;
+	BB_Stop();
+	ubKNL_SysStopFlag = TRUE;
+}
+//------------------------------------------------------------------------------
+void KNL_ReStart(void)
+{
+	if(FALSE == ubKNL_SysStopFlag)
+		return;
+	BB_Start(THREAD_STACK_BB_HANDLER, THREAD_PRIO_BB_HANDLER);
+	ubKNL_SysStopFlag = FALSE;
 }
 //------------------------------------------------------------------------------
 uint32_t ulKNL_GetDataBitRate(uint8_t ubDataType,uint8_t ubCodecIdx)
@@ -534,14 +580,14 @@ static void KNL_SecMonitThread(void const *argument)
 		ulKNL_VdoOutAccCntTemp[3] = 0;		
 
 		//Output/Input Frame-Rate (Video Data)
-		for(i=0;i<KNL_SRC_NUM;i++)
+		for(i = 0; i < KNL_SRC_NUM; i++)
 		{
 			ulKNL_OutVdoFpsCnt[i] = ulKNL_OutVdoFpsCntTemp[i];
 			ulKNL_OutVdoFpsCntTemp[i] = 0;
 //			ulKNL_InVdoFpsCnt[i] = ulKNL_InVdoFpsCntTemp[i];
 //			ulKNL_InVdoFpsCntTemp[i] = 0;
 		}
-		for(i=0;i<KNL_MAX_ROLE;i++)
+		for(i = 0; i < KNL_MAX_ROLE; i++)
 		{
 			ulKNL_FrmTRxNum[i] = ulKNL_FrmTRxNumTemp[i];
 			ulKNL_FrmTRxNumTemp[i] = 0;
@@ -652,20 +698,21 @@ static void KNL_AdoDecMonitThread(void const *argument)
 #if defined(BPC_RX) || defined(BPC_CAM)
 				//ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, OFF);
 #endif
-
-#ifdef VBM_PU
+				#ifdef VBM_PU
 				SPEAKER_EN(FALSE);
 				TIMER_Delay_us(1000);
 				SPEAKER_EN(TRUE);
 				TIMER_Delay_us(2);
 				SPEAKER_EN(FALSE);
 				TIMER_Delay_us(2);
-				SPEAKER_EN(TRUE);
-#endif
 
-#if VBM_BU
 				SPEAKER_EN(TRUE);
-#endif
+				#endif
+
+				#if VBM_BU
+				SPEAKER_EN(TRUE);
+				//SPEAKER_EN(FALSE);
+				#endif
 				break;
 			case PLAY_BUF_EMP:
 				printf("-Dac play empty-\n");
@@ -850,7 +897,7 @@ void KNL_BufInit(void)
 		fBufSize = ulKNL_CalLcdBufSz();
 		BUF_BufInit(BUF_LCD_IP,1,fBufSize,0);
 	}
-
+	
 	//H264_ENC Node	
 	//================================================================
 	//For Main Source
@@ -1014,23 +1061,40 @@ void KNL_BufInit(void)
 	if(ubSD_ChkIFSetup())
 	{
 		uint32_t ulNeedMemSize;
+		FS_RESOLUTION_MODE tResMode;
 
-        ulNeedMemSize = ulFS_GetTotalBufSize(FS_RES_MODE_HDx1);
-		printd(DBG_Debug3Lvl, "FS Buf:0x%X\r\n",ulNeedMemSize);
+		tResMode = (KNL_REC_FUNC_ENABLE)?FS_RES_MODE_HDx4:FS_RES_MODE_HDx1;
+        ulNeedMemSize = ulFS_GetTotalBufSize(tResMode);
+		printd(DBG_Debug3Lvl, "FS Buf:0x%X\r\n", ulNeedMemSize);
 		BUF_BufInit(BUF_FS,1,ulNeedMemSize,0);
 	}
 
+	//Photo
+	#if KNL_PHOTOGRAPH_FUNC_ENABLE
+	if(ubSD_ChkIFSetup())
+	{
+		fBufSize = KNL_JPG_HEADER_SIZE + KNL_JPG_BS_SIZE;
+		BUF_BufInit(BUF_JPG_BS, (1 << ubKNL_GetOpMode()), fBufSize, 0);
+		if((KNL_OPMODE_VBM_4T != ubKNL_GetOpMode()) ||
+		   ((KNL_OPMODE_VBM_4T == ubKNL_GetOpMode()) && (KNL_DISP_SINGLE == tKNL_GetDispType())))
+		{
+			fBufSize = ISP_WIDTH * ISP_HEIGHT * 1.5;
+			BUF_BufInit(BUF_RESV_YUV, 1, fBufSize, 0);
+		}
+	}
+	#endif
+
+	//REC
 	#if KNL_REC_FUNC_ENABLE
-    //REC
     if(ubSD_ChkIFSetup())
     {
 		uint32_t ulTotalMemSize, ulResiMemSize;
 
-        ulTotalMemSize = 0x2000000;
-        ulResiMemSize = ulTotalMemSize-(ulBUF_GetBlkBufAddr(0,BUF_FS)+ulBUF_AlignAddrTo1K(ulFS_GetTotalBufSize(FS_RES_MODE_HDx1)));
+        ulTotalMemSize = DDR_BSZ_MAX;
+        ulResiMemSize  = ulTotalMemSize - (ulBUF_GetBlkBufAddr(0,BUF_FS)+ulBUF_AlignAddrTo1K(ulFS_GetTotalBufSize(FS_RES_MODE_HDx4))) - 1024;
         BUF_BufInit(BUF_REC,1,ulResiMemSize,0);
-        
-        vREC_FileFormatSet(REC_FILE_AVI);
+
+        vREC_FileFormatSet(REC_FILE_MP4);
         Media_FileFormatConfigInit();
         printd(DBG_Debug3Lvl, "MaxRECTime %d minutes\r\n",ulREC_ModeSet(ulResiMemSize));
     }
@@ -1039,7 +1103,7 @@ void KNL_BufInit(void)
 
 #if KNL_USBH_FUNC_ENABLE
 	memset(&uvc_frame_info, 0, sizeof(USBH_UVC_FRAME_INFO));
-    
+
 #if defined (CONFIG_DUAL_HOST)
 	uvc_stream_num = 4;
 	for(i = 0; i < uvc_stream_num; i++) {
@@ -1315,7 +1379,9 @@ void KNL_BlockInit(void)
 		{
 			RC_Init(i);
 		}
-	}	
+	}
+	//Rate-Control for IQ-Tuning
+	RC_EngModeSet(0,KNL_RC_BITRATE,KNL_RC_FPS);	//CodecIdx:0,Target BitRate:150KB,FPS:15
 	
 	//For BB
 	ubNodeExist = ubKNL_ChkExistNode(KNL_NODE_COMM_TX_VDO)|ubKNL_ChkExistNode(KNL_NODE_COMM_RX_VDO)|ubKNL_ChkExistNode(KNL_NODE_COMM_TX_ADO)|ubKNL_ChkExistNode(KNL_NODE_COMM_RX_ADO);		
@@ -1480,7 +1546,7 @@ void KNL_BlockInit(void)
 
 	//For JPEG Codec
 	//=======================================================================
-	if((ubKNL_ChkExistNode(KNL_NODE_JPG_ENC)||ubKNL_ChkExistNode(KNL_NODE_JPG_DEC1)||ubKNL_ChkExistNode(KNL_NODE_JPG_DEC2))&&(ubKNL_InitJpegFlg==0))
+	if((KNL_PHOTOGRAPH_FUNC_ENABLE || ubKNL_ChkExistNode(KNL_NODE_JPG_ENC) || ubKNL_ChkExistNode(KNL_NODE_JPG_DEC1) || ubKNL_ChkExistNode(KNL_NODE_JPG_DEC2)) && (ubKNL_InitJpegFlg == 0))
 	{
 		JPEG_Init();
 		KNL_SetJpegQp(32);
@@ -1499,8 +1565,11 @@ void KNL_BlockInit(void)
 	else
 		JPEG_FuncDisable;
 
+#if KNL_PHOTOGRAPH_FUNC_ENABLE
+	KNL_UpdateJpgHeader();
+#endif
+
 #if USBD_ENABLE
-	//For USB Device
 	USBD_Start();
 #endif
 
@@ -1511,6 +1580,7 @@ void KNL_BlockInit(void)
         tKNL_FsParam.ulFS_BufStartAddr = ulBUF_GetBlkBufAddr(0,BUF_FS);
         tKNL_FsParam.Mode = FS_RES_MODE_HDx1;
         FS_Init(&tKNL_FsParam);
+		FS_SetMaxRollingValOfGrpIdx(65536);
         printd(DBG_Debug3Lvl, "FS buf %d bytes\r\n",ulFS_GetTotalBufSize(FS_RES_MODE_HDx1));
     }
 
@@ -2034,7 +2104,7 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 		sLcdInfor.tDispType = LCD_DISP_1T;
 		sLcdInfor.ubChNum = 1;
 
-		KNL_SwDispInfo.ubSetupFlag = FALSE;
+		KNL_SwDispInfo.ubSetupFlag = TRUE;	//FALSE;
 		ubDisp1Src = KNL_SwDispInfo.tSrcNum[0];
 		if(tKNL_GetDispRotate() == KNL_DISP_ROTATE_0)
 		{
@@ -3694,6 +3764,7 @@ uint8_t ubKNL_ImgDec(H264_DECODE_INDEX CodecIdx,uint32_t ulYuvAddr,uint32_t ulBs
 	return 1;
 }
 //------------------------------------------------------------------------------
+#if OP_STA
 uint8_t ubKNL_UpdateUvcImage(KNL_PROCESS tProc, KNL_NODE tCurNode)
 {
 	static uint8_t ubUvcChgResFlag = FALSE;
@@ -3705,7 +3776,7 @@ uint8_t ubKNL_UpdateUvcImage(KNL_PROCESS tProc, KNL_NODE tCurNode)
 	ubUvcPathMode = UVC_GetVdoFormat();
 	if(USB_UVC_VS_FORMAT_UNDEFINED != ubUvcPathMode)
 	{
-		if((tProc.ubSrcNum == KNL_SRC_1_MAIN) || (tProc.ubSrcNum == KNL_SRC_1_AUX))
+		if(0xFF != ubKNL_SrcNumMap(tProc.ubSrcNum))
 		{
 			uint16_t uwVdoHSize = uwKNL_GetVdoH(tProc.ubSrcNum);
 			uint16_t uwVdoVSize = uwKNL_GetVdoV(tProc.ubSrcNum);
@@ -3715,6 +3786,7 @@ uint8_t ubKNL_UpdateUvcImage(KNL_PROCESS tProc, KNL_NODE tCurNode)
 				case USB_UVC_VS_FORMAT_FRAME_BASED:
 					if(TRUE == ubUVC_CheckResolution(uwVdoHSize, uwVdoVSize))
 					{
+						SEN_SetUvcPathFlag(1);
 						uvc_update_image((uint32_t *)tProc.ulDramAddr2, (uint32_t)tProc.ulSize);
 					}
 					else
@@ -3755,6 +3827,7 @@ uint8_t ubKNL_UpdateUvcImage(KNL_PROCESS tProc, KNL_NODE tCurNode)
 	}
 	else
 	{
+		SEN_SetUvcPathFlag(0);
 		if(tNodeInfo.ubPreNode == KNL_NODE_H264_ENC)
 		{
 			if(TRUE == ubUvcChgResFlag)
@@ -3771,11 +3844,15 @@ uint8_t ubKNL_UpdateUvcImage(KNL_PROCESS tProc, KNL_NODE tCurNode)
 				ubUvcChgResFlag = FALSE;
 			}
 			if(!ubRC_GetFlg(tNodeInfo.ubCodecIdx))
+			{
+				H264_SetGOP((H264_ENCODE_INDEX)tNodeInfo.ubCodecIdx, ulKNL_GetVdoGop());
 				ubRC_SetFlg(tNodeInfo.ubCodecIdx, TRUE);
+			}
 		}
 	}
 	return 1;
 }
+#endif
 //------------------------------------------------------------------------------
 void KNL_VdoPathReset(void)
 {
@@ -4880,7 +4957,7 @@ void KNL_H264CodecProcess(KNL_PROCESS tProc)
 {
 	if(ubKNL_ChkVdoFlowAct(tProc.ubSrcNum))
 	{
-		uint8_t ubCodecRetryNum = 0, ubCodecRetryCnt = (KNL_NODE_H264_DEC == tProc.ubNextNode)?15:30;
+		uint8_t ubCodecRetryNum = 0, ubCodecRetryCnt = (KNL_NODE_H264_DEC == tProc.ubNextNode)?18:30;
 
 		for(;;)
 		{
@@ -5023,8 +5100,16 @@ void KNL_H264DecProcess(KNL_PROCESS tProc)
 				ubKNL_ReleaseBsBufAddr(KNL_NODE_H264_DEC,tProc.ubSrcNum,tProc.ulDramAddr2);
 				return;
 			}
-			KNL_LcdDisplaySetting();
-			ulAddr = ulKNL_GetLcdDispAddr(tProc.ubSrcNum);
+			if(KNL_PHOTO_PLAY == tKNL_GetRecordFunc())
+			{
+				ulAddr = ulKNL_GetResvDecAddr();
+				printd(DBG_InfoLvl, "		>H264 DEC: 0x%X\n", ulAddr);
+			}
+			else
+			{
+				KNL_LcdDisplaySetting();
+				ulAddr = ulKNL_GetLcdDispAddr(tProc.ubSrcNum);
+			}
 			if(ulAddr == 0)
 			{
 				ubKNL_ReleaseBsBufAddr(KNL_NODE_H264_DEC,tProc.ubSrcNum,tProc.ulDramAddr2);
@@ -5039,7 +5124,7 @@ void KNL_H264DecProcess(KNL_PROCESS tProc)
 			//Rotate
 			if(tNodeInfo.ubRotate == 1)
 			{
-				H264_SetRotationEn((H264_DECODE_INDEX)tNodeInfo.ubCodecIdx,H264_ENABLE);
+				H264_SetRotationEn((H264_DECODE_INDEX)tNodeInfo.ubCodecIdx, (TRUE == ubKNL_SearchCapSrcNum(tProc.ubSrcNum))?H264_DISABLE:H264_ENABLE);
 			}
 			else
 			{
@@ -5459,11 +5544,13 @@ void KNL_VdoBsBuf1Process(KNL_PROCESS tProc)
     REC_INFO RecInfo;
 #endif
 
+#if OP_STA
 	if(KNL_GetTuningToolMode() == KNL_TUNINGMODE_ON)
 	{
 		if(!ubKNL_UpdateUvcImage(tProc, KNL_NODE_VDO_BS_BUF1))
 			return;
 	}
+#endif
 
 	if(ubKNL_ChkVdoFlowAct(tProc.ubSrcNum))
 	{
@@ -7580,6 +7667,61 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 	}
 }
 //------------------------------------------------------------------------------
+void KNL_UpdateJpgHeader(void)
+{
+	uint8_t *pJpgHeader, i;
+	uint8_t ubJpgHeader1[25] = {
+		0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x02, 0xd0, 0x05, 0x00, 0x03, 0x01, 0x22, 0x00, 0x02, 
+		0x11, 0x01, 0x03, 0x11, 0x01, 0xFF, 0xEF, 0x01, 0xB1
+	};
+	uint8_t ubJpgHeader2[568] = {
+		0xFF, 0xDB, 0x00, 0x84, 0x00, 0x0B, 0x07, 0x07,
+		0x0B, 0x07, 0x07, 0x0B, 0x0B, 0x0B, 0x0B, 0x0E, 0x0B, 0x0B, 0x0E, 0x12, 0x1D, 0x12, 0x12, 0x0E, 
+		0x0E, 0x12, 0x24, 0x19, 0x19, 0x15, 0x1D, 0x2B, 0x24, 0x2B, 0x2B, 0x27, 0x24, 0x27, 0x27, 0x2F, 
+		0x32, 0x40, 0x39, 0x2F, 0x32, 0x3D, 0x32, 0x27, 0x27, 0x39, 0x4F, 0x39, 0x3D, 0x44, 0x48, 0x4B, 
+		0x4B, 0x4B, 0x2B, 0x36, 0x52, 0x56, 0x4F, 0x48, 0x56, 0x40, 0x48, 0x4B, 0x48, 0x01, 0x0B, 0x0E, 
+		0x0E, 0x12, 0x0E, 0x12, 0x20, 0x12, 0x12, 0x20, 0x48, 0x2F, 0x27, 0x2F, 0x48, 0x48, 0x48, 0x48, 
+		0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48,
+		0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48,
+		0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0x48, 0xFF, 0xC4,
+		0x01, 0xA2, 0x00, 0x00, 0x01, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x01,
+		0x00, 0x03, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x10, 0x00, 0x02, 0x01,
+		0x03, 0x03, 0x02, 0x04, 0x03, 0x05, 0x05, 0x04, 0x04, 0x00, 0x00, 0x01, 0x7D, 0x01, 0x02, 0x03,
+		0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14,
+		0x32, 0x81, 0x91, 0xA1, 0x08, 0x23, 0x42, 0xB1, 0xC1, 0x15, 0x52, 0xD1, 0xF0, 0x24, 0x33, 0x62,
+		0x72, 0x82, 0x09, 0x0A, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x34,
+		0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x53, 0x54,
+		0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x73, 0x74,
+		0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x92, 0x93,
+		0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA,
+		0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8,
+		0xC9, 0xCA, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5,
+		0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0x11,
+		0x00, 0x02, 0x01, 0x02, 0x04, 0x04, 0x03, 0x04, 0x07, 0x05, 0x04, 0x04, 0x00, 0x01, 0x02, 0x77,
+		0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71,
+		0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91, 0xA1, 0xB1, 0xC1, 0x09, 0x23, 0x33, 0x52, 0xF0,
+		0x15, 0x62, 0x72, 0xD1, 0x0A, 0x16, 0x24, 0x34, 0xE1, 0x25, 0xF1, 0x17, 0x18, 0x19, 0x1A, 0x26,
+		0x27, 0x28, 0x29, 0x2A, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
+		0x49, 0x4A, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+		0x69, 0x6A, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
+		0x88, 0x89, 0x8A, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0xA2, 0xA3, 0xA4, 0xA5,
+		0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xC2, 0xC3,
+		0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA,
+		0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8,
+		0xF9, 0xFA, 0xFF, 0xDA, 0x00, 0x0C, 0x03, 0x01, 0x00, 0x02, 0x11, 0x03, 0x11, 0x00, 0x3F, 0x00
+	};
+	for(i = 0; i < (1 << ubKNL_GetOpMode()); i++)
+	{
+		pJpgHeader = (uint8_t *)ulBUF_GetBlkBufAddr(i, BUF_JPG_BS);
+		memset(pJpgHeader, 0, 1024);
+		memcpy(pJpgHeader, ubJpgHeader1, sizeof(ubJpgHeader1));
+		memcpy(&pJpgHeader[456], ubJpgHeader2, sizeof(ubJpgHeader2));
+	}
+}
+
+//------------------------------------------------------------------------------
 static void KNL_JpegMonitThread(void const *argument)
 {		
 	KNL_PROCESS tJpegMonitProc;		
@@ -7606,6 +7748,22 @@ static void KNL_JpegMonitThread(void const *argument)
 		
 		//(2)Release JPEG Codec
 		osSemaphoreRelease(JPEG_CodecSem);
+
+		//PhotoGraph
+		#if KNL_PHOTOGRAPH_FUNC_ENABLE
+		switch(tKNL_GetRecordFunc())
+		{
+			case KNL_PHOTO_CAPTURE:
+				KNL_PhotoCaptureFinFunc(ubInfo_PreNode, ubInfo_PreSrc, ulInfo_Size);
+				ubInfo_PreNode = KNL_NODE_NONE;
+				continue;
+			case KNL_PHOTO_PLAY:
+				KNL_PhotoPlayFinFunc();
+				break;
+			default:
+				break;
+		}
+		#endif
 
 		/*
 		printd(DBG_Debug3Lvl, "JPEG_Action:%d\r\n",ubInfo_Action);
@@ -7831,8 +7989,7 @@ static void KNL_SysMonitThread(void const *argument)
 				ubSysPowerDectFlag = TRUE;
 				ubSysLoopNum = 5;
 			}
-			tSysMaxRole = (tKNL_Info.ubOpMode == KNL_OPMODE_VBM_4T)?KNL_STA4:
-					      (tKNL_Info.ubOpMode == KNL_OPMODE_VBM_2T)?KNL_STA2:KNL_STA1;
+			tSysMaxRole = 1 << ubKNL_GetOpMode();
 			BB_SetTxPwr(0, 0x37);
 			for(tKNL_Role = KNL_STA1; tKNL_Role <= tSysMaxRole; tKNL_Role++)
 			{
@@ -8141,7 +8298,16 @@ void KNL_ImgMonitorFunc(struct IMG_RESULT ReceiveResult)
 		ubNextNode = ubKNL_GetNextNode(ubSrcNum,KNL_NODE_H264_DEC);
 		if(ubKNL_ChkVdoFlowAct(ubSrcNum))
 		{
-			if(ubNextNode == KNL_NODE_LCD)
+			tNodeInfo = tKNL_GetNodeInfo(ubSrcNum, KNL_NODE_H264_DEC);
+			if(KNL_PHOTO_CAPTURE == tKNL_GetRecordFunc())
+			{			
+				ubKNL_JpegPreNode = KNL_NODE_H264_DEC;
+				ubKNL_JpegSrc 	  = ubSrcNum;
+				ubKNL_JPEGEncode(tNodeInfo.uwVdoH, tNodeInfo.uwVdoV, ReceiveResult.H264Result->YuvAddr,
+								 (ulBUF_GetBlkBufAddr((ubKNL_SrcNumMap(ubSrcNum)), BUF_JPG_BS) + KNL_JPG_HEADER_SIZE));
+				return;
+			}
+			else if((KNL_PHOTO_PLAY != tKNL_GetRecordFunc()) && (ubNextNode == KNL_NODE_LCD))
 			{
 				KNL_ActiveLcdDispBuf(ubSrcNum);
 			}
@@ -8837,7 +9003,8 @@ void KNL_VdoStop(uint8_t ubSrcNum)
 			tKNL_NodeState[ubSrcNum][i] = KNL_NODE_STOP;
 		}
 #if OP_AP
-		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
+		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) ||
+		   ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
 		{
 			KNL_SRC tAdoSrcNum;
 
@@ -9022,41 +9189,17 @@ uint8_t ubKNL_ChkSenStateChangeDone(void)
 //------------------------------------------------------------------------------
 void KNL_SDUpgradeFwFunc(void)
 {
-	KNL_SRC tKNL_SrcNum;
-	typedef	void (*pvVAExecFunc)(uint8_t);
-	pvVAExecFunc pAdoExecFunc[] = {KNL_AdoStop, KNL_AdoStart};
-	pvVAExecFunc pVdoExecFunc[] = {KNL_VdoStop, KNL_VdoStart};
-	uint8_t ubExecIdx = 0;
+	FWU_UpgResult_t tFwuUpgRet;
 
-	for(ubExecIdx = 0; ubExecIdx < 2; ubExecIdx++)
+	KNL_Stop();
+	tFwuUpgRet = FWU_SdUpgradeStart(ulBUF_GetFreeAddr());
+	printd(DBG_CriticalLvl, "\r\nFW Upgrade %s\r\n", (FWU_UPG_SUCCESS == tFwuUpgRet)?"Success":"Fail !");
+	if(FWU_UPG_FAIL == tFwuUpgRet)
 	{
-		for(tKNL_SrcNum = KNL_SRC_1_MAIN; tKNL_SrcNum <= KNL_SRC_4_MAIN; tKNL_SrcNum++)
-		{
-			pAdoExecFunc[ubExecIdx](tKNL_SrcNum);
-			pVdoExecFunc[ubExecIdx](tKNL_SrcNum);
-		}
-		for(tKNL_SrcNum = KNL_SRC_1_SUB; tKNL_SrcNum <= KNL_SRC_4_SUB; tKNL_SrcNum++)
-		{
-			pAdoExecFunc[ubExecIdx](tKNL_SrcNum);
-			pVdoExecFunc[ubExecIdx](tKNL_SrcNum);
-		}
-		for(tKNL_SrcNum = KNL_SRC_1_AUX; tKNL_SrcNum <= KNL_SRC_4_AUX; tKNL_SrcNum++)
-		{
-			pAdoExecFunc[ubExecIdx](tKNL_SrcNum);
-			pVdoExecFunc[ubExecIdx](tKNL_SrcNum);
-		}
-		if(!ubExecIdx)
-		{
-			if(FWU_SdUpgradeStart(ulBUF_GetFreeAddr()))
-			{
-				printd(DBG_CriticalLvl, "FW Upgrade Success ...\n");
-				WDT_RST_Enable(WDT_CLK_EXTCLK, 0);
-				while(1);
-			}
-			else
-				printd(DBG_ErrorLvl, "FW Upgrade Fail !!!\n");
-		}
+		KNL_ReStart();
+		return;
 	}
+	SYS_Reboot();
 }
 //------------------------------------------------------------------------------
 uint8_t ubKNL_JPEGEncode(uint16_t uwH, uint16_t uwV, uint32_t ulVdoAddr, uint32_t ulJpgAddr)
@@ -9066,7 +9209,7 @@ uint8_t ubKNL_JPEGEncode(uint16_t uwH, uint16_t uwV, uint32_t ulVdoAddr, uint32_
 	JPEG_CODEC_FN_ES_t	tJpgCodecFnEs;
 
 	tJpgFiFo.ulJpeg_Buf_Start	= ulJpgAddr;
-	tJpgFiFo.ulJpeg_Buf_End		= ulJpgAddr + JPEG_MAX_BS_SZ;
+	tJpgFiFo.ulJpeg_Buf_End		= ulJpgAddr + KNL_JPG_BS_SIZE;
 	JPEG_Ring_FIFO_Setup(tJpgFiFo);
 
 	JPEG_Set_Start_Address(ulVdoAddr,ulJpgAddr);
@@ -9106,7 +9249,7 @@ uint8_t ubKNL_JPEGDecode(KNL_NODE_INFO *pKNL_NodeInfo, uint16_t uwH, uint16_t uw
 	JPEG_CODEC_FN_ES_t	tJpgCodecFnEs;
 
 	tJpgFiFo.ulJpeg_Buf_Start		= ulJpgAddr;
-	tJpgFiFo.ulJpeg_Buf_End			= ulJpgAddr + JPEG_MAX_BS_SZ;
+	tJpgFiFo.ulJpeg_Buf_End			= ulJpgAddr + KNL_JPG_BS_SIZE;
 	JPEG_Ring_FIFO_Setup(tJpgFiFo);	
 
 	JPEG_Set_Start_Address(ulVdoAddr,ulJpgAddr);
@@ -9117,8 +9260,8 @@ uint8_t ubKNL_JPEGDecode(KNL_NODE_INFO *pKNL_NodeInfo, uint16_t uwH, uint16_t uw
 	tJpgDecInfo.uwQP				= ubKNL_GetJpegQp();
 	tJpgDecInfo.ubJPG_Fmt 			= JPEG_YUV420;
 	tJpgDecInfo.ubJPG_ScaleMode		= 0;
-	tJpgDecInfo.ubJPG_Mirror		= (pKNL_NodeInfo->ubHMirror == 1)?JPEG_H_MIRROR:(pKNL_NodeInfo->ubVMirror == 1)?JPEG_V_MIRROR:JPEG_MIRROR_DISABLE;
-	tJpgDecInfo.ubJPG_Rotate		= (pKNL_NodeInfo->ubRotate == 1)?JPEG_ROT_90Deg:JPEG_ROT_DISABLE;
+	tJpgDecInfo.ubJPG_Mirror		= (pKNL_NodeInfo->ubHMirror)?JPEG_H_MIRROR:(pKNL_NodeInfo->ubVMirror)?JPEG_V_MIRROR:JPEG_MIRROR_DISABLE;
+	tJpgDecInfo.ubJPG_Rotate		= (pKNL_NodeInfo->ubRotate)?JPEG_ROT_90Deg:JPEG_ROT_DISABLE;
 
 	tJpgCodecFnEs.tEM				= JPEG_QUEUE;
 	tJpgCodecFnEs.pvEvent			= &KNL_QueueJpegMonit;
@@ -9248,6 +9391,447 @@ KNL_TuningMode_t KNL_GetTuningToolMode(void)
 	tKNL_TuningMode = KNL_TUNINGMODE_OFF;
 #endif
 	return tKNL_TuningMode;
+}
+//------------------------------------------------------------------------------
+KNL_Status_t tKNL_ChkSdCardSts(void)
+{
+	KNL_Status_t tSdCardSts = KNL_ErrorNoCard;
+#if KNL_SD_FUNC_ENABLE
+	uint8_t ubFsTimeout = 30;
+
+	if(!ubSD_ChkCardIn(tSD_GetDevIF()))
+		return KNL_ErrorNoCard;
+
+	while(FS_SD_NOT_RDY == FS_ChkSdRdy())
+	{
+		osDelay(100);
+		if(!--ubFsTimeout)
+		{
+			printd(DBG_ErrorLvl, "SD Card not ready !\n");
+			return KNL_ErrorTimeout;
+		}
+	}
+	tSdCardSts = KNL_OK;
+#endif
+	return tSdCardSts;
+}
+//------------------------------------------------------------------------------
+uint32_t ulKNL_GetResvDecAddr(void)
+{
+	uint32_t ulDecAddr = 0;
+
+#if KNL_LCD_FUNC_ENABLE
+	KNL_DISP_TYPE tDispType;
+
+	tDispType = tKNL_GetDispType();
+	switch(ubKNL_GetOpMode())
+	{
+		case KNL_OPMODE_VBM_4T:
+		{
+			LCD_CH_TYP tLcdCh;
+
+			tLcdCh    = (KNL_DISP_SINGLE == tDispType)?LCD_CH0:(KNL_DISP_QUAD == tDispType)?LCD_CH2:LCD_CH1;
+			ulDecAddr = (LCD_CH0 == tLcdCh)?ulBUF_GetBlkBufAddr(0, BUF_RESV_YUV):pLCD_GetLcdChBufInfor(tLcdCh)->ulBufAddr;
+			break;
+		}
+		case KNL_OPMODE_VBM_2T:
+			if(KNL_DISP_SINGLE != tDispType)
+			{
+				ulDecAddr = pLCD_GetLcdChBufInfor(LCD_CH1)->ulBufAddr;
+				break;
+			}
+		default:
+			ulDecAddr = ulBUF_GetBlkBufAddr(0, BUF_RESV_YUV);
+			break;
+	}
+#endif
+	return ulDecAddr;
+}
+//------------------------------------------------------------------------------
+uint8_t ubKNL_SearchCapSrcNum(uint8_t ubSrcNum)
+{
+#if KNL_PHOTOGRAPH_FUNC_ENABLE
+	uint8_t i;
+
+	for(i = 0; i < (1 << ubKNL_GetOpMode()); i++)
+	{
+		if(tKNL_RecordAct.ubPhotoCapSrc[i] == ubSrcNum)
+		{
+			KNL_SetRecordFunc(KNL_PHOTO_CAPTURE);
+			return TRUE;
+		}
+	}
+#endif
+	return FALSE;
+}
+//------------------------------------------------------------------------------
+uint8_t ubKNL_UpdateCapSrcNumFin(uint8_t ubSrcNum)
+{
+	uint8_t ubRet = TRUE;
+#if KNL_PHOTOGRAPH_FUNC_ENABLE
+	uint8_t i;
+
+	for(i = 0; i < (1 << ubKNL_GetOpMode()); i++)
+	{
+		if(tKNL_RecordAct.ubPhotoCapSrc[i] == ubSrcNum)
+			tKNL_RecordAct.ubPhotoCapSrc[i] = KNL_SRC_NONE;
+		else if(tKNL_RecordAct.ubPhotoCapSrc[i] != KNL_SRC_NONE)
+			ubRet = FALSE;
+	}
+#endif
+	return ubRet;
+}
+//------------------------------------------------------------------------------
+#if KNL_PHOTOGRAPH_FUNC_ENABLE
+void KNL_WriteCaptureFile(uint8_t ubSrcNum, uint32_t ulCapSize)
+{
+	FS_KNL_CRE_PROCESS_t tKNL_FsProc;
+	FS_Q_CREATE_STATUS tKNL_CreateFileHd;
+	FS_KNL_HIDDEN_PROCESS_t tKNL_JpgHidInfo;
+	FS_CRE_TIME_INFO_t tKNL_JpgCreTimeInfo;
+	uint8_t ubFsTimeout = 50;
+
+	tKNL_FsProc.SrcNum      	  = (FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0);
+	tKNL_FsProc.ubRecGroupFileNum = 1;
+	tKNL_FsProc.ubFileNameLen 	  = 8;
+	FS_GetLatestFileName(&cKNL_LatestFileName[0]);
+	FS_FileNameHandle(&tKNL_FsProc.chFileName[0], cKNL_LatestFileName, tKNL_FsProc.ubFileNameLen);
+	memcpy(cKNL_LatestFileName, &tKNL_FsProc.chFileName[0], tKNL_FsProc.ubFileNameLen);
+	memcpy(&tKNL_FsProc.chFileExtName[0], "JPG", 3);
+	tKNL_FsProc.uwGroupIdx = tKNL_RecordAct.uwRecordGroupIdx;
+	printd(DBG_CriticalLvl, "	Photo[%d][Gp:%d]:[%s].JPG\n", ubSrcNum, tKNL_FsProc.uwGroupIdx, cKNL_LatestFileName);
+	tKNL_FsProc.FileAttr = FILE_ATTR_READ_ONLY;
+	tKNL_FsProc.FilePath = FILE_PATH_DEFAULT;
+	tKNL_CreateFileHd = FS_CreateFile(tKNL_FsProc);
+	if(tKNL_CreateFileHd != Q_CREATE_OK)
+		printd(DBG_ErrorLvl, "\n\r=== ERROR_Create File:%d ERROR ===\n\r", tKNL_CreateFileHd);
+	while(FS_ChkCreateStatus((FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0)) != FS_REC_CREATE_OK)
+	{
+		osDelay(20);
+		if(!--ubFsTimeout)
+		{
+			printd(DBG_ErrorLvl, "Create File Err !!\n");
+			return;
+		}
+	}
+	FS_WriteFile((FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0), ulBUF_GetBlkBufAddr(ubKNL_SrcNumMap(ubSrcNum), BUF_JPG_BS), (ulCapSize + KNL_JPG_HEADER_SIZE));
+	FS_CloseFile((FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0));
+	ubFsTimeout = 50;
+	while(FS_ChkCloseStatus((FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0)) != FS_REC_CLOSED_OK)
+	{
+		osDelay(20);
+		if(!--ubFsTimeout)
+		{
+			printd(DBG_ErrorLvl, "Close File Err !!\n");
+			return;
+		}
+	}
+	tKNL_JpgHidInfo.SrcNum = (FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0);
+	tKNL_JpgHidInfo.ubFileNameLen = 8;
+	memcpy(&tKNL_JpgHidInfo.chFileName, &tKNL_FsProc.chFileName[0] , tKNL_JpgHidInfo.ubFileNameLen);
+	memcpy(&tKNL_JpgHidInfo.chFileExtName[0], "JPG", 3);
+	tKNL_JpgHidInfo.ubEvent = 0;
+	tKNL_JpgHidInfo.uwGroupIdx = tKNL_RecordAct.uwRecordGroupIdx;
+	tKNL_JpgCreTimeInfo = FS_GetCreateTimeInfo((FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0));
+	tKNL_JpgHidInfo.uwDateInfo = tKNL_JpgCreTimeInfo.uwDateInfo;
+	tKNL_JpgHidInfo.uwTimeInfo = tKNL_JpgCreTimeInfo.uwTimeInfo;
+	tKNL_JpgHidInfo.ubSecondOfs = tKNL_JpgCreTimeInfo.ubSecondOfs;
+	tKNL_JpgHidInfo.ullFileSize = (ulCapSize + KNL_JPG_HEADER_SIZE);
+	FS_UpdateHiddenInfo(tKNL_JpgHidInfo);
+	ubFsTimeout = 50;
+	while(FS_ChkUpdateHiddenInfoStatus((FS_SRC_NUM)(ubSrcNum+FS_JPG_SRC_0)) != FS_UPDATE_HIDDEN_INFO_OK)
+	{
+		osDelay(20);
+		if(!--ubFsTimeout)
+		{
+			printd(DBG_ErrorLvl, "Update File Err !!\n");
+			return;
+		}
+	}
+}
+//------------------------------------------------------------------------------
+KNL_Status_t tKNL_ReadCaptureFile(KNL_RecordAct_t *pPhotoInfo)
+{
+	uint32_t ulJpgAddr  = 0, ulJpgSize = 0;
+	uint8_t ubFsTimeout = 20;
+
+    strncpy(&pPhotoInfo->tPhotoPlayInfo.chFileExtName[0], "JPG", 3);
+    pPhotoInfo->tPhotoPlayInfo.SrcNum = pPhotoInfo->tPhotoPlayInfo.SrcNum;
+    pPhotoInfo->tPhotoPlayInfo.FilePath = FILE_PATH_DEFAULT;
+    if(FS_OpenFile(pPhotoInfo->tPhotoPlayInfo) == Q_OPEN_OK)
+    {
+		while(FS_ChkOpenStatus(pPhotoInfo->tPhotoPlayInfo.SrcNum) != FS_PLY_OPEN_OK)
+		{
+			osDelay(100);
+			if(!--ubFsTimeout)
+			{
+				printd(DBG_ErrorLvl, "Open JPG file Fail !!\n");
+				return KNL_ErrorTimeout;
+			}
+		}
+    }
+	ubFsTimeout = 30;
+	ulJpgAddr = ulBUF_GetBlkBufAddr(0, BUF_JPG_BS);
+	ulJpgSize = ullFS_GetOpenFileSize(pPhotoInfo->tPhotoPlayInfo.SrcNum);
+    if(FS_ReadFile(ulJpgAddr, pPhotoInfo->tPhotoPlayInfo.SrcNum, 0, ulJpgSize) == Q_READ_OK)
+    {
+		while(FS_ChkReadStatus(pPhotoInfo->tPhotoPlayInfo.SrcNum) != FS_PLY_READ_OK)
+		{
+			osDelay(100);
+			if(!--ubFsTimeout)
+			{
+				printd(DBG_ErrorLvl, "Read JPG file Fail !!\n");
+				return KNL_ErrorTimeout;
+			}
+		}
+    }
+	osDelay(20);
+	return KNL_OK;
+}
+//------------------------------------------------------------------------------
+void KNL_PhotoCaptureFinFunc(uint8_t ubCapNode, uint8_t ubCapSrc, uint32_t ulCapSize)
+{
+	KNL_NODE_INFO tNodeInfo;
+	uint8_t *pJpgHeader, ubCapFlag;
+
+	tNodeInfo 		= tKNL_GetNodeInfo(ubCapSrc, ubCapNode);
+	pJpgHeader 		= (uint8_t *)ulBUF_GetBlkBufAddr(ubKNL_SrcNumMap(ubCapSrc), BUF_JPG_BS);
+	pJpgHeader[7]   = (uint8_t)((tNodeInfo.uwVdoV >> 8) & 0xFF);
+	pJpgHeader[8]   = (tNodeInfo.uwVdoV & 0xFF);
+	pJpgHeader[9]   = (uint8_t)((tNodeInfo.uwVdoH >> 8) & 0xFF);
+	pJpgHeader[10]  = (tNodeInfo.uwVdoH & 0xFF);
+	KNL_SetRecordFunc(KNL_RECORDFUNC_DISABLE);
+	ubCapFlag = ubKNL_UpdateCapSrcNumFin(ubCapSrc);
+	if(KNL_NODE_H264_DEC == ubCapNode)
+	{
+		osSemaphoreRelease(tKNL_ImgSem);
+		ubKNL_ImgRdy = 1;
+	}
+	KNL_WriteCaptureFile(ubCapSrc, ulCapSize);
+	if(TRUE == ubCapFlag)
+		osSignalSet(osKNL_RecordThreadId, osKNL_CapFinSignal);
+}
+//------------------------------------------------------------------------------
+void KNL_PhotoCaptureFunc(void)
+{
+	osEvent osKNL_PhotoGraphFinSig;
+	KNL_Status_t tKNL_PhotoSts;
+	uint8_t ubCapSrcNum, i;
+
+	for(i = 0; i < (1 << ubKNL_GetOpMode()); i++)
+		tKNL_RecordAct.ubPhotoCapSrc[i] = KNL_SRC_NONE;
+	tKNL_RecordAct.uwRecordGroupIdx = uwFS_GetLatestGroupIdx(FS_JPG_SRC_0) + 1;
+	ubCapSrcNum = (TRUE == KNL_SwDispInfo.ubSetupFlag)?KNL_SwDispInfo.tSrcNum[0]:ubKNL_GetDispSrc(KNL_DISP_LOCATION1);
+	tKNL_RecordAct.ubPhotoCapSrc[0] = ((KNL_SRC_NONE != ubCapSrcNum) && (BB_LINK == ubKNL_GetCommLinkStatus(ubKNL_SrcNumMap(ubCapSrcNum))))?ubCapSrcNum:KNL_SRC_NONE;
+	ubCapSrcNum = (TRUE == KNL_SwDispInfo.ubSetupFlag)?KNL_SwDispInfo.tSrcNum[1]:ubKNL_GetDispSrc(KNL_DISP_LOCATION2);
+	tKNL_RecordAct.ubPhotoCapSrc[1] = ((KNL_SRC_NONE != ubCapSrcNum) && (BB_LINK == ubKNL_GetCommLinkStatus(ubKNL_SrcNumMap(ubCapSrcNum))))?ubCapSrcNum:KNL_SRC_NONE;
+	switch(tKNL_GetDispType())
+	{
+		case KNL_DISP_QUAD:
+			ubCapSrcNum = ubKNL_GetDispSrc(KNL_DISP_LOCATION3);
+			tKNL_RecordAct.ubPhotoCapSrc[2] = ((KNL_SRC_NONE != ubCapSrcNum) && (BB_LINK == ubKNL_GetCommLinkStatus(ubKNL_SrcNumMap(ubCapSrcNum))))?ubCapSrcNum:KNL_SRC_NONE;
+			ubCapSrcNum = ubKNL_GetDispSrc(KNL_DISP_LOCATION4);
+			tKNL_RecordAct.ubPhotoCapSrc[3] = ((KNL_SRC_NONE != ubCapSrcNum) && (BB_LINK == ubKNL_GetCommLinkStatus(ubKNL_SrcNumMap(ubCapSrcNum))))?ubCapSrcNum:KNL_SRC_NONE;
+			break;
+		case KNL_DISP_SINGLE:
+			tKNL_RecordAct.ubPhotoCapSrc[1] = KNL_SRC_NONE;
+			break;
+		default:
+			break;
+	}
+	osKNL_PhotoGraphFinSig = osSignalWait(osKNL_CapFinSignal, 2000);
+	tKNL_PhotoSts = ((osKNL_PhotoGraphFinSig.status == osEventSignal) &&
+					 (osKNL_PhotoGraphFinSig.value.signals == osKNL_CapFinSignal))?KNL_OK:KNL_ErrorTimeout;
+	if(KNL_OK != tKNL_PhotoSts)
+	{
+		if(ubKNL_ExistNode(tKNL_RecordAct.ubPhotoCapSrc[0], KNL_NODE_H264_DEC))
+		{
+			osSemaphoreRelease(tKNL_ImgSem);
+			ubKNL_ImgRdy = 1;
+		}
+		JPEG_Codec_Disable();
+		osSemaphoreRelease(JPEG_CodecSem);
+		KNL_SetRecordFunc(KNL_RECORDFUNC_DISABLE);
+	}
+	else
+		FS_ResetSortingResult();
+	if(tKNL_RecordAct.pRecordStsNtyCb)
+		tKNL_RecordAct.pRecordStsNtyCb(tKNL_PhotoSts);
+}
+//------------------------------------------------------------------------------
+uint32_t ulKNL_PhotoLcdDisplaySetup(uint16_t uwPhotoHSize, uint16_t uwPhotoVSize)
+{
+	LCD_INFOR_TYP tLcdParam;
+	LCD_CALBUF_TYP	tLcdBufCalInfo;
+
+	if(LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
+		tLCD_JpegDecodeDisable();
+	KNL_ResetLcdChannel();
+	tLcdBufCalInfo.ubChMax = 1;
+	tLcdBufCalInfo.tInput[0].bJpegEn = FALSE;
+	tLcdBufCalInfo.tInput[0].uwHSize = uwLCD_GetLcdHoSize();
+	tLcdBufCalInfo.tInput[0].uwVSize = uwLCD_GetLcdVoSize();
+	tLcdBufCalInfo.tAlign = LCD_BUF_1024BYTES_ALIG;
+	ulLCD_CalLcdBufSize(&tLcdBufCalInfo);
+	LCD_SetLcdBufAddr(ulBUF_GetBlkBufAddr(0, BUF_LCD_IP));
+	tLcdParam.tDispType = LCD_DISP_1T;
+	tLcdParam.ubChNum = 1;
+	tLcdParam.tChRes[0].uwCropHstart = 0;
+	tLcdParam.tChRes[0].uwCropVstart = 0;
+	tLcdParam.uwLcdOutputHsize = uwLCD_GetLcdHoSize();
+	tLcdParam.uwLcdOutputVsize = uwLCD_GetLcdVoSize();
+	tLcdParam.tChRes[0].uwChInputHsize = (tKNL_GetDispRotate() == KNL_DISP_ROTATE_0)?uwPhotoHSize:uwPhotoVSize;
+	tLcdParam.tChRes[0].uwChInputVsize = (tKNL_GetDispRotate() == KNL_DISP_ROTATE_0)?uwPhotoVSize:uwPhotoHSize;
+	tLcdParam.tChRes[0].uwCropHsize = tLcdParam.tChRes[0].uwChInputHsize;
+	tLcdParam.tChRes[0].uwCropVsize = tLcdParam.tChRes[0].uwChInputVsize;
+	tLCD_CropScale(&tLcdParam);
+	pKNL_LcdPlayBuf = pLCD_GetLcdChBufInfor(LCD_CH0);
+
+	return pKNL_LcdPlayBuf->ulBufAddr;
+}
+//------------------------------------------------------------------------------
+void KNL_PhotoLcdDisplayOn(void)
+{
+	LCD_SetChBufReady(pKNL_LcdPlayBuf);
+	LCD_ChEnable(LCD_CH0);
+}
+//------------------------------------------------------------------------------
+void KNL_PhotoLcdDisplayOFF(void)
+{
+	ulKNL_CalLcdBufSz();
+	ubKNL_LcdDispParamActiveFlg = 1;
+	KNL_ResetLcdChannel();
+}
+//------------------------------------------------------------------------------
+void KNL_PhotoPlayFinFunc(void)
+{
+	osSignalSet(osKNL_RecordThreadId, osKNL_PhotoPlyFinSignal);
+}
+//------------------------------------------------------------------------------
+void KNL_PhotoPlayFunc(KNL_RecordAct_t *pPhotoInfo)
+{
+	osEvent osKNL_PhotoGraphFinSig;
+	KNL_Status_t tKNL_PhotoSts;
+	KNL_NODE_INFO tPhotoPlayNodeInfo;
+	uint32_t ulVdoYuvAddr = 0, ulJpgBsAddr = 0;
+	uint16_t uwJpgHSize = 0, uwJpgVSize = 0;
+	uint8_t *pJpgAddr;
+
+	KNL_SetRecordFunc(KNL_PHOTO_PLAY);
+	while(!ubKNL_ImgRdy)
+		osDelay(10);
+	if(KNL_OK != tKNL_ReadCaptureFile(pPhotoInfo))
+		goto PHOTOPLAY_ERR;
+	osDelay(100);
+	pJpgAddr   = (uint8_t *)ulBUF_GetBlkBufAddr(0, BUF_JPG_BS);
+	uwJpgVSize = (pJpgAddr[7] << 8) + pJpgAddr[8];
+	uwJpgHSize = (pJpgAddr[9] << 8) + pJpgAddr[10];
+	memset(&tPhotoPlayNodeInfo, 0, sizeof(KNL_NODE_INFO));
+	tPhotoPlayNodeInfo.ubVMirror = (tKNL_GetDispRotate() == KNL_DISP_ROTATE_90)?JPEG_V_MIRROR:JPEG_MIRROR_DISABLE;
+	ulVdoYuvAddr = ulKNL_PhotoLcdDisplaySetup(uwJpgHSize, uwJpgVSize);
+	ulJpgBsAddr  = ulBUF_GetBlkBufAddr(0, BUF_JPG_BS) + KNL_JPG_HEADER_SIZE;
+	ubKNL_JPEGDecode(&tPhotoPlayNodeInfo, uwJpgHSize, uwJpgVSize, ulVdoYuvAddr, ulJpgBsAddr);
+	osKNL_PhotoGraphFinSig = osSignalWait(osKNL_PhotoPlyFinSignal, 1000);
+	tKNL_PhotoSts = ((osKNL_PhotoGraphFinSig.status == osEventSignal) &&
+					 (osKNL_PhotoGraphFinSig.value.signals == osKNL_PhotoPlyFinSignal))?KNL_OK:KNL_ErrorTimeout;
+	if(KNL_OK != tKNL_PhotoSts)
+		goto PHOTOPLAY_ERR;
+	if(KNL_DISP_ROTATE_90 == tKNL_GetDispRotate())
+	{
+		ubKNL_JPEGEncode(uwJpgHSize, uwJpgVSize, ulVdoYuvAddr, ulJpgBsAddr);
+		osKNL_PhotoGraphFinSig = osSignalWait(osKNL_PhotoPlyFinSignal, 1000);
+		tKNL_PhotoSts = ((osKNL_PhotoGraphFinSig.status == osEventSignal) &&
+						 (osKNL_PhotoGraphFinSig.value.signals == osKNL_PhotoPlyFinSignal))?KNL_OK:KNL_ErrorTimeout;
+		if(KNL_OK != tKNL_PhotoSts)
+			goto PHOTOPLAY_ERR;
+		tPhotoPlayNodeInfo.ubHMirror = JPEG_H_MIRROR;
+		tPhotoPlayNodeInfo.ubRotate  = JPEG_ROT_90Deg;
+		ubKNL_JPEGDecode(&tPhotoPlayNodeInfo, uwJpgHSize, uwJpgVSize, ulVdoYuvAddr, ulJpgBsAddr);
+		osKNL_PhotoGraphFinSig = osSignalWait(osKNL_PhotoPlyFinSignal, 1000);
+		tKNL_PhotoSts = ((osKNL_PhotoGraphFinSig.status == osEventSignal) &&
+						 (osKNL_PhotoGraphFinSig.value.signals == osKNL_PhotoPlyFinSignal))?KNL_OK:KNL_ErrorTimeout;
+		if(KNL_OK != tKNL_PhotoSts)
+			goto PHOTOPLAY_ERR;
+	}
+	KNL_PhotoLcdDisplayOn();
+	if(tKNL_RecordAct.pRecordStsNtyCb)
+		tKNL_RecordAct.pRecordStsNtyCb(KNL_OK);
+	return;
+PHOTOPLAY_ERR:
+	KNL_SetRecordFunc(KNL_RECORDFUNC_DISABLE);
+	if(tKNL_RecordAct.pRecordStsNtyCb)
+		tKNL_RecordAct.pRecordStsNtyCb(KNL_ErrorTimeout);
+}
+#endif
+//------------------------------------------------------------------------------
+void KNL_SetRecordFunc(KNL_RecordFunc_t tRecordFunc)
+{
+#if (KNL_PHOTOGRAPH_FUNC_ENABLE || KNL_REC_FUNC_ENABLE)
+	osMutexWait(osKNL_RecordFuncMutex, osWaitForever);
+	if(KNL_PHOTO_PLAY == tKNL_RecordAct.tRecordFunc)
+		KNL_PhotoLcdDisplayOFF();
+	tKNL_RecordAct.tRecordFunc = tRecordFunc;
+	osMutexRelease(osKNL_RecordFuncMutex);
+#endif
+}
+//------------------------------------------------------------------------------
+KNL_RecordFunc_t tKNL_GetRecordFunc(void)
+{
+	KNL_RecordFunc_t tRecordFunc = KNL_RECORDFUNC_DISABLE;
+
+#if (KNL_PHOTOGRAPH_FUNC_ENABLE || KNL_REC_FUNC_ENABLE)
+	osMutexWait(osKNL_RecordFuncMutex, osWaitForever);
+	tRecordFunc = tKNL_RecordAct.tRecordFunc;
+	osMutexRelease(osKNL_RecordFuncMutex);
+#endif
+	return tRecordFunc;
+}
+//------------------------------------------------------------------------------
+#if (KNL_PHOTOGRAPH_FUNC_ENABLE || KNL_REC_FUNC_ENABLE)
+static void KNL_RecordThread(void const *argument)
+{
+	KNL_RecordAct_t tKNL_RecordEvt;
+	KNL_Status_t tKNL_RecordSts;
+
+	tKNL_RecordEvt.tRecordFunc = KNL_RECORDFUNC_DISABLE;
+	while(1)
+	{
+		osMessageGet(osKNL_RecordMsgQue, &tKNL_RecordEvt, osWaitForever);
+		if(KNL_RECORDFUNC_DISABLE == tKNL_RecordEvt.tRecordFunc)
+		{
+			KNL_SetRecordFunc(KNL_RECORDFUNC_DISABLE);
+			continue;
+		}
+		tKNL_RecordAct.pRecordStsNtyCb = tKNL_RecordEvt.pRecordStsNtyCb;
+		tKNL_RecordSts = tKNL_ChkSdCardSts();
+		if(KNL_OK != tKNL_RecordSts)
+		{
+			if(tKNL_RecordAct.pRecordStsNtyCb)
+				tKNL_RecordAct.pRecordStsNtyCb(tKNL_RecordSts);
+			continue;
+		}
+	#if KNL_PHOTOGRAPH_FUNC_ENABLE
+		switch(tKNL_RecordEvt.tRecordFunc)
+		{
+			case KNL_PHOTO_CAPTURE:
+				KNL_PhotoCaptureFunc();
+				break;
+			case KNL_PHOTO_PLAY:
+				KNL_PhotoPlayFunc(&tKNL_RecordEvt);
+				break;
+			default:
+				break;
+		}
+	#endif
+		tKNL_RecordEvt.tRecordFunc = KNL_RECORDFUNC_DISABLE;
+	}
+}
+#endif
+//------------------------------------------------------------------------------
+void KNL_ExecRecordFunc(KNL_RecordAct_t tRecordAct)
+{
+	if(osKNL_RecordMsgQue)
+		osMessagePut(osKNL_RecordMsgQue, &tRecordAct, 0);
 }
 //------------------------------------------------------------------------------
 

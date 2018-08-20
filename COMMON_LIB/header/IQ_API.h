@@ -11,9 +11,9 @@
 	\file		IQ_API.h
 	\brief		Image quality API function header
 	\author		BoCun
-	\version	0.1
-	\date		2017/03/15
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.0
+	\date		2018/07/17
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _IQ_API_H_
@@ -289,14 +289,6 @@ void IQ_SetEdgeEnhnce(uint8_t ubHGain, uint8_t ubVGain, uint8_t ubThd);
 \return(no)
 */
 void IQ_SetISPRes(void);
-//------------------------------------------------------------------------
-/*!
-\brief Set mirror/flip.
-\param ubMirrorEn 	mirror switch.
-\param ubFlipEn 		flip  switch.
-\return(no)
-*/
-void IQ_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn);
 //------------------------------------------------------------------------
 /*!
 \brief Dynamic IQ SDK.

@@ -56,6 +56,7 @@ typedef enum
 	AKEY_EVENT,
 	GKEY_EVENT,	
 	SCANMODE_EVENT,
+	FWUPG_EVENT,
 	EVENT_NONE,
 }UI_EventType_t;
 
@@ -140,10 +141,13 @@ void UI_Init(osMessageQId *pvMsgQId);
 uint32_t ulUI_BufSetup(uint32_t ulBUF_StartAddr);
 void UI_PlugIn(void);
 osMessageQId *pUI_GetEventQueueHandle(void);
+void UI_StopUpdateThread(void);
+void UI_StartUpdateThread(void);
 void UI_SendMessageToAPP(void *pvMessage);
 //------------------------------------------------------------------------------
 void UI_OnInitDialog(void);
 void UI_StateReset(void);
+void UI_UpdateFwUpgStatus(void *ptUpgStsReport);
 void UI_UpdateAppStatus(void *ptAppStsReport);
 void UI_UpdateStatus(uint16_t *pThreadCnt);
 void UI_EventHandles(UI_Event_t *ptEventPtr);

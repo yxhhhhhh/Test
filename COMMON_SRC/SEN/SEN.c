@@ -8,12 +8,12 @@
     circuits described herein. All application information is advisor and does
     not from part of the specification.
 
-    \file       SEN.c
-    \brief      Sensor relation function
-    \author     BoCun
-    \version    1.6
-    \date       2018-07-06
-    \copyright  Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
+	\file		SEN.c
+	\brief		Sensor relation function
+	\author		BoCun
+	\version	1.9
+	\date		2018-08-09
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
@@ -36,9 +36,9 @@
 
 //------------------------------------------------------------------------------
 #define SEN_MAJORVER    1        //!< Major version = 1
-#define SEN_MINORVER    6        //!< Minor version = 6
+#define SEN_MINORVER    9        //!< Minor version = 9
 //------------------------------------------------------------------------------
-osSemaphoreId   SEM_SEN_VSyncRdy;
+osSemaphoreId 	SEM_SEN_VSyncRdy;
 osMessageQId tSEN_ExtEventQueue;
 static void SEN_DoVsyncThread(void const *argument);
 static pvSEN_CbFunc pSEN_CbFunc = NULL;
@@ -777,9 +777,9 @@ void SEN_ISPInitial(void)
     // open 3DNR frame buffer compression
     ISP_Set3DNR_FBC();
     //NR Day mode
-    SEN_SetIrMode(0); // 1:sensor黑白色
-
-    SEN_SetMirrorFlip(0, 0); // 20180508 翻转 sensor 画面
+    SEN_SetIrMode(0);
+    SEN_SetMirrorFlip(0,0); //20180508 翻转sensor画面   //
+    ISP_DateStampInit();
 }
 
 //------------------------------------------------------------------------------
@@ -875,6 +875,82 @@ void SEN_VsyncInit(void)
 }
 
 //------------------------------------------------------------------------------
+uint8_t ubISP_Osd1[32] = {	
+	12,  12,  12,  12,  12,  12,  12,  12,
+	12,  12,  12,  12,  12,  12,  12,  12,
+	12,  12,  12,  12,  12,  12,  12,  12,
+	12,  12,  12,  12,  12,  12,  12,  12,    
+};
+uint8_t ubISP_Osd2[32] = {	
+	12,  12,  12,  12,  12,  12,  12,  12,
+	12,  12,  12,  12,  12,  12,  12,  12,
+	12,  12,  12,  12,  12,  12,  12,  12,
+	12,  12,  12,  12,  12,  12,  12,  12,    
+};
+void SEN_DisplayOSD(void)
+{
+    static uint32_t ulMaxValue = 0;
+    uint32_t ulAfValueTemp;
+    static uint8_t ubFlg = 0;
+    //Get AF report
+    ulAfValueTemp = SEN->AF_W0_SUM;
+    //Get Max value.
+    if(ulMaxValue < ulAfValueTemp)
+    {
+        ulMaxValue = ulAfValueTemp;
+    }
+    //Over tuning 50%up
+    if(ulMaxValue - ulAfValueTemp > 0.5 *ulMaxValue)
+    {   
+        ubFlg = 1;
+    }
+    //
+    if((ulMaxValue > ulAfValueTemp) && ubFlg)
+    {
+        if((ulMaxValue - ulAfValueTemp > 0.1 * ulMaxValue))
+        {
+            
+            ISP_SetOsdColor(DS_PATH1, 3, 255, 255, 255);
+        }else if((ulMaxValue - ulAfValueTemp < 0.1 * ulMaxValue)){
+            //safe 
+            ISP_SetOsdColor(DS_PATH1, 3, 0, 255, 0);		
+        }
+    }   
+    //
+    ubISP_Osd1[0] = (ulAfValueTemp / 1000000)%10; 
+    ubISP_Osd1[1] = (ulAfValueTemp / 100000)%10;    
+    ubISP_Osd1[2] = (ulAfValueTemp / 10000)%10;
+    ubISP_Osd1[3] = (ulAfValueTemp / 1000)%10;
+    ubISP_Osd1[4] = (ulAfValueTemp / 100)%10;
+    ubISP_Osd1[5] = (ulAfValueTemp / 10)%10;
+    ubISP_Osd1[6] = (ulAfValueTemp / 1)%10;
+    ubISP_Osd1[7] = 12;
+    ubISP_Osd1[8] = (ulMaxValue / 1000000)%10; 
+    ubISP_Osd1[9] = (ulMaxValue / 100000)%10;    
+    ubISP_Osd1[10] = (ulMaxValue / 10000)%10;
+    ubISP_Osd1[11] = (ulMaxValue / 1000)%10;
+    ubISP_Osd1[12] = (ulMaxValue / 100)%10;
+    ubISP_Osd1[13] = (ulMaxValue / 10)%10;
+    ubISP_Osd1[14] = (ulMaxValue / 1)%10;    
+     
+    ISP_OsdLine1Display(DS_PATH1 ,&ubISP_Osd1[0] ,32, 0, 100);
+    ISP_OsdLine2Display(DS_PATH1 ,&ubISP_Osd2[0] ,32, 0, 150);
+}
+
+//------------------------------------------------------------------------------
+void SEN_ClearDisplayOSD(void)
+{
+    uint8_t i;
+    for(i=0; i<32; i++)
+    {
+        ubISP_Osd1[i]=12;
+    }
+
+	ISP_OsdLine1Display(DS_PATH1 ,&ubISP_Osd1[0] ,32, 0, 100);
+    ISP_OsdLine2Display(DS_PATH1 ,&ubISP_Osd2[0] ,32, 0, 150);
+}
+
+//------------------------------------------------------------------------------
 uint8_t ubDropCnt = 0;
 uint8_t ub3ACtrlTableCnt = 0;
 uint8_t ub3ACtrlTableFg = FALSE;
@@ -921,9 +997,12 @@ static void SEN_DoVsyncThread(void const *argument)
 #endif
             }
 
-#if (AF_EN == 1)
-            AF_VSync();
-#endif
+            #if(AF_EN == 1)
+                AF_VSync();
+            #endif
+            if (ubSEN_UvcPathFlag) {
+                SEN_DisplayOSD();
+            }
         }
     }
 }
@@ -1236,7 +1315,12 @@ uint8_t ubSEN_GetIrMode(void)
 //------------------------------------------------------------------------------
 void SEN_SetUvcPathFlag(uint8_t ubFlag)
 {
-    ubSEN_UvcPathFlag = ubFlag;
+	if(ubSEN_UvcPathFlag != ubFlag)
+	{
+		ubSEN_UvcPathFlag = ubFlag;
+		if(!ubSEN_UvcPathFlag)
+			SEN_ClearDisplayOSD();
+	}
 }
 
 //------------------------------------------------------------------------------

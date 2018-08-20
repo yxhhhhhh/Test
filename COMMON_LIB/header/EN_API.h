@@ -11,9 +11,9 @@
 	\file		EN_API.h
 	\brief		Engineer Mode API header
 	\author		Bing
-	\version	0.3
-	\date		2016/09/13
-	\copyright	Copyright(C) 2016 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.0
+	\date		2018/07/25
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------
 #ifndef __EN_API_H
@@ -27,6 +27,7 @@ void EN_UpKey(void);
 void EN_DownKey(void);
 void EN_EnterKey(void);
 void EN_Start(uint32_t ulStackSize, osPriority priority);
+void EN_SetupOsdImgRotate(OSD_IMG_RA_TYP tOsdRotate);
 void EN_SetupOsdImgInfo(OSD_IMGIDXARRARY_t *pEN_OsdImgIdx);
 void EN_OpenEnMode(uint8_t ubEnMode);
 

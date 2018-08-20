@@ -11,8 +11,8 @@
 	\file		OV9715.h
 	\brief		Sensor OV9715 header
 	\author		BoCun
-	\version	1.1
-	\date		2018-07-06
+	\version	1.2
+	\date		2018-07-17
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -26,18 +26,20 @@
 // Sensor OV9715
 // SLAVE_ID is 0x30 [1:7] + [0] r/w
 #define SEN_SLAVE_ADDR				(0x30)
+//sensor per frame max total line
+#define SEN_MAX_EXPLINE				(829)
+// system control registers
+/* ID */
 #define OV9715_CHIP_ID_HIGH_ADDR	(0x0A)
 #define OV9715_CHIP_ID_LOW_ADDR		(0x0B)
 #define OV9715_CHIP_ID				(0x9711)
-#define SEN_MAX_EXPLINE				(829)
-
-#define	SEN_STATE_INIT			    (0)
-#define	SEN_STATE_STANDBY		    (1)
-#define	SEN_STATE_RUN			    (2)
-	
-#define SEN_IMG_NORMAL			    (0)
-#define SEN_IMG_FLIP			    (1)
-#define SEN_IMG_MIRROR			    (2)
+#define OV9715_RENDL_LOW            (0x3D)
+#define OV9715_RENDL_HIGH           (0x3E)
+#define OV9715_DUMMY_LINE_LOW       (0x2D)
+#define OV9715_DUMMY_LINE_HIGH      (0x2E)
+#define OV9715_EXP_LOW              (0x10)
+#define OV9715_EXP_HIGH             (0x16)
+#define OV9715_GAIN                 (0x00)
 
 #define OV9715_MIRROR		        (0x40)
 #define OV9715_FLIP		            (0x80)
@@ -48,41 +50,9 @@
 #define SEN_SetExpLine()			{ SEN_WrExpLine(xtSENInst.xtSENCtl.uwExpLine);  }
 #define SEN_SetDummyLine()			{ SEN_WrDummyLine(xtSENInst.xtSENCtl.uwDmyLine); }
 #define uwSEN_CalExpLine(t)			( ulSEN_GetPixClk() / 1000000L * (uint32_t)t / (uint32_t)ulSEN_GetPckPerLine() / 10)
-
-//==============================================================================
-// EXTERN
-//==============================================================================
-extern uint8_t ubSEN_AeAwbAfSettingArray[];
-
 //==============================================================================
 // FUNCTION
 //==============================================================================
-//------------------------------------------------------------------------
-/*!
-\brief Read data from sensor register.
-\param 	ubAddress 	Sensor address.
-\param 	pValue 		Point of sensor register.
-\retval Value		Sensor register data.
-\retval False		0->read sensor fail.
-\par [Example]
-\code 
-		ulSEN_I2C_Read(0x04, &ubValue);
-\endcode
-*/
-uint32_t ulSEN_I2C_Read(uint8_t ubAddress, uint8_t *pValue);
-//------------------------------------------------------------------------
-/*!
-\brief Write data to sensor register.
-\param ubAddress 	Sensor address.
-\param ubValue 		data.
-\retval True		1->I2C write sensor ok.
-\retval False		0->I2C write sensor fail.
-\par [Example]
-\code 
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2]);
-\endcode
-*/
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress, uint8_t ubValue);
 //------------------------------------------------------------------------
 /*!
 \brief Set frame rate and pixel clock.

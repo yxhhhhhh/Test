@@ -11,8 +11,8 @@
 	\file		RC.c
 	\brief		Rate Control function
 	\author		Justin Chen
-	\version	0.5
-	\date		2017/10/20
+	\version	0.6
+	\date		2018/07/26
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -43,6 +43,24 @@ RC_INFO tRC_Info[4];
 
 uint8_t ubRC_FinalMaxQp[4];
 uint8_t ubRC_FinalMinQp[4];
+uint32_t ulRC_EngModeBitRate[4];
+uint8_t ubRC_EngModeFps[4];
+
+void RC_EngModeSet(uint8_t ubCodecIdx,uint32_t ulTarBitRate,uint8_t ubFps)
+{
+	ulRC_EngModeBitRate[ubCodecIdx] = ulTarBitRate;
+	ubRC_EngModeFps[ubCodecIdx]		= ubFps;
+}
+
+uint32_t ulRC_GetEngModeBitRate(uint8_t ubCodecIdx)
+{
+	return ulRC_EngModeBitRate[ubCodecIdx];
+}
+
+uint8_t ubRC_GetEngModeFps(uint8_t ubCodecIdx)
+{
+	return ubRC_EngModeFps[ubCodecIdx];
+}
 
 uint32_t ulRC_MaxQP;
 uint32_t ulRC_MinQP;
@@ -57,7 +75,7 @@ osThreadId  RC_SysThreadId;
 uint8_t ubRC_EnableFlg = 0;
 
 #define RC_MAJORVER    0        //!< Major version = 0
-#define RC_MINORVER    5        //!< Minor version = 5
+#define RC_MINORVER    6        //!< Minor version = 6
 uint16_t uwRC_GetVersion (void)
 {
     return ((RC_MAJORVER << 8) + RC_MINORVER);
@@ -1148,9 +1166,12 @@ void RC_MonitThread0(void const *argument)
 			if(!ubRC_FixPreset0Flg)
 			{
 				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetGOP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx, 15);
 				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
 				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
-				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				//IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));	
+				IQ_SetAEPID(((ubRC_GetEngModeFps(0) <= 5)?1:0));
+				H264_SetRCParameter((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,ulRC_GetEngModeBitRate(0),ubRC_GetEngModeFps(0));
 				ubRC_FixPreset0Flg = 1;
 			}
 		}
@@ -1188,9 +1209,12 @@ void RC_MonitThread1(void const *argument)
 			if(!ubRC_FixPreset1Flg)
 			{
 				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetGOP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx, 15);
 				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
 				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
-				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				//IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				IQ_SetAEPID(((ubRC_GetEngModeFps(0) <= 5)?1:0));
+				H264_SetRCParameter((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,ulRC_GetEngModeBitRate(0),ubRC_GetEngModeFps(0));
 				ubRC_FixPreset1Flg = 1;
 			}
 		}
@@ -1228,9 +1252,12 @@ void RC_MonitThread2(void const *argument)
 			if(!ubRC_FixPreset2Flg)
 			{
 				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetGOP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx, 15);
 				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
 				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
-				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				//IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				IQ_SetAEPID(((ubRC_GetEngModeFps(0) <= 5)?1:0));
+				H264_SetRCParameter((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,ulRC_GetEngModeBitRate(0),ubRC_GetEngModeFps(0));
 				ubRC_FixPreset2Flg = 1;
 			}
 		}
@@ -1268,9 +1295,12 @@ void RC_MonitThread3(void const *argument)
 			if(!ubRC_FixPreset3Flg)
 			{
 				SEN_SetFrameRate(SENSOR_PATH1, tRC_Info[0].ubInitFps);
+				H264_SetGOP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx, 15);
 				H264_SetMaxQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMaxQp);
 				H264_SetMinQP((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,tRC_Info[0].ubMinQp);
-				IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				//IQ_SetAEPID(((tRC_Info[0].ubInitFps <= 5)?1:0));
+				IQ_SetAEPID(((ubRC_GetEngModeFps(0) <= 5)?1:0));
+				H264_SetRCParameter((H264_ENCODE_INDEX)tRC_Info[0].ubCodecIdx,ulRC_GetEngModeBitRate(0),ubRC_GetEngModeFps(0));
 				ubRC_FixPreset3Flg = 1;
 			}
 		}
@@ -1342,20 +1372,20 @@ void RC_QtyAndBwModePreset(void)
 	tRcInfo.ubRefreshRate		= 1;
 	tRcInfo.ubKeySecRatio		= RC_RATIO_70;
 	tRcInfo.ubNonKeySecRatio	= RC_RATIO_50;
-	tRcInfo.ubMinQp				= 28;
-	tRcInfo.ubMaxQp				= 43;
+	tRcInfo.ubMinQp				= 29;
+	tRcInfo.ubMaxQp				= 49;
 	tRcInfo.ubQpBuf				= 6;
 	tRcInfo.ulInitBitRate		= 0x168000L;	//180KByte
 	tRcInfo.ulBwBuf				= 30*1024*8L;
 	tRcInfo.ubInitFps			= 15;
 	tRcInfo.ulHighQtyTh			= 190*1024*8L;
-	tRcInfo.ulLowQtyTh			= 100*1024*8L;
+	tRcInfo.ulLowQtyTh			= 100*1024*8L;	
 	tRcInfo.ubHighBwMaxQp		= 43;
-	tRcInfo.ubHighBwMinQp		= 28;
+	tRcInfo.ubHighBwMinQp		= 29;	
 	tRcInfo.ubMediumBwMaxQp		= 46;
-	tRcInfo.ubMediumBwMinQp		= 31;
+	tRcInfo.ubMediumBwMinQp		= 32;
 	tRcInfo.ubLowBwMaxQp		= 49;
-	tRcInfo.ubLowBwMinQp		= 34;
+	tRcInfo.ubLowBwMinQp		= 35;
 
 	RC_FuncSet(&tRcInfo);
 }
@@ -1372,7 +1402,7 @@ void RC_QtyThenFpsModePreset(void)
 	tRcInfo.ubRefreshRate		= 1;
 	tRcInfo.ubKeySecRatio		= RC_RATIO_70;
 	tRcInfo.ubNonKeySecRatio	= RC_RATIO_50;
-	tRcInfo.ubMinQp				= 28;
+	tRcInfo.ubMinQp				= 29;
 	tRcInfo.ubMaxQp				= 46;	
 	tRcInfo.ulInitBitRate		= 0x168000L;	//180KByte
 	tRcInfo.ulStepBitRate		= 50*1024*8L;
@@ -1397,7 +1427,7 @@ void RC_FpsThenQtyModePreset(void)
 	tRcInfo.ubRefreshRate		= 1;
 	tRcInfo.ubKeySecRatio		= RC_RATIO_70;
 	tRcInfo.ubNonKeySecRatio	= RC_RATIO_50;
-	tRcInfo.ubMinQp				= 28;
+	tRcInfo.ubMinQp				= 29;
 	tRcInfo.ubMaxQp				= 46;
 	tRcInfo.ubTargetQp			= 41;
 	tRcInfo.ubQpBuf				= 2;

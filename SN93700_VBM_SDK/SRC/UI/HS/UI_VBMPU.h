@@ -1,19 +1,19 @@
 /*!
-    The information contained herein is the exclusive property of SONiX and
-    shall not be distributed, or disclosed in whole or in part without prior
-    permission of SONiX.
-    SONiX reserves the right to make changes without further notice to the
-    product to improve reliability, function or design. SONiX does not assume
-    any liability arising out of the application or use of any product or
-    circuits described herein. All application information is advisor and does
-    not from part of the specification.
+	The information contained herein is the exclusive property of SONiX and
+	shall not be distributed, or disclosed in whole or in part without prior
+	permission of SONiX.
+	SONiX reserves the right to make changes without further notice to the
+	product to improve reliability, function or design. SONiX does not assume
+	any liability arising out of the application or use of any product or
+	circuits described herein. All application information is advisor and does
+	not from part of the specification.
 
-    \file       UI_VBMPU.h
-    \brief      User Interface Header file (for High Speed Mode)
-    \author     Hanyi Chiu
-    \version    1.8
-    \date       2018/06/29
-    \copyright  Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
+	\file		UI_VBMPU.h
+	\brief		User Interface Header file (for High Speed Mode)
+	\author		Hanyi Chiu
+	\version	1.10
+	\date		2018/08/02
+	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _UI_VBMPU_H_
@@ -23,24 +23,26 @@
 #include "APP_HS.h"
 #include "OSD.h"
 #include "RTC_API.h"
+#include "FS_API.h"
 #include "TIMER.h"
 
-#define INVALID_ID                  0xFFFFFFFF
-#define INVAILD_ACT                 0xFFFFFFFE
-#define UI_UPDATESTS_PERIOD         (1000 / UI_TASK_PERIOD)
-#define UI_SHOWLOSTLOGO_PERIOD      (1000 / UI_TASK_PERIOD)
-#define UI_UPDATEBRILVL_PERIOD      (1000 / UI_TASK_PERIOD)
-#define UI_UPDATEVOLLVL_PERIOD      (1000 / UI_TASK_PERIOD)
+#define	INVALID_ID 					0xFFFFFFFF
+#define INVAILD_ACT					0xFFFFFFFE
+#define UI_UPDATESTS_PERIOD			(1000 / UI_TASK_PERIOD)
+#define UI_SHOWLOSTLOGO_PERIOD		(1000 / UI_TASK_PERIOD)
+#define UI_UPDATEBRILVL_PERIOD		(1000 / UI_TASK_PERIOD)
+#define UI_UPDATEVOLLVL_PERIOD		(1000 / UI_TASK_PERIOD)
+#define UI_PHOTOGRAPHSTS_PERIOD		(1000 / UI_TASK_PERIOD)
 
-#define QUAL_TYPE_ITEM              6
-#define SCAN_TYPE_ITEM              5
-#define DUAL_TYPE_ITEM              4
+#define QUAL_TYPE_ITEM				6
+#define SCAN_TYPE_ITEM				5
+#define DUAL_TYPE_ITEM				4
 
-#define RECORD_PWRSTS_ADDR      0
-#define PWRSTS_KEEP             3
+#define 	RECORD_PWRSTS_ADDR	0
+#define 	PWRSTS_KEEP			3
 
-#define TEMP_ALARM_INTERVAL     270
-#define PICk_ALARM_INTERVAL     135
+#define TEMP_ALARM_INTERVAL		270
+#define PICk_ALARM_INTERVAL		135
 
 typedef void (*pvUiFuncPtr)(void);
 
@@ -69,150 +71,168 @@ typedef enum
 
 typedef enum
 {
-    UI_DISPLAY_STATE = 0x20,            //! Display Image
-    UI_MAINMENU_STATE,                  //! Menu
-    UI_SUBMENU_STATE,                   //! Sub menu
-    UI_SUBSUBMENU_STATE,                //! Sub sub menu
-    UI_SUBSUBSUBMENU_STATE,             //! Sub sub sub menu
-    UI_CAM_SEL_STATE,                   //! Camera Selection
-    UI_SET_VDOMODE_STATE,               //! Setting Video mode
-    UI_SET_ADOSRC_STATE,                //! Selection Audio source
-    UI_SET_BUECOMODE_STATE,             //! Setting ECO mode of BU
-    UI_SET_PUPSMODE_STATE,              //! Setting VOX/WOR mode of PU
-    UI_CAMSETTINGMENU_STATE,
-    UI_SET_CAMCOLOR_STATE,
-    UI_DPTZ_CONTROL_STATE,
-    UI_MD_WINDOW_STATE,
-    UI_PAIRING_STATE,
-    UI_DUALVIEW_CAMSEL_STATE,
-    UI_ENGMODE_STATE,
-    UI_STATE_MAX,
-} UI_State_t;
+	UI_DISPLAY_STATE = 0x20,			//! Display Image
+	UI_MAINMENU_STATE,					//! Menu
+	UI_SUBMENU_STATE,					//! Sub menu
+	UI_SUBSUBMENU_STATE,				//! Sub sub menu
+	UI_SUBSUBSUBMENU_STATE,				//! Sub sub sub menu
+	UI_CAM_SEL_STATE,					//! Camera Selection
+	UI_SET_VDOMODE_STATE,				//! Setting Video mode
+	UI_SET_ADOSRC_STATE,				//! Selection Audio source
+	UI_SET_BUECOMODE_STATE,				//! Setting ECO mode of BU
+	UI_SET_PUPSMODE_STATE,				//! Setting VOX/WOR mode of PU
+	UI_CAMSETTINGMENU_STATE,
+	UI_SET_CAMCOLOR_STATE,
+	UI_DPTZ_CONTROL_STATE,
+	UI_MD_WINDOW_STATE,
+	UI_PAIRING_STATE,
+	UI_DUALVIEW_CAMSEL_STATE,
+	UI_SDFWUPG_STATE,
+	UI_RECFOLDER_SEL_STATE,
+	UI_RECFILES_SEL_STATE,
+	UI_RECPLAYLIST_STATE,
+	UI_PHOTOPLAYLIST_STATE,
+	UI_ENGMODE_STATE,
+	UI_STATE_MAX,
+}UI_State_t;
 
 typedef enum
 {
-    BRIGHT_ITEM,
-    AUTOLCD_ITEM,
-    ALARM_ITEM,
-    TIME_ITEM,
-    ZOOM_ITEM,
-    CAMERAS_ITEM,
-    SETTING_ITEM,
-    MENUITEM_MAX,
-} UI_MenuItemList_t;
+	BRIGHT_ITEM,
+	AUTOLCD_ITEM,
+	ALARM_ITEM,
+	TIME_ITEM,
+	ZOOM_ITEM,
+	CAMERAS_ITEM,
+	SETTING_ITEM,
+	MENUITEM_MAX,
+}UI_MenuItemList_t;
 
 typedef enum
 {
-    NOT_ACTION,
-    DRAW_MENUPAGE,
-    DRAW_HIGHLIGHT_MENUICON,
-    EXECUTE_MENUFUNC,
-    EXIT_MENUFUNC,
-} UI_MenuAct_t;
-
-
-typedef enum
-{
-    ADJUST_BR_ITEM,
-    AUTO_BR_ITEM,
-    BRIGHTNESS_MAX
-} UI_BrightnessSubMenuItemList_t;
+	NOT_ACTION,
+	DRAW_MENUPAGE,
+	DRAW_HIGHLIGHT_MENUICON,
+	EXECUTE_MENUFUNC,
+	EXIT_MENUFUNC,
+}UI_MenuAct_t;
 
 
 typedef enum
 {
-//  CAMVIEW_ITEM,
-//  PTZ_ITEM,
-//  CAMBL_ITEM,
-    CAMSSELCAM_ITEM,
-    CAMSANR_ITEM,
-    CAMS3DNR_ITEM,
-    CAMSvLDS_ITEM,
-    CAMSWDR_ITEM,
-    CAMSDIS_ITEM,
-    CAMSCBR_ITEM,
-    CAMSCONDENSE_ITEM,
-    CAMSFLICKER_ITEM,
-    CAMSITEM_MAX
-} UI_CamsSubMenuItemList_t;
+	ADJUST_BR_ITEM,
+	AUTO_BR_ITEM,
+	BRIGHTNESS_MAX
+}UI_BrightnessSubMenuItemList_t;
+
 
 typedef enum
 {
-    CAMSET_OFF,
-    CAMSET_ON,
-} UI_CamsSetMode_t;
+//	CAMVIEW_ITEM,
+//	PTZ_ITEM,
+//	CAMBL_ITEM,
+	CAMSSELCAM_ITEM,
+	CAMSANR_ITEM,
+	CAMS3DNR_ITEM,
+	CAMSvLDS_ITEM,
+	CAMSAEC_ITEM,
+	CAMSDIS_ITEM,
+	CAMSCBR_ITEM,
+	CAMSCONDENSE_ITEM,
+	CAMSFLICKER_ITEM,
+	CAMSITEM_MAX
+}UI_CamsSubMenuItemList_t;
 
 typedef enum
 {
-    CAMFLICKER_50HZ,
-    CAMFLICKER_60HZ,
-} UI_CamFlicker_t;
+	CAMSET_OFF,
+	CAMSET_ON,
+}UI_CamsSetMode_t;
 
 typedef enum
 {
-    CAM1VIEW_ITEM,
-    CAM2VIEW_ITEM,
-    CAM3VIEW_ITEM,
-    CAM4VIEW_ITEM,
-    QUALVIEW_ITEM,
-    CAMVIEWITEM_MAX,
-    SINGLEVIEW_ITEM = 1,
-    DUALVIEW_ITEM = 3,
-} UI_CamsSubSubMenuItemList_t;
+	CAMFLICKER_50HZ,
+	CAMFLICKER_60HZ,
+}UI_CamFlicker_t;
 
 typedef enum
 {
-    PAIRCAM_ITEM,
-    DELCAM_ITEM,
-    PAIRITEM_MAX
-} UI_PairSubMenuItemList_t;
+	CAM1VIEW_ITEM,
+	CAM2VIEW_ITEM,
+	CAM3VIEW_ITEM,
+	CAM4VIEW_ITEM,	
+	QUALVIEW_ITEM,
+	CAMVIEWITEM_MAX,
+	SINGLEVIEW_ITEM = 1,
+	DUALVIEW_ITEM = 3,
+}UI_CamsSubSubMenuItemList_t;
 
 typedef enum
 {
-    RECSELCAM_ITEM,
-    RECMODE_ITEM,
-    RECRES_ITEM,
-    SDCARD_ITEM,
-    RECITEM_MAX
-} UI_RecordSubMenuItemList_t;
+	PAIRCAM_ITEM,
+	DELCAM_ITEM,
+	PAIRITEM_MAX
+}UI_PairSubMenuItemList_t;
 
 typedef enum
 {
-    REC_LOOPING,
-    REC_MANUAL,
-    REC_RECMODE_MAX,
-} UI_RecordMode_t;
+//	RECSELCAM_ITEM,
+//	RECMODE_ITEM,
+//	RECRES_ITEM,
+//	SDCARD_ITEM,
+	RECMODE_ITEM,
+	RECTIME_ITEM,
+	RECITEM_MAX
+}UI_RecordSubMenuItemList_t;
 
 typedef enum
 {
-    RECRES_FHD,
-    RECRES_HD,
-    RECRES_WVGA,
-    RECRES_MAX,
-} UI_RecordResolution_t;
+	REC_LOOPING,
+	REC_MANUAL,
+	REC_TRIGGER,
+	REC_OFF,
+	REC_RECMODE_MAX,
+}UI_RecordMode_t;
 
 typedef enum
 {
-    PHOTOSELCAM_ITEM,
-    PHOTOFUNC_ITEM,
-    PHOTORES_ITEM,
-    PHOTOITEM_MAX
-} UI_PhotoSubMenuItemList_t;
+	RECRES_FHD,
+	RECRES_HD,
+	RECRES_WVGA,
+	RECRES_MAX,
+}UI_RecordResolution_t;
 
 typedef enum
 {
-    PHOTOFUNC_OFF,
-    PHOTOFUNC_ON,
-    PHOTOFUNC_MAX,
-} UI_PhotoFunction_t;
+	RECTIME_1MIN,
+	RECTIME_2MIN,
+	RECTIME_5MIN,
+	RECTIME_10MIN,
+	RECTIME_MAX,
+}UI_RecordTime_t;
 
 typedef enum
 {
-    PHOTORES_3M,
-    PHOTORES_5M,
-    PHOTORES_12M,
-    PHOTORES_MAX,
-} UI_PhotoResolution_t;
+	PHOTOSELCAM_ITEM,
+	PHOTOFUNC_ITEM,
+	PHOTORES_ITEM,
+	PHOTOITEM_MAX
+}UI_PhotoSubMenuItemList_t;
+
+typedef enum
+{
+	PHOTOFUNC_OFF,
+	PHOTOFUNC_ON,
+	PHOTOFUNC_MAX,
+}UI_PhotoFunction_t;
+
+typedef enum
+{
+	PHOTORES_3M,
+	PHOTORES_5M,
+	PHOTORES_12M,
+	PHOTORES_MAX,
+}UI_PhotoResolution_t;
 
 typedef enum
 {
@@ -351,8 +371,8 @@ typedef struct
 
 typedef struct
 {
-    UI_SubMenuItem_t tRecordS[CAM_4T][RECITEM_MAX];
-} UI_RecSubSubMenuItem_t;
+	UI_SubMenuItem_t tRecordS[RECITEM_MAX];
+}UI_RecSubSubMenuItem_t;
 
 typedef struct
 {
@@ -535,91 +555,170 @@ typedef struct
     uint8_t  ubBatLev;
 } BatteryMap_t;
 
+
+typedef enum
+{
+	UI_OSDLDDISP_OFF,
+	UI_OSDLDDISP_ON,
+}UI_OsdLdDispSts_t;
+
+typedef enum
+{
+	UI_SEARCH_DCIMFOLDER,
+	UI_SEARCH_RECFILES,
+}UI_LoadingState_t;
+
+typedef enum
+{
+	UI_VDORECLOOP_MODE,
+	UI_VDORECMANU_MODE,
+	UI_VDORECTRIG_MODE,
+	UI_VDOPHOTO_MODE,
+	UI_VDOMODE_MAX
+}UI_VdoRecMode_t;
+
+typedef enum
+{
+	UI_RECIMG_COLOR1,
+	UI_RECIMG_COLOR2,
+	UI_RECIMG_COLOR3,
+	UI_RECIMG_COLOR4,
+	UI_RECIMG_COLOR5,
+	UI_RECIMG_COLOR6,
+	UI_RECIMG_DEFU = 0xFF,
+}UI_RecImgColor_t;
+
+typedef enum
+{
+	UI_RECFILE_PAUSE,
+	UI_RECFILE_PLAY,
+}UI_RecPlayStatus_t;
+
+typedef enum
+{
+	UI_RECSKIPBKFWD_ITEM,
+	UI_RECPLAYPAUSE_ITEM,
+	UI_RECSKIPFRFWD_ITEM,
+	UI_RECPLAYLISTITEM_MAX
+}UI_RecPlayListItem_t;
+
+#define REC_FOLDER_LIST_MAXNUM	10
+#define REC_FILE_LIST_MAXNUM	10
 #pragma pack(push) /* push current alignment to stack */
 #pragma pack(1) /* set alignment to 1 byte boundary */
-typedef struct
-{
-    uint32_t              ulCAM_ID;
-    UI_DisplayLocation_t  tCamDispLocation;
-    UI_CamConnectStatus_t tCamConnSts;
-    UI_CamVdoMode_t       tCamVdoMode;
-    UI_AntLvl_t           tCamAntLvl;
-    UI_BatLvl_t           tCamBatLvl;
-    UI_SdInfo_t           tSdInfo;
-    UI_RecordMode_t       tREC_Mode;
-    UI_RecordResolution_t tREC_Resolution;
-    UI_PhotoFunction_t    tPHOTO_Func;
-    UI_PhotoResolution_t  tPHOTO_Resolution;
-    UI_CamsSetMode_t      tCamAnrMode;
-    UI_CamsSetMode_t      tCam3DNRMode;
-    UI_CamsSetMode_t      tCamvLDCMode;
-    UI_CamsSetMode_t      tCamWdrMode;
-    UI_CamsSetMode_t      tCamDisMode;
-    UI_CamFlicker_t       tCamFlicker;
-    UI_CamsSetMode_t      tCamCbrMode;
-    UI_CamsSetMode_t      tCamCondenseMode;
-    UI_ColorParam_t       tCamColorParam;
-    struct
-    {
-        uint8_t           ubMD_Mode;
-        uint8_t           ubMD_Param[4];
-    } MdParam;
-    UI_PowerSaveMode_t    tCamPsMode;
-    UI_CamsSetMode_t      tCamScanMode;
-    uint8_t               ubReserved[216];
-} UI_BUStatus_t;
 
 typedef struct
 {
-    uint8_t             ubTotalBuNum;
-    uint8_t             ubPairedBuNum;
-    RTC_Calendar_t      tSysCalendar;
-    uint8_t             ubAEC_Mode;
-    uint8_t             ubCCA_Mode;
-    uint8_t             ubSTORAGE_Mode;
-    struct
-    {
-        uint8_t             ubDrawStsIconFlag;
-        uint8_t             ubRdPairIconFlag;
-        uint8_t             ubClearThdCntFlag;
-        uint8_t             ubShowLostLogoFlag;
-        uint8_t             ubDrawNoCardIconFlag;
-        uint8_t             ubDrawMdTrigFlag;
-    } IconSts;
-    struct
-    {
-        UI_BrightnessLvl_t  tBL_UpdateLvL;
-        uint8_t             ubBL_UpdateCnt;
-    } BriLvL;
-    struct
-    {
-        UI_VolumeLvl_t      tVOL_UpdateLvL;
-        uint8_t             ubVOL_UpdateCnt;
-    } VolLvL;
-    UI_CamNum_t         tAdoSrcCamNum;
-    UI_PowerSaveMode_t  tPsMode;
-    uint8_t             ubScanModeEn;
-    uint8_t             ubDualModeEn;
-    uint8_t             ubDefualtFlag;
-    uint8_t             ubFeatCode0;
-    uint8_t             ubFeatCode1;
-    uint8_t             ubFeatCode2;
-    uint16_t            ubScanTime;
-    uint8_t             ubHighTempSetting;
-    uint8_t             ubLowTempSetting;
-    uint8_t             ubTempAlertSetting;
-    uint8_t             ubSoundLevelSetting;
-    uint8_t             ubSoundAlertSetting;
-    uint8_t             ubAutoBrightness;
-    uint8_t             ubSleepMode;
-    uint8_t             ubZoomScale;
-    uint8_t             ubFlickerFlag;
-    uint8_t             ubLangageFlag;
-    uint8_t             ubTempunitFlag;
-    uint8_t             NightmodeFlag;
-    uint8_t             ubCamViewNum;
-    uint8_t             ubReserved[210];
-} UI_PUSetting_t;
+	uint16_t uwUI_RecNumArray[10];
+	uint16_t uwUI_RecUpperLetterArray[26];
+	uint16_t uwUI_RecLowerLetterArray[26];
+	uint16_t uwUI_RecSymbolArray[4];
+}UI_RecOsdImgDb_t;
+
+typedef struct
+{
+	uint8_t ubTotalRecFolderNum;
+	uint8_t ubRecFolderSelIdx;
+	FS_FoldersInfo_t tRecFolderInfo[50];
+}UI_RecFoldersInfo_t;
+
+typedef struct
+{
+	uint16_t uwTotalRecFileNum;
+	uint16_t uwRecFileSelIdx;
+	FS_FilesInfo_t tRecFilesInfo[1000];
+}UI_RecFilesInfo_t;
+
+typedef struct
+{
+	uint32_t 			  ulCAM_ID;
+	UI_DisplayLocation_t  tCamDispLocation;
+	UI_CamConnectStatus_t tCamConnSts;
+	UI_CamVdoMode_t		  tCamVdoMode;
+	UI_AntLvl_t			  tCamAntLvl;
+	UI_BatLvl_t 		  tCamBatLvl;
+	UI_SdInfo_t 		  tSdInfo;
+	UI_RecordMode_t		  tREC_Mode;
+	UI_RecordResolution_t tREC_Resolution;
+	UI_PhotoFunction_t	  tPHOTO_Func;
+	UI_PhotoResolution_t  tPHOTO_Resolution;
+	UI_CamsSetMode_t	  tCamAnrMode;
+	UI_CamsSetMode_t	  tCam3DNRMode;
+	UI_CamsSetMode_t	  tCamvLDCMode;
+	UI_CamsSetMode_t	  tCamAecMode;
+	UI_CamsSetMode_t	  tCamDisMode;
+	UI_CamFlicker_t		  tCamFlicker;
+	UI_CamsSetMode_t	  tCamCbrMode;
+	UI_CamsSetMode_t	  tCamCondenseMode;
+	UI_ColorParam_t		  tCamColorParam;
+	struct
+	{
+		uint8_t			  ubMD_Mode;
+		uint8_t 		  ubMD_Param[4];
+	}MdParam;
+	UI_PowerSaveMode_t	  tCamPsMode;
+	UI_CamsSetMode_t	  tCamScanMode;
+	uint8_t				  ubReserved[216];
+}UI_BUStatus_t;
+
+typedef struct
+{
+	uint8_t 			ubTotalBuNum;
+	uint8_t 			ubPairedBuNum;
+	RTC_Calendar_t 		tSysCalendar;
+	uint8_t 			ubAEC_Mode;
+	uint8_t 			ubCCA_Mode;
+	uint8_t 			ubSTORAGE_Mode;
+	struct
+	{
+		uint8_t				ubDrawStsIconFlag;
+		uint8_t				ubRdPairIconFlag;
+		uint8_t				ubClearThdCntFlag;
+		uint8_t 			ubShowLostLogoFlag;
+		uint8_t				ubDrawNoCardIconFlag;
+		uint8_t 			ubDrawMdTrigFlag;
+	}IconSts;
+	struct
+	{
+		UI_BrightnessLvl_t	tBL_UpdateLvL;
+		uint8_t				ubBL_UpdateCnt;
+	}BriLvL;
+	struct
+	{
+		UI_VolumeLvl_t		tVOL_UpdateLvL;
+		uint8_t				ubVOL_UpdateCnt;
+	}VolLvL;
+	UI_CamNum_t			tAdoSrcCamNum;
+	UI_PowerSaveMode_t	tPsMode;
+	struct
+	{
+		UI_RecordMode_t		tREC_Mode;
+		UI_RecordTime_t		tREC_Time;
+	}RecInfo;
+	UI_VdoRecMode_t		tVdoRecMode;
+	uint8_t				ubVdoRecStsCnt;
+	uint8_t				ubScanModeEn;
+	uint8_t				ubDualModeEn;
+	uint8_t				ubDefualtFlag;	
+	uint8_t				ubFeatCode0;	
+	uint8_t				ubFeatCode1;	
+	uint8_t				ubFeatCode2;	
+	uint16_t			ubScanTime;
+	uint8_t				ubHighTempSetting;	
+	uint8_t				ubLowTempSetting;
+	uint8_t				ubTempAlertSetting;	
+	uint8_t				ubSoundLevelSetting;	
+	uint8_t				ubSoundAlertSetting;		
+	uint8_t				ubAutoBrightness;
+	uint8_t				ubSleepMode;
+	uint8_t				ubZoomScale;
+	uint8_t				ubFlickerFlag;
+	uint8_t				ubLangageFlag;
+	uint8_t				ubTempunitFlag;
+	uint8_t 			NightmodeFlag;
+	uint8_t				ubCamViewNum;	
+	uint8_t				ubReserved[207];	
+}UI_PUSetting_t;
 
 typedef struct
 {
@@ -689,41 +788,42 @@ typedef enum
 
 typedef enum
 {
-    UI_PTZ_SETTING = 1,
-    UI_RECMODE_SETTING,
-    UI_RECRES_SETTING,
-    UI_SDCARD_SETTING,
-    UI_PHOTOMODE_SETTING,
-    UI_PHOTORES_SETTING,
-    UI_SYSINFO_SETTING,
-    UI_VOXMODE_SETTING,
-    UI_ECOMODE_SETTING,
-    UI_WORMODE_SETTING,
-    UI_ADOANR_SETTING,
-    UI_IMGPROC_SETTING,
-    UI_MD_SETTING,
-    UI_VOICETRIG_SETTING,
-    UI_MOTOR_SETTING,
-    UI_NIGHTMODE_SETTING,
-    UI_PU_TO_BU_CMD_SETTING,
-    UI_TEST_SETTING,
-} UI_PUReqCmdID_t;
+	UI_PTZ_SETTING = 1,
+	UI_RECMODE_SETTING,
+	UI_RECRES_SETTING,
+	UI_SDCARD_SETTING,
+	UI_PHOTOMODE_SETTING,
+	UI_PHOTORES_SETTING,
+	UI_SYSINFO_SETTING,
+	UI_VOXMODE_SETTING,
+	UI_ECOMODE_SETTING,
+	UI_WORMODE_SETTING,
+	UI_ADOANR_SETTING,
+	UI_ADOAEC_SETTING,
+	UI_IMGPROC_SETTING,
+	UI_MD_SETTING,
+	UI_VOICETRIG_SETTING,
+	UI_MOTOR_SETTING,
+	UI_NIGHTMODE_SETTING,
+	UI_PU_TO_BU_CMD_SETTING,
+	UI_TEST_SETTING,
+}UI_PUReqCmdID_t;
 
 typedef enum
 {
-    UI_IMG3DNR_SETTING,
-    UI_IMGvLDC_SETTING,
-    UI_IMGWDR_SETTING,
-    UI_IMGDIS_SETTING,
-    UI_IMGCBR_SETTING,
-    UI_IMGCONDENSE_SETTING,
-    UI_FLICKER_SETTING,
-    UI_IMGBL_SETTING,
-    UI_IMGCONTRAST_SETTING,
-    UI_IMGSATURATION_SETTING,
-    UI_IMGHUE_SETTING,
-    UI_IMGSETTING_MAX,
-} UI_ImgProcSettingItem_t;
+	UI_IMG3DNR_SETTING,
+	UI_IMGvLDC_SETTING,
+	UI_IMGWDR_SETTING,
+	UI_IMGDIS_SETTING,
+	UI_IMGCBR_SETTING,
+	UI_IMGCONDENSE_SETTING,
+	UI_FLICKER_SETTING,
+	UI_IMGBL_SETTING,
+	UI_IMGCONTRAST_SETTING,
+	UI_IMGSATURATION_SETTING,
+	UI_IMGHUE_SETTING,
+	UI_IMGSETTING_MAX = 20,
+}UI_ImgProcSettingItem_t;
 
 #pragma pack(push) /* push current alignment to stack */
 #pragma pack(1) /* set alignment to 1 byte boundary */
@@ -796,10 +896,17 @@ void UI_PairingSubSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_PairingSubSubSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_DrawPairingStatusIcon(void);
 void UI_ReportPairingResult(UI_Result_t tResult);
+void UI_DrawDCIMFolderMenu(void);
+void UI_DrawRecordFileMenu(void);
+void UI_DCIMFolderSelection(UI_ArrowKey_t tArrowKey);
+void UI_RecordFileSelection(UI_ArrowKey_t tArrowKey);
+void UI_RecordPlayListSelection(UI_ArrowKey_t tArrowKey);
+void UI_PhotoPlayListSelection(UI_ArrowKey_t tArrowKey);
 void UI_RecordSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_RecordSubSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_PhotoSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_PhotoSubSubMenuPage(UI_ArrowKey_t tArrowKey);
+void UI_PlaybackSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_PowerSaveSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey);
 void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey);
@@ -824,6 +931,7 @@ void UI_ClearStatusBarOsdIcon(void);
 void UI_RedrawStatusBar(uint16_t *pThreadCnt);
 void UI_ReportBuConnectionStatus(void *pvConnectionSts);
 void UI_UpdateBuStatus(UI_CamNum_t tCamNum, void *pvStatus);
+void UI_LeftArrowLongKey(void);
 void UI_RightArrowLongKey(void);
 void UI_ShowSysTime(void);
 void UI_UnBindBu(UI_CamNum_t tUI_DelCam);
@@ -846,6 +954,11 @@ UI_Result_t UI_CheckCameraSource4SV(void);
 void UI_EngModeKey(void);
 void UI_EngModeCtrl(UI_ArrowKey_t tArrowKey);
 void UI_PairingControl(UI_ArrowKey_t tArrowKey);
+void UI_FwUpgViaSdCard(void);
+void UI_FwUpgExecSel(UI_ArrowKey_t tArrowKey);
+void UI_UpdateRecStsIcon(void);
+void UI_PhotoCaptureFinish(uint8_t ubPhotoCapRet);
+void UI_PhotoPlayFinish(uint8_t ubPhtoCapRet);
 
 //====================================================
 void UI_DrawBrightnessSubMenuPage(void);

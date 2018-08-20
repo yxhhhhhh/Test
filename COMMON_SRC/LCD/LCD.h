@@ -11,8 +11,8 @@
 	\file		LCD.h
 	\brief		LCD Function Header
 	\author		Pierce
-	\version	1.2
-	\date		2017/11/22
+	\version	1.3
+	\date		2018/07/25
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -561,6 +561,16 @@ LCD_RESULT tLCD_JpegDecodeEnable (LCD_CH_TYP tCh);
 	\endcode
 */
 LCD_RESULT tLCD_JpegDecodeDisable (void);
+//------------------------------------------------------------------------------
+/*!
+	\brief	LCD Jpeg Decode Stop Function
+	\return	Stop Jpeg decode
+	\par [Example]
+	\code    
+		 LCD_JpegDecodeStop();
+	\endcode
+*/
+void LCD_JpegDecodeStop (void);
 //------------------------------------------------------------------------------
 /*!
 	\brief	Get status of LCD Jpeg Decoder.

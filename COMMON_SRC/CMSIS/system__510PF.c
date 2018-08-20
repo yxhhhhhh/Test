@@ -19,11 +19,13 @@
 #include <stdio.h>
 #include "_510PF.h"
 #include "RTC_API.h"
+#include "WDT.h"
 //------------------------------------------------------------------------------
 uint32_t SystemCoreClock;														//!< Variable to hold the system core clock value
-int32_t lSYS_DebugLvl = DBG_ErrorLvl;                                          //!< System Debug Level
+int32_t lSYS_DebugLvl = DBG_ErrorLvl;                                           //!< System Debug Level
 uint32_t ulSYS_Func1State;
 uint32_t ulSYS_Func2State;
+uint8_t ubSYS_BusRate[4];														//!< 0:AHB1, 1:AHB2, 2:AHB3, 3:APBC
 //------------------------------------------------------------------------------
 void SystemStartup(void)
 {
@@ -34,10 +36,10 @@ void SystemInit(void)
 //	SystemCoreClockUpdate();
 	GLB->REG_CK_MODE = 0;														//!< Save power consumption mode
 	GLB->PLL300_DIV  = 28;
-	GLB->AHB1_RATE 	 = 3;
-	GLB->AHB2_RATE 	 = 15;
-	GLB->AHB3_RATE   = 10;
-	GLB->APBC_RATE   = 10;
+	GLB->AHB1_RATE 	 = ubSYS_BusRate[0] = 3;
+	GLB->AHB2_RATE 	 = ubSYS_BusRate[1] = 15;
+	GLB->AHB3_RATE   = ubSYS_BusRate[2] = 10;
+	GLB->APBC_RATE   = ubSYS_BusRate[3] = 10;
 	lSYS_DebugLvl    = DBG_ErrorLvl;
 }
 //------------------------------------------------------------------------------
@@ -52,6 +54,11 @@ void SystemCoreClockUpdate(void)
 void SYS_SetCoreClock(SYS_CoreClkSel CoreClkSel)
 {
 	GLB->CPU_RATE = CoreClkSel;
+}
+//------------------------------------------------------------------------------
+void SYS_Reboot(void)
+{
+	WDT_RST_Enable(WDT_CLK_EXTCLK, 0);
 }
 //------------------------------------------------------------------------------
 void SYS_SetState(SYS_STATE State)
@@ -78,10 +85,10 @@ void SYS_SetPowerStates(SYS_PowerState_t tPowerState)
 	{
 		case SYS_PS0:
 			SYS_SetCoreClock(CPU_CLK_FS);
-			GLB->AHB1_RATE = 3;
-			GLB->AHB2_RATE = 15;
-			GLB->AHB3_RATE = 10;
-			GLB->APBC_RATE = 10;
+			GLB->AHB1_RATE  = ubSYS_BusRate[0];
+			GLB->AHB2_RATE  = ubSYS_BusRate[1];
+			GLB->AHB3_RATE  = ubSYS_BusRate[2];
+			GLB->APBC_RATE  = ubSYS_BusRate[3];
 			GLB->REG_0x001C = ulSYS_Func1State;
 			GLB->REG_0x0020 = ulSYS_Func2State;
 			break;
@@ -98,6 +105,7 @@ void SYS_SetPowerStates(SYS_PowerState_t tPowerState)
 			GLB->ISP_YUV_PATH3_FUNC_DIS = 1;
 			GLB->IMG_FUNC_DIS  = 1;
 			GLB->H264_FUNC_DIS = 1;
+			GLB->JPG_FUNC_DIS  = 1;
 			GLB->MIPI_FUNC_DIS = 1;
 			GLB->ENC_FUNC_DIS  = 1;
 			GLB->FAT_FUNC_DIS  = 1;
@@ -113,6 +121,10 @@ void SYS_SetPowerStates(SYS_PowerState_t tPowerState)
 			GLB->SDIO2_FUNC_DIS = 1;
 			GLB->SDIO3_FUNC_DIS = 1;
 			SYS_SetCoreClock(CPU_CLK_DIV1);
+			ubSYS_BusRate[0] = GLB->AHB1_RATE;
+			ubSYS_BusRate[1] = GLB->AHB2_RATE;
+			ubSYS_BusRate[2] = GLB->AHB3_RATE;
+			ubSYS_BusRate[3] = GLB->APBC_RATE;
 			GLB->AHB1_RATE = 8;
 			GLB->AHB2_RATE = 15;
 			GLB->AHB3_RATE = 15;
@@ -131,7 +143,7 @@ void SYS_SetPrintLevel(SYS_PrintLevel_t tLevel)
 	printf("New lv=%d\n",lSYS_DebugLvl);
 	printf("===================================\n");
 }
-
+//------------------------------------------------------------------------------
 uint16_t uwSYS_GetOsVersion(void)
 {
     return osCMSIS_KERNEL;

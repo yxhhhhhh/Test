@@ -78,6 +78,7 @@ void SPI_Init(SPI_Setup_t* setup)
         }
     }
     INTC_IrqSetup(INTC_SSP_IRQ, INTC_EDGE_TRIG, SPI_ISR);
+	SSP->SSP_GPIO_MODE = 0;
 }
 //------------------------------------------------------------------------------
 #if 0
