@@ -76,7 +76,7 @@ void LCD_SetGammaBritCtst(LCD_GAMMA_SET_TYP *pParam)
 	uint8_t 	*ptr = (uint8_t*)ulGammaTemp;
 	
 	ubCntrsCtr 			   = 1;
-	LCD->LCD_Y_GAMMA_EN = 1;
+	LCD->LCD_Y_GAMMA_EN = 0;
 	//fix point gamma x 100 = (100.0f/uwGamma)x100 = 10000/uwGamma
 	pParam->uwGamma = 10000 / pParam->uwGamma;
 
