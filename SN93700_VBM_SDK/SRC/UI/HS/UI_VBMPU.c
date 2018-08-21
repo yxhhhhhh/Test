@@ -7663,22 +7663,25 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 static void UI_DisplaySN(int x, int y, uint8_t *sn, int len)
 {
     OSD_IMG_INFO tOsdImgInfo;
-    int i;
+    int idx, i;
 
-	   tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_TITLE, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 436;
-        tOsdImgInfo.uwYStart = 631;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-	
     for (i=0; i<len; i++) {
         printd(Apk_DebugLvl,"Factory mode sn[%d] = %c\n", i, sn[i]);
     }
 
     for (i=0; i<len && sn[i]; i++)
     {
-        int idx = sn[i] <= '9' ? sn[i] - '0' : sn[i] - 'A' + 10;
-        if (idx < 0 || idx > 36) idx = 'X' - 'A' + 10;
+        if (sn[i] == ' ') {
+            tOsdImgInfo.uwHSize  = 46;
+            tOsdImgInfo.uwVSize  = 22;
+            tOsdImgInfo.uwXStart = x;
+            tOsdImgInfo.uwYStart = y - (20 * i);
+            OSD_EraserImg2(&tOsdImgInfo);
+            continue;
+        }
 
+        idx = sn[i] <= '9' ? sn[i] - '0' : sn[i] - 'A' + 10;
+        if (idx < 0 || idx > 36) idx = 'X' - 'A' + 10;
         tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0 + idx, 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = x;
         tOsdImgInfo.uwYStart = y - (20 * i);
@@ -7734,21 +7737,24 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
         break;
 
     case PRODUCT_INFO_ITEM:
-      			 UI_DisplaySN(436, 605, RxSNdata, sizeof(RxSNdata));
+        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_TITLE, 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 436;
+        tOsdImgInfo.uwYStart = 631;
+        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+        UI_DisplaySN(436, 605, RxSNdata, sizeof(RxSNdata));
+        tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_INFO_INFO + (70*tUI_PuSetting.ubLangageFlag), 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 290;
+        tOsdImgInfo.uwYStart = 377;
+        tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+        UI_VerDisplay();
+        break;
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_INFO_INFO+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 290;
-			tOsdImgInfo.uwYStart =377;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);		
-			UI_VerDisplay();	
-			break;
-			
-		case CONTACT_ITEM:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CONTACT_INFO, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 128;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
-			break;
+    case CONTACT_ITEM:
+        tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CONTACT_INFO, 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 128;
+        tOsdImgInfo.uwYStart = 284;
+        tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+        break;
 
     default:
         break;
@@ -9355,8 +9361,7 @@ void UI_GetBatLevel(void)
 		{3984, 	 	4350, 	BAT_LVL4},	//100%
 	};
 	
-	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
-	//ubGetBatValue = ubBatAdc*33*2*100/1024;
+	ubBatAdc = uwSADC_GetReport(SADC_CH4);
 	ubGetBatValue = ubBatAdc*3050*2/1024;
 	
 	ubAdjustAdc = uwSADC_GetReport(SADC_CH3);
@@ -9371,6 +9376,7 @@ void UI_GetBatLevel(void)
     {
         ubGetBatValue = ubGetBatValue + (ADJUST_VOL - ubAdjustVal);
     }
+
     if(UI_GetUsbDet() == 1)
     {
         if (ubGetBatValue < 3500)
@@ -13108,56 +13114,9 @@ void UI_FactoryStatusDisplay(void)
     tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    //------------------------------
-    //SD
-    if (ubSD_ChkCardIn(SD_1))
-    {
-        for (int i = 0;i<5; i++)
-        {
-            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_ENG_SPACESYM, 1, &tOsdImgInfo);
-            tOsdImgInfo.uwXStart = 395;
-            tOsdImgInfo.uwYStart = 900 - 20 - 15*i+ Factory_y_vol;
-            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-        }
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_O, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_N, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 53+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-    }
-    else
-    {
-        for (int i = 0;i<5; i++)
-        {
-            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_ENG_SPACESYM, 1, &tOsdImgInfo);
-            tOsdImgInfo.uwXStart = 395;
-            tOsdImgInfo.uwYStart = 900 - 20 - 15*i+ Factory_y_vol;
-            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-        }
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_O, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_F, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 51+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_F, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 70+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-    }
-
-    UI_DisplaySN(455 + Factory_x_vol, 1000, TxSNdata, sizeof(TxSNdata));
-    UI_DisplaySN(515 + Factory_x_vol, 1000, RxSNdata, sizeof(RxSNdata));
+    UI_DisplaySN(380 + Factory_x_vol, 1000, ubSD_ChkCardIn(SD_1) ? "ON " : "OFF", 3);
+    UI_DisplaySN(445 + Factory_x_vol, 1000, TxSNdata, sizeof(TxSNdata));
+    UI_DisplaySN(510 + Factory_x_vol, 1000, RxSNdata, sizeof(RxSNdata));
 }
 
 void UI_FactorymodeKeyDisplay(uint8_t Value)
