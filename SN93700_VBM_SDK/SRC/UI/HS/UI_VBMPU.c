@@ -44,8 +44,6 @@
 
 #define PICKUP_VOLUME_TEST  0
 
-#define UI_BATT_TEST    0
-
 #define UI_NOTIMEMENU	1
 #define Factory_x_vol   10
 #define Factory_y_vol   80
@@ -277,7 +275,8 @@ uint8_t ubPairOK_SwitchCam = 0;
 uint8_t ubSetViewCam = 0;
 
 uint8_t ubBatLowCount = 0;
-uint16_t ubGetBatValue = 0;
+uint16_t ubGetBatPercent = 0;
+uint16_t ubGetBatVoltage = 0;
 uint16_t ubBatLvLIdx = BAT_LVL0;
 
 uint16_t ubLinkStateCheckCount = 0;
@@ -9346,70 +9345,30 @@ void UI_MotorStateCheck(void)
 
 void UI_GetBatLevel(void)
 {
-    #define ADJUST_VOL  (1844*2)//1820
-    int i;
-    uint16_t ubBatAdc;
-    uint16_t ubAdjustAdc, ubAdjustVal;
-    OSD_IMG_INFO tOsdImgInfo;
-
-	BatteryMap_t tBatMap[] =
-	{
-		{3500, 		3598, 	BAT_LVL0},  	 //10%
-		{3598, 	 	3665, 	BAT_LVL1},	//25%
-		{3665, 	 	3788,	BAT_LVL2},	//50%
-		{3788, 		3984, 	BAT_LVL3},	//75%
-		{3984, 	 	4350, 	BAT_LVL4},	//100%
-	};
-	
-	ubBatAdc = uwSADC_GetReport(SADC_CH4);
-	ubGetBatValue = ubBatAdc*3050*2/1024;
-	
-	ubAdjustAdc = uwSADC_GetReport(SADC_CH3);
-	ubAdjustVal = ubAdjustAdc*3050*2/1024;
-	//printd(Apk_DebugLvl, "UI_GetBatLevel ubAdjustAdc: %d, ubAdjustVal: %d.\n", ubAdjustAdc, ubAdjustVal);
-
-    if(ubAdjustVal >= ADJUST_VOL)
-    {
-        ubGetBatValue = ubGetBatValue - (ubAdjustVal - ADJUST_VOL);
-    }
-    else
-    {
-        ubGetBatValue = ubGetBatValue + (ADJUST_VOL - ubAdjustVal);
-    }
-
-    if(UI_GetUsbDet() == 1)
-    {
-        if (ubGetBatValue < 3500)
-        {
+    uint8_t i;
+    static uint16_t batmap[] = {
+        3500, 3598, 3665, 3788, 3984, 4350, 4500
+    };
+    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3050 * 2 / 1024;
+    if (UI_GetUsbDet() == 1) {
+        if (ubGetBatVoltage < 3500) {
             ubBatLowCount++;
-            if (ubBatLowCount == 10)
-            {
+            if (ubBatLowCount == 10) {
                 UI_PowerOff();
             }
-        }
-        else
-        {
+        } else {
             ubBatLowCount = 0;
         }
+    } else {
+        ubBatLowCount    = 0;
+        ubGetBatVoltage -= 50;
     }
-    else
-    {
-        ubBatLowCount = 0;
+    for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
+        if (ubGetBatVoltage <= batmap[i]) break;
     }
-
-    for (i = BAT_LVL0; i <= BAT_LVL4; i++)
-    {
-        if ((ubGetBatValue >= tBatMap[i].ubMinBat) && (ubGetBatValue < tBatMap[i].ubMaxBat))
-        {
-            ubBatLvLIdx = tBatMap[i].ubBatLev;
-            break;
-        }
-    }
-
-    if (ubGetBatValue >= 4350)
-        ubBatLvLIdx = BAT_LVL4;
-
-    //printd(Apk_DebugLvl, "UI_GetBatLevel ubBatLvLIdx: %d, ubGetBatValue: %d.\n", ubBatLvLIdx, ubGetBatValue);
+    ubGetBatPercent = (i-1) * 20 + 20 * (ubGetBatVoltage - batmap[i-1]) / (batmap[i] - batmap[i-1]);
+    ubGetBatPercent = ubGetBatPercent < 100 ? ubGetBatPercent : 100;
+    ubBatLvLIdx = BAT_LVL0 + ubGetBatPercent / 20;
 }
 
 uint8_t UI_GetUsbDet(void)
@@ -12321,30 +12280,6 @@ void UI_UpdateBarIcon_Part1(void)
         ubChargShowCnt = 0;
     }
 
-#if UI_BATT_TEST
-    #define batt_offset 40
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 460 + batt_offset;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/100%10), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 440 + batt_offset;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/10%10), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 420 + batt_offset;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue%10), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 400 + batt_offset;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-#endif
-
     tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
@@ -13117,6 +13052,12 @@ void UI_FactoryStatusDisplay(void)
     UI_DisplaySN(380 + Factory_x_vol, 1000, ubSD_ChkCardIn(SD_1) ? "ON " : "OFF", 3);
     UI_DisplaySN(445 + Factory_x_vol, 1000, TxSNdata, sizeof(TxSNdata));
     UI_DisplaySN(510 + Factory_x_vol, 1000, RxSNdata, sizeof(RxSNdata));
+
+    if (0) {
+        char str[64];
+        sprintf(str, "%d %d", ubGetBatVoltage, ubGetBatPercent);
+        UI_DisplaySN(575 + Factory_x_vol, 1000, str, sizeof(str));
+    }
 }
 
 void UI_FactorymodeKeyDisplay(uint8_t Value)
