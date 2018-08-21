@@ -1,4 +1,6 @@
 !.gitignore
+ConfigGen/Download/
+ConfigGen/Temporal/
 COMMON_SRC/CMSIS/heads
 SN93700_VBM_SDK/BIN/*
 SN93700_VBM_SDK/LST/
