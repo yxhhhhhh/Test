@@ -1,0 +1,699 @@
+ST53500 TestAP & ConfigGen Change log
+
+Version 3.0.91224a
+------------------
+Modified the BB function for SN93500, Version 3.0.91224a
+
+
+Version 3.0.100118a
+------------------
+Modified code for BB Calulate function (Audio/Video full duplex), Version 3.0.100118a
+
+
+Version 3.0.100521a
+------------------
+To modify code for fixing the save file bug (Add sub-Level bug), Version 3.0.100521a
+
+
+Version 3.0.100521b
+------------------
+To modify code for fixing key down NULL image, Version 3.0.100521b
+
+
+Version 3.0.100524b
+------------------
+1. Add OSD Menu function.
+2. To modify the OSD Image function.
+2. To fix the bug that level number isn't correct , Version 3.0.100524b
+
+
+Version 3.0.100525a
+------------------
+To fix the bug for loading font function , Version 3.0.100525a
+
+
+Version 3.0.100609a
+------------------
+Add OSD Image transfer function (no load file) , Version 3.0.100609a
+
+
+Version 3.0.100614a
+------------------
+support refence ID (to modified the offset) , Version 3.0.100614a
+
+
+Version 3.0.100615a
+------------------
+modified code for write-out data ( [0x0D]:MAX_PALETTE_COLOR_COUNT), Version 3.0.100615a
+
+
+Version 3.0.100621a
+------------------
+modified code for OSD Image function (preview focus rectangle), Version 3.0.100621a
+
+
+Version 3.0.100622a
+------------------
+Modified Font function (add the color list in INI file into color table), Version 3.0.100622a
+
+
+Version 3.0.100625a
+------------------
+Add preview label, Version 3.0.100625a
+
+
+Version 3.0.100628a
+------------------
+Add clear function before load OSD image file, Version 3.0.100628a
+
+
+Version 3.0.100628b
+------------------
+modified code for OSD menu (modify the OSDDes.INI file), Version 3.0.100628b
+
+
+Version 3.0.100628c
+------------------
+Fixed bug about the FontApply function, Version 3.0.100628c
+
+
+Version 3.0.100730a
+------------------
+modified code for SF Burn and new ConfigGen function, Version 3.0.100730a
+
+
+Version 3.0.100820a
+------------------
+modified code for UART Dbg print and ConfigGen function, Version 3.0.100820a
+
+
+Version 3.0.100825a
+------------------
+modified code for STA number and I2C read/write function, Version 3.0.100825a
+
+
+Version 3.0.100907a
+------------------
+Add Logo generator function and write protect function, Version 3.0.100907a
+
+
+Version 3.0.100908a
+------------------
+Modified code for OSD Image (1 group), and OSD Menu (display level, item), Version 3.0.100908a
+
+
+Version 3.0.100908b
+------------------
+Modified code for FW size and fixed partial write bug, Version 3.0.100908b
+
+
+Version 3.0.100909a
+------------------
+Modified code for Logo generator page (Enable Q-Tab selection), Version 3.0.100909a
+
+
+Version 3.0.100909b
+------------------
+Modified code for partial write programCode (Update system profile), Version 3.0.100909b
+
+
+Version 3.0.100910a
+------------------
+Modified code for OSD Font(rigth-mouse clear) and OSD Menu ( load only a font), Version 3.0.100910a
+
+
+Version 3.0.100920a
+------------------
+Modified code for Logo Generator function (Output: YUV420), Version 3.0.100920a
+
+
+Version 3.0.100921a
+------------------
+Modified code for adding Q-tab for each logo file, Version 3.0.100921a
+
+
+Version 3.0.100924a
+------------------
+Modified code for fixed melody function bug (check size), Version 3.0.100924a
+
+
+Version 3.0.100927a
+------------------
+Modified code for 0x241(AP->STA audio channel), Version 3.0.100927a
+
+
+Version 3.0.100927b
+------------------
+Modified code for AV-Sender mode (Add USB ROM descriptor), Version 3.0.100927b
+
+
+Version 3.0.100927c
+------------------
+Modified code for 0x228, 0x229 values, Version 3.0.100927c
+
+
+Version 3.0.100927d
+------------------
+Add ISP and Erase SF(all) function, and fix audio setting bug, Version 3.0.100927d
+
+
+Version 3.0.100927e
+------------------
+modified code for 0x228, 0x229 value, Version 3.0.100927e
+
+
+Version 3.0.100929a
+------------------
+To modify the JPEG-Encode C-Module code to fix Decode issue, Version 3.0.100929a
+
+
+Version 3.0.100930a
+------------------
+To fix logo file bug (2 line up) and adjust the message status bar, Version 3.0.100930a
+
+
+Version 3.0.101006a
+------------------
+To fix the bug about OSD Menu (NULL string), Version 3.0.101006a
+
+
+Version 3.0.101007a
+------------------
+Add AKEY function, Version 3.0.101007a
+
+
+Version 3.0.101015a
+------------------
+Add SF_Type_switch command  function, Version 3.0.101015a
+
+
+Version 3.0.101017a
+------------------
+Modified code for USB write (64K), Version 3.0.101017a
+
+
+Version 3.0.101019a
+------------------
+Modified code for USB Desc parse function, Version 3.0.101019a
+
+
+Version 3.0.101020a
+------------------
+Modified code for SF Command swtich (for new version HW, 0x201E != 0x7B), Version 3.0.101020a
+
+
+Version 3.0.101025a
+------------------
+Modified code for UART SF Getstatus function bug, Version 3.0.101025a
+
+
+Version 3.0.101025b
+------------------
+Modified code for UART SF Getstatus function bug, and Command Swtich (0x201E), Version 3.0.101025b
+
+Version 3.0.101028a
+------------------
+Modified code for LOGO Generator load file function bug, Version 3.0.101028a
+
+
+Version 3.0.101029a
+------------------
+Add function to create download folder automatically, Version 3.0.101029a
+
+
+Version 3.0.101105a
+------------------
+Modified code for Logo Generate function(640x480), and OSD Menu (11 Items/page), Version 3.0.101105a
+
+
+Version 3.0.101108a
+------------------
+Modified code for adjust the offset of OSD image function bug, Version 3.0.101108a
+
+
+Version 3.0.101108a
+------------------
+Add New USB Desc and Video parameter function, modified code for USB Desc(ROM-0x0100), Version 3.0.101111a
+
+
+Version 3.0.101115a
+------------------
+Add ADC_MCLK_DIV and , Version 3.0.101115a
+
+
+Version 3.0.101117a
+------------------
+Fixed the bug about Erase command timout (g_bRxHit reset to false before write command) , Version 3.0.101117a
+
+
+Version 3.0.101118a
+------------------
+Write register 0x20C0[1:0] before read/write SF , Version 3.0.101118a
+
+
+Version 3.0.101125a
+------------------
+Rerrange initial sensor table and change the method to save, Version 3.0.101125a
+
+
+Version 3.0.101202a
+------------------
+modified code for command switch function (0x2003 <-- 0x2, for new IC), Version 3.0.101202a
+
+
+Version 3.0.101203a
+------------------
+Modified code for OSD image function (for HW issue), Version 3.0.101203a
+
+
+Version 3.0.101207a
+------------------
+Add OSD Font Rotation function (90', 180',270'), Version 3.0.101207a
+
+
+Version 3.0.101207b, 3.0.101216b
+------------------
+Modified code for OSD font/image (add FW offset data(640*4B) ), Version 3.0.101216b
+
+
+Version 3.0.101207b, 3.0.101221a
+------------------
+Add GigaDevice SF type(1M, 2M, 4M) into chipinfo.ini
+
+
+Version 3.0.101227a
+------------------
+Modified code for OSD image (Prview 1 pic), and multi-load Logo image and preview logo image, Version 3.0.101227a
+
+
+Version 3.0.101227b,c
+------------------
+Modified code for Logo image preview (640x480) function, Version 3.0.101227b, c
+
+
+Version 3.0.101230a
+------------------
+Modified code for OSD Font (32x32), Version 3.0.101230a
+
+
+Version 3.0.110111a
+------------------
+Modified code for UART read function (check the current ACK timer), Version 3.0.110111a
+
+
+Version 3.0.110117a
+------------------
+Modified code for UART read function (Hang-up bug), Version 3.0.110117a
+
+
+Version 3.0.110125a
+------------------
+Modified USB VID/PID data in order to match the spec, Version 3.0.110125a 
+
+
+Version 3.0.110126a
+------------------
+Modified code for Logo generator (Mini 8K->4K), Version 3.0.110126a
+
+
+Version 3.0.110127a
+------------------
+Add EngiMode function for A7121, Version 3.0.110127a
+
+
+Version 3.0.110128a
+------------------
+Modified the name dumy-> dummy, Version 3.0.110128a
+
+
+Version 3.0.110216a
+------------------
+Modified code for Logo function (Multi-selection, Load DAT->JPEG file, Auto-adjust Quality factor), Version 3.0.110216a
+
+
+Version 3.0.110216b
+------------------
+Modified code for Logo function (Read from INI file), Version 3.0.110216b
+
+
+Version 3.0.110218a
+------------------
+Add Parameter (AKEY, GKEY) , Version 3.0.110218a
+
+
+Version 3.0.110223a
+------------------
+Modified code for UART (256B) , Version 3.0.110223a
+
+
+Version 3.0.110224a
+------------------
+Add ASICIdentify function before SF read/Write cmd , Version 3.0.110224a
+
+
+Version 3.0.110307a
+------------------
+Modified code for OSD font ad Image Palette tab count, UART connect with 3 times ASIC identify, Version 3.0.110307a
+
+
+Version 3.0.110315a
+------------------
+Modified code: 1. USB MSC -> show SF ID, 
+               2. RF_Init_Tab, 
+               3. Font Palette tab count check
+         Version 3.0.110315a
+         
+         
+Version 3.0.110317a
+---------------------------------------
+Modified code to fix UART bug after the last cmd timeout, Version 3.0.110317a
+         
+         
+Version 3.0.110317b
+---------------------------------------
+Update chipinfo.ini (Add SST PCT25VF064B), Version 3.0.110317b
+
+
+Version 3.0.110406a
+---------------------------------------
+Modified code for loading profile bug (Show message in statusbar bug), Version 3.0.110406a
+
+
+Version 3.0.110413a
+---------------------------------------
+Modified code for loading profile bug and OSD Image (no HW issue), Version 3.0.110413a
+
+
+Version 3.0.110512a
+---------------------------------------
+Modified code for OSD FONT (Multi-Font, Header length (16B->32B)), Version 3.0.110512a
+
+
+Version 3.0.110516a
+---------------------------------------
+Modified code for UI, Version 3.0.110516a
+
+
+Version 3.0.110518b
+---------------------------------------
+Modified code :
+1. OSD FONT(automatic generate multi-color and multi-angle rotation font data)
+2. modify iSizeForOSDFont calculation formula
+Version 3.0.110518b
+
+
+Version 3.0.110519a
+---------------------------------------
+Modified code :
+1. OSD Menu load font bug (for new font format). 
+2.modified code for ConfigGen.INI (iSizeForOSDFont = 256 //K-base)
+
+
+Version 3.0.110520a
+---------------------------------------
+Modified code for SF partial write LOGO function (USB),Version 3.0.110520a
+
+
+Version 3.0.110523a
+---------------------------------------
+Modified code for improving the LOGO auto-adjust QP function, Version 3.0.110523a
+
+
+Version 3.0.110523b
+---------------------------------------
+Modified code for improving the LOGO auto-adjust QP function(1/2 method), Version 3.0.110523b
+
+
+Version 3.0.110524a
+---------------------------------------
+Modified code for Logo generate function, ConfigGen UI function, new application, Version 3.0.110524a
+
+
+Version 3.0.110525a
+---------------------------------------
+Modified code for fixing ConfigGen bug (parameter), Version 3.0.110525a
+
+
+Version 3.0.110525b
+---------------------------------------
+Modified code for OSD Font function (1. restore color table -> INI. 2. OSD font count algorithm. 3. DVR 1T1R), Version 3.0.110525b
+
+
+Version 3.0.110530a
+---------------------------------------
+Modified code for OSD Menu (dynamic allocate 100 Items/page), Version 3.0.110530a
+
+
+Version 3.0.110530b
+---------------------------------------
+Modified code for OSD Menu (to check Language number), Version 3.0.110530b
+
+
+Version 3.0.110608a
+---------------------------------------
+Modified code for OSD Menu (1. Support Item character (Max == 32) ), Version 3.0.110608a
+
+
+Version 3.0.110614a
+---------------------------------------
+Modified code for OSD Menu tree view function, load project (disable USB DESC function), Version 3.0.110614a
+
+
+Version 3.0.110615a
+---------------------------------------
+Add SF read/write function to support the player tools data, Version 3.0.110615a
+
+
+Version 3.0.110615b
+---------------------------------------
+Modified code for update register 0x2003 with SF = SST and Size < 8M, Version 3.0.110615b
+
+
+Version 3.0.110707a
+---------------------------------------
+Modified code for load profile (no check USB Desc file), Version 3.0.110707a
+
+
+Version 3.0.110712a
+---------------------------------------
+Modified code to enable USB DESC function (User can modify the USB Desc or not), Version 3.0.110712a
+
+
+Version 3.0.110817a
+---------------------------------------
+Modified code to support EngiMode (RF: 24 channel) and fixed the bug for UART function in Win7 OS, Version 3.0.110817a
+
+
+Version 3.0.110825a
+---------------------------------------
+1. To expand the maximum number(Length=60) of item characters in the OSD MENU
+2. modified code for Key range, Version 3.0.110825a
+
+
+Version 3.0.110901a
+---------------------------------------
+modified code for SFDA (0x0005 == 1 AP in Broadcast mode), Version 3.0.110901a
+
+
+Version 3.0.110906a
+---------------------------------------
+Add the RAM2 USB Desc function, Version 3.0.110906a
+
+
+Version 3.0.110909a
+---------------------------------------
+Add UART log parser function, Version 3.0.110909a
+
+
+Version 3.0.110913a
+---------------------------------------
+Add UART log parser function, Version 3.0.110913a
+
+
+Version 3.0.110916a
+---------------------------------------
+Add UART log parser function and fixed OSD Menu bug (space character (0x20 -> 0x0)), Version 3.0.110913b
+
+
+
+Version 3.0.111007a
+---------------------------------------
+Modified code for OSD Font (add Font background color function), Version 3.0.111007a
+
+
+Version 3.0.111011a
+---------------------------------------
+Modified code for OSD Image (Support Font background color function), Version 3.0.111011a
+
+
+Version 3.0.111011b
+---------------------------------------
+Modified code to fix the bug that is about the 2 USB DESC file, Version 3.0.111011b
+
+
+Version 3.0.111026a
+---------------------------------------
+Modified code for OSD Font BG show color (INI defined), Version 3.0.111026a
+
+
+Version 3.0.111026b
+---------------------------------------
+Modified code for OSD Menu font to support OSD Font BG show color (INI defined), Version 3.0.111026b
+
+
+Version 3.0.111101a
+---------------------------------------
+Add OSD font rotation Mirror (0') function , Version 3.0.111101a
+
+
+Version 3.0.111107a
+---------------------------------------
+Add OSD font rotation Mirror (0', 90', 180', 270') function , Version 3.0.111107a
+
+
+Version 3.0.111107b
+---------------------------------------
+update chipinfo.ini (Add new SF type MX25L1635D).
+
+
+Version 3.0.111117a
+---------------------------------------
+Modified code for USB DESC save/restore function. UVC. UAC parameter. USB desc parser function , Version 3.0.111117a
+
+
+Version 3.0.111123a
+---------------------------------------
+Modified code to fix the USB Desc parser bug , Version 3.0.111123a
+
+
+Version 3.0.111205a
+---------------------------------------
+to modify code for UVC_RELATED_PARAMETER bug, Version 3.0.111205a
+
+
+Version 3.0.111214a
+---------------------------------------
+to modify code for iDramPowerOnForUsbDongle (SFDA - 0x58), Version 3.0.111214a
+
+
+Version 3.0.111216a
+---------------------------------------
+to modify code for iDramPowerOnForUsbDongle (SFDA - 0x58), Version 3.0.111216a
+
+
+Version 3.0.111216b
+---------------------------------------
+to modify USB UAC descriptor bug, Version 3.0.111216b
+
+
+Version 3.0.120214a
+---------------------------------------
+to modify code for Op-mode value in profile (by SZ request), Version 3.0.120214a
+
+
+Version 3.0.120301a
+---------------------------------------
+Add OSD Image Batch transfer function, Version 3.0.12301a
+
+
+Version 3.0.120302a
+---------------------------------------
+To support different width and height for OSD Image Batch transfer function, Version 3.0.120302a
+
+
+Version 3.0.120305a
+---------------------------------------
+Remove the SF identify fuction from UART Connect procdure, Version 3.0.120305a
+
+
+Version 3.0.120309a
+---------------------------------------
+Fix the bug for Read Sensor initial table and output text file format, Version 3.0.120309a	
+
+
+Version 3.0.120316a
+---------------------------------------
+Add Mutli-Language String Text --> OSD Image function, Version 3.0.120316a		
+
+
+
+Version 3.0.120319a
+---------------------------------------
+Fixed bug: [OSD Menu], to delete a font then insert new one in a item ( color incorrect ) , Version 3.0.120319a
+
+
+
+Version 3.0.120326a
+---------------------------------------
+Fixed bug: [UART DBG Message] , Version 3.0.120326a
+
+
+
+Version 3.0.120327a
+---------------------------------------
+Modified code for OSD Image Text transfer function with text length = 0, space character , Version 3.0.120327a
+
+
+Version 3.0.120402a
+---------------------------------------
+Modified code for OSDImage String Text function (the left/bottom rectangle color isn't sync to BG color), Version 3.0.120402a
+
+
+Version 3.0.120402b
+---------------------------------------
+Add Font offset adjust function for OSDImage String Text function, Version 3.0.120402b
+
+
+Version 3.0.120411a
+---------------------------------------
+Remove the EngineerModePageBtn_QueryChannelInfo function to EngMode page (No in UART connect function), Version 3.0.120411a
+
+
+Version 3.0.120411b
+---------------------------------------
+Add new flash MX25L12845E, Version 3.0.120411b
+
+
+Version 3.0.120416a
+---------------------------------------
+Fixed the USB Desc parser function bug (GenUSBDescData()) and add to update 0x20C2 (SPI CLK) function, Version 3.0.120416a
+
+
+Version 3.0.120507a
+---------------------------------------
+Add new USB Desc definition(DESC_UVC_YUY2_HID), Version 3.0.120507a
+
+
+Version 3.0.120510a
+---------------------------------------
+Modified code for LOGO function (Add header[30] = 2, file size (2B -> 3B), Version 3.0.120510a
+
+
+Version 3.0.120621a
+---------------------------------------
+Modified code for LOGO function (Add System parameter [0x007F] = 2, file size (2B -> 3B), Version 3.0.120621a
+
+
+Version 3.0.120710a
+---------------------------------------
+Add iEnableSFParitalWrite default value in INI file, Version 3.0.120710a
+
+
+Version 3.0.120724b
+---------------------------------------
+Expand the OSD Image Max count (255->32767)Font Group header [0x0C, 0x0E], Version 3.0.120724b
+
+
+Version 3.0.120724c
+---------------------------------------
+Expand the OSD Image Max count (255->32767)Font Group header [0x0C, 0x0E], Version 3.0.120724c
+
+
+Version 3.0.120823a
+---------------------------------------
+Add Query RF Channel info from SF in EngiMode function (INI file defined channel count and rate), Version 3.0.120823a
+
+
+Version 3.0.120823b
+---------------------------------------
+update chipinfo.ini (Add new SF type GD25Q64B).

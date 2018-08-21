@@ -1,0 +1,238 @@
+
+//------------------------------------------------------
+//------------------------------------------------------
+//------------------------------------------------------
+//
+//
+//
+//			Descriptor for MSC USB2.0
+//
+//
+//------------------------------------------------------
+
+// MSC
+HS_DEVICE_DSCR =
+{        		// Device Descriptor
+    0x12, //  0 bLength
+    0x01, //  1 bDescriptorType
+    0x00, //  2 bcdUSB (LSB)
+    0x02, //  3 bcdUSB (MSB)
+    0x00, //  4 bDeviceClass
+    0x00, //  5 bDeviceSubClass
+    0x00, //  6 bDeviceProtocol
+    0x40, //  7 bMaxPacketSize0  
+    0x45, //  8 idVender (LSB)
+    0x0c, //  9 idVender (MSB)
+    0x50, // 10 idProduct (LSB)
+    0x67, // 11 idProduct (MSB)
+    0x00, // 12 bcdDevice (LSB)
+    0x01, // 13 bcdDevice (MSB)
+    0x00, // 14 iManufacture
+    0x01, // 15 iProduct
+    0x02, // 16 iSerialNumber
+    0x01  // 17 bNumberConfigurations 
+}
+
+//------------------------------------------------------
+//MSC ONLY DESCRIPTOR
+HS_CONFIG_DSCR =
+{
+/* Configuration Descriptor */
+    0x09, //  0 bLength
+    0x02, //  1 bDescriptorType
+
+    0x20, //  2 wTotalLength (LSB)
+    0x00, //  3 wTotalLength (MSB)
+    
+    0x01, //  4 bNumInterface
+    0x01, //  5 bConfigurationValue
+    0x00, //  6 iConfiguration
+    0xC0, //  7 bmAttributes   1 BUS-POWERED 1 Self-Powered  0 0 0 0 0 0
+    0xFA, //  8 bMaxPower = 500mA
+
+	// Interface0 Descriptor
+    0x09, //  0 bLength
+    0x04, //  1 bDescriptorType
+    0x00, //  2 bInterfaceNumber
+    0x00, //  3 bAlternativeSetting
+    0x02, //  4 bNumberEndpoints
+    0x08, //  5 bInterfaceClass :    08 MASS STORAGE CLASS
+    0x06, //  6 bInterfaceSubClass : 01 RBC T10 Project
+       	  //                         02 SFF-8020i, MMC-2(ATAPI)
+	      //                         03 QIC-157
+	      //                         04 UFI
+	      //                         05 SFF 8070i
+          //                         06 SCSI transparent command set
+    0x50, //  7 bInterfaceProtocol   50 Bulk Only Transport
+    0x00, //  8 iInterface
+
+	// Endpoint 1 Descriptor
+    0x07, //  0 bLength
+    0x05, //  1 bDescriptorType 
+    0x81, //  2 bEndpointAddress	8x In
+    0x02, //  3 bmAttributes		02 Bulk
+    0x00, //  4 wMaxPacketSize (LSB)
+    0x02, //  5 wMaxPacketSize (MSB)
+    0x00, //  6 bInterval
+
+	// Endpoint 2 Descriptor
+    0x07, //  0 bLength
+    0x05, //  1 bDescriptorType
+    0x02, //  2 bEndpointAddress	0x Out
+    0x02, //  3 bmAttributes		02 Bulk
+    0x00, //  4 wMaxPacketSize (LSB)
+    0x02, //  5 wMaxPacketSize (MSB)
+    0x00, //  6 bInterval
+
+}
+
+HS_DEV_QUALIF =
+{         // Device Qualifier
+    0x0a, //  0 bLength
+    0x06, //  1 bDescriptorType
+
+    0x00, //  2 bcdUSB (LSB)
+    0x02, //  3 bcdUSB (MSB)
+    0x00, //  4 bDeviceClass
+    0x00, //  5 bDeviceSubClass
+    0x00, //  6 bDeviceProtocol
+    0x40, //  7 bMaxPacketSixe0
+    0x01, //  8 bNumberConfigurations
+    0x00  //  9 bReserved
+}
+
+HS_OTHER_CONFIG_DSCR_MSC = 
+{
+	// Full-Speed Configuration Descriptor
+    0x09, //  0 bLength
+    0x07, //  1 bDescriptorType
+    
+    0x20, //  2 wTotalLength (LSB)
+    0x00, //  3 wTotalLength (MSB)
+    
+    0x01, //  4 bNumInterface
+    0x01, //  5 bConfigurationValue
+    0x00, //  6 iConfiguration
+    0xC0, //  7 bmAttributes   1 BUS-POWERED 1 Self-Powered  0 0 0 0 0 0  
+    0xFA, //  8 bMaxPower = 500mA
+
+	// Interface0 Descriptor
+    0x09, //  0 bLength
+    0x04, //  1 bDescriptorType
+    0x00, //  2 bInterfaceNumber
+    0x00, //  3 bAlternativeSetting
+    0x02, //  4 bNumberEndpoints
+    0x08, //  5 bInterfaceClass :    08 MASS STORAGE CLASS
+    0x06, //  6 bInterfaceSubClass : 01 RBC T10 Project
+       	  //                         02 SFF-8020i, MMC-2(ATAPI)
+	      //                         03 QIC-157
+	      //                         04 UFI
+	      //                         05 SFF 8070i
+          //                         06 SCSI transparent command set
+    0x50, //  7 bInterfaceProtocol   50 Bulk Only Transport
+    0x00, //  8 iInterface
+
+	// Endpoint 1 Descriptor
+    0x07, //  0 bLength
+    0x05, //  1 bDescriptorType 
+    0x81, //  2 bEndpointAddress	8x In
+    0x02, //  3 bmAttributes		02 Bulk
+    0x40, //  4 wMaxPacketSize (LSB)
+    0x00, //  5 wMaxPacketSize (MSB)
+    0x00, //  6 bInterval
+
+	// Endpoint 2 Descriptor
+    0x07, //  0 bLength
+    0x05, //  1 bDescriptorType
+    0x02, //  2 bEndpointAddress	0x Out
+    0x02, //  3 bmAttributes		02 Bulk
+    0x40, //  4 wMaxPacketSize (LSB)
+    0x00, //  5 wMaxPacketSize (MSB)
+    0x00  //  6 bInterval
+	
+}
+
+//------------------------------------------------------
+STRING_DSCR0 =                             // Language ID : 0x0409
+{
+    0x04,  
+    0x03,   
+    0x09,   
+    0x04
+}
+
+
+STRING_DSCR1 =
+{
+    0x1E, 0x03, 
+    'S',  0x00, 
+    'N',  0x00, 
+    '9',  0x00,              // iManufacture = "SN93500 - ROM"
+    '3',  0x00, 
+    '5',  0x00, 
+    '0',  0x00, 
+    '0',  0x00,
+    ' ',  0x00, 
+    '-',  0x00, 
+    ' ',  0x00, 
+    'R',  0x00,
+    'O',  0x00, 
+    'M',  0x00, 
+    ' ',  0x00 
+}
+
+
+STRING_DSCR2 =
+{
+    0x1E, 0x03, 
+    'S',  0x00, 
+    'O',  0x00,
+    'N',  0x00,              // iManufacture = "SONiX/SA3 USB"
+    'i',  0x00, 
+    'X',  0x00, 
+    '/',  0x00, 
+    'S',  0x00,
+    'A',  0x00, 
+    '3',  0x00, 
+    ' ',  0x00, 
+    'U',  0x00,
+    'S',  0x00, 
+    'B',  0x00, 
+    ' ',  0x00, 
+}
+
+STRING_DSCR3 =
+{
+   0x1E, 0x03, 
+   '0',  0x00, 
+   '0',  0x00, 
+   '0',  0x00,              // serial number "00000000000001"
+   '0',  0x00, 
+   '0',  0x00, 
+   '0',  0x00, 
+   '0',  0x00,
+   '0',  0x00, 
+   '0',  0x00, 
+   '0',  0x00, 
+   '0',  0x00,
+   '0',  0x00, 
+   '0',  0x00, 
+   '1',  0x00,
+}
+
+STRING_DSCR4 =
+{
+     'S','O','N','i','X',' ',' ',' ',
+}
+
+STRING_DSCR5 =
+{
+     'S','N','9','3','5','0','0',' ',
+     'M','S','C',' ','D','e','v',' ',
+}
+
+STRING_DSCR6 =
+{
+     'V','0','.','1',
+}
+
