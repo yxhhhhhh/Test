@@ -9332,18 +9332,20 @@ void UI_MotorStateCheck(void)
 
 void UI_GetBatLevel(void)
 {
-    uint8_t  usbdet, i;
-    uint16_t percent;
+    uint8_t usbdet, i;
+    int16_t percent;
     static uint16_t batmap[] = {
         3500, 3598, 3665, 3788, 3984, 4350, 4500
     };
     usbdet  = !UI_GetUsbDet();
-    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3050 * 2 / 1024 - (usbdet ? 50 : 0);
+    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3050 * 2 / 1024 - (usbdet ? 50 : 0); // new board
+//  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50 : 0); // old board
     for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
         if (ubGetBatVoltage <= batmap[i]) break;
     }
     percent = (i-1) * 20 + 20 * (ubGetBatVoltage - batmap[i-1]) / (batmap[i] - batmap[i-1]);
     percent = percent < 100 ? percent : 100;
+    percent = percent > 0   ? percent : 0;
     if (ubGetBatPercent == -1) ubGetBatPercent = percent;
     if (usbdet) {
         if (ubGetBatPercent < percent) ubGetBatPercent++;
