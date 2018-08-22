@@ -9360,7 +9360,7 @@ void UI_GetBatLevel(void)
     uint8_t usbdet, i;
     int16_t percent;
     static uint16_t batmap[] = {
-        3500, 3598, 3665, 3788, 3984, 4350, 4500
+        3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
     usbdet  = !UI_GetUsbDet();
     ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3050 * 2 / 1024 - (usbdet ? 50 : 0); // new board
