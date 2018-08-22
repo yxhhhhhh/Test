@@ -787,7 +787,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         }
     }
 
-    if ((ubCheckCount%10) == 0)
+    if ((ubCheckCount%10) == 9)
     {
         UI_GetBatLevel();
     }
@@ -9363,7 +9363,7 @@ void UI_GetBatLevel(void)
         3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
     usbdet  = !UI_GetUsbDet();
-    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3050 * 2 / 1024 - (usbdet ? 50 : 0); // new board
+    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 50 : 0); // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50 : 0); // old board
     for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
         if (ubGetBatVoltage <= batmap[i]) break;
@@ -9377,7 +9377,7 @@ void UI_GetBatLevel(void)
     } else {
         if (ubGetBatPercent > percent) ubGetBatPercent--;
     }
-    ubBatLvLIdx = BAT_LVL0 + ubGetBatPercent / 20;
+    ubBatLvLIdx = BAT_LVL0 + ubGetBatPercent / 25;
     if (!usbdet && ubGetBatVoltage < 3500) {
         if (++ubBatLowCount == 10) {
             UI_PowerOff();
@@ -13061,8 +13061,8 @@ void UI_FactoryStatusDisplay(void)
     UI_DisplaySN(510 + Factory_x_vol, 1000, RxSNdata, sizeof(RxSNdata));
 
     if (0) {
-        char str[64];
-        sprintf(str, "%d %d", ubGetBatVoltage, ubGetBatPercent);
+        char str[10];
+        sprintf(str, "%4d %3d", ubGetBatVoltage, ubGetBatPercent);
         UI_DisplaySN(575 + Factory_x_vol, 1000, str, sizeof(str));
     }
 }
