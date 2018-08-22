@@ -833,90 +833,63 @@ uint8_t UI_GetTempAverVal(uint8_t Value)
     return 0xFF;
 }
 
+// #define CT75_TEMP_SENSOR
 void UI_TempCheck(void) //20180322
 {
-    //uint8_t cur_temp;
     UI_BUReqCmd_t tUI_TempReqCmd;
 
-    //I2C1_Type *pI2C;
-    uint8_t   ubData[4] = {0};
-    uint8_t   ubReg = 0xE3;
-    bool      ret = 0;
-    uint32_t  tem = 0;
-	static uint8_t ubTempInvalidCnt = 0;
+    uint8_t ubReg;
+    uint8_t ubData[2] = {0};
+    bool    ret = 0;
+    int32_t tem = 0;
+    static uint8_t ubTempInvalidCnt = 0;
 
-    //pI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
-    ret = bI2C_MasterProcess (pTempI2C,  0x40, &ubReg, 1, ubData, 2);
+#ifdef CT75_TEMP_SENSOR
+    ubReg = 0x00;
+    ret   = bI2C_MasterProcess(pTempI2C, 0x48, &ubReg, 1, ubData, 2);
+#else
+    ubReg = 0xE3;
+    ret   = bI2C_MasterProcess(pTempI2C, 0x40, &ubReg, 1, ubData, 2);
+#endif
+    if (!ret) {
+        if (++ubTempInvalidCnt >= 5) {
+            ubTempInvalid    = 1;
+            ubTempInvalidCnt = 0;
+        } else {
+            return;
+        }
+    } else {
+        ubTempInvalid    = 0;
+        ubTempInvalidCnt = 0;
+    }
 
-	if(ret == false)
-	{
-		ubTempInvalidCnt++;
-		if(ubTempInvalidCnt >= 5)
-		{
-			ubTempInvalid = 1;
-			ubTempInvalidCnt = 0;
-		}
-		else
-		{
-			return;
-		}
-	}
-	else
-	{
-		ubTempInvalid = 0;
-		ubTempInvalidCnt = 0;
-	}
-
-	//tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
-	//ubCurTempVal = tem;
-	
-	if((17572*(ubData[0]*256+ubData[1])/65536-4685) >= 0)
-	{
-		ubTempBelowZore = 0;
-		tem = (17572*(ubData[0]*256+ubData[1])/65536) - 4685;
-		if(ubTempAdjustValue >=9000)
-			tem -=50;
-		else if(ubTempAdjustValue >=18000)
-			tem -=100;
-		else if(ubTempAdjustValue >=27000)
-			tem -=150;
-		else if(ubTempAdjustValue >=36000)
-			tem -=200;
-		
-		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
-	}
-	else
-	{
-		ubTempBelowZore = 1;
-		tem = 4685 - (17572*(ubData[0]*256+ubData[1])/65536);
-		if(ubTempAdjustValue >=9000)
-			tem -=50;
-		else if(ubTempAdjustValue >=18000)
-			tem -=100;
-		else if(ubTempAdjustValue >=27000)
-			tem -=150;
-		else if(ubTempAdjustValue >=36000)
-			tem -=200;
-		
-		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
-	}
+#ifdef CT75_TEMP_SENSOR
+    tem   = (int8_t)ubData[0];
+    ubTempBelowZore = tem < 0;
+    ubCurTempVal    = tem > 0 ? tem : -tem;
+#else
+    tem  = 17572 * (ubData[0] * 256 + ubData[1]) / 65536 - 4685;
+    tem /= 100;
+    ubTempBelowZore = tem < 0;
+    ubCurTempVal    = tem > 0 ? tem : -tem;
+#endif
 
     ubCurTempVal = UI_GetTempAverVal(ubCurTempVal);
     printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
 
-	if(ubCurTempVal == 0xFF)
-		return;
-	
-//	if(ubTemp_bak != cur_temp)
-	{
-		tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]	  	= UI_REPORT;
-		tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM] 	= UI_TEMP_CHECK;
-		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA] 	= ubCurTempVal;
-		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1] 	= ubTempBelowZore;
-		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubTempInvalid;
-		tUI_TempReqCmd.ubCmd_Len  			  	= 5;
+    if (ubCurTempVal == 0xFF)
+        return;
+
+//  if (ubTemp_bak != cur_temp)
+    {
+        tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM]    = UI_TEMP_CHECK;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1]  = ubTempBelowZore;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  = 0;
+        tUI_TempReqCmd.ubCmd_Len                = 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
-    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
+        printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
         ubTemp_bak = ubCurTempVal;
     }
 }
@@ -1544,7 +1517,6 @@ void UI_SetIRLed(uint8_t LedState)
 void UI_BrightnessCheck(void) //20180408
 {
 	#define IR_CHECK_CNT	3
-	int i;
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
@@ -1707,8 +1679,8 @@ uint8_t UI_SendPsModeToPu(void)
     tUI_PsModeReqCmd.ubCmd[UI_TWC_TYPE]     = UI_REPORT;
     tUI_PsModeReqCmd.ubCmd[UI_REPORT_ITEM]  = UI_BU_TO_PU_CMD;
     tUI_PsModeReqCmd.ubCmd[UI_REPORT_DATA]  = UI_BU_CMD_PS_MODE;
-    tUI_PsModeReqCmd.ubCmd[UI_REPORT_DATA+1]    = tUI_BuStsInfo.tCamPsMode;
-    tUI_PsModeReqCmd.ubCmd_Len                  = 4;
+    tUI_PsModeReqCmd.ubCmd[UI_REPORT_DATA+1]= tUI_BuStsInfo.tCamPsMode;
+    tUI_PsModeReqCmd.ubCmd_Len              = 4;
 
     printd(Apk_DebugLvl, "UI_SendPsModeToPu PsMode: %d.\n", tUI_BuStsInfo.tCamPsMode);
     if (rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_PsModeReqCmd))
@@ -1833,6 +1805,7 @@ uint8_t UI_SendIRValueToPu(uint8_t ubHIr, uint8_t ubLIr)
 
 	return rUI_SUCCESS;
 }
+
 void UI_AlarmTrigger(void)
 {
     UI_BUReqCmd_t tUI_AlarmReqCmd;
@@ -1881,54 +1854,10 @@ uint8_t UI_SendPickupVolumeToPu(uint32_t ulUI_AdcRpt)
 
 uint8_t UI_readSN(void)
 {
-	uint8_t i =0;
     uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
     SF_Read(ubUI_SFAddr, sizeof(TXSNdata), TXSNdata);
-	for (int i=0; i<sizeof(TXSNdata); i++)
-		{
-	printd(Apk_DebugLvl,"UI_readSN TXSNdata= %d\n",TXSNdata[i]);
-
-	}
     return 0;
 }
-/*
-uint8_t UI_SendSnValueToPu(void)
-{
-	UI_BUReqCmd_t tUI_SNVolueReqCmd;
-	static uint8_t time = 0;
-	
-	
-	tUI_SNVolueReqCmd.ubCmd[UI_TWC_TYPE]	  			= UI_REPORT;
-	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_ITEM] 			= UI_BU_TO_PU_CMD;
-	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA] 			= UI_BU_CMD_SN_VALUE;
-	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+1] 		= TXSNdata[time+0];		
-	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+2] 		= TXSNdata[time+1];		
-	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+3] 		= TXSNdata[time+2];		
-	tUI_SNVolueReqCmd.ubCmd[UI_REPORT_DATA+4] 		= TXSNdata[time+3];	
-	tUI_SNVolueReqCmd.ubCmd_Len  			  			= 7;
-	printd(Apk_DebugLvl,"UI_LoadDevStatusInfo  TXSNdata[time+0]= %d.TXSNdata[time+1]= %d.TXSNdata[time+2]= %d.TXSNdata[time+3]= %d\n",TXSNdata[time+0],TXSNdata[time+1],TXSNdata[time+2],TXSNdata[time+3]);
-
-	if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_SNVolueReqCmd))
-	{
-		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Fail!\n");
-		return 0;
-	}
-
-	time +=4;
-
-	if(time == 16)
-	{
-		time = 0;
-		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu end!\n");
-		return 2;
-	}
-	else
-	{
-		printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Success!\n");
-		return 1;
-	}
-}
-*/
 
 uint8_t UI_SendSnValueToPu(uint8_t n)
 {
