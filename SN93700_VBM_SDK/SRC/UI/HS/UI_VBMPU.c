@@ -253,6 +253,8 @@ uint8_t ubShowCamPairFullSta = 0;
 uint8_t ubCameraOnlineNum = 0;
 uint8_t ubMenuKeyPairing = 0;
 
+uint8_t ubShowAlarmAgain = 0;
+uint8_t ubShowAlarmType = 0;
 uint8_t ubShowAlarmstate = 0;
 uint8_t ubPlayAlarmCount = 0;
 uint8_t ubTempAlarmCheckCount = 0;
@@ -971,6 +973,17 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             ubLostLinkEnterSanMode = 0;
             UI_DisableScanMode();
         }
+
+		if ((ubTempAlarmState == HIGH_TEMP_ALARM_ING)||(ubTempAlarmState == LOW_TEMP_ALARM_ING)||(ubPickupAlarmState == PICKUP_ALARM_ING))
+		{
+			 //if (ubShowAlarmstate == 3)
+        	//{
+				//if(ubAlarmOnlyAlertFlag == 0)
+               	 //UI_ShowAlarm(3);
+				//ubAlarmOnlyAlertFlag = 0;
+        	//}
+			 ubShowAlarmAgain=1;
+		}
 
         if (tUI_PuSetting.ubDefualtFlag == FALSE)
         {
@@ -5362,6 +5375,8 @@ void UI_ShowAlarm(uint8_t type)
 {
     OSD_IMG_INFO tOsdImgInfo;
 
+	//if(type<3)
+	ubShowAlarmType = type;
     printd(Apk_DebugLvl, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
 
     if ((ubMotor0State != MC_LEFT_RIGHT_OFF) || (ubMotor1State != MC_UP_DOWN_OFF))
@@ -5523,12 +5538,22 @@ void UI_PlayAlarmSound(uint8_t type)
         {
             printd(Apk_DebugLvl, "UI_PlayAlarmSound BUZ_PlaySingleSound###\n");
             BUZ_PlayAlarmSound();
+
+			if(ubShowAlarmAgain)
+			{	
+				//osDelay(1000);
+				ubShowAlarmAgain=0;
+				printd(Apk_DebugLvl, "UI_PlayAlarmSound ubShowAlarmType: %d\n", ubShowAlarmType);
+				UI_ShowAlarm(ubShowAlarmType);
+			}
         }
     }
 }
 
 void UI_StopPlayAlarm(void)
 {
+	ubShowAlarmAgain=0;
+
     if (ubAlarmPlayState == 1)
     {
         ubAlarmPlayState = 0;
