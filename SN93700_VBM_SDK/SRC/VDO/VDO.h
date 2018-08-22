@@ -121,5 +121,6 @@ void VDO_RemoveDataPath(KNL_ROLE tVDO_BURole);
 void VDO_DataPathSetup(KNL_ROLE tVDO_KNLRole, VDO_SrcType_t tVDO_SrcType);
 void VDO_ChangePlayState(KNL_ROLE tVDO_KNLRole, VDO_PlayState_t tVdoPlySte);
 KNL_SRC VDO_GetSourceNumber(KNL_ROLE tVDO_KNLRole);
+KNL_ROLE VDO_KNLSrcNumMap2KNLRoleNum(KNL_SRC tVDO_SrcNum);
 
 #endif

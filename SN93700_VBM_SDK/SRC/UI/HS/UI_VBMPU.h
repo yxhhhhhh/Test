@@ -870,6 +870,7 @@ typedef struct
 void UI_PowerKeyShort(void); //20180319
 void UI_PowerKey(void);
 void UI_MenuKey(void);
+void UI_MenuLongKey(void);
 void UI_UpArrowKey(void);
 void UI_DownArrowKey(void);
 void UI_LeftArrowKey(void);

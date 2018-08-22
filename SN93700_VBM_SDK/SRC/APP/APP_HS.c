@@ -603,7 +603,7 @@ void APP_doPairingStart(void *pvPairInfo)
 #endif
 	VDO_Stop();
 	ADO_Stop();
-	PAIR_Start(tPair_Tag, APP_PAIRING_TIMEOUT, 0);
+	PAIR_Start(tPair_Tag, APP_PAIRING_TIMEOUT, 1);
 }
 //------------------------------------------------------------------------------
 #ifdef VBM_PU
@@ -776,6 +776,9 @@ void APP_FWUgradeStatusReport(uint8_t ubStsReport)
 	{
 		case FWU_UPG_INPROGRESS:
 			UI_StopUpdateThread();
+			#ifdef VBM_PU
+			UI_TimerEventStop();
+			#endif
 			KNL_Stop();
 			VDO_Stop();
 			ADO_Stop();
@@ -1012,10 +1015,10 @@ void APP_Start(void)
 #endif
 	
 #ifdef VBM_PU	
-	if(ubFactorySettingFLag == 0)	
-		VDO_Start();
-	else
+	if(ubFactorySettingFLag == 1)	
 		VDO_Stop();
+	else
+		VDO_Start();
 #endif
 	
 	//! Audio Start
@@ -1027,6 +1030,9 @@ void APP_Start(void)
 	tAPP_StsReport.tAPP_State = APP_IDLE_STATE;
 	UI_UpdateAppStatus(&tAPP_StsReport);
 #ifdef VBM_PU
-	UI_SwitchCameraSource();
+	if(ubFactorySettingFLag != 1)
+	{
+		UI_SwitchCameraSource();
+	}	
 #endif
 }

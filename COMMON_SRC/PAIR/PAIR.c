@@ -76,13 +76,13 @@ static void PAIR_Thread(void const *argument)
 		{
 //			printf("Sent TWC_PRP");
 			if(tTWC_Send(TWC_AP_MASTER, TWC_PRP, (uint8_t *)&PAIR_PrpPket,sizeof(PAIR_PrpPket), 8) == TWC_SUCCESS)
-				printf("Sent TWC_PRP_ok \n");
+				printd(Apk_DebugLvl,"Sent TWC_PRP_ok \n");
 
 			uwDelayMs = PAIR_PRP_DELAY;
 		}
 		else if(ubPAIR_State == PAIR_PAAP)
 		{
-			printf("Sent TWC_PAAP\n");
+			printd(Apk_DebugLvl,"Sent TWC_PAAP\n");
 			tTWC_Send(TWC_AP_MASTER, TWC_PAAP, (uint8_t *)&PAIR_PapPket, sizeof(PAIR_PapPket), 8);
 			uwDelayMs = PAIR_PAAP_DELAY;
 			ubPAIR_PaapCnt++;
@@ -97,7 +97,7 @@ static void PAIR_Thread(void const *argument)
 			tTWC_StopTwcSend(TWC_AP_MASTER, TWC_PRP);
 			tTWC_StopTwcSend(TWC_AP_MASTER, TWC_PAAP);
 			BB_HoppingPairingEnd();
-			printf("PAIR_END\n");
+			printd(Apk_DebugLvl,"PAIR_END\n");
 			tPair_EvtMsg.ubPAIR_Event 		= APP_PAIRING_SUCCESS_EVENT;
 			tPair_EvtMsg.ubPAIR_Message[0] 	= PAIR_GetStaNumber();
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
@@ -114,7 +114,7 @@ static void PAIR_Thread(void const *argument)
 			ubPAIR_State = PAIR_TIMEOUT;
 			tPair_EvtMsg.ubPAIR_Event = APP_PAIRING_FAIL_EVENT;
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
-			printf("PAIR_TIMEOUT\n");
+			printd(Apk_DebugLvl,"PAIR_TIMEOUT\n");
 			osThreadSuspend(PAIR_ThreadId);
 		}
 		osDelay(uwDelayMs);
@@ -122,14 +122,14 @@ static void PAIR_Thread(void const *argument)
 #if OP_AP
 		if(ubPAIR_State == PAIR_START)
 		{
-			printf("Wait PRP\n");
+			printd(Apk_DebugLvl,"Wait PRP\n");
 			uwDelayMs = PAIR_START_DELAY;
 		}
 		else if(ubPAIR_State == PAIR_PAP)
 		{
 //			printf("Sent PAIR_PAP "); 
 			if(tTWC_Send(TWC_STA1, TWC_PAP, (uint8_t *)&PAIR_PapPket, sizeof(PAIR_PapPket), 8)== TWC_SUCCESS)
-				printf("Sent PAIR_PAP ok \n");
+				printd(Apk_DebugLvl,"Sent PAIR_PAP ok \n");
 			uwDelayMs = PAIR_PAP_DELAY;
 		}
 		else if(ubPAIR_State == PAIR_END)
@@ -144,7 +144,7 @@ static void PAIR_Thread(void const *argument)
 				tPair_EvtMsg.ubPAIR_Message[2] = APP_UNBIND_BU_EVENT;
 			}
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
-			printf("PAIR_END\n");
+			printd(Apk_DebugLvl,"PAIR_END\n");
 			ulPAIR_TimeCnt = 0;
 			tPair_EvtMsg.ubPAIR_Message[2] = APP_REFRESH_EVENT;
 			osThreadSuspend(PAIR_ThreadId);

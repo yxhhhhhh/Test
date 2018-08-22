@@ -122,7 +122,6 @@ uint8_t ubLowAlarm = 0;
 uint8_t ubSoundAlarm = 0;
 uint8_t TXSNdata[16] = {0};
 uint8_t ubTempBelowZore = 0;
-uint32_t ubTempAdjustValue = 0;
 uint8_t ubTempAdjustTime = 0;
 uint8_t ubTempInvalid = 0;
 
@@ -220,8 +219,6 @@ void UI_StatusCheck(uint16_t pThreadCnt)
 		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
 		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 	}
-	ubTempAdjustValue ++;
-	printd(Apk_DebugLvl,"UI_StatusCheck ubTempAdjustValue =%d.\n",ubTempAdjustValue);
 
     if (ubTalkCnt == 0)
     {
@@ -404,13 +401,12 @@ void UI_UpdateBUStatusToPU(void)
     //  tUI_BuSts.ubCmd_Len                 = 3;
     //  UI_SendRequestToPU(NULL, &tUI_BuSts);
 
-    static uint8_t ubVersionResut = rUI_FAIL;
-    static uint8_t ubSNValueResut = 0;
-
-    if (ubVersionResut == rUI_FAIL) {
-        ubVersionResut = UI_SendVersionToPu();
-    }
-	
+	static uint8_t ubVersionResut = rUI_FAIL;
+	static uint8_t ubSNValueResut = 0;
+	if(ubVersionResut == rUI_FAIL)
+	{
+		ubVersionResut = UI_SendVersionToPu();
+	}
 //	if(ubSNValueResut == 0 || ubSNValueResut ==1)
 	{
 //		ubSNValueResut = UI_SendSnValueToPu();
@@ -874,35 +870,19 @@ void UI_TempCheck(void) //20180322
 	{
 		ubTempBelowZore = 0;
 		tem = (17572*(ubData[0]*256+ubData[1])/65536) - 4685;
-		if(ubTempAdjustValue >=9000)
-			tem -=50;
-		else if(ubTempAdjustValue >=18000)
-			tem -=100;
-		else if(ubTempAdjustValue >=27000)
-			tem -=150;
-		else if(ubTempAdjustValue >=36000)
-			tem -=200;
-		
+	
 		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
 	}
 	else
 	{
 		ubTempBelowZore = 1;
 		tem = 4685 - (17572*(ubData[0]*256+ubData[1])/65536);
-		if(ubTempAdjustValue >=9000)
-			tem -=50;
-		else if(ubTempAdjustValue >=18000)
-			tem -=100;
-		else if(ubTempAdjustValue >=27000)
-			tem -=150;
-		else if(ubTempAdjustValue >=36000)
-			tem -=200;
 		
 		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
 	}
 
     ubCurTempVal = UI_GetTempAverVal(ubCurTempVal);
-    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
+    //printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
 
 	if(ubCurTempVal == 0xFF)
 		return;
@@ -916,7 +896,7 @@ void UI_TempCheck(void) //20180322
 		tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2] 	= ubTempInvalid;
 		tUI_TempReqCmd.ubCmd_Len  			  	= 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
-    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
+    //printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
         ubTemp_bak = ubCurTempVal;
     }
 }
@@ -1146,7 +1126,7 @@ void UI_ResetDevSetting(void)
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCondenseMode, 	CAMSET_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorBL, 		  64);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorContrast,	  64);
-	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);  //±¥ºÍ¶È
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorHue, 		  64);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.MdParam.ubMD_Mode,	MD_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamPsMode,			POWER_NORMAL_MODE);
@@ -1571,17 +1551,18 @@ void UI_BrightnessCheck(void) //20180408
     //printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
-        if (ubCheckMinIrCnt >= IR_CHECK_CNT)
+    	  if (ubCheckMinIrCnt >= IR_CHECK_CNT)
         {
             UI_SetIRLed(1);
             ubCheckMinIrCnt = 0;
         }
 
-        if (ubCheckMaxIrCnt >= IR_CHECK_CNT)
+       if (ubCheckMaxIrCnt >= IR_CHECK_CNT)
         {
             UI_SetIRLed(0);
             ubCheckMaxIrCnt = 0;
         }
+        
     }
     else
     {

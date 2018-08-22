@@ -1283,6 +1283,8 @@ OSD2IMGPOOL(MENU_TEMPUNIT1,		0x3000,        0,            0)
 OSD2IMGPOOL(MENU_TEMPUNIT1_S,		0x3000,        0,            0)
 OSD2IMGPOOL(MENU_TEMPUNIT2,		0x3000,        0,            0)
 OSD2IMGPOOL(MENU_TEMPUNIT2_S,		0x3000,        0,            0)
+OSD2IMGPOOL(BAR_VOLCHECK,			0x3000,        0,            0)
+OSD2IMGPOOL(MENU_TEMPUNIT1_SS,		0x3000,        0,            0)
 //----------------------------------------------------------------------------
 
 OSD2IMGPOOL(PU_STSICON,  				0x3000,        10,         0)
