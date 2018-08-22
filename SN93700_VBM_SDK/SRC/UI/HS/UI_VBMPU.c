@@ -44,8 +44,6 @@
 
 #define PICKUP_VOLUME_TEST  0
 
-#define UI_BATT_TEST    0
-
 #define UI_NOTIMEMENU	1
 #define Factory_x_vol   10
 #define Factory_y_vol   80
@@ -255,6 +253,8 @@ uint8_t ubShowCamPairFullSta = 0;
 uint8_t ubCameraOnlineNum = 0;
 uint8_t ubMenuKeyPairing = 0;
 
+uint8_t ubShowAlarmAgain = 0;
+uint8_t ubShowAlarmType = 0;
 uint8_t ubShowAlarmstate = 0;
 uint8_t ubPlayAlarmCount = 0;
 uint8_t ubTempAlarmCheckCount = 0;
@@ -277,7 +277,8 @@ uint8_t ubPairOK_SwitchCam = 0;
 uint8_t ubSetViewCam = 0;
 
 uint8_t ubBatLowCount = 0;
-uint16_t ubGetBatValue = 0;
+int16_t ubGetBatPercent = -1;
+uint16_t ubGetBatVoltage = 0;
 uint16_t ubBatLvLIdx = BAT_LVL0;
 
 uint16_t ubLinkStateCheckCount = 0;
@@ -327,8 +328,8 @@ extern uint16_t ubTest_uwCropHstart;
 extern uint16_t ubTest_uwCropVstart;
 extern uint32_t ulPAIR_TimeCnt;
 
-uint8_t RxSNdata[16] = {0};
-uint8_t TxSNdata[16] = {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'};
+char RxSNdata[16] = {0};
+char TxSNdata[16] = {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'};
 
 uint8_t ubComboKeyFlag  = 0;
 uint8_t ubAdoOnlyFlag  = 0;
@@ -339,7 +340,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
 {
     static uint8_t ubUI_KeyEventIdx = 0;
     uint16_t uwUiKeyEvent_Cnt = 0, uwIdx;
-    OSD_IMG_INFO tOsdImgInfo;
 
     KEY_Event_t *ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
     uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
@@ -610,19 +610,20 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 {
 	APP_StatusReport_t *pFWU_StsRpt = (APP_StatusReport_t *)ptUpgStsReport;
 	OSD_IMG_INFO tOsdImgInfo;
+    uint8_t ubKNL_PsValue = 0;
 
-	switch(pFWU_StsRpt->ubAPP_Report[0])
+	switch (pFWU_StsRpt->ubAPP_Report[0])
 	{
 		case FWU_UPG_INPROGRESS:
-			ubUpdateFWFlag =1;
-			
-			OSD_IMG_INFO tOsdInfo;
 
-			tOsdInfo.uwHSize  = 672;
-			tOsdInfo.uwVSize  = 1280;
-			tOsdInfo.uwXStart = 48;
-			tOsdInfo.uwYStart = 0;
-			OSD_EraserImg1(&tOsdInfo);
+			ubUpdateFWFlag =1;			
+
+			tOsdImgInfo.uwHSize  = 672;
+			tOsdImgInfo.uwVSize  = 1280;
+			tOsdImgInfo.uwXStart = 48;
+			tOsdImgInfo.uwYStart = 0;
+			OSD_EraserImg1(&tOsdImgInfo);
+
 			
 			tUI_PuSetting.IconSts.ubDrawStsIconFlag = TRUE;
 			UI_ClearStatusBarOsdIcon();
@@ -632,8 +633,6 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 			OSD_LogoJpeg(OSDLOGO_FW_INPROGRESS);
 			break;
 		case FWU_UPG_SUCCESS:
-			uint8_t ubKNL_PsValue = 0;
-
 			ubKNL_PsValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
 			ubKNL_PsValue &= 0xF;
 			ubKNL_PsValue |= 0x40;
@@ -643,7 +642,7 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 			tLCD_JpegDecodeDisable();
 			OSD_LogoJpeg(OSDLOGO_FW_OK);
 			osDelay(1000);
-		break;	
+            break;	
 		
 		case FWU_UPG_FAIL:
 		{
@@ -794,7 +793,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         }
     }
 
-    if ((ubCheckCount%10) == 0)
+    if ((ubCheckCount%10) == 9)
     {
         UI_GetBatLevel();
     }
@@ -980,6 +979,17 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             ubLostLinkEnterSanMode = 0;
             UI_DisableScanMode();
         }
+
+		if ((ubTempAlarmState == HIGH_TEMP_ALARM_ING)||(ubTempAlarmState == LOW_TEMP_ALARM_ING)||(ubPickupAlarmState == PICKUP_ALARM_ING))
+		{
+			 //if (ubShowAlarmstate == 3)
+        	//{
+				//if(ubAlarmOnlyAlertFlag == 0)
+               	 //UI_ShowAlarm(3);
+				//ubAlarmOnlyAlertFlag = 0;
+        	//}
+			 ubShowAlarmAgain=1;
+		}
 
         if (tUI_PuSetting.ubDefualtFlag == FALSE)
         {
@@ -1770,7 +1780,6 @@ void DisplayStatus(uint8_t  type)
 
 void FactortPair(void)
 {
-    OSD_IMG_INFO tOsdImgInfo;
     APP_EventMsg_t tUI_PairMessage = {0};
 
     if (ubCamFullFlag == 0)
@@ -2691,7 +2700,7 @@ void UI_BuPowerSaveModeSelection(UI_ArrowKey_t tArrowKey)
 //------------------------------------------------------------------------------
 void UI_PushTalkKeyShort(void)
 {
-    static uint8_t  UI_PushTalkFlag = TRUE;
+    static uint8_t UI_PushTalkFlag = TRUE;
     //if(UI_PushTalkFlag == TRUE)
     {
         printd(Apk_DebugLvl,"UI_PushTalkKeyShort\n");
@@ -2742,7 +2751,7 @@ void UI_PushTalkKeyShort(void)
                     }
                 }
                 tUI_State = UI_DISPLAY_STATE;
-                UI_PushTalkFlag =FALSE;
+                UI_PushTalkFlag = FALSE;
                 break;
             }
 
@@ -2783,7 +2792,7 @@ void UI_PushTalkKeyShort(void)
         case UI_MD_WINDOW_STATE:
         case UI_DUALVIEW_CAMSEL_STATE:
             tUI_StateMap2MenuFunc[tUI_State].pvFuncPtr(EXIT_ARROW);
-            UI_PushTalkFlag =FALSE;
+            UI_PushTalkFlag = FALSE;
             break;
         default:
             break;
@@ -2791,7 +2800,7 @@ void UI_PushTalkKeyShort(void)
     }
     //else
     //{
-    //  UI_PushTalkFlag =TRUE;
+    //  UI_PushTalkFlag = TRUE;
     //}
 }
 
@@ -3395,12 +3404,11 @@ uint8_t UI_CheckStopAlarm(void)
 
 	if(ubShowAlarmstate)
 	{
-		 OSD_EraserImg2(&tOsdImgInfo);
-	        ubShowAlarmstate = 0;
-	        ubTempAlarmState = TEMP_ALARM_OFF;
-		ubPickupAlarmState == PICKUP_ALARM_OFF;
-	        return 1;
-
+		OSD_EraserImg2(&tOsdImgInfo);
+	    ubShowAlarmstate = 0;
+	    ubTempAlarmState = TEMP_ALARM_OFF;
+		ubPickupAlarmState = PICKUP_ALARM_OFF;
+	    return 1;
 	}
 
     return 0;
@@ -5449,6 +5457,8 @@ void UI_ShowAlarm(uint8_t type)
 {
     OSD_IMG_INFO tOsdImgInfo;
 
+	//if(type<3)
+	ubShowAlarmType = type;
     printd(Apk_DebugLvl, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
 
     if ((ubMotor0State != MC_LEFT_RIGHT_OFF) || (ubMotor1State != MC_UP_DOWN_OFF))
@@ -5610,12 +5620,22 @@ void UI_PlayAlarmSound(uint8_t type)
         {
             printd(Apk_DebugLvl, "UI_PlayAlarmSound BUZ_PlaySingleSound###\n");
             BUZ_PlayAlarmSound();
+
+			if(ubShowAlarmAgain)
+			{	
+				//osDelay(1000);
+				ubShowAlarmAgain=0;
+				printd(Apk_DebugLvl, "UI_PlayAlarmSound ubShowAlarmType: %d\n", ubShowAlarmType);
+				UI_ShowAlarm(ubShowAlarmType);
+			}
         }
     }
 }
 
 void UI_StopPlayAlarm(void)
 {
+	ubShowAlarmAgain=0;
+
     if (ubAlarmPlayState == 1)
     {
         ubAlarmPlayState = 0;
@@ -7209,7 +7229,6 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
     {
         if (tUI_CamStatus[CameraId].ulCAM_ID != INVALID_ID)
         {
-            printd(Apk_DebugLvl, "UI_CamDeleteCamera CameraID: %d.\n");
             tUI_CamStatus[CameraId].ulCAM_ID    = INVALID_ID;
             tUI_CamStatus[CameraId].tCamConnSts = CAM_OFFLINE;
             tUI_PuSetting.ubPairedBuNum -= (tUI_PuSetting.ubPairedBuNum == 0)?0:1;
@@ -7744,25 +7763,28 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
     }
 }
 
-static void UI_DisplaySN(int x, int y, uint8_t *sn, int len)
+static void UI_DisplaySN(int x, int y, char *sn, int len)
 {
     OSD_IMG_INFO tOsdImgInfo;
-    int i;
+    int idx, i;
 
-	   tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_TITLE, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 436;
-        tOsdImgInfo.uwYStart = 631;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-	
     for (i=0; i<len; i++) {
         printd(Apk_DebugLvl,"Factory mode sn[%d] = %c\n", i, sn[i]);
     }
 
     for (i=0; i<len && sn[i]; i++)
     {
-        int idx = sn[i] <= '9' ? sn[i] - '0' : sn[i] - 'A' + 10;
-        if (idx < 0 || idx > 36) idx = 'X' - 'A' + 10;
+        if (sn[i] == ' ') {
+            tOsdImgInfo.uwHSize  = 46;
+            tOsdImgInfo.uwVSize  = 22;
+            tOsdImgInfo.uwXStart = x;
+            tOsdImgInfo.uwYStart = y - (20 * i);
+            OSD_EraserImg2(&tOsdImgInfo);
+            continue;
+        }
 
+        idx = sn[i] <= '9' ? sn[i] - '0' : sn[i] - 'A' + 10;
+        if (idx < 0 || idx > 36) idx = 'X' - 'A' + 10;
         tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0 + idx, 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = x;
         tOsdImgInfo.uwYStart = y - (20 * i);
@@ -7818,21 +7840,24 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
         break;
 
     case PRODUCT_INFO_ITEM:
-      			 UI_DisplaySN(436, 605, RxSNdata, sizeof(RxSNdata));
+        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_TITLE, 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 436;
+        tOsdImgInfo.uwYStart = 631;
+        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+        UI_DisplaySN(436, 605, RxSNdata, sizeof(RxSNdata));
+        tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_INFO_INFO + (70*tUI_PuSetting.ubLangageFlag), 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 290;
+        tOsdImgInfo.uwYStart = 377;
+        tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+        UI_VerDisplay();
+        break;
 
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_INFO_INFO+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 290;
-			tOsdImgInfo.uwYStart =377;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);		
-			UI_VerDisplay();	
-			break;
-			
-		case CONTACT_ITEM:
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CONTACT_INFO, 1, &tOsdImgInfo);
-			tOsdImgInfo.uwXStart= 128;
-			tOsdImgInfo.uwYStart =284;	
-			tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);			
-			break;
+    case CONTACT_ITEM:
+        tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CONTACT_INFO, 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 128;
+        tOsdImgInfo.uwYStart = 284;
+        tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+        break;
 
     default:
         break;
@@ -8740,24 +8765,24 @@ uint8_t UI_TempFToC(uint8_t fTemp)
 
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
-	OSD_IMG_INFO tOsdImgInfo;
 	uint8_t *pvdata = (uint8_t *)pvTrig;
 
     if(ubUpdateFWFlag == 1)return;
 
+
     if ((tCamViewSel.tCamViewPool[0] == tCamNum) && (CAM_ONLINE == tUI_CamStatus[tCamNum].tCamConnSts))
     {
-	    	ubTempBelowZoreSta = pvdata[1];
+        ubTempBelowZoreSta = pvdata[1];
 		ubTempInvalidSta = pvdata[2];
 
 		printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, %d, %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
-		if(ubTempInvalidSta == 1)
+		if (ubTempInvalidSta == 1)
 		{
 			ubRealTemp = 0xFF;
 			UI_TempBarDisplay(ubRealTemp);
 			return;
 		}
-	        ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+        ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
     }
 
     if (ubRealTemp > 199)
@@ -8772,10 +8797,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
 {
     uint8_t *pvdata = (uint8_t *)pvTrig;
-    uint8_t i,ubBUCmdID = pvdata[0];
-    static uint8_t time;
-
-//  OSD_IMG_INFO tOsdImgInfo;
+    uint8_t ubBUCmdID = pvdata[0];
 
     switch (ubBUCmdID)
     {
@@ -9508,70 +9530,34 @@ void UI_MotorStateCheck(void)
 
 void UI_GetBatLevel(void)
 {
-    #define ADJUST_VOL  (1844*2)//1820
-    int i;
-    uint16_t ubBatAdc;
-    uint16_t ubAdjustAdc, ubAdjustVal;
-    OSD_IMG_INFO tOsdImgInfo;
-
-	BatteryMap_t tBatMap[] =
-	{
-		{3500, 		3598, 	BAT_LVL0},  	 //10%
-		{3598, 	 	3665, 	BAT_LVL1},	//25%
-		{3665, 	 	3788,	BAT_LVL2},	//50%
-		{3788, 		3984, 	BAT_LVL3},	//75%
-		{3984, 	 	4350, 	BAT_LVL4},	//100%
-	};
-	
-	ubBatAdc  = uwSADC_GetReport(SADC_CH4);
-	//ubGetBatValue = ubBatAdc*33*2*100/1024;
-	ubGetBatValue = ubBatAdc*3050*2/1024;
-	
-	ubAdjustAdc = uwSADC_GetReport(SADC_CH3);
-	ubAdjustVal = ubAdjustAdc*3050*2/1024;
-	//printd(Apk_DebugLvl, "UI_GetBatLevel ubAdjustAdc: %d, ubAdjustVal: %d.\n", ubAdjustAdc, ubAdjustVal);
-
-    if(ubAdjustVal >= ADJUST_VOL)
-    {
-        ubGetBatValue = ubGetBatValue - (ubAdjustVal - ADJUST_VOL);
+    uint8_t usbdet, i;
+    int16_t percent;
+    static uint16_t batmap[] = {
+        3500, 3637, 3699, 3802, 3985, 4253, 4500
+    };
+    usbdet  = !UI_GetUsbDet();
+    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 50 : 0); // new board
+//  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50 : 0); // old board
+    for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
+        if (ubGetBatVoltage <= batmap[i]) break;
     }
-    else
-    {
-        ubGetBatValue = ubGetBatValue + (ADJUST_VOL - ubAdjustVal);
+    percent = (i-1) * 20 + 20 * (ubGetBatVoltage - batmap[i-1]) / (batmap[i] - batmap[i-1]);
+    percent = percent < 100 ? percent : 100;
+    percent = percent > 0   ? percent : 0;
+    if (ubGetBatPercent == -1) ubGetBatPercent = percent;
+    if (usbdet) {
+        if (ubGetBatPercent < percent) ubGetBatPercent++;
+    } else {
+        if (ubGetBatPercent > percent) ubGetBatPercent--;
     }
-    if(UI_GetUsbDet() == 1)
-    {
-        if (ubGetBatValue < 3500)
-        {
-            ubBatLowCount++;
-            if (ubBatLowCount == 10)
-            {
-                UI_PowerOff();
-            }
+    ubBatLvLIdx = BAT_LVL0 + ubGetBatPercent / 25;
+    if (!usbdet && ubGetBatVoltage < 3500) {
+        if (++ubBatLowCount == 10) {
+            UI_PowerOff();
         }
-        else
-        {
-            ubBatLowCount = 0;
-        }
-    }
-    else
-    {
+    } else {
         ubBatLowCount = 0;
     }
-
-    for (i = BAT_LVL0; i <= BAT_LVL4; i++)
-    {
-        if ((ubGetBatValue >= tBatMap[i].ubMinBat) && (ubGetBatValue < tBatMap[i].ubMaxBat))
-        {
-            ubBatLvLIdx = tBatMap[i].ubBatLev;
-            break;
-        }
-    }
-
-    if (ubGetBatValue >= 4350)
-        ubBatLvLIdx = BAT_LVL4;
-
-    //printd(Apk_DebugLvl, "UI_GetBatLevel ubBatLvLIdx: %d, ubGetBatValue: %d.\n", ubBatLvLIdx, ubGetBatValue);
 }
 
 uint8_t UI_GetUsbDet(void)
@@ -12394,12 +12380,8 @@ void UI_DrawPUStatusIcon(void)
 //------------------------------------------------------------------------------
 void UI_UpdateBuStatusOsdImg(OSD_IMG_INFO *pOsdImgInfo, OSD_UPDATE_TYP tUpdateMode, UI_OsdImgFnType_t tOsdImgFnType, UI_DisplayLocation_t tDispLoc)
 {
-    uint32_t ulLcd_HSize  = uwLCD_GetLcdHoSize();
-    uint32_t ulLcd_VSize  = uwLCD_GetLcdVoSize();
-    uint16_t uwXStart = 0, uwYStart = 0;
-
-    uwXStart = pOsdImgInfo->uwXStart;
-    uwYStart = pOsdImgInfo->uwYStart;
+    uint32_t ulLcd_HSize = uwLCD_GetLcdHoSize();
+    uint32_t ulLcd_VSize = uwLCD_GetLcdVoSize();
 
     if (UI_OsdUpdate == tOsdImgFnType)
         tOSD_Img2(pOsdImgInfo, tUpdateMode);
@@ -12482,30 +12464,6 @@ void UI_UpdateBarIcon_Part1(void)
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
         ubChargShowCnt = 0;
     }
-
-#if UI_BATT_TEST
-    #define batt_offset 40
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/1000), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 460 + batt_offset;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/100%10), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 440 + batt_offset;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue/10%10), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 420 + batt_offset;
-    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubGetBatValue%10), 1, &tOsdImgInfo);
-    tOsdImgInfo.uwXStart = 0;
-    tOsdImgInfo.uwYStart = 400 + batt_offset;
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-#endif
 
     tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
@@ -12630,7 +12588,6 @@ void UI_UpdateBarIcon_Part2(void)
 void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 {
     static OSD_IMG_INFO tCamNumOsdImgInfo[CAM_4T];
-    //static OSD_IMG_INFO tAdoSrcOsdImgInfo, tMarkAdoOsdImgInfo;
     static OSD_IMG_INFO tCamAntLvlOsdImgInfo[7], tCamBatLvlOsdImgInfo[6];
     static uint8_t ubUI_RdBuStsOsdImgFlag       = FALSE;
     static uint8_t ubUI_BuOnlineFlag[CAM_4T]    = {FALSE, FALSE, FALSE, FALSE};
@@ -12644,8 +12601,6 @@ void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
 
     if (FALSE == ubUI_RdBuStsOsdImgFlag)
     {
-        UI_CamNum_t tSelCamNum;
-
         //tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_ADOSRC_STSICON, 1, &tAdoSrcOsdImgInfo);
         //tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_STSMASK_STSICON, 1, &tMarkAdoOsdImgInfo);
 
@@ -13078,11 +13033,9 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 
 void UI_FactoryStatusDisplay(void)
 {
-    int i, RXSNValue, TXSNValue;
-    uint8_t data[3] = {0};
     OSD_IMG_INFO tOsdImgInfo;
-    uint8_t  ubper_temp, ubir_temp1,ubir_temp2;
-    uint16_t  ubir_temp;
+    uint8_t ubper_temp, ubir_temp1,ubir_temp2;
+    uint16_t ubir_temp;
 
     //printd(Apk_DebugLvl, "UI_FactoryStatusDisplay.\n");
     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_FACTORY_PER, 1, &tOsdImgInfo);
@@ -13291,56 +13244,15 @@ void UI_FactoryStatusDisplay(void)
     tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    //------------------------------
-    //SD
-    if (ubSD_ChkCardIn(SD_1))
-    {
-        for (int i = 0;i<5; i++)
-        {
-            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_ENG_SPACESYM, 1, &tOsdImgInfo);
-            tOsdImgInfo.uwXStart = 395;
-            tOsdImgInfo.uwYStart = 900 - 20 - 15*i+ Factory_y_vol;
-            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-        }
+    UI_DisplaySN(380 + Factory_x_vol, 1000, ubSD_ChkCardIn(SD_1) ? "ON " : "OFF", 3);
+    UI_DisplaySN(445 + Factory_x_vol, 1000, TxSNdata, sizeof(TxSNdata));
+    UI_DisplaySN(510 + Factory_x_vol, 1000, RxSNdata, sizeof(RxSNdata));
 
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_O, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_N, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 53+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+    if (0) {
+        char str[10];
+        sprintf(str, "%4d %3d", ubGetBatVoltage, ubGetBatPercent);
+        UI_DisplaySN(575 + Factory_x_vol, 1000, str, sizeof(str));
     }
-    else
-    {
-        for (int i = 0;i<5; i++)
-        {
-            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_ENG_SPACESYM, 1, &tOsdImgInfo);
-            tOsdImgInfo.uwXStart = 395;
-            tOsdImgInfo.uwYStart = 900 - 20 - 15*i+ Factory_y_vol;
-            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-        }
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_O, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_F, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 51+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SN_F, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 395;
-        tOsdImgInfo.uwYStart = 900 - 70+ Factory_y_vol;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-    }
-
-    UI_DisplaySN(455 + Factory_x_vol, 1000, TxSNdata, sizeof(TxSNdata));
-    UI_DisplaySN(515 + Factory_x_vol, 1000, RxSNdata, sizeof(RxSNdata));
 }
 
 void UI_FactorymodeKeyDisplay(uint8_t Value)
@@ -13683,8 +13595,6 @@ void UI_UnBindBu(UI_CamNum_t tUI_DelCam)
 //------------------------------------------------------------------------------
 void UI_VoxTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 {
-    APP_EventMsg_t tUI_PsMessage = {0};
-
     if (tCamNum > CAM4)
         return;
 
@@ -13733,7 +13643,6 @@ void UI_EnableVox(void)
 void UI_DisableVox(void)
 {
     APP_EventMsg_t tUI_PsMessage = {0};
-    UI_PUReqCmd_t tPsCmd;
 
     //if (DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
         //return;
@@ -13911,12 +13820,10 @@ void UI_ResetDevSetting(UI_CamNum_t tCamNum)
 //------------------------------------------------------------------------------
 void UI_LoadDevStatusInfo(void)
 {
-    //Read SN
-    uint8_t i = 0;
+    // Read SN
     uint32_t ubUI_SFAddr = pSF_Info->ulSize - (1 * pSF_Info->ulSecSize);
-    SF_Read(ubUI_SFAddr, sizeof(RxSNdata), RxSNdata);
-	//if(ubWorWakeUpFlag == 1)
-		//ubDefualtFlag = 1;
+    SF_Read(ubUI_SFAddr, sizeof(RxSNdata), (uint8_t*)RxSNdata);
+
 
     uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
     UI_DeviceStatusInfo_t tUI_DevStsInfo = {{0}, {0}, {0}, {0}};
@@ -14086,8 +13993,7 @@ uint8_t UI_GetCamOnLineNum(uint8_t type)
 void UI_SwitchCameraScan(uint8_t type)
 {
     int i, j;
-    uint8_t ubCamPairNum = 0;
-    UI_CamNum_t tCamSwtichNum = 0xFF;
+    UI_CamNum_t tCamSwtichNum = (UI_CamNum_t)0xFF;
     UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 
     printd(Apk_DebugLvl, "UI_SwitchCameraScan type: %d.\n", type);
@@ -14158,7 +14064,6 @@ SWITCH_CAMERA:
 	UI_SwitchCameraSource();
 	UI_ClearBuConnectStatusFlag();
 	UI_UpdateDevStatusInfo();
-	
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb)
