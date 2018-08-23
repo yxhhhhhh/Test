@@ -403,11 +403,12 @@ void UI_UpdateBUStatusToPU(void)
 
 	static uint8_t ubVersionResut = rUI_FAIL;
 	static uint8_t ubSNValueResut = 0;
-	if(ubVersionResut == rUI_FAIL)
-	{
+
+	if (ubVersionResut == rUI_FAIL) {
 		ubVersionResut = UI_SendVersionToPu();
 	}
-//	if(ubSNValueResut == 0 || ubSNValueResut ==1)
+
+//	if (ubSNValueResut == 0 || ubSNValueResut ==1)
 	{
 //		ubSNValueResut = UI_SendSnValueToPu();
 	}
@@ -791,43 +792,6 @@ void UI_VoiceCheck (void)
 
     UI_SendPickupVolumeToPu(ulUI_AdcRpt);
 }
-//------------------------------------------------------------------------------
-typedef struct {
-    uint8_t TempVal[8];
-    uint8_t TempAverage;
-    uint8_t TempSize;
-} TEMP_CHECK_DATA;
-
-TEMP_CHECK_DATA ubTempData;
-
-uint8_t UI_GetTempAverVal(uint8_t Value)
-{
-    static uint16_t ubTempCheckCnt = 0;
-    uint8_t ubAbsVal = 0;
-
-    if ((ubTempCheckCnt%5) == 2)
-    {
-        ubTempCheckCnt = 0;
-        ubTempData.TempAverage = (ubTempData.TempVal[0] + ubTempData.TempVal[1] + ubTempData.TempVal[2])/3;
-        return ubTempData.TempAverage;
-    }
-    else
-    {
-        ubAbsVal = (ubTempData.TempVal[ubTempCheckCnt] >= Value) ? (ubTempData.TempVal[ubTempCheckCnt] - Value): (Value - ubTempData.TempVal[ubTempCheckCnt]);
-
-        if (ubAbsVal < 3)
-        {
-            ubTempCheckCnt++;
-        }
-        else
-        {
-            ubTempCheckCnt = 0;
-        }
-        ubTempData.TempVal[ubTempCheckCnt] = Value;
-    }
-
-    return 0xFF;
-}
 
 // #define CT75_TEMP_SENSOR
 void UI_TempCheck(void) //20180322
@@ -839,7 +803,7 @@ void UI_TempCheck(void) //20180322
     bool    ret = 0;
     int32_t tem = 0;
     static uint8_t ubTempInvalidCnt = 0;
-/*
+
 #ifdef CT75_TEMP_SENSOR
     ubReg = 0x00;
     ret   = bI2C_MasterProcess(pTempI2C, 0x48, &ubReg, 1, ubData, 2);
@@ -847,7 +811,7 @@ void UI_TempCheck(void) //20180322
     ubReg = 0xE3;
     ret   = bI2C_MasterProcess(pTempI2C, 0x40, &ubReg, 1, ubData, 2);
 #endif
-*/
+
     if (!ret) {
         if (++ubTempInvalidCnt >= 5) {
             ubTempInvalid    = 1;
@@ -860,24 +824,6 @@ void UI_TempCheck(void) //20180322
         ubTempInvalidCnt = 0;
     }
 
-	//tem = (17572*(ubData[0]*256+ubData[1])/65536-4685)/100;
-	//ubCurTempVal = tem;
-	
-	if((17572*(ubData[0]*256+ubData[1])/65536-4685) >= 0)
-	{
-		ubTempBelowZore = 0;
-		tem = (17572*(ubData[0]*256+ubData[1])/65536) - 4685;
-	
-		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
-	}
-	else
-	{
-		ubTempBelowZore = 1;
-		tem = 4685 - (17572*(ubData[0]*256+ubData[1])/65536);
-		
-		ubCurTempVal = (tem/100) + (((tem%100) >= 50)?1:0);
-	}
-/*
 #ifdef CT75_TEMP_SENSOR
     tem   = (int8_t)ubData[0];
     ubTempBelowZore = tem < 0;
@@ -888,10 +834,7 @@ void UI_TempCheck(void) //20180322
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
 #endif
-*/
-
-    ubCurTempVal = UI_GetTempAverVal(ubCurTempVal);
-    //printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
+    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
 
     if (ubCurTempVal == 0xFF)
         return;
@@ -905,7 +848,6 @@ void UI_TempCheck(void) //20180322
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  = 0;
         tUI_TempReqCmd.ubCmd_Len                = 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
-
         ubTemp_bak = ubCurTempVal;
     }
 }
@@ -1559,18 +1501,17 @@ void UI_BrightnessCheck(void) //20180408
     //printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
-    	  if (ubCheckMinIrCnt >= IR_CHECK_CNT)
+        if (ubCheckMinIrCnt >= IR_CHECK_CNT)
         {
             UI_SetIRLed(1);
             ubCheckMinIrCnt = 0;
         }
 
-       if (ubCheckMaxIrCnt >= IR_CHECK_CNT)
+        if (ubCheckMaxIrCnt >= IR_CHECK_CNT)
         {
             UI_SetIRLed(0);
             ubCheckMaxIrCnt = 0;
         }
-        
     }
     else
     {
