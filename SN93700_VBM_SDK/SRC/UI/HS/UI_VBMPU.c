@@ -5459,7 +5459,7 @@ void UI_ShowAlarm(uint8_t type)
 
 	//if(type<3)
 	ubShowAlarmType = type;
-    printd(Apk_DebugLvl, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
+    printd(1, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
 
     if ((ubMotor0State != MC_LEFT_RIGHT_OFF) || (ubMotor1State != MC_UP_DOWN_OFF))
     {
@@ -5470,51 +5470,51 @@ void UI_ShowAlarm(uint8_t type)
 
     switch (type)
     {
-    case 0:
-        UI_AlarmTriggerDisplay(0);
-        if (ubRealTemp/100)
-        {
-            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
-            tOsdImgInfo.uwXStart = 340;
-            tOsdImgInfo.uwYStart = 600;
-            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-        }
-        if (ubRealTemp/10%10)
-        {
-            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
-            tOsdImgInfo.uwXStart = 340;
-            tOsdImgInfo.uwYStart = 600-24;
-            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
-        }
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart= 340;
-        tOsdImgInfo.uwYStart =600-24-24;
-        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	    case 0:
+	        UI_AlarmTriggerDisplay(0);
+	        if (ubRealTemp/100)
+	        {
+	            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
+	            tOsdImgInfo.uwXStart = 340;
+	            tOsdImgInfo.uwYStart = 600;
+	            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	        }
+	        if (ubRealTemp/10%10)
+	        {
+	            tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
+	            tOsdImgInfo.uwXStart = 340;
+	            tOsdImgInfo.uwYStart = 600-24;
+	            tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	        }
+	        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
+	        tOsdImgInfo.uwXStart= 340;
+	        tOsdImgInfo.uwYStart =600-24-24;
+	        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
-        tOsdImgInfo.uwXStart = 334;
-        tOsdImgInfo.uwYStart = 600-72-24;
-        tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-        ubShowAlarmstate = 1;
-        break;
+	        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_F - 2*tUI_PuSetting.ubTempunitFlag, 1, &tOsdImgInfo);
+	        tOsdImgInfo.uwXStart = 334;
+	        tOsdImgInfo.uwYStart = 600-72-24;
+	        tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+	        ubShowAlarmstate = 1;
+	        break;
 
 		case 1:
 			UI_AlarmTriggerDisplay(1);
-			if(ubRealTemp/100)
+			if(ubTempBelowZoreSta == 1)
 			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/100)*2), 1, &tOsdImgInfo);
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_MIN, 1, &tOsdImgInfo);
 				tOsdImgInfo.uwXStart = 340;
 				tOsdImgInfo.uwYStart = 600;	
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			}
 			if(ubRealTemp/10%10)
 			{
-				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_0+((ubRealTemp/10%10)*2), 1, &tOsdImgInfo);
 				tOsdImgInfo.uwXStart = 340;
 				tOsdImgInfo.uwYStart = 600-24;	
 				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 			}
-			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_HIGHTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
+			tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_DIS_LOWTEMP_0+((ubRealTemp%10)*2), 1, &tOsdImgInfo);
 			tOsdImgInfo.uwXStart= 340;
 			tOsdImgInfo.uwYStart =600-24-24;	
 			tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
@@ -5652,7 +5652,7 @@ void UI_TempAlarmCheck(void)
 {
     OSD_IMG_INFO tOsdInfo;
     uint8_t ubHightempMax,ubLowtempMin;
-  printd(Apk_DebugLvl, "UI_TempAlarmCheck ubUI_PttStartFlag: %d.\n", ubUI_PttStartFlag);
+  	printd(Apk_DebugLvl, "UI_TempAlarmCheck \n");
 
 	if(ubRealTemp == 0xFF)
       		return;
@@ -5814,7 +5814,7 @@ void UI_TempAlarmCheck(void)
 void UI_PickupAlarmCheck(void)
 {
     OSD_IMG_INFO tOsdInfo;
-
+  	printd(Apk_DebugLvl, "UI_PickupAlarmCheck \n");
     if (LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
         return;
 
