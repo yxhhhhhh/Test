@@ -793,9 +793,9 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         }
     }
 
-    if ((ubCheckCount%10) == 9)
+    if ((ubCheckCount%10) == 0)
     {
-        UI_GetBatLevel();
+        UI_GetBatLevel(ubCheckCount);
     }
 
     UI_CheckUsbCharge();
@@ -9524,7 +9524,7 @@ void UI_MotorStateCheck(void)
     }
 }
 
-void UI_GetBatLevel(void)
+void UI_GetBatLevel(uint16_t checkcount)
 {
     uint8_t usbdet, i;
     int16_t percent;
@@ -9532,19 +9532,22 @@ void UI_GetBatLevel(void)
         3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
     usbdet  = !UI_GetUsbDet();
-    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 50 : 0); // new board
-//  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50 : 0); // old board
+    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 100 : 0); // new board
+//  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50  : 0); // old board
     for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
         if (ubGetBatVoltage <= batmap[i]) break;
     }
     percent = (i-1) * 20 + 20 * (ubGetBatVoltage - batmap[i-1]) / (batmap[i] - batmap[i-1]);
     percent = percent < 100 ? percent : 100;
     percent = percent > 0   ? percent : 0;
-    if (ubGetBatPercent == -1) ubGetBatPercent = percent;
-    if (usbdet) {
-        if (ubGetBatPercent < percent) ubGetBatPercent++;
+    if (checkcount > 10) {
+        if (usbdet) {
+            if (ubGetBatPercent < percent) ubGetBatPercent++;
+        } else {
+            if (ubGetBatPercent > percent) ubGetBatPercent--;
+        }
     } else {
-        if (ubGetBatPercent > percent) ubGetBatPercent--;
+        ubGetBatPercent = percent;
     }
     if (ubGetBatPercent > 75) {
         ubBatLvLIdx = BAT_LVL0 + 4;
