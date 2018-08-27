@@ -974,7 +974,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
     //	printd(Apk_DebugLvl, "UI_UpdateStatus tUI_SyncAppState: %d.\n", tUI_SyncAppState);
 	//printd(Apk_DebugLvl, "UI_UpdateStatus :tUI_PuSetting.tPsMode %d.\n", tUI_PuSetting.tPsMode);
 
-    WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
+    if (ubUpdateFWFlag == 0)
+    	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
     switch (tUI_SyncAppState)
     {
     case APP_IDLE_STATE:
