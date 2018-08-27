@@ -295,8 +295,8 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 03;
-uint32_t ubHWVersion = 03;
+uint32_t ubPuSWVersion = 04;
+uint32_t ubHWVersion = 04;
 uint8_t ubBuHWVersion = 0;
 uint32_t ubBuSWVersion = 0;
 
@@ -793,7 +793,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         }
     }
 
-    if ((ubCheckCount%10) == 9)
+    if (ubCheckCount%10 == 0)
     {
         UI_GetBatLevel();
     }
@@ -924,6 +924,24 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         UI_CheckPowerMode();
 #endif
     }
+
+
+    if (ubFactoryModeFLag== 1)
+    {
+        static uint8_t ubCamId = 0;
+	if(TRUE == ubUI_PttStartFlag)
+	{
+	        if (tUI_CamStatus[ubCamId].ulCAM_ID != INVALID_ID)
+	        {
+	            UI_CamDeleteCamera(1, ubCamId);
+	        }
+	        ubCamId++;
+	        if (ubCamId > 4)
+	        {
+	            ubCamId = 0;   
+	        }
+    	}
+  }
 
     if (ubFactoryDeleteCam == 1)
     {
@@ -1782,7 +1800,7 @@ void FactortPair(void)
     if (ubCamFullFlag == 0)
     {
         BUZ_PlaySingleSound();
-        ubPairDisplayTime = 20; //10
+        ubPairDisplayTime = 60; //10
         tPairInfo.tPairSelCam = ubPairSelCam;
         tPairInfo.tDispLocation = ubPairSelCam;
 
@@ -2800,6 +2818,8 @@ void UI_PushTalkKeyShort(void)
     //  UI_PushTalkFlag = TRUE;
     //}
 }
+
+
 
 void UI_PushTalkKey(void)
 {
@@ -7433,6 +7453,7 @@ void UI_DrawPairingStatusIcon(void)
     */
 	ubPairDisplayTime = ulPAIR_TimeCnt /1000;
 	ubPairDisplayTime = 60 - ubPairDisplayTime;
+	
 
     printd(Apk_DebugLvl,"UI_DrawPairingStatusIcon ubPairDisplayTime=%d.\n",ubPairDisplayTime);
     if(ubFactoryModeFLag == 0)
@@ -7533,8 +7554,8 @@ void UI_ReportPairingResult(UI_Result_t tResult)
 
         ubPairDisplayTime = 60; //10
 
-        if (ubFactoryModeFLag == 1)
-            ubPairDisplayTime = 20;
+       // if (ubFactoryModeFLag == 1)
+            //ubPairDisplayTime = 20;
 
         UI_ResetDevSetting(tPairInfo.tPairSelCam);
         UI_UpdateDevStatusInfo();
@@ -9532,7 +9553,7 @@ void UI_GetBatLevel(void)
         3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
     usbdet  = !UI_GetUsbDet();
-    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 50 : 0); // new board
+    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 100 : 0); // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50 : 0); // old board
     for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
         if (ubGetBatVoltage <= batmap[i]) break;
@@ -13250,10 +13271,12 @@ void UI_FactoryStatusDisplay(void)
     UI_DisplaySN(445 + Factory_x_vol, 1000, TxSNdata, sizeof(TxSNdata));
     UI_DisplaySN(510 + Factory_x_vol, 1000, RxSNdata, sizeof(RxSNdata));
 
-    if (0) {
+    if (1) {
         char str[10];
-        sprintf(str, "%4d %3d", ubGetBatVoltage, ubGetBatPercent);
-        UI_DisplaySN(575 + Factory_x_vol, 1000, str, sizeof(str));
+        sprintf(str, "%4d", ubGetBatVoltage);
+        UI_DisplaySN(0, 700, str, sizeof(str));
+        //sprintf(str, "%4d %3d", ubGetBatVoltage, ubGetBatPercent);
+        //UI_DisplaySN(575 + Factory_x_vol, 1000, str, sizeof(str));
     }
 }
 
@@ -13866,8 +13889,8 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.ubTotalBuNum 				 = DISPLAY_MODE;
 			tUI_PuSetting.ubCamViewNum	  =    		CAM1;
 			tUI_PuSetting.tAdoSrcCamNum				 = (tUI_PuSetting.tAdoSrcCamNum > CAM4)?CAM1:tUI_PuSetting.tAdoSrcCamNum;
-			tUI_PuSetting.BriLvL.tBL_UpdateLvL		 = BL_LVL6; //BL_LVL5
-			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL3; //VOL_LVL4
+			tUI_PuSetting.BriLvL.tBL_UpdateLvL		 = BL_LVL8; //BL_LVL5
+			tUI_PuSetting.VolLvL.tVOL_UpdateLvL		 = VOL_LVL6; //VOL_LVL4
 			ADO_SetDacR2RVol(tUI_VOLTable[tUI_PuSetting.VolLvL.tVOL_UpdateLvL]);
 			
 			tUI_PuSetting.IconSts.ubDrawStsIconFlag  = FALSE;
@@ -13887,9 +13910,9 @@ void UI_LoadDevStatusInfo(void)
 			tUI_PuSetting.ubScanTime 				= 2;
 			tUI_PuSetting.ubHighTempSetting 		= 0;
 			tUI_PuSetting.ubLowTempSetting 			= 0;
-			tUI_PuSetting.ubTempAlertSetting 		= 2;
+			tUI_PuSetting.ubTempAlertSetting 		= 0;
 			tUI_PuSetting.ubSoundLevelSetting 		= 0;
-			tUI_PuSetting.ubSoundAlertSetting 		= 2;	
+			tUI_PuSetting.ubSoundAlertSetting 		= 0;	
 			tUI_PuSetting.ubTempunitFlag 			= 0;
 			tUI_PuSetting.ubSleepMode				= 1;
 			tUI_PuSetting.ubZoomScale				= 0;

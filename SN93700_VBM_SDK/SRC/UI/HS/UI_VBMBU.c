@@ -110,7 +110,7 @@ uint8_t ubTemp_bak = 25;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint32_t ubBuSWVersion = 12;
+uint32_t ubBuSWVersion = 04;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;

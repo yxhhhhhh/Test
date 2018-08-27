@@ -1405,7 +1405,7 @@ void KNL_BlockInit(void)
 		KNL_DisableWORFunc();
 		if((!ubRTC_GetKey()) && (ubKNL_PsValue == RTC_PS_WOR_TAG))
 		{			
-			BB_Init(tKNL_BbSlotMode, NULL, 0,0x2B,0x2B,0,165);	//Step(n)
+			BB_Init(tKNL_BbSlotMode, NULL, 0,0x2B,0x2B,0,165);	//Step(n)  //倒数第二个参数设置FCC(0) 和CE (1)
 			ubKNL_WorSts = BB_ConfirmWakeUpInf();
 		}
 		else
