@@ -241,10 +241,10 @@ typedef enum
     FLICKER_ITEM,
     LANGUAGESET_ITEM,
     DEFAULT_ITEM,
-    TEMPUNIT_ITEM,
     PRODUCT_INFO_ITEM,
     CONTACT_ITEM,
-    SETTINGITEM_MAX
+    SETTINGITEM_MAX,
+   TEMPUNIT_ITEM,
 }UI_SettingSubMenuItemList_t;
 #else
 typedef enum
@@ -253,10 +253,10 @@ typedef enum
     FLICKER_ITEM,
     LANGUAGESET_ITEM,
     DEFAULT_ITEM,
+     TEMPUNIT_ITEM,
     PRODUCT_INFO_ITEM,
     CONTACT_ITEM,
     SETTINGITEM_MAX,
-    TEMPUNIT_ITEM,
 }UI_SettingSubMenuItemList_t;
 #endif
 
@@ -731,7 +731,8 @@ typedef struct
     uint8_t             ubTempunitFlag;
     uint8_t             NightmodeFlag;
     uint8_t             ubCamViewNum;
-    uint8_t             ubReserved[207];
+	uint8_t				ubSquealWarnCnt;	
+	uint8_t				ubReserved[206];	
 }UI_PUSetting_t;
 
 typedef struct
@@ -1137,5 +1138,10 @@ void UI_DrawTempSubMenuPage_NoSel(void);
 void UI_TempUnitSubMenuDisplay(void);
 
 void UI_ShowAlarm(uint8_t type);
+void UI_DisplayAlarmSubmenu(void);
+void UI_DisplaySquealAlert(void);
+void UI_CleanSquealAlert(void);
+uint8_t UI_SendPwrVoxModeToBu(void);
+
 #endif
 

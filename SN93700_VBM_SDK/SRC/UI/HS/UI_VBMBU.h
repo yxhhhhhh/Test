@@ -319,4 +319,5 @@ uint8_t UI_readSN(void);
 uint8_t UI_SendSnValueToPu(uint8_t n);
 //uint8_t UI_SendSnValueToPu(void);
 uint8_t UI_SendIRValueToPu(uint8_t ubHIr, uint8_t ubLIr);
+void UI_SetIrMode(uint8_t mode);
 #endif

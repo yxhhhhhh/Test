@@ -842,15 +842,17 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 	tAPP_StsReport.ubAPP_Report[0] = tAPP_CamView;
 	UI_UpdateAppStatus(&tAPP_StsReport);
 	tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
-
-	if ((tAPP_CamView == SINGLE_VIEW) || (tAPP_CamView == SCAN_VIEW)) {
-		if(tAPP_KNLInfo.tAdoSrcRole != tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum)
-			APP_UpdateKNLSetupInfo();
-		tAPP_KNLInfo.tAdoSrcRole = tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum;
-		ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
-	}
 	if(ubPowerState == PWR_ON)
+	{
+		if ((tAPP_CamView == SINGLE_VIEW) || (tAPP_CamView == SCAN_VIEW)) {
+			if(tAPP_KNLInfo.tAdoSrcRole != tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum)
+				APP_UpdateKNLSetupInfo();
+			tAPP_KNLInfo.tAdoSrcRole = tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum;
+			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
+		}
+	
 		VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
+	}
 }
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOff(void)
@@ -893,6 +895,7 @@ void APP_LcdDisplayOn(void)
 	
 	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
+		printd(Apk_DebugLvl,"11111APP_LOSTLINK_EVENT == APP_UpdateLinkStatus().\n");
 		UI_RemoveLostLinkLogo();
 		ubFastShowLostLinkSta = 1;
 	}	
@@ -1003,11 +1006,11 @@ void APP_Start(void)
 	KNL_BlockInit();
 
 	#ifdef VBM_PU
-	BB_SetTxPwr(1, 0x3D);
+	//BB_SetTxPwr(1, 0x3D);
 	#endif
 
 	#ifdef VBM_BU
-	BB_SetTxPwr(1, 0x35);
+	//BB_SetTxPwr(1, 0x35);
 	#endif
 	//! Video Start
 #ifdef VBM_BU	

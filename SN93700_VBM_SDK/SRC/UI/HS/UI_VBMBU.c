@@ -110,7 +110,7 @@ uint8_t ubTemp_bak = 25;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint32_t ubBuSWVersion = 04;
+uint32_t ubBuSWVersion = 06;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -124,7 +124,10 @@ uint8_t TXSNdata[16] = {0};
 uint8_t ubTempBelowZore = 0;
 uint8_t ubTempAdjustTime = 0;
 uint8_t ubTempInvalid = 0;
-
+uint32_t ubTempcnt = 0;
+uint8_t ubTempflag = 0;
+uint8_t ubUpdateFWFlag = 0;
+uint8_t ubIROnOffFlag = 0;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -174,10 +177,31 @@ void UI_StateReset(void)
     ubUI_WorModeEnFlag   = (PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)?TRUE:FALSE;
     ubUI_WorWakeUpCnt    = 0;
     tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
+
+    ubUpdateFWFlag = 0;	
 }
 //------------------------------------------------------------------------------
 void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 {
+	APP_StatusReport_t *pFWU_StsRpt = (APP_StatusReport_t *)ptUpgStsReport;
+
+	switch(pFWU_StsRpt->ubAPP_Report[0])
+	{
+		case FWU_UPG_INPROGRESS:
+			ubUpdateFWFlag = 1;
+		break;
+
+		case FWU_UPG_SUCCESS:
+
+		break;
+
+		case FWU_UPG_FAIL:
+
+		break;
+
+		default:
+		break;	
+	}		
 }
 //------------------------------------------------------------------------------
 void UI_UpdateAppStatus(void *ptAppStsReport)
@@ -213,7 +237,8 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t pThreadCnt)
 {
-	WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
+        if(ubUpdateFWFlag == 0)	
+		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	//if(((pThreadCnt)%3) == 0)
 	{
 		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
@@ -240,6 +265,10 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
     osMutexWait(UI_BUMutex, osWaitForever);
     UI_CLEAR_THREADCNT(ubUI_ClearThdCntFlag, *pThreadCnt);
     UI_MCStateCheck(); //20180529
+
+	ubTempcnt++;
+	printd(Apk_DebugLvl,"UI_StatusCheck ubTempcnt = %d.\n",ubTempcnt);
+
     switch(tUI_SyncAppState)
     {
     case APP_LINK_STATE:
@@ -292,6 +321,9 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             else if (++ubUI_WorWakeUpCnt > (6000 / UI_TASK_PERIOD))
                 UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
         }
+		if(ubIROnOffFlag == 1)
+			GPIO->GPIO_O4 = 0;
+			
         break;
     case APP_PAIRING_STATE:
         //if ((*pThreadCnt % UI_PAIRINGLED_PERIOD) == 0)
@@ -545,6 +577,13 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         ADO_SetAdcRpt(ADC_SUMRPT_VOX_THL, ADC_SUMRPT_VOX_THH, ADO_ON);
         */
         tUI_BuStsInfo.tCamPsMode = PS_VOX_MODE;
+
+        if(ubIROnOffFlag == 1)
+        {
+       	    GPIO->GPIO_O4 = 0;
+        	    printf("vox on IR off \n");
+	 }
+			
         UI_UpdateDevStatusInfo();
         printd(DBG_InfoLvl, "       => VOX Mode Enable\n");
         break;
@@ -569,7 +608,14 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         break;
     case POWER_NORMAL_MODE:
         if (PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
+        	{
             UI_DisableVox();
+	   if(ubIROnOffFlag == 1)
+	   {
+		    GPIO->GPIO_O4 = 1;
+	        	    printf("vox on IR ON \n");
+	   }			
+        	}		
         break;
     default:
         break;
@@ -803,6 +849,7 @@ void UI_TempCheck(void) //20180322
     bool    ret = 0;
     int32_t tem = 0;
     static uint8_t ubTempInvalidCnt = 0;
+	static uint8_t temp_flag = 0;
 
 #ifdef CT75_TEMP_SENSOR
     ubReg = 0x00;
@@ -830,6 +877,28 @@ void UI_TempCheck(void) //20180322
     ubCurTempVal    = tem > 0 ? tem : -tem;
 #else
     tem  = 17572 * (ubData[0] * 256 + ubData[1]) / 65536 - 4685;
+    if(tem >=2000 && temp_flag == 0)
+   {
+	ubTempflag = 1;
+	temp_flag = 1;
+    }
+    else if(tem < 2000 && temp_flag == 0)
+    {
+	ubTempflag = 0;
+	temp_flag = 1;
+    }
+
+    if(ubTempflag == 1)
+    {
+	tem -= 50;
+	if(ubTempcnt >=36000)
+		tem -= 50;
+    }
+    else
+    {
+	 tem -=50;
+    }
+
     tem /= 100;
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
@@ -1437,7 +1506,7 @@ void UI_SetIrMode(uint8_t mode)
 	if(mode == 1)
 	{
 		AWB_Stop();
-		osDelay(500);
+		osDelay(100);
 		SEN_SetIrMode(1);
 		ISP_SetIQSaturation(0);
 	}
@@ -1459,29 +1528,37 @@ void UI_SetIRLed(uint8_t LedState)
 		UI_SetIrMode(1); //开IR, 黑白色
 		osDelay(50);
 		GPIO->GPIO_O4 = 1;
-        printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
+
+		ubIROnOffFlag = 1;
+        printd(1, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
+        
     }
 
     if ((GPIO->GPIO_O4 == 1) && (LedState == 0))
     {
-        GPIO->GPIO_O4 = 0;
+
+	 GPIO->GPIO_O4 = 0;
         UI_SetIrMode(0); //关IR, 彩色
-        printd(Apk_DebugLvl, "UI_SetIRLed Off###\n");
+	ubIROnOffFlag = 0;
+        printd(1, "UI_SetIRLed Off###\n");
         //BUZ_PlaySingleSound();
     }
 }
 
 void UI_BrightnessCheck(void) //20180408
 {
-	#define IR_CHECK_CNT	3
+	#define IR_CHECK_CNT	1
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
 
+    if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
+	 return;	
+
     uwDetLvl = uwSADC_GetReport(1);
 
-	if(uwDetLvl < 0x28)
+	if(uwDetLvl < 0x32)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
@@ -1498,7 +1575,7 @@ void UI_BrightnessCheck(void) //20180408
 	}
 
 	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-    //printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+    printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
         if (ubCheckMinIrCnt >= IR_CHECK_CNT)
