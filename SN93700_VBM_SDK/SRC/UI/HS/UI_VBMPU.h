@@ -42,7 +42,7 @@
 #define PWRSTS_KEEP             3
 
 #define TEMP_ALARM_INTERVAL     270
-#define PICk_ALARM_INTERVAL     135
+#define PICk_ALARM_INTERVAL     270
 
 typedef void (*pvUiFuncPtr)(void);
 
@@ -1079,7 +1079,9 @@ uint8_t UI_TempCToF(uint8_t cTemp);
 uint8_t UI_TempFToC(uint8_t fTemp);
 uint8_t UI_CheckStopAlarm(void);
 uint8_t UI_GetAlarmStatus(void);
+#if UI_TEMPMENU
 void UI_TempAlarmCheck(void);
+#endif
 void UI_PickupAlarmCheck(void);
 
 void UI_PTNDisplay(uint8_t value);

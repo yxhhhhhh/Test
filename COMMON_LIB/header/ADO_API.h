@@ -11,8 +11,8 @@
 	\file		ADO_API.h
 	\brief		Audio header file
 	\author		Chinwei Hsu/Bruce Hsu
-	\version	2.27
-	\date		2018/08/09
+	\version	2.30
+	\date		2018/08/27
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -25,6 +25,7 @@
 #define ADO_AUDIO32_MAX_NUM 	7
 #define ADO_SRC_NUM				4
 #define ADO_SELF_TEST_LENGTH	5
+#define AUDIO32_REMAIN_SIZE 	640
 
 extern osMessageQId tADO_EncodeQueue;       //!< Audio event queue for external
 extern osMessageQId tADO_EncodeQueueHandle;
@@ -1015,10 +1016,10 @@ void ADO_Audio32_EncBufRdOut(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Siz
 \param SourAddr		source address
 \param Size			write in size
 \param Copy			Copy or not:ADO_ON/ADO_OFF.
-\return(no)
+\return 0:fail; 1:success
 \endcode
 */
-void ADO_Audio32_DecBufWrtIn(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
+uint8_t ubADO_Audio32_DecBufWrtIn(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
 //------------------------------------------------------------------------
 /*!
 \brief Audio32 deocde buffer read out function
@@ -1026,10 +1027,10 @@ void ADO_Audio32_DecBufWrtIn(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_t Siz
 \param DestAddr		destination address
 \param Size			read out size
 \param Copy			Copy or not:ADO_ON/ADO_OFF.
-\return(no)
+\return 0:fail; 1:success
 \endcode
 */
-void ADO_Audio32_DecBufRdOut(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
+uint8_t ubADO_Audio32_DecBufRdOut(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
 //------------------------------------------------------------------------
 /*!
 \brief wav play buffer write in function
@@ -1162,6 +1163,10 @@ void ADO_SelfTest_Close(void);
 \endcode
 */
 void ADO_WavplayVolCompensation(uint32_t ulGainValue);
+
+typedef void(*pvADO_OutputCbFunc)(uint32_t, uint32_t);
+void ADO_SetOutputCbFunc(pvADO_OutputCbFunc pOutput_Cb);
+
 //------------------------------------------------------------------------------
 extern const uint32_t ulADO_BufTh[];
 extern ADO_METADATA_t GlobalAudioMeta;

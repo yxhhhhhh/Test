@@ -11,8 +11,8 @@
 	\file		FWU_API.h
 	\brief		Firmware upgrade function header file
 	\author		Hanyi Chiu
-	\version	1.8
-	\date		2018/08/06
+	\version	1.9
+	\date		2018/08/21
 	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -33,7 +33,8 @@ typedef enum
 
 typedef enum
 {
-	FWU_UPG_FAIL 	= 120,
+	FWU_UPG_FAIL 		= 120,
+	FWU_UPG_DEVTAG_FAIL,
 	FWU_UPG_SUCCESS,
 	FWU_UPG_INPROGRESS,
 }FWU_UpgResult_t;

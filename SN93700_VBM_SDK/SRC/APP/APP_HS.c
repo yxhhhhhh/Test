@@ -779,15 +779,16 @@ void APP_FWUgradeStatusReport(uint8_t ubStsReport)
 			#ifdef VBM_PU
 			UI_TimerEventStop();
 			#endif
-			KNL_Stop();
+//			KNL_Stop();
 			VDO_Stop();
 			ADO_Stop();
 			break;
 		case FWU_UPG_SUCCESS:
 			SYS_Reboot();
 			break;
+		case FWU_UPG_DEVTAG_FAIL:
 		case FWU_UPG_FAIL:
-			KNL_ReStart();
+//			KNL_ReStart();
 			VDO_Start();
 			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 			UI_StartUpdateThread();
@@ -943,6 +944,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 		#ifdef VBM_BU
 			VDO_ChangePlayState(tAPP_KNLInfo.tKNL_Role, VDO_STOP);
 			KNL_EnableWORFunc();
+			break;
 		#endif
 		#ifdef VBM_PU
 		{
@@ -951,9 +953,9 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 			tKNL_Role = tAPP_STANumTable[tPsCamNum].tKNL_StaNum;
 			VDO_ChangePlayState(tKNL_Role, tAPP_VdoPlySte);
 			KNL_WakeupDevice(tKNL_Role, ptEventMsg->ubAPP_Message[2]);
-		}
-		#endif
 			break;
+		}
+		#endif			
 		case PS_WOR_MODE:
 		#ifdef VBM_BU
 		{
@@ -965,6 +967,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 			   (tAPP_WorFunc[ubAPP_PsFlag].VDO_tPsFunPtr))
 				tAPP_WorFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
 			KNL_WakeupDevice(KNL_MASTER_AP, ptEventMsg->ubAPP_Message[3]);
+			break;
 		}
 		#endif
 		#ifdef VBM_PU

@@ -11,9 +11,9 @@
 	\file		TIMER.c
 	\brief		TIMER Function
 	\author		Hanyi Chiu
-	\version	0.3
-	\date		2017/02/24
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.5
+	\date		2018/08/27
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
@@ -21,7 +21,7 @@
 #include "INTC.h"
 
 #define TIMER_MAJORVER	0
-#define TIMER_MINORVER	3
+#define TIMER_MINORVER	5
 
 //------------------------------------------------------------------------------
 uint32_t ulTimer_DeviceAddr[] = {Timer1_BASE, Timer1_BASE, Timer1_BASE,
@@ -54,15 +54,17 @@ void TIMER_Init(void)
 	INTC_IrqClear(INTC_TIMER1_IRQ);
 	INTC_IrqClear(INTC_TIMER2_IRQ);
 	for(ubIdx = 0; ubIdx < TIMER_TOTAL_NUM; ubIdx++)
+	{
 		TIMER_Stop((TIMER_DEVICE_t)(TIMER1_1 + ubIdx));
+		INTC_IrqSetup(iTimer_IRQn[(TIMER_DEVICE_t)(TIMER1_1 + ubIdx)], INTC_EDGE_TRIG, iTimer_IrqHandler[(TIMER_DEVICE_t)(TIMER1_1 + ubIdx)]);
+		INTC_IrqEnable(iTimer_IRQn[(TIMER_DEVICE_t)(TIMER1_1 + ubIdx)]);
+	}
 	osMutexDef(TIMER22_delayMutex);
 	TIMER22_delayMutex = osMutexCreate(osMutex(TIMER22_delayMutex));
 }
 //------------------------------------------------------------------------------
 TIMER_RESULT TIMER_Start(TIMER_DEVICE_t tDevice, TIMER_SETUP_t TimerSetup)
 {
-	INTC_IrqSetup(iTimer_IRQn[tDevice], INTC_EDGE_TRIG, iTimer_IrqHandler[tDevice]);
-	INTC_IrqEnable(iTimer_IRQn[tDevice]);
 	Timer_EventMethod[tDevice] = TimerSetup.tEM;
 	Timer_Event[tDevice]  	   = TimerSetup.pvEvent;
 	switch(tDevice)
@@ -215,11 +217,14 @@ void TIMER1_INT_Handler(void)
 	uint8_t ubEvent;
 	TIMER_DEVICE_t tDev;
 
-	tDev = ((TmFlag & TIMER1_FLAG_MASK) && (!(TmMask & TIMER1_FLAG_MASK)))?TIMER1_1:
-	       ((TmFlag & TIMER2_FLAG_MASK) && (!(TmMask & TIMER2_FLAG_MASK)))?TIMER1_2:
-	       ((TmFlag & TIMER3_FLAG_MASK) && (!(TmMask & TIMER3_FLAG_MASK)))?TIMER1_3:TIMER_NULL;
-	if(tDev != TIMER_NULL)
+	while(1)
 	{
+		tDev = ((TmFlag & TIMER1_FLAG_MASK) && (!(TmMask & TIMER1_FLAG_MASK)))?TIMER1_1:
+			   ((TmFlag & TIMER2_FLAG_MASK) && (!(TmMask & TIMER2_FLAG_MASK)))?TIMER1_2:
+			   ((TmFlag & TIMER3_FLAG_MASK) && (!(TmMask & TIMER3_FLAG_MASK)))?TIMER1_3:TIMER_NULL;
+		TmFlag &= ~((tDev == TIMER1_1)?TIMER1_FLAG_MASK:(tDev == TIMER1_2)?TIMER2_FLAG_MASK:(tDev == TIMER1_3)?TIMER3_FLAG_MASK:TmFlag);
+		if(TIMER_NULL == tDev)
+			break;
 #ifdef RTOS
 		if(Timer_EventMethod[tDev] == TIMER_SEMAPHORE)
 		{
@@ -245,6 +250,7 @@ void TIMER1_INT_Handler(void)
 				Event_CB(ubEvent);
 		}
 	}
+	TmFlag = (Timer1->TIMER_FLAG & 0x1FF);
 	Timer1->TIMER_FLAG = (TmFlag << 9) & 0x3FE00;
 	INTC_IrqClear(INTC_TIMER1_IRQ);	
 }
@@ -256,11 +262,14 @@ void TIMER2_INT_Handler(void)
 	uint8_t ubEvent;
 	TIMER_DEVICE_t tDev;
 
-	tDev = ((TmFlag & TIMER1_FLAG_MASK) && (!(TmMask & TIMER1_FLAG_MASK)))?TIMER2_1:
-	       ((TmFlag & TIMER2_FLAG_MASK) && (!(TmMask & TIMER2_FLAG_MASK)))?TIMER2_2:
-	       ((TmFlag & TIMER3_FLAG_MASK) && (!(TmMask & TIMER3_FLAG_MASK)))?TIMER2_3:TIMER_NULL;
-	if(tDev != TIMER_NULL)
+	while(1)
 	{
+		tDev = ((TmFlag & TIMER1_FLAG_MASK) && (!(TmMask & TIMER1_FLAG_MASK)))?TIMER2_1:
+			   ((TmFlag & TIMER2_FLAG_MASK) && (!(TmMask & TIMER2_FLAG_MASK)))?TIMER2_2:
+			   ((TmFlag & TIMER3_FLAG_MASK) && (!(TmMask & TIMER3_FLAG_MASK)))?TIMER2_3:TIMER_NULL;
+		TmFlag &= ~((tDev == TIMER2_1)?TIMER1_FLAG_MASK:(tDev == TIMER2_2)?TIMER2_FLAG_MASK:(tDev == TIMER2_3)?TIMER3_FLAG_MASK:TmFlag);
+		if(TIMER_NULL == tDev)
+			break;
 #ifdef RTOS
 		if(Timer_EventMethod[tDev] == TIMER_SEMAPHORE)
 		{
@@ -286,6 +295,7 @@ void TIMER2_INT_Handler(void)
 				Event_CB(ubEvent);
 		}
 	}
+	TmFlag = (Timer2->TIMER_FLAG & 0x1FF);
 	Timer2->TIMER_FLAG = (TmFlag << 9) & 0x3FE00;
 	INTC_IrqClear(INTC_TIMER2_IRQ);
 }

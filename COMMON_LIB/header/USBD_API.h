@@ -11,8 +11,8 @@
 	\file		USBD_API.h
 	\brief		USB Device Config header file
 	\author		Hanyi Chiu
-	\version	1.4
-	\date		2018/07/09
+	\version	1.5
+	\date		2018/08/15
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -21,15 +21,18 @@
 
 #include "_510PF.h"
 
-#define USBD_ENABLE		TRUE
+#define USBD_ENABLE			TRUE
 
 #define USBD_FuncEnable		(GLB->UD_FUNC_DIS = 0)
 #define USBD_FuncDisable	(GLB->UD_FUNC_DIS = 1)
+
+#define USBD_UVC_DUMMY_SZ	30
 
 typedef enum
 {
 	USBD_UVC_MODE = 1,
 	USBD_MSC_MODE,
+	USBD_MULTI_MODE,
 	USBD_UNKNOWN_MODE,
 }USBD_ClassMode_t;
 
@@ -84,7 +87,7 @@ USBD_STATUS tUSBD_GetConfigStatus(void);
 \brief Get USB Class Mode
 \return Class mode
 */
-USBD_ClassMode_t USBD_GetClassMode(void);
+USBD_ClassMode_t tUSBD_GetClassMode(void);
 //------------------------------------------------------------------------------
 /*!
 \brief Buffer setup for USB Device

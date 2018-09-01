@@ -11,9 +11,9 @@
 	\file		TIMER.h
 	\brief		TIMER Header File
 	\author		Hanyi Chiu
-	\version	0.3
-	\date		2017/02/24
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.5
+	\date		2018/08/27
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _TIMER_H_

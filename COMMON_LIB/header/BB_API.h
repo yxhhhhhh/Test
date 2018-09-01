@@ -11,8 +11,8 @@
 	\file		BB_API.h
 	\brief		Baseband API header
 	\author		Bing
-	\version	1.17
-	\date		2018/08/01
+	\version	1.19
+	\date		2018/08/27
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------
