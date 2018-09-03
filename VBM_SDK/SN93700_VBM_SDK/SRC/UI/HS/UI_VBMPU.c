@@ -14005,10 +14005,10 @@ void UI_FactoryStatusDisplay(void)
 
     if (1) {
         char str[10];
-        sprintf(str, "%4d", ubGetBatVoltage);
-        UI_DisplaySN(0, 700, str, sizeof(str));
-        //sprintf(str, "%4d %3d", ubGetBatVoltage, ubGetBatPercent);
-        //UI_DisplaySN(575 + Factory_x_vol, 1000, str, sizeof(str));
+        //sprintf(str, "%4d", ubGetBatVoltage);
+        //UI_DisplaySN(0, 700, str, sizeof(str));
+        sprintf(str, "%-4d %-3d", ubGetBatVoltage, ubGetBatPercent);
+        UI_DisplaySN(575 + Factory_x_vol, 1000, str, sizeof(str));
     }
 }
 
