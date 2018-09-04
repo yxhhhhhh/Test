@@ -799,6 +799,8 @@ typedef enum
     UI_SET_TALK_OFF_CMD,
     UI_GET_BU_PS_MODE_CMD,
     UI_SET_BU_ALARM_VALUE_CMD,
+    UI_SET_BUMIC12_CMD,
+    UI_SET_BUMIC13_5_CMD,
 } UI_PUTOBUCmdID_t;
 
 typedef enum

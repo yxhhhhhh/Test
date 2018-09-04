@@ -1197,6 +1197,7 @@ void UI_LoadDevStatusInfo(void)
 	}
 
     ADO_SetDacR2RVol(R2R_VOL_n0DB);
+    //ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_12DB); // 20180903
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)
@@ -1497,6 +1498,14 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
         ubSoundAlarm = pRecvPuParam[3];
         break;
 
+    case UI_SET_BUMIC12_CMD:
+		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_12DB); // 20180903
+		break;
+		
+   case  UI_SET_BUMIC13_5_CMD:
+		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_13p5DB); // 20180524
+		break;
+		
     default:
         break;
     }

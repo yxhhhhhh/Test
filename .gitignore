@@ -1,6 +1,17 @@
 !.gitignore
 *.bin
 *.bak
+*.IAB
+*.IAD
+*.IMB
+*.IMD
+*.PFI
+*.PO
+*.PRI
+*.PS
+*.PR
+*.SearchResults
+*.WK3
 Thumbs.db
 ConfigGen/Download/
 ConfigGen/Temporal/
