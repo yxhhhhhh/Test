@@ -1493,10 +1493,13 @@ void UI_PowerKey(void)
 void UI_MenuKey(void)
 {
     OSD_IMG_INFO tOsdInfo;
-    printd(Apk_DebugLvl, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt);
+    printd(1, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt);
     switch (tUI_State)
     {
     case UI_DISPLAY_STATE:
+	if(ubFactoryModeFLag == 1)
+            return;
+	
         if (ubShowAlarmstate > 0)
         {
             return;
@@ -1511,8 +1514,6 @@ void UI_MenuKey(void)
             tUI_PuSetting.VolLvL.ubVOL_UpdateCnt = 0;
             return;
         }
-        if (ubFactoryModeFLag == 1)
-            return;
 
         if (ubAutoBrightnessFlag == 0)
         {
@@ -1536,6 +1537,9 @@ void UI_MenuKey(void)
     case UI_SUBSUBMENU_STATE:
     case UI_SUBSUBSUBMENU_STATE:
         {
+	     if(ubFactoryModeFLag == 1)
+           	 return;
+	
             if (tUI_SyncAppState == APP_PAIRING_STATE)
             {
                 UI_PairingControl(EXIT_ARROW);
@@ -1886,7 +1890,7 @@ void FactortPair(void)
    // if (ubCamFullFlag == 0)
     //{
         BUZ_PlaySingleSound();
-        ubPairDisplayTime = 60; //10
+        ubPairDisplayTime = 20; //10
         tPairInfo.tPairSelCam = ubPairSelCamcnt;
         tPairInfo.tDispLocation = ubPairSelCamcnt;
 
@@ -3460,18 +3464,21 @@ void UI_VolUpKey(void)
 
     UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
     ubMenuKeyPairing = 0;
-
-    if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL5)
-    {
-    	if(APP_LINK_STATE == tUI_SyncAppState)
-    	{
-		if(++tUI_PuSetting.ubSquealWarnCnt <= 3 )
-		{
-			UI_UpdateDevStatusInfo();
-	    		UI_DisplaySquealAlert();
-		}	
-    	}
-    }	
+	if(ubFactoryModeFLag ==0)
+	{
+	    if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL5)
+	    {
+	    	if(APP_LINK_STATE == tUI_SyncAppState)
+	    	{
+			if(++tUI_PuSetting.ubSquealWarnCnt <= 3 )
+			{
+				
+				UI_UpdateDevStatusInfo();
+		    		UI_DisplaySquealAlert();
+			}	
+	    	}
+	    }	
+	}
     tUI_State = UI_DISPLAY_STATE;
 }
 
@@ -8084,10 +8091,19 @@ void UI_DrawPairingStatusIcon(void)
     }
     */
 	ubPairDisplayTime = ulPAIR_TimeCnt /1000;
-	ubPairDisplayTime = 60 - ubPairDisplayTime;
 	
+	if(ubFactoryModeFLag == 0)
+		ubPairDisplayTime = 60 - ubPairDisplayTime;
+	else
+	{
+		ubPairDisplayTime = 20 - ubPairDisplayTime;
+		if(ubPairDisplayTime == 0)
+                UI_PairingControl(EXIT_ARROW);
+	}
 
-    printd(Apk_DebugLvl,"UI_DrawPairingStatusIcon ubPairDisplayTime=%d.\n",ubPairDisplayTime);
+
+
+    printd(1,"UI_DrawPairingStatusIcon ubPairDisplayTime=%d.\n",ubPairDisplayTime);
     if(ubFactoryModeFLag == 0)
     {
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_CAM_PAIRING+ (37*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
@@ -8188,8 +8204,8 @@ if (ubFactoryModeFLag == 0)
 
         ubPairDisplayTime = 60; //10
 
-       // if (ubFactoryModeFLag == 1)
-            //ubPairDisplayTime = 20;
+       if (ubFactoryModeFLag == 1)
+           ubPairDisplayTime = 20;
 
         UI_ResetDevSetting(tPairInfo.tPairSelCam);
         UI_UpdateDevStatusInfo();
