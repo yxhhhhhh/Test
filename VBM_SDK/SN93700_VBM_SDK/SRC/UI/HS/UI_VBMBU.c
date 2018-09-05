@@ -267,6 +267,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
     UI_MCStateCheck(); //20180529
 
 	ubTempcnt++;
+	if(ubTempcnt >36002)
+		ubTempcnt = 36002;
 	printd(Apk_DebugLvl,"UI_StatusCheck ubTempcnt = %d.\n",ubTempcnt);
 
     switch(tUI_SyncAppState)
@@ -892,7 +894,9 @@ void UI_TempCheck(void) //20180322
     {
 	tem -= 50;
 	if(ubTempcnt >=36000)
+	{
 		tem -= 50;
+	}
     }
     else
     {
@@ -1456,6 +1460,7 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	static uint8_t BuTalkSpkState = 0;	
     uint8_t *pRecvPuParam = (uint8_t *)pvRecvPuParam;
     uint8_t ubPuCmd = pRecvPuParam[0];
+	printd(1,"UI_RecvPUCmdSetting  ubPuCmd =%x\n",ubPuCmd);
 
     switch(ubPuCmd)
     {
@@ -1464,19 +1469,11 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
         break;
 
     case UI_SET_BU_ADO_TEST_CMD:
-        if (BuPlayRecordState == 0)
-        {
-            BuPlayRecordState = 1;
+			printd(1,"UI_RecvPUCmdSetting 2222222222\n");
             ADO_SelfTest_Init(); //ADO_SelfTest_Init(10);
             ADO_SelfTest_Record();
             ADO_SelfTest_Play();
             ADO_SelfTest_Close();
-            BuPlayRecordState = 2;
-        }
-        else if (BuPlayRecordState == 2)
-        {
-            BuPlayRecordState = 0;
-        }
         break;
 
     case UI_SET_TALK_ON_CMD:
@@ -1584,7 +1581,7 @@ void UI_BrightnessCheck(void) //20180408
 	}
 
 	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-    printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+    printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
         if (ubCheckMinIrCnt >= IR_CHECK_CNT)

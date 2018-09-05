@@ -53,7 +53,9 @@ extern uint8_t ubFactorySettingFLag;
 extern uint8_t ubClearOsdFlag_2;
 
 extern uint8_t ubFactoryModeFLag;
+extern uint8_t ubReStartWakeUpFlag ;
 extern uint8_t ubWorWakeUpFlag ;
+
 
 extern uint8_t ubSwitchNormalFlag;
 extern uint8_t ubPowerState;
@@ -125,16 +127,24 @@ uint8_t APP_CheckBootStatus(void)
 
 	if((!ubRTC_GetKey()) && (ubWorWakepValue == 0x40))
 	{			
+		ubReStartWakeUpFlag = 1;
+	}
+	else
+	{
+		ubReStartWakeUpFlag = 0;
+	}
+	
+	if((!ubRTC_GetKey()) && (ubWorWakepValue == RTC_PS_WOR_TAG))
+	{			
 		ubWorWakeUpFlag = 1;
 	}
 	else
 	{
 		ubWorWakeUpFlag = 0;
 	}
-	
-	printf("ubWorWakeUpFlag~~~~ %d \n",ubWorWakeUpFlag);
+	printf("ubReStartWakeUpFlag %d \n",ubReStartWakeUpFlag);
 
-	if (ubWorWakeUpFlag == 0)
+	if (ubReStartWakeUpFlag == 0 ||  ubWorWakeUpFlag == 0)
 	{
 		while (1)
 		{
@@ -163,6 +173,7 @@ uint8_t APP_CheckBootStatus(void)
 			WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 		}
 	}
+
 	printd(Apk_DebugLvl, "APP_CheckBootStatus USB: %d, checkCount: %d.\n", UI_GetUsbDet(), checkCount);
 #else
 	#define CHECK_COUNT  10

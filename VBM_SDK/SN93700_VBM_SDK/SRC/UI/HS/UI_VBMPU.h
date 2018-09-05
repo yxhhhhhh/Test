@@ -1121,6 +1121,8 @@ uint8_t UI_CamvLDCModeCmd(uint8_t value);
 uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode);
 uint8_t UI_SendNightModeToBu(void);
 uint8_t UI_GetBuVersion(void);
+
+uint8_t UI_GetBuMICTest(void);
 void UI_FactoryStatusDisplay(void);
 uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len);
 void UI_EnterLongKey(void);
