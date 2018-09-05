@@ -2586,10 +2586,10 @@ UI_Result_t UI_SetupPuWorMode(void)
     tPsCmd.ubCmd[UI_SETTING_ITEM]   = UI_WORMODE_SETTING;
     tPsCmd.ubCmd[UI_SETTING_DATA]   = PS_WOR_MODE;
     tPsCmd.ubCmd_Len                = 3;
-    for (tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
+/*    for (tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
     {
-        if (CAM_OFFLINE == tUI_CamStatus[tCamNum].tCamConnSts)
-            continue;
+       //if (CAM_OFFLINE == tUI_CamStatus[tCamNum].tCamConnSts)
+          //continue;
         tPsCmd.tDS_CamNum = tCamNum;
         tBuNotifyRet = UI_SendRequestToBU(osThreadGetId(), &tPsCmd);
         if (rUI_SUCCESS == tBuNotifyRet)
@@ -2597,7 +2597,19 @@ UI_Result_t UI_SetupPuWorMode(void)
         else
             printd(DBG_ErrorLvl, "CAM%d:WOR Setting Fail !\n", (tCamNum + 1));
     }
+*/	 
+	printd(1, "tCamViewSel.tCamViewPool[0]] %d  tCamConnSts %d \n", tCamViewSel.tCamViewPool[0],tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
 
+        if(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE)
+      	{
+	        tPsCmd.tDS_CamNum = tCamViewSel.tCamViewPool[0];
+	        tBuNotifyRet = UI_SendRequestToBU(osThreadGetId(), &tPsCmd);
+	        if (rUI_SUCCESS == tBuNotifyRet)
+	            tWorRet = rUI_SUCCESS;
+	        else
+	            printd(DBG_ErrorLvl, "CAM%d:WOR Setting Fail !\n", (tCamViewSel.tCamViewPool[0] + 1));
+      	}
+	  
     if (rUI_SUCCESS == tWorRet)
     {
         APP_EventMsg_t tUI_PsMessage = {0};
