@@ -363,7 +363,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 
 	printd(1,"UI_KeyEventExec ptKeyEvent->ubKeyID = %x.\n",ptKeyEvent->ubKeyID);
 	
-    if (tUI_PuSetting.ubDefualtFlag == TRUE) //禄脰赂麓鲁枚鲁搂脡猫脰脙脰禄脫脨脡脧脧脗脳贸脫脪,Enter,PowerKe   y录眉脫脨脫脙
+    if (tUI_PuSetting.ubDefualtFlag == TRUE) //恢复出厂设置只有上下左右,Enter,PowerKey键有用
     {
         if ((ptKeyEvent->ubKeyID < AKEY_UP) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
         {
@@ -1701,7 +1701,7 @@ void UI_MenuLongKey(void)
 		tOsdImgInfo.uwVSize  = 1280;
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 0;
-		OSD_EraserImg2(&tOsdImgInfo); 
+		OSD_EraserImg2(&tOsdImgInfo); //复位重启以后OSD可能会有残留
 
 		UI_PowerOff	();	
 	}
