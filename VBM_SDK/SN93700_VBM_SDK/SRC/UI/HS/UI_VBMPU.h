@@ -88,6 +88,8 @@ typedef enum
     UI_PAIRING_STATE,
     UI_DUALVIEW_CAMSEL_STATE,
     UI_SDFWUPG_STATE,
+	UI_VOXPS_STATE,
+	UI_ADOONLYPS_STATE,
     UI_RECFOLDER_SEL_STATE,
     UI_RECFILES_SEL_STATE,
     UI_RECPLAYLIST_STATE,
@@ -861,8 +863,8 @@ typedef struct
 
 typedef struct
 {
-    void (*pvAction)(UI_CamNum_t, void *);
-} UI_ReportFuncPtr_t;
+	void (*pvAction)(UI_CamNum_t, void *);
+}UI_ReportFuncPtr_t;
 
 typedef struct
 {
@@ -1147,5 +1149,7 @@ void UI_DisplaySquealAlert(void);
 void UI_CleanSquealAlert(void);
 uint8_t UI_SendPwrVoxModeToBu(void);
 
+void UI_DisablePuAdoOnlyMode(void);
+void UI_SwitchAudioSource(UI_CamNum_t tCamNum);
 #endif
 

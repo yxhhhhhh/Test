@@ -437,7 +437,7 @@ _RETRY:
 uint8_t ubSEN_Open(struct SENSOR_SETTING *setting, uint8_t ubFPS)
 {		
 		// Set ISP clock
-		SEN_SetISPRate(8);		
+		SEN_SetISPRate(8);
 		// Set parallel mode
 		SEN->MIPI_MODE = 0;
 		// Set sensor clock
@@ -505,7 +505,6 @@ uint8_t ubSEN_Open(struct SENSOR_SETTING *setting, uint8_t ubFPS)
 void SEN_CalExpLDmyL(uint32_t ulAlgExpTime)
 {
 	//Transfor the ExpLine of Algorithm	to ExpLine and DmyLine of Sensor here
-
 	xtSENInst.xtSENCtl.ulExpTime = ulAlgExpTime;
 	xtSENInst.xtSENCtl.uwExpLine = uwSEN_CalExpLine(ulAlgExpTime);
 

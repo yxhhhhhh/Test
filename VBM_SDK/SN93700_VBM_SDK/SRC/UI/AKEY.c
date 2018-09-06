@@ -137,6 +137,7 @@ AKEY_ID_t AKEY_Detection(void)
 	if(uwAKEY_DetLvl >= tAKEY_Map[AKEY_UNKNOW].uwKeyLvl)
 		return AKEY_UNKNOW;
 
+	printd(1,"AKEY_Detection  uwAKEY_DetLvl  %x.\n",uwAKEY_DetLvl);
 	ubAKEY_MaxID = sizeof tAKEY_Map / sizeof(AKEY_MAP_t);
 	for(ubAKEY_Idx = AKEY_MENU; ubAKEY_Idx < ubAKEY_MaxID; ubAKEY_Idx++)
 	{

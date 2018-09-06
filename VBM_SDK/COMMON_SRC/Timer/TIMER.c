@@ -21,7 +21,7 @@
 #include "INTC.h"
 
 #define TIMER_MAJORVER	0
-#define TIMER_MINORVER	5
+#define TIMER_MINORVER	3
 
 //------------------------------------------------------------------------------
 uint32_t ulTimer_DeviceAddr[] = {Timer1_BASE, Timer1_BASE, Timer1_BASE,

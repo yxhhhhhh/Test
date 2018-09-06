@@ -85,7 +85,8 @@ typedef enum
 typedef enum
 {
 	PS_VOX_MODE,
-	PS_WOR_MODE,
+	PS_ADOONLY_MODE,
+	PS_WOR_MODE,	
 	PS_ECO_MODE,
 	POWER_NORMAL_MODE = 8,
 }UI_PowerSaveMode_t;

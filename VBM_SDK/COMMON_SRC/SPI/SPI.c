@@ -62,9 +62,9 @@ void SPI_Init(SPI_Setup_t* setup)
     //! clear rx/tx fifo
     SSP->SSP_RXF_CLR = 1;
     SSP->SSP_TXF_CLR = 1;
-    SSP->SSP_RXF_TH = 1;
-    SSP->SSP_TXF_TH = 15;
-    SSP->SSP_TXDOE = 1;
+    SSP->SSP_RXF_TH  = 1;
+    SSP->SSP_TXF_TH  = 15;
+    SSP->SSP_TXDOE 	 = 1;
 
     SSP->SSP_EN = 0;
 

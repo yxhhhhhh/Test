@@ -11,8 +11,8 @@
 	\file	    SEN.h
 	\brief		Sensor funcations header
 	\author     BoCun
-	\version    0.9
-	\date		2018-07-06
+	\version    1.0
+	\date		2018-07-17
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------

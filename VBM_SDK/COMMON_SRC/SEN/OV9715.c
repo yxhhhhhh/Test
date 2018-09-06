@@ -348,13 +348,13 @@ uint8_t ubSEN_Open(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 	// Free run mode for PCLK
 	SEN->SYNC_MODE = 1;		
 	// Change ISP_LH_SEL to 0, for 10bit raw input
-	SEN->ISP_LH_SEL = 0;																		// change ISP_LH_SEL to 1, for D2-D9 input
+	SEN->ISP_LH_SEL = 0;                            // change ISP_LH_SEL to 1, for D2-D9 input
 	SEN->ISP_HSTART_OFFSET = 0;
-	SEN->ISP_MODE = 0;																			// Bayer pat mode	
+	SEN->ISP_MODE = 0;                              // Bayer pat mode	
 
 	// Change RAW_REORDER to 0, start from B
 	SEN->RAW_REORDER = 0;
-	SEN->SENSOR_MODE = 1;																		// Buffer sync mode
+	SEN->SENSOR_MODE = 1;                           // Buffer sync mode
 	// Change to 10bit RAW
 	SEN->RAW_BP_MODE = 1;
 	SEN->RAW_BP_EN = 0;		
@@ -443,7 +443,6 @@ void SEN_WriteTotalLine(void)
 	bSEN_I2C_Write(OV9715_RENDL_LOW, (uint8_t)((xtSENInst.uwMaxExpLine) &0x00ff));
 #else
 	uint8_t ubData[2];
-//	static uint8_t testCnt;
 	
 	// MSB
 	ubData[0] = 0x3E;
@@ -453,7 +452,6 @@ void SEN_WriteTotalLine(void)
 	// LSB
 	ubData[0] = 0x3D;
 	ubData[1] = (uint8_t)((xtSENInst.uwMaxExpLine) &0x00ff);
-	//ubData[1] = testCnt++;
 	CQI2C_ModifyCQ_I2C_Write(pWrDataSet[1], ubData);
 #endif
 }

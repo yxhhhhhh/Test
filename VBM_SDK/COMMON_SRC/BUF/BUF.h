@@ -24,7 +24,7 @@
 
 //Buffer Setting
 //-----------------------------------------------------
-#define BUF_NUM_SEN_YUV				5
+#define BUF_NUM_SEN_YUV				3//5
 
 #define BUF_NUM_VDO_BS				9
 #define BUF_NUM_VDO_BS0				BUF_NUM_VDO_BS	//10
@@ -34,6 +34,9 @@
 
 #define BUF_NUM_ADC					3
 #define BUF_NUM_DAC					3
+
+#define BUF_NUM_USBD_VDO			28
+#define BUF_NUM_USBD_ADO			16
 
 typedef enum
 {
@@ -71,7 +74,10 @@ typedef enum
 	BUF_VDO_SUB_BS01	= 15,	//Video Bitstream Data Buffer
 	BUF_VDO_SUB_BS11	= 16,	//Video Bitstream Data Buffer
 	BUF_VDO_SUB_BS21	= 17,	//Video Bitstream Data Buffer
-	BUF_VDO_SUB_BS31	= 18,	//Video Bitstream Data Buffer	
+	BUF_VDO_SUB_BS31	= 18,	//Video Bitstream Data Buffer
+	
+	BUF_USBD_VDO		= 22,
+	BUF_USBD_ADO		= 23,
 	
 	BUF_ADO_ADC			= 24,	//Audio ADC Buffer
 	
@@ -606,5 +612,37 @@ uint8_t ubBUF_ReleaseDac5Buf(uint32_t ulBufAddr);
 \return Buffer address
 */
 uint32_t ulBUF_GetBlkBufAddr(uint8_t ubIndex,uint8_t ubBufMode);
+
+//------------------------------------------------------------------------
+/*!
+\brief Get VDO buffer of UVC address
+\return Buffer address
+*/
+uint32_t ulBUF_GetVdoUsbdFreeBuf(void);
+
+//------------------------------------------------------------------------
+/*!
+\brief Get ADO buffer of USBD address
+\return Buffer address
+*/
+uint32_t ulBUF_GetAdoUsbdFreeBuf(void);
+
+//------------------------------------------------------------------------
+/*!
+\brief Release VDO buffer of UVC
+\param ulBufAddr Buffer address
+\return 0xA5->Fail\n
+			1->Success
+*/
+uint8_t ubBUF_ReleaseVdoUsbdBuf(uint32_t ulBufAddr);
+
+//------------------------------------------------------------------------
+/*!
+\brief Release ADO buffer of USBD
+\param ulBufAddr Buffer address
+\return 0xA5->Fail\n
+			1->Success
+*/
+uint8_t ubBUF_ReleaseAdoUsbdBuf(uint32_t ulBufAddr);
 
 #endif

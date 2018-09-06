@@ -1,18 +1,18 @@
 /*!
-    The information contained herein is the exclusive property of SONiX and
-    shall not be distributed, or disclosed in whole or in part without prior
-    permission of SONiX.
-    SONiX reserves the right to make changes without further notice to the
-    product to improve reliability, function or design. SONiX does not assume
-    any liability arising out of the application or use of any product or
-    circuits described herein. All application information is advisor and does
-    not from part of the specification.
+	The information contained herein is the exclusive property of SONiX and
+	shall not be distributed, or disclosed in whole or in part without prior
+	permission of SONiX.
+	SONiX reserves the right to make changes without further notice to the
+	product to improve reliability, function or design. SONiX does not assume
+	any liability arising out of the application or use of any product or
+	circuits described herein. All application information is advisor and does
+	not from part of the specification.
 
 	\file		UI_VBMPU.c
 	\brief		User Interface of VBM Parent Unit (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.10
-	\date		2018/08/02
+	\version	1.11
+	\date		2018/08/27
 	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -147,6 +147,7 @@ static UI_ThreadNotify_t tosUI_Notify;
 static UI_DPTZParam_t tUI_DptzParam;
 static UI_CamNum_t tUI_BuEcoCamNum;
 static UI_CamNum_t tUI_CamNumSel;
+static uint8_t ubUI_PuStartUpFlag;
 static uint8_t ubUI_PttStartFlag;
 static uint8_t ubUI_ResetPeriodFlag;
 static uint8_t ubUI_FastStateFlag;
@@ -353,13 +354,16 @@ uint8_t ubFactoryDelCamFlag  = 0;
 void UI_KeyEventExec(void *pvKeyEvent)
 {
     static uint8_t ubUI_KeyEventIdx = 0;
+	KEY_Event_t *ptKeyEvent;
     uint16_t uwUiKeyEvent_Cnt = 0, uwIdx;
     OSD_IMG_INFO tOsdImgInfo;
 
-    KEY_Event_t *ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
+	ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
     uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
 
-    if (tUI_PuSetting.ubDefualtFlag == TRUE) //ª÷∏¥≥ˆ≥ß…Ë÷√÷ª”–…œœ¬◊Û”“,Enter,PowerKeyº¸”–”√
+	printd(1,"UI_KeyEventExec ptKeyEvent->ubKeyID = %x.\n",ptKeyEvent->ubKeyID);
+	
+    if (tUI_PuSetting.ubDefualtFlag == TRUE) //¬ª√ñ¬∏¬¥¬≥√∂¬≥¬ß√â√®√ñ√É√ñ¬ª√ì√ê√â√è√è√Ç√ó√≥√ì√í,Enter,PowerKe   y¬º√º√ì√ê√ì√É
     {
         if ((ptKeyEvent->ubKeyID < AKEY_UP) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
         {
@@ -549,7 +553,7 @@ void UI_OnInitDialog(void)
 		OSD_LogoJpeg(OSDLOGO_BOOT);
 
 	if ((DISPLAY_MODE != DISPLAY_1T1R) && wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) == RTC_WATCHDOG_CHK_TAG) {
-		printd(DBG_ErrorLvl, "Watch Dog Rst\n");
+		printd(DBG_CriticalLvl, "PWR STS: Keep\n");
 		tCamViewSel.tCamViewType    = (UI_CamViewType_t)wRTC_ReadUserRam(RTC_RECORD_VIEW_MODE_ADDR);
 		tCamViewSel.tCamViewPool[0] = (UI_CamNum_t)(wRTC_ReadUserRam(RTC_RECORD_VIEW_CAM_ADDR) >> 4);
 		tCamViewSel.tCamViewPool[1] = (UI_CamNum_t)(wRTC_ReadUserRam(RTC_RECORD_VIEW_CAM_ADDR) & 0x0f);
@@ -598,6 +602,7 @@ void UI_StateReset(void)
     UI_PUMutex                = osMutexCreate(osMutex(UI_PUMutex));
     tosUI_Notify.thread_id    = NULL;
     tosUI_Notify.iSignals     = 0;
+	ubUI_PuStartUpFlag		  = FALSE;
     ubUI_ResetPeriodFlag      = FALSE;
     ubUI_FastStateFlag        = FALSE;
     ubUI_ShowTimeFlag         = FALSE;
@@ -688,7 +693,7 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 void UI_UpdateAppStatus(void *ptAppStsReport)
 {
     APP_StatusReport_t *pAppStsRpt = (APP_StatusReport_t *)ptAppStsReport;
-    static uint8_t ubUI_PuStartUpFlag = FALSE;
+    //static uint8_t ubUI_PuStartUpFlag = FALSE;
 
     osMutexWait(UI_PUMutex, osWaitForever);
     switch (pAppStsRpt->tAPP_ReportType)
@@ -751,6 +756,8 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
             UI_EnableScanMode();
         }
     }
+	ubUI_PuStartUpFlag = TRUE;
+
     tUI_PuSetting.IconSts.ubClearThdCntFlag = (tUI_SyncAppState == pAppStsRpt->tAPP_State)?FALSE:TRUE;
     tUI_SyncAppState = pAppStsRpt->tAPP_State;
     osMutexRelease(UI_PUMutex);
@@ -1232,6 +1239,9 @@ void UI_PowerOnSet(void)
 //------------------------------------------------------------------------------
 void UI_EventHandles(UI_Event_t *ptEventPtr)
 {
+	printd(1,"UI_EventHandles  ubUI_PuStartUpFlag %d \n",ubUI_PuStartUpFlag);
+	if(FALSE == ubUI_PuStartUpFlag)
+		return;
 	switch(ptEventPtr->tEventType)
 	{
 		case AKEY_EVENT:
@@ -1691,7 +1701,7 @@ void UI_MenuLongKey(void)
 		tOsdImgInfo.uwVSize  = 1280;
 		tOsdImgInfo.uwXStart = 0;
 		tOsdImgInfo.uwYStart = 0;
-		OSD_EraserImg2(&tOsdImgInfo); //∏¥Œª÷ÿ∆Ù“‘∫ÛOSDø…ƒ‹ª·”–≤–¡Ù
+		OSD_EraserImg2(&tOsdImgInfo); 
 
 		UI_PowerOff	();	
 	}
@@ -1990,7 +2000,8 @@ void UI_CameraSettingMenu1Key(void)
 void UI_CameraSettingMenu2Key(void)
 {
 	if((APP_LOSTLINK_STATE == tUI_SyncAppState) ||
-	   (SINGLE_VIEW != tCamViewSel.tCamViewType))
+	   (SINGLE_VIEW != tCamViewSel.tCamViewType) ||
+	   (UI_DISPLAY_STATE != tUI_State))
 		return;
 
     UI_DrawCameraSettingMenu(UI_CAMFUNC_SETUP);
@@ -2501,30 +2512,31 @@ void UI_ChangeVideoMode(UI_ArrowKey_t tArrowKey)
 //------------------------------------------------------------------------------
 void UI_PuPowerSaveKey(void)
 {
-    OSD_IMG_INFO tOsdImgInfo[4];
+	OSD_IMG_INFO tOsdImgInfo[5];
 
-    if ((APP_LOSTLINK_STATE == tUI_SyncAppState)
-    || (tUI_State != UI_DISPLAY_STATE)
-    || (DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
-    || (PS_VOX_MODE == tUI_PuSetting.tPsMode))
-        return;
+	if((APP_LOSTLINK_STATE == tUI_SyncAppState)
+	|| (tUI_State != UI_DISPLAY_STATE)
+//	|| (DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
+	|| (PS_VOX_MODE == tUI_PuSetting.tPsMode))
+		return;
 
-    if (tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_VOXOPT_ICON, 4, &tOsdImgInfo[0]) != OSD_OK)
-    {
-        printd(DBG_ErrorLvl, "Load OSD Image FAIL, pls check (%d) !\n", __LINE__);
-        return;
-    }
-    tOSD_Img2(&tOsdImgInfo[0], OSD_QUEUE);
-    tOSD_Img2(&tOsdImgInfo[1], OSD_QUEUE);
-    tOSD_Img2(&tOsdImgInfo[3], OSD_UPDATE);
-    tUI_State = UI_SET_PUPSMODE_STATE;
+	if(tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_VOXOPT_ICON, 5, &tOsdImgInfo[0]) != OSD_OK)
+	{
+		printd(DBG_ErrorLvl, "Load OSD Image FAIL, pls check (%d) !\n", __LINE__);
+		return;
+	}
+	tOSD_Img2(&tOsdImgInfo[0], OSD_QUEUE);
+	tOSD_Img2(&tOsdImgInfo[1], OSD_QUEUE);
+	tOSD_Img2(&tOsdImgInfo[2], OSD_QUEUE);
+	tOSD_Img2(&tOsdImgInfo[4], OSD_UPDATE);
+	tUI_State = UI_SET_PUPSMODE_STATE;
 }
 //------------------------------------------------------------------------------
 UI_Result_t UI_SetupPuVoxMode(void)
 {
 	UI_PUReqCmd_t tPsCmd;
 	UI_CamNum_t tCamNum;
-	UI_Result_t tVoxRet = rUI_FAIL, tBuNotifyRet = rUI_SUCCESS;;
+	UI_Result_t tVoxRet = rUI_FAIL, tBuNotifyRet = rUI_SUCCESS;
 
 	for(tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
 	{
@@ -2556,6 +2568,23 @@ UI_Result_t UI_SetupPuVoxMode(void)
 		UI_UpdateDevStatusInfo();
 	}
 	return tVoxRet;
+}
+//------------------------------------------------------------------------------
+UI_Result_t UI_SetupPuAdoOnlyMode(void)
+{
+	APP_EventMsg_t tUI_PsMessage = {0};
+
+	LCDBL_ENABLE(UI_DISABLE);
+	UI_DisableScanMode();
+	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
+	tUI_PsMessage.ubAPP_Message[1] = PS_ADOONLY_MODE;
+	tUI_PsMessage.ubAPP_Message[2] = TRUE;
+	UI_SendMessageToAPP(&tUI_PsMessage);
+	tUI_PuSetting.tPsMode = PS_ADOONLY_MODE;
+	UI_EnableScanMode();
+
+	return rUI_SUCCESS;
 }
 //------------------------------------------------------------------------------
 UI_Result_t UI_SetupPuWorMode(void)
@@ -2659,8 +2688,12 @@ void UI_BuPowerSaveKey(void)
     {
         UI_DisableVox();
         return;
-    }
-    */
+    }*/
+	if(PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
+	{
+		UI_DisablePuAdoOnlyMode();
+		return;
+	}
 
     if ((tUI_State != UI_DISPLAY_STATE) ||
        (TRUE == tUI_PuSetting.IconSts.ubShowLostLogoFlag))
@@ -2717,19 +2750,23 @@ void UI_PuPowerSaveModeSelection(UI_ArrowKey_t tArrowKey)
 		case LEFT_ARROW:
 			if(PS_VOX_MODE == tUI_PsMode)
 				return;
-			tUI_PsMode    = PS_VOX_MODE;
-			tUI_PrePsMode = PS_WOR_MODE;
+			tUI_PrePsMode = tUI_PsMode;
+			tUI_PsMode--;
 			break;
 		case RIGHT_ARROW:
 			if(PS_WOR_MODE == tUI_PsMode)
 				return;
-			tUI_PsMode    = PS_WOR_MODE;
-			tUI_PrePsMode = PS_VOX_MODE;
+			tUI_PrePsMode = tUI_PsMode;			
+			tUI_PsMode++;
 			break;
 		case ENTER_ARROW:
 			if(PS_VOX_MODE == tUI_PsMode)
 			{
-				UI_SetupPuVoxMode();
+				tUI_PsMode = (rUI_SUCCESS != UI_SetupPuVoxMode())?POWER_NORMAL_MODE:tUI_PsMode;
+			}
+			else if(PS_ADOONLY_MODE == tUI_PsMode)
+			{
+				UI_SetupPuAdoOnlyMode();
 			}
 			else if(PS_WOR_MODE == tUI_PsMode)
 			{
@@ -2738,12 +2775,13 @@ void UI_PuPowerSaveModeSelection(UI_ArrowKey_t tArrowKey)
 		case EXIT_ARROW:
 			UI_ClearBuConnectStatusFlag();
 			tOsdImgInfo.uwXStart = 153;
-			tOsdImgInfo.uwYStart = 380;
+			tOsdImgInfo.uwYStart = 300;
 			tOsdImgInfo.uwHSize  = 210;
-			tOsdImgInfo.uwVSize  = 420;
+			tOsdImgInfo.uwVSize  = 600;
 			OSD_EraserImg2(&tOsdImgInfo);
+			tUI_State = (ENTER_ARROW == tArrowKey)?(PS_VOX_MODE == tUI_PsMode)?UI_VOXPS_STATE:
+												   (PS_ADOONLY_MODE == tUI_PsMode)?UI_ADOONLYPS_STATE:UI_DISPLAY_STATE:UI_DISPLAY_STATE;
 			tUI_PsMode = PS_VOX_MODE;
-			tUI_State = UI_DISPLAY_STATE;
 			return;
 		default:
 			return;
@@ -3444,7 +3482,7 @@ void UI_VolUpKey(void)
         tUI_PuSetting.VolLvL.tVOL_UpdateLvL++;
     }
 
-/*	//–ﬁ∏ƒ‘ˆ“Ê 
+/*	//√ê√û¬∏√Ñ√î√∂√í√¶ 
     if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL4)
     {
     	     CmdData = UI_SET_BUMIC12_CMD;
@@ -9085,7 +9123,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
             tOsdImgInfo.uwVSize  = 1280;
             tOsdImgInfo.uwXStart = 0;
             tOsdImgInfo.uwYStart = 0;
-            OSD_EraserImg2(&tOsdImgInfo); //∏¥Œª÷ÿ∆Ù“‘∫ÛOSDø…ƒ‹ª·”–≤–¡Ù
+            OSD_EraserImg2(&tOsdImgInfo); //¬∏¬¥√é¬ª√ñ√ò√Ü√¥√í√î¬∫√≥OSD¬ø√â√Ñ√ú¬ª√°√ì√ê¬≤√ê√Å√¥
 
             //osDelay(100);
             //WDT_Disable(WDT_RST);
@@ -9224,13 +9262,13 @@ void UI_FS_SetTimeMenuDisplay(uint8_t value)
 //  EN_MODE_UI  tEnUI;
 
 /*
-    tEnUI.tStatus = EN_FIX_HOPPING;                               //πÃ∂®∆µµ„ƒ£ Ω
+    tEnUI.tStatus = EN_FIX_HOPPING;                               //¬π√å¬∂¬®√Ü¬µ¬µ√£√Ñ¬£√ä¬Ω
 
-    tEnUI.tRole = SET_STA1;                                       //‘⁄STA1∂À…˙–ß
+    tEnUI.tRole = SET_STA1;                                       //√î√öSTA1¬∂√ã√â√∫√ê¬ß
 
-    tEnUI.ubData1 = 2;                                            //‘⁄∏ﬂ∆µµ„…˙–ß£¨0°¢1°¢2¥˙±ÌµÕ÷–∏ﬂ∆µµ„
+    tEnUI.ubData1 = 2;                                            //√î√ö¬∏√ü√Ü¬µ¬µ√£√â√∫√ê¬ß¬£¬¨0¬°¬¢1¬°¬¢2¬¥√∫¬±√≠¬µ√ç√ñ√ê¬∏√ü√Ü¬µ¬µ√£
 
-    tEN_Start(tEnUI.tStatus,tEnUI.tRole,&tEnUI.ubData1,NULL);     //ø™∆Ùπ§≥Ãƒ£ Ω
+    tEN_Start(tEnUI.tStatus,tEnUI.tRole,&tEnUI.ubData1,NULL);     //¬ø¬™√Ü√¥¬π¬§¬≥√å√Ñ¬£√ä¬Ω
 */
 
     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME+ (21*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
@@ -10392,12 +10430,12 @@ void UI_CheckUsbCharge(void)
 #else
     if(UI_GetUsbDet() == 0) //USB_DET
     {
-        if (tUSBD_GetConfigStatus() == 1) //≥‰µÁ∆˜
+        if (tUSBD_GetConfigStatus() == 1) //¬≥√§¬µ√ß√Ü√∑
         {
             if (GPIO->GPIO_O12 == 1)
             {
                 printd(Apk_DebugLvl, "UI_CheckUsbCharge AC Charge!\n");
-                GPIO->GPIO_O12 = 0; //¥ÛµÁ¡˜øÏ≥‰
+                GPIO->GPIO_O12 = 0; //¬¥√≥¬µ√ß√Å√∑¬ø√¨¬≥√§
             }
         }
         else
@@ -10409,7 +10447,7 @@ void UI_CheckUsbCharge(void)
             }
         }
 
-        if (UI_GetBatChgFull() == 0) //µÁ≥ÿ≥‰¬˙
+        if (UI_GetBatChgFull() == 0) //¬µ√ß¬≥√ò¬≥√§√Ç√∫
         {
         }
     }
@@ -13532,7 +13570,22 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     UI_CamNum_t tCamNum;
     uint16_t uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
     OSD_IMG_INFO tOsdImgInfo;
-
+	
+	if(TRUE == ubUI_ResetPeriodFlag)
+	{
+		switch(tUI_PuSetting.tPsMode)
+		{
+			case PS_VOX_MODE:
+				UI_DisableVox();
+				break;
+			case PS_ADOONLY_MODE:
+				UI_DisablePuAdoOnlyMode();
+				break;
+			default:
+				break;
+		}
+	}
+	
     if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
         return;
     if (FALSE == ubUI_ResetPeriodFlag)
@@ -14512,6 +14565,37 @@ void UI_DisableVox(void)
     UI_UpdateDevStatusInfo();
     printd(Apk_DebugLvl, "UI_DisableVox ok###\n");
 }
+
+//------------------------------------------------------------------------------
+void UI_DisablePuAdoOnlyMode(void)
+{
+	APP_EventMsg_t tUI_PsMessage = {0};
+
+	UI_DisableScanMode();
+	UI_ClearStatusBarOsdIcon();
+	UI_ClearBuConnectStatusFlag();
+	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
+	tUI_PsMessage.ubAPP_Message[1] = PS_ADOONLY_MODE;
+	tUI_PsMessage.ubAPP_Message[2] = FALSE;
+	UI_SendMessageToAPP(&tUI_PsMessage);
+	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
+	tUI_State = UI_DISPLAY_STATE;
+	switch(tCamViewSel.tCamViewType)
+	{
+		case SINGLE_VIEW:
+		case SCAN_VIEW:
+			if(tCamViewSel.tCamViewPool[0] != tUI_PuSetting.tAdoSrcCamNum)
+				UI_SwitchAudioSource(tCamViewSel.tCamViewPool[0]);
+			if(SINGLE_VIEW == tCamViewSel.tCamViewType)
+				break;
+			UI_EnableScanMode();
+			break;
+		default:
+			break;
+	}
+}
+
 //------------------------------------------------------------------------------
 void UI_MDTrigger(UI_CamNum_t tCamNum, void *pvTrig)
 {
@@ -14545,7 +14629,7 @@ void UI_VoiceTrigger(UI_CamNum_t tCamNum, void *pvTrig)
     UI_DisableScanMode();
     tUI_PuSetting.ubDualModeEn  = FALSE;
     tCamViewSel.tCamViewType    = SINGLE_VIEW;
-    tCamViewSel.tCamViewPool[0]     = tCamNum;
+    //tCamViewSel.tCamViewPool[0]     = tCamNum;
     tUI_PuSetting.tAdoSrcCamNum = tCamNum;
     UI_SwitchCameraSource();
     tUI_PuSetting.IconSts.ubDrawStsIconFlag = TRUE;
@@ -14996,8 +15080,8 @@ void UI_EnableScanMode(void)
 
     if (ubShowAlarmstate > 0)
         return;
-
-    UI_CheckCameraSource4SV();
+	if(PS_ADOONLY_MODE != tUI_PuSetting.tPsMode)
+    	UI_CheckCameraSource4SV();
     UI_SetupScanModeTimer(TRUE);
 }
 //------------------------------------------------------------------------------
@@ -15015,26 +15099,32 @@ void UI_ScanModeExec(void)
 #if 0
     UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
     uint8_t ubSearchCnt;
-
+	tSearchCam = (PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)?tUI_PuSetting.tAdoSrcCamNum:tCamViewSel.tCamViewPool[0];
     printd(Apk_DebugLvl, "UI_ScanModeExec tSearchCam: %d.\n", tSearchCam);
     for (ubSearchCnt = 0; ubSearchCnt < tUI_PuSetting.ubTotalBuNum; ubSearchCnt++)
     {
-        tSearchCam = ((tSearchCam + 1) >= CAM_4T)?CAM1:((UI_CamNum_t)(tSearchCam + 1));
-        if ((tUI_CamStatus[tSearchCam].ulCAM_ID != INVALID_ID) &&
-           (tUI_CamStatus[tSearchCam].tCamConnSts == CAM_ONLINE) &&
-           (tSearchCam != tCamViewSel.tCamViewPool[0]))
-        {
-            tCamViewSel.tCamViewType    = SINGLE_VIEW;
-            tCamViewSel.tCamViewPool[0] = tSearchCam;
-            tUI_PuSetting.tAdoSrcCamNum = tSearchCam;
-            UI_SwitchCameraSource();
-            UI_ClearBuConnectStatusFlag();
+		tSearchCam = ((tSearchCam + 1) >= ((DISPLAY_2T1R == tUI_PuSetting.ubTotalBuNum)?CAM_2T:CAM_4T))?CAM1:((UI_CamNum_t)(tSearchCam + 1));
+		if((tUI_CamStatus[tSearchCam].ulCAM_ID != INVALID_ID) &&
+		   (tUI_CamStatus[tSearchCam].tCamConnSts == CAM_ONLINE))
+		{
+			if(PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
+			{
+				UI_SwitchAudioSource(tSearchCam);
+				break;
+			}
+			else if(tSearchCam != tCamViewSel.tCamViewPool[0])
+			{
+				tCamViewSel.tCamViewType	= SCAN_VIEW;
+				tCamViewSel.tCamViewPool[0] = tSearchCam;
+				UI_SwitchCameraSource();
+				UI_ClearBuConnectStatusFlag();
+				
+				   ubSetViewCam = tCamViewSel.tCamViewPool[0];
+				break;
+			}
+		}
+	}
 
-            ubSetViewCam = tCamViewSel.tCamViewPool[0];
-
-            break;
-        }
-    }
     UI_SetupScanModeTimer(TRUE);
 #else
     printd(Apk_DebugLvl,"UI_ScanModeExec\n");
@@ -15085,6 +15175,18 @@ void UI_SwitchCameraSource(void)
 
     RTC_WriteUserRam(RTC_RECORD_VIEW_MODE_ADDR, tCamViewSel.tCamViewType);
     RTC_WriteUserRam(RTC_RECORD_VIEW_CAM_ADDR, (tCamViewSel.tCamViewPool[0] << 4) | tCamViewSel.tCamViewPool[1]);
+}
+//------------------------------------------------------------------------------
+void UI_SwitchAudioSource(UI_CamNum_t tCamNum)
+{
+	APP_EventMsg_t tUI_SwitchAdoSrcMsg = {0};
+
+	tUI_PuSetting.tAdoSrcCamNum			 = tCamNum;
+	tUI_SwitchAdoSrcMsg.ubAPP_Event 	 = APP_ADOSRCSEL_EVENT;
+	tUI_SwitchAdoSrcMsg.ubAPP_Message[0] = 1;		//! Message Length
+	tUI_SwitchAdoSrcMsg.ubAPP_Message[1] = tUI_PuSetting.tAdoSrcCamNum;
+	tUI_SwitchAdoSrcMsg.ubAPP_Message[2] = (PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)?FALSE:TRUE;
+	UI_SendMessageToAPP(&tUI_SwitchAdoSrcMsg);
 }
 //------------------------------------------------------------------------------
 void UI_EngModeKey(void)

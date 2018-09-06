@@ -11,8 +11,8 @@
 	\file		APP_HS.c
 	\brief		Application function (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.3
-	\date		2017/11/27
+	\version	1.5
+	\date		2018/08/15
 	\copyright	Copyright(C) 2017 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -442,10 +442,12 @@ void APP_LinkStateFunc(APP_EventMsg_t *ptEventMsg)
 		case APP_ADOSRCSEL_EVENT:
 		{
 			KNL_ROLE tKNL_Role = tAPP_STANumTable[ptEventMsg->ubAPP_Message[1]].tKNL_StaNum;
+			uint8_t ubUpdFlag  = ptEventMsg->ubAPP_Message[2];
 
 			tAPP_KNLInfo.tAdoSrcRole = tKNL_Role;
 			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
-			APP_UpdateKNLSetupInfo();
+			if(TRUE == ubUpdFlag)
+				APP_UpdateKNLSetupInfo();
 			break;
 		}
 		case APP_PTT_EVENT:
@@ -555,7 +557,6 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			}
 			tAPP_KNLInfo.tBURoleInfo[tAPP_PairRoleInfo.tPairBURole].tKNL_DispLoc = tAPP_PairRoleInfo.tPairBUDispLoc;
 			VDO_DisplayLocationSetup(tAPP_PairRoleInfo.tPairBURole, tAPP_PairRoleInfo.tPairBUDispLoc);
-			//VDO_SetPlayRole(tAPP_PairRoleInfo.tPairBURole); 
 			VDO_UpdateDisplayParameter();
 			if(APP_UNBIND_BU_EVENT == ptEventMsg->ubAPP_Message[2])
 			{
@@ -779,7 +780,6 @@ void APP_FWUgradeStatusReport(uint8_t ubStsReport)
 			#ifdef VBM_PU
 			UI_TimerEventStop();
 			#endif
-//			KNL_Stop();
 			VDO_Stop();
 			ADO_Stop();
 			break;
@@ -788,7 +788,6 @@ void APP_FWUgradeStatusReport(uint8_t ubStsReport)
 			break;
 		case FWU_UPG_DEVTAG_FAIL:
 		case FWU_UPG_FAIL:
-//			KNL_ReStart();
 			VDO_Start();
 			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 			UI_StartUpdateThread();
@@ -921,7 +920,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 		{
 			VDO_PsFuncPtr_t tAPP_VoxFunc[] = {VDO_Start, VDO_Stop};
 		#ifdef VBM_PU
-			APP_ActFuncPtr_t tAPP_LcdFunc[] = {APP_LcdDisplayOn, APP_LcdDisplayOff};	//! {LCD_Resume, LCD_Suspend};
+			APP_ActFuncPtr_t tAPP_LcdFunc[] = {APP_LcdDisplayOn, APP_LcdDisplayOff};
 			SYS_PowerState_t tAPP_PsState[]	= {SYS_PS0, SYS_PS1};
 		#endif
 			uint8_t ubAPP_PsFlag = ptEventMsg->ubAPP_Message[2];
@@ -930,7 +929,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 				tAPP_VoxFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
 		#ifdef VBM_PU
 			SYS_SetPowerStates(tAPP_PsState[ubAPP_PsFlag]);
-//			SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE; 
+			//SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE; 
 			tAPP_StsReport.tAPP_ReportType = APP_VOXMODESTS_RPT;
 			tAPP_StsReport.ubAPP_Report[0] = ubAPP_PsFlag;
 			UI_UpdateAppStatus(&tAPP_StsReport);
@@ -972,8 +971,28 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 		#endif
 		#ifdef VBM_PU
 			KNL_EnableWORFunc();
-		#endif
 			break;
+		#endif
+		#ifdef VBM_PU
+		case PS_ADOONLY_MODE:
+		{
+			VDO_PsFuncPtr_t tAPP_AdoOnFunc[] = {VDO_Start, VDO_Stop};
+			APP_ActFuncPtr_t tAPP_LcdFunc[]  = {LCD_Resume, LCD_Suspend};
+			SYS_PowerState_t tAPP_PsState[]	 = {SYS_PS0, SYS_PS1};
+			uint8_t ubAPP_PsFlag 			 = ptEventMsg->ubAPP_Message[2];
+
+			KNL_SetTRXPathActivity();
+			if(tAPP_AdoOnFunc[ubAPP_PsFlag].VDO_tPsFunPtr)
+				tAPP_AdoOnFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
+			SYS_SetPowerStates(tAPP_PsState[ubAPP_PsFlag]);
+			//SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE;
+			if(tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr)
+				tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr();
+			if(FALSE == ubAPP_PsFlag)
+				LCDBL_ENABLE(UI_ENABLE);
+			break;
+		}
+		#endif
 		default:
 			break;
 	}

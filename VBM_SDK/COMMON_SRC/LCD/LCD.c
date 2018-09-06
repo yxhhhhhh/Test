@@ -11,8 +11,8 @@
 	\file		LCD.c
 	\brief		LCD Funcation
 	\author		Pierce
-	\version	1.3
-	\date		2018/07/25
+	\version	1.4
+	\date		2018/08/28
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -23,7 +23,7 @@
 #include "TIMER.h"
 //------------------------------------------------------------------------------
 #define LCD_MAJORVER    1        //!< Major version
-#define LCD_MINORVER    3        //!< Minor version
+#define LCD_MINORVER    4        //!< Minor version
 //------------------------------------------------------------------------------
 static osMessageQId 	 	LCD_SwitchModeQueue;
 static osMessageQId 	 	LCD_GpioQueue;
@@ -76,7 +76,7 @@ void LCD_SetGammaBritCtst(LCD_GAMMA_SET_TYP *pParam)
 	uint8_t 	*ptr = (uint8_t*)ulGammaTemp;
 	
 	ubCntrsCtr 			   = 1;
-	LCD->LCD_Y_GAMMA_EN = 0;
+	LCD->LCD_Y_GAMMA_EN = 1;
 	//fix point gamma x 100 = (100.0f/uwGamma)x100 = 10000/uwGamma
 	pParam->uwGamma = 10000 / pParam->uwGamma;
 
@@ -325,7 +325,7 @@ void LCD_Start (void)
 void LCD_Stop(void)
 {
 	uint8_t ubi;
-	
+
 	bLCD_IsrEnable = false;
 	LCD->TV_LCD_EN = 0;
 	INTC_IrqDisable(INTC_LCD_IRQ);
@@ -342,6 +342,8 @@ void LCD_Stop(void)
 //------------------------------------------------------------------------------
 void LCD_Suspend (void)
 {
+	if(!ubLCD_StartFlag)
+		return;
 #if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
 	LCD_MIPI_SSD2828_Sleep();
 #endif
@@ -355,14 +357,16 @@ void LCD_Suspend (void)
 //------------------------------------------------------------------------------
 void LCD_Resume (void)
 {
-	GLB->LCD_RATE = 1;	
+	if(ubLCD_StartFlag)
+		return;
+	GLB->LCD_RATE = 1;
 	//! LCD PLL
 	if (!GLB->LCDPLL_PD_N)
 	{
-		GLB->LCDPLL_LDO_EN = 1;
-		GLB->LCDPLL_PD_N = 1;
+		GLB->LCDPLL_LDO_EN 	= 1;
+		GLB->LCDPLL_PD_N 	= 1;
 		TIMER_Delay_us(400);
-		GLB->LCDPLL_SDM_EN = 1;
+		GLB->LCDPLL_SDM_EN 	= 1;
 		TIMER_Delay_us(1);
 	}
 	LCD_PixelPllSetting();
@@ -846,8 +850,8 @@ LCD_RESULT tLCD_DynamicOneChCropScale (LCD_DYN_INFOR_TYP *pDynInfor)
 					{
 						tLCD_DynSetting.bDyn       = false;
 						tLCD_DynSetting.uwHiSize   = pDynInfor->tChRes.uwChInputHsize >> 2;
-						tLCD_DynSetting.uwHiStart  = pDynInfor->tChRes.uwCropHstart >> 2;
-						tLCD_DynSetting.uwViStart  = pDynInfor->tChRes.uwCropVstart;
+						tLCD_DynSetting.uwHiStart  = (pDynInfor->tChRes.uwCropHstart >> 2) & ~3;
+						tLCD_DynSetting.uwViStart  = pDynInfor->tChRes.uwCropVstart & ~3;
 						tLCD_DynSetting.uwHsize    = pDynInfor->tChRes.uwCropHsize >> 2;
 						tLCD_DynSetting.uwVsize    = pDynInfor->tChRes.uwCropVsize;						
 						tLCD_DynSetting.uwHoSize   = pDynInfor->uwLcdOutputHsize;
@@ -857,14 +861,14 @@ LCD_RESULT tLCD_DynamicOneChCropScale (LCD_DYN_INFOR_TYP *pDynInfor)
 												     (pDynInfor->uwLcdOutputHsize >> tLCD_DynSetting.ubFsHdupEN);
 						tLCD_DynSetting.uwHoStart  = (((((uint32_t)(0x80 * pDynInfor->tChRes.uwCropHsize / 
 													 tLCD_DynSetting.uwHratio)) << tLCD_DynSetting.ubFsHdupEN) - 
-													 pDynInfor->uwLcdOutputHsize) >> 1) & ~1;						
+													 pDynInfor->uwLcdOutputHsize) >> 1) & ~3;						
 						
 						tLCD_DynSetting.ubFsVdupEN = (pDynInfor->uwLcdOutputVsize > (pDynInfor->tChRes.uwCropVsize << 2))?1:0;						
 						tLCD_DynSetting.uwVratio   = 0x80 * pDynInfor->tChRes.uwCropVsize /
 												     (pDynInfor->uwLcdOutputVsize >> tLCD_DynSetting.ubFsVdupEN);
 						tLCD_DynSetting.uwVoStart  = (((((uint32_t)(0x80 * pDynInfor->tChRes.uwCropVsize /
 													 tLCD_DynSetting.uwVratio)) << tLCD_DynSetting.ubFsVdupEN) - 
-													 pDynInfor->uwLcdOutputVsize) >> 1) & ~1;						
+													 pDynInfor->uwLcdOutputVsize) >> 1) & ~3;						
 						tLCD_DynSetting.ubFsEN     = (0x80 == tLCD_DynSetting.uwHratio && 0x80 == tLCD_DynSetting.uwVratio)?0:1;
 						tLCD_DynSetting.ubFirEN    = (tLCD_DynSetting.ubFsEN)?1:0;	
 						tLCD_DynSetting.bDyn = true;
@@ -977,37 +981,37 @@ LCD_RESULT tLCD_CropScale(LCD_INFOR_TYP *pLcdInfor)
 			case LCD_CH0:
 				LCD->LCD_FS0_HDUP_EN = (uwHoSize > (pLcdInfor->tChRes[ubi].uwCropHsize << 2))?1:0;
 				LCD->DISP0_HI_SIZE = pLcdInfor->tChRes[ubi].uwChInputHsize >> 2;
-				LCD->DISP0_HI_START = pLcdInfor->tChRes[ubi].uwCropHstart >> 2;
-				LCD->DISP0_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart;
+				LCD->DISP0_HI_START = (pLcdInfor->tChRes[ubi].uwCropHstart >> 2) & ~3;
+				LCD->DISP0_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart & ~3;
 				LCD->DISP0_H_SIZE = pLcdInfor->tChRes[ubi].uwCropHsize >> 2;
 				LCD->DISP0_V_SIZE = pLcdInfor->tChRes[ubi].uwCropVsize;
 				LCD->LCD_FS0_EN = 1;
 				LCD->LCD_FS0_HO_SIZE = uwHoSize;
 				LCD->LCD_FS0_HRATIO = 0x80 * pLcdInfor->tChRes[ubi].uwCropHsize / (uwHoSize >> LCD->LCD_FS0_HDUP_EN);
-				LCD->LCD_FS0_HO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropHsize / LCD->LCD_FS0_HRATIO)) << LCD->LCD_FS0_HDUP_EN) - uwHoSize) >> 1) & ~1;
+				LCD->LCD_FS0_HO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropHsize / LCD->LCD_FS0_HRATIO)) << LCD->LCD_FS0_HDUP_EN) - uwHoSize) >> 1) & ~3;
 				
 				LCD->LCD_FS0_VDUP_EN = (uwVoSize > (pLcdInfor->tChRes[ubi].uwCropVsize << 2))?1:0;
 				LCD->LCD_FS0_VO_SIZE = uwVoSize;
 				LCD->LCD_FS0_VRATIO = 0x80 * pLcdInfor->tChRes[ubi].uwCropVsize / (uwVoSize >> LCD->LCD_FS0_VDUP_EN);
-				LCD->LCD_FS0_VO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropVsize / LCD->LCD_FS0_VRATIO)) << LCD->LCD_FS0_VDUP_EN) - uwVoSize) >> 1) & ~1;
+				LCD->LCD_FS0_VO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropVsize / LCD->LCD_FS0_VRATIO)) << LCD->LCD_FS0_VDUP_EN) - uwVoSize) >> 1) & ~3;
 				LCD->LCD_FS0_FIR_EN = (LCD->LCD_FS0_HRATIO != 0x80 || LCD->LCD_FS0_VRATIO != 0x80)?1:0;				
 				break;
 			case LCD_CH1:
 				LCD->LCD_FS1_HDUP_EN = (uwHoSize > (pLcdInfor->tChRes[ubi].uwCropHsize << 2))?1:0;
 				LCD->DISP1_HI_SIZE = pLcdInfor->tChRes[ubi].uwChInputHsize >> 2;
-				LCD->DISP1_HI_START = pLcdInfor->tChRes[ubi].uwCropHstart >> 2;
-				LCD->DISP1_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart;
+				LCD->DISP1_HI_START = (pLcdInfor->tChRes[ubi].uwCropHstart >> 2) & ~3;
+				LCD->DISP1_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart & ~3;
 				LCD->DISP1_H_SIZE = pLcdInfor->tChRes[ubi].uwCropHsize >> 2;
 				LCD->DISP1_V_SIZE = pLcdInfor->tChRes[ubi].uwCropVsize;
 				LCD->LCD_FS1_EN = 1;
 				LCD->LCD_FS1_HO_SIZE = uwHoSize;
 				LCD->LCD_FS1_HRATIO = 0x80 * pLcdInfor->tChRes[ubi].uwCropHsize / (uwHoSize >> LCD->LCD_FS1_HDUP_EN);
-				LCD->LCD_FS1_HO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropHsize / LCD->LCD_FS1_HRATIO)) << LCD->LCD_FS1_HDUP_EN) - uwHoSize) >> 1) & ~1;
+				LCD->LCD_FS1_HO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropHsize / LCD->LCD_FS1_HRATIO)) << LCD->LCD_FS1_HDUP_EN) - uwHoSize) >> 1) & ~3;
 				
 				LCD->LCD_FS1_VDUP_EN = (uwVoSize > (pLcdInfor->tChRes[ubi].uwCropVsize << 2))?1:0;
 				LCD->LCD_FS1_VO_SIZE = uwVoSize;
 				LCD->LCD_FS1_VRATIO = 0x80 * pLcdInfor->tChRes[ubi].uwCropVsize / (uwVoSize >> LCD->LCD_FS1_VDUP_EN);
-				LCD->LCD_FS1_VO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropVsize / LCD->LCD_FS1_VRATIO)) << LCD->LCD_FS1_VDUP_EN) - uwVoSize) >> 1) & ~1;
+				LCD->LCD_FS1_VO_START = (((((uint32_t)(0x80 * pLcdInfor->tChRes[ubi].uwCropVsize / LCD->LCD_FS1_VRATIO)) << LCD->LCD_FS1_VDUP_EN) - uwVoSize) >> 1) & ~3;
 				LCD->LCD_FS1_FIR_EN = (LCD->LCD_FS1_HRATIO != 0x80 || LCD->LCD_FS1_VRATIO != 0x80)?1:0;
 				break;
 			case LCD_CH2:
@@ -1017,8 +1021,8 @@ LCD_RESULT tLCD_CropScale(LCD_INFOR_TYP *pLcdInfor)
 					return LCD_SCALE_FAIL;
 				}
 				LCD->DISP2_HI_SIZE = pLcdInfor->tChRes[ubi].uwChInputHsize >> 2;
-				LCD->DISP2_HI_START = pLcdInfor->tChRes[ubi].uwCropHstart >> 2;
-				LCD->DISP2_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart;
+				LCD->DISP2_HI_START = (pLcdInfor->tChRes[ubi].uwCropHstart >> 2) & ~3;
+				LCD->DISP2_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart & ~3;
 				LCD->DISP2_H_SIZE = pLcdInfor->tChRes[ubi].uwCropHsize >> 2;
 				LCD->DISP2_V_SIZE = pLcdInfor->tChRes[ubi].uwCropVsize;
 				break;
@@ -1029,8 +1033,8 @@ LCD_RESULT tLCD_CropScale(LCD_INFOR_TYP *pLcdInfor)
 					return LCD_SCALE_FAIL;
 				}
 				LCD->DISP3_HI_SIZE = pLcdInfor->tChRes[ubi].uwChInputHsize >> 2;
-				LCD->DISP3_HI_START = pLcdInfor->tChRes[ubi].uwCropHstart >> 2;
-				LCD->DISP3_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart;
+				LCD->DISP3_HI_START = (pLcdInfor->tChRes[ubi].uwCropHstart >> 2) & ~3;
+				LCD->DISP3_VI_START = pLcdInfor->tChRes[ubi].uwCropVstart & ~3;
 				LCD->DISP3_H_SIZE = pLcdInfor->tChRes[ubi].uwCropHsize >> 2;
 				LCD->DISP3_V_SIZE = pLcdInfor->tChRes[ubi].uwCropVsize;
 				break;

@@ -11,8 +11,8 @@
 	\file		KNL.c
 	\brief		Kernel Control function
 	\author		Justin Chen
-	\version	1.13
-	\date		2018/08/02
+	\version	1.16
+	\date		2018/08/21
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -73,12 +73,14 @@ uint8_t ubKNL_SenStartFlg = 0;
 uint8_t ubKNL_ChgResFlg = 0;
 KNL_SrcLocateMap_t KNL_SwDispInfo;
 uint8_t ubKNL_SysStopFlag;
+uint8_t ubKNL_BbPathAct;
+KNL_SrcLocateMap_t KNL_SwDispInfo;
 
 //For Process
 KNL_INFO tKNL_Info;
 osMessageQId KNL_VdoInProcQueue;
 osMessageQId KNL_VdoCodecProcQueue;
-osMessageQId KNL_AdoCdoecProcQueue;
+osMessageQId KNL_AdoCodecProcQueue;
 osMessageQId KNL_CommTxProcQueue;
 
 //For AVG
@@ -236,7 +238,7 @@ static void KNL_SecMonitThread(void const *argument);
 //------------------------------------------------------------------------------
 
 #define KNL_MAJORVER    1        //!< Major version = 1
-#define KNL_MINORVER    13       //!< Minor version = 13
+#define KNL_MINORVER    16       //!< Minor version = 16
 uint16_t uwKNL_GetVersion (void)
 {
     return ((KNL_MAJORVER << 8) + KNL_MINORVER);
@@ -368,31 +370,31 @@ uint32_t ulKNL_GetBbIpBufSz(void)
 void KNL_SetAdoInfo(ADO_KNL_PARA_t tAdoInfo)
 {
 	tKNL_AdoInfo.ulADO_BufStartAddr         = tAdoInfo.ulADO_BufStartAddr;
-	tKNL_AdoInfo.Sys_speed					= tAdoInfo.Sys_speed;	
+	tKNL_AdoInfo.Sys_speed					= tAdoInfo.Sys_speed;
 	tKNL_AdoInfo.Rec_device 				= tAdoInfo.Rec_device;
 	tKNL_AdoInfo.Ply_device 				= tAdoInfo.Ply_device;
     tKNL_AdoInfo.ADO_SigDelAdcMode  		= tAdoInfo.ADO_SigDelAdcMode;
 	tKNL_AdoInfo.Rec_fmt.sign_flag   		= tAdoInfo.Rec_fmt.sign_flag;
 	tKNL_AdoInfo.Rec_fmt.channel     		= tAdoInfo.Rec_fmt.channel;
 	tKNL_AdoInfo.Rec_fmt.sample_size 		= tAdoInfo.Rec_fmt.sample_size;
-	tKNL_AdoInfo.Rec_fmt.sample_rate		= tAdoInfo.Rec_fmt.sample_rate;	
+	tKNL_AdoInfo.Rec_fmt.sample_rate		= tAdoInfo.Rec_fmt.sample_rate;
 	tKNL_AdoInfo.Ply_fmt.sign_flag   		= tAdoInfo.Ply_fmt.sign_flag;
 	tKNL_AdoInfo.Ply_fmt.channel     		= tAdoInfo.Ply_fmt.channel;
 	tKNL_AdoInfo.Ply_fmt.sample_size		= tAdoInfo.Ply_fmt.sample_size;
-	tKNL_AdoInfo.Ply_fmt.sample_rate 		= tAdoInfo.Ply_fmt.sample_rate;	
-	tKNL_AdoInfo.Compress_method			= tAdoInfo.Compress_method;	
+	tKNL_AdoInfo.Ply_fmt.sample_rate 		= tAdoInfo.Ply_fmt.sample_rate;
+	tKNL_AdoInfo.Compress_method			= tAdoInfo.Compress_method;
 	tKNL_AdoInfo.Adpcm_func.extra_header	= tAdoInfo.Adpcm_func.extra_header;
 	tKNL_AdoInfo.Adpcm_func.step_size		= tAdoInfo.Adpcm_func.step_size;
 	tKNL_AdoInfo.Adpcm_func.enc_smpl_num	= tAdoInfo.Adpcm_func.enc_smpl_num;
-	tKNL_AdoInfo.Adpcm_func.dec_byte_num	= tAdoInfo.Adpcm_func.dec_byte_num;	
+	tKNL_AdoInfo.Adpcm_func.dec_byte_num	= tAdoInfo.Adpcm_func.dec_byte_num;
 	tKNL_AdoInfo.Rec_buf_size        		= tAdoInfo.Rec_buf_size;
 	tKNL_AdoInfo.Ply_buf_size        		= tAdoInfo.Ply_buf_size;
 	tKNL_AdoInfo.Audio32_En_buf_size 		= tAdoInfo.Audio32_En_buf_size;
 	tKNL_AdoInfo.Audio32_De_buf_size 		= tAdoInfo.Audio32_De_buf_size;
 	tKNL_AdoInfo.WavPlay_buf_size 		    = tAdoInfo.WavPlay_buf_size;
 	tKNL_AdoInfo.AAC_En_buf_size     		= tAdoInfo.AAC_En_buf_size;
-	tKNL_AdoInfo.AAC_De_buf_size     		= tAdoInfo.AAC_De_buf_size;	
-	tKNL_AdoInfo.Alarm_buf_size             = tAdoInfo.Alarm_buf_size;	
+	tKNL_AdoInfo.AAC_De_buf_size     		= tAdoInfo.AAC_De_buf_size;
+	tKNL_AdoInfo.Alarm_buf_size             = tAdoInfo.Alarm_buf_size;
 	tKNL_AdoInfo.Rec_buf_th					= tAdoInfo.Rec_buf_th;
 	tKNL_AdoInfo.Ply_buf_th        			= tAdoInfo.Ply_buf_th;
 }
@@ -403,11 +405,13 @@ void KNL_SetVdoGop(uint32_t ulGop)
 	tKNL_Info.ulGop = ulGop;
 }
 
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetVdoGop(void)
 {
 	return tKNL_Info.ulGop;
 }
 
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetVdoFrmIdx(uint8_t ubCh)
 {
 	return ulKNL_CurFrmIdx[ubCh];
@@ -419,6 +423,7 @@ void KNL_Init(void)
 	KNL_ROLE tKNLRole;
 
 	ubKNL_SysStopFlag		= FALSE;
+	ubKNL_BbPathAct			= FALSE;
 	pLcdCropScaleParam 		= NULL;
 	ptKNL_VdoRoleSrcMapT    = NULL;
 	ptKNL_AdoRoleSrcMapT    = NULL;
@@ -468,7 +473,7 @@ void KNL_Init(void)
 	KNL_VdoCodecProcQueue = osMessageCreate(osMessageQ(KNL_VDOPROCESS), NULL);
 
 	osMessageQDef(KNL_ADOPROCESS, KNL_PROC_QUEUE_NUM, KNL_PROCESS);
-	KNL_AdoCdoecProcQueue = osMessageCreate(osMessageQ(KNL_ADOPROCESS), NULL);
+	KNL_AdoCodecProcQueue = osMessageCreate(osMessageQ(KNL_ADOPROCESS), NULL);
 
 	osMessageQDef(KNL_VDOINPROCESS, BUF_NUM_SEN_YUV, KNL_PROCESS);
 	KNL_VdoInProcQueue = osMessageCreate(osMessageQ(KNL_VDOINPROCESS), NULL);
@@ -625,6 +630,10 @@ static void KNL_AdoEncMonitThread(void const *argument)
 			{
 				printd(DBG_Debug3Lvl, "AdoEncQ(ADPCM) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.PcmAddr,tAdoInfo.PcmSize);
 			}
+			else if(tKNL_AdoInfo.Compress_method == COMPRESS_ALAW)
+			{
+				printd(DBG_Debug3Lvl, "AdoEncQ(ALAW) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.PcmAddr,tAdoInfo.PcmSize);
+			}
 			else if(tKNL_AdoInfo.Compress_method == COMPRESS_NONE)
 			{
 				printd(DBG_Debug3Lvl, "AdoEncQ(PCM) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.PcmAddr,tAdoInfo.PcmSize);
@@ -673,7 +682,7 @@ static void KNL_AdoEncMonitThread(void const *argument)
 			tProcess.ulDramAddr2 = ulAddr;
 			tProcess.ulSize		 = ulSize;
 //			KNL_AdcBufProcess(tProcess);
-			if(osMessagePut(KNL_AdoCdoecProcQueue, &tProcess, 0) == osErrorResource)
+			if(osMessagePut(KNL_AdoCodecProcQueue, &tProcess, 0) == osErrorResource)
 			{
 				printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!!\r\n");
 			}
@@ -715,7 +724,7 @@ static void KNL_AdoDecMonitThread(void const *argument)
 				#endif
 				break;
 			case PLAY_BUF_EMP:
-				printf("-Dac play empty-\n");
+				printd(DBG_CriticalLvl, "-Dac play empty-\n");
 				break;
 		}
 	}
@@ -1054,7 +1063,7 @@ void KNL_BufInit(void)
 				BUF_BufInit(BUF_IMG_DEC,1,fBufSize,3);
 			}
 		}
-	}	
+	}
 
 #if KNL_SD_FUNC_ENABLE
     //FS
@@ -1405,7 +1414,7 @@ void KNL_BlockInit(void)
 		KNL_DisableWORFunc();
 		if((!ubRTC_GetKey()) && (ubKNL_PsValue == RTC_PS_WOR_TAG))
 		{			
-			BB_Init(tKNL_BbSlotMode, NULL, 0,0x2B,0x2B,0,165);	//Step(n)  //倒数第二个参数设置FCC(0) 和CE (1)
+			BB_Init(tKNL_BbSlotMode, NULL, 0,0x2B,0x2B,0,165);	//Step(n)
 			ubKNL_WorSts = BB_ConfirmWakeUpInf();
 		}
 		else
@@ -1639,12 +1648,12 @@ void KNL_SetOpMode(uint8_t ubOpMode)
 {
 	tKNL_Info.ubOpMode = ubOpMode;
 }
-
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetOpMode(void)
 {
 	return tKNL_Info.ubOpMode;
 }
-
+//------------------------------------------------------------------------------
 void KNL_SetAuxInfoFunc(uint8_t ubEnable)
 {
 	tKNL_Info.ubAuxInfoFlg = ubEnable;
@@ -1657,13 +1666,28 @@ uint8_t ubKNL_GetAuxInfoFunc(void)
 //------------------------------------------------------------------------------
 uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulAddr,uint32_t ulSize,uint32_t ulFrmIdx,uint32_t ulGop,uint8_t ubVdoGroupIdx)
 {
+#define KNL_AUX_INFO_LEN		(16 * 3)
+#define KNL_INFO_PADD			(0)
+#define KNL_INFO_FRMSEQ			(1)
+#define KNL_INFO_RES			(2)
+#define KNL_INFO_VGOP			(6)
+#define KNL_INFO_GOP			(7)
+#define KNL_INFO_FRMIDX			(11)
+#define KNL_INFO_OPMODE			(15)
+#define KNL_INFO_SRCNUM			(16)
+#define KNL_INFO_TIMESTP_LSB	(20)
+#define KNL_INFO_TIMESTP_MSB	(24)
+#define KNL_INFO_ADOSIZE		(3)
 //	uint8_t ubCrc8 = 0;
 //	CRC_t tCRC2_Setup;
 	uint32_t ulTemp;
 	uint32_t ulRtnSz;
 	uint32_t i;
-	uint32_t ulDmy0Time;
-	uint32_t ulCrcCalSz;
+	uint32_t ulDmy0Time = 0;
+//	uint32_t ulCrcCalSz;
+	uint8_t ubVdoIdx = 0;
+	static uint8_t ubKNL_VdoFrameSeq[2] = {0, 0};
+	static uint8_t ubKNL_AdoFrameSeq = 0;
 
 	//Case (%16) = 0
 	//-------------------------------------------
@@ -1671,9 +1695,7 @@ uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulA
 	//| Original Size			 				|
 	//|							 				|
 	//-------------------------------------------
-	//|CrcCalSz(4)|(12)			 				|
-	//-------------------------------------------
-	//|Crc(4)|  (12)   			 				|
+	//|TimeStamp (24)  			 				|
 	//--------------------------------------------------
 	//|SrcNum(1)|OpMode(1)|FrmIdx(4)|GOP(4)|VGOP(1)|(5)|
 	//--------------------------------------------------
@@ -1688,25 +1710,25 @@ uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulA
 		ulTemp = ulSize;
 		if((ulTemp % 16) == 0)
 		{
-			ulRtnSz    = ulTemp + 16 + 16 + 16;
-			ulCrcCalSz = ulTemp;
+			ulRtnSz    = ulTemp + KNL_AUX_INFO_LEN;
+//			ulCrcCalSz = ulTemp;
 		}
 		else
 		{
-			ulRtnSz    = ((ulTemp/16)*16) + (16*3) + 16;
-			ulCrcCalSz = ((ulTemp/16)*16) + 16;
+			ulRtnSz    = ((ulTemp / 16) * 16) + 16 + KNL_AUX_INFO_LEN;
+//			ulCrcCalSz = ((ulTemp / 16) * 16) + 16;
 			//Padd 0 value
-			ulDmy0Time = 16 - (ulSize%16);
-			for(i=0;i<ulDmy0Time;i++)
+			ulDmy0Time = 16 - (ulTemp % 16);
+			for(i = 0; i < ulDmy0Time; i++)
 			{
-				*((uint8_t *)(ulAddr+ulSize+i)) = 0;
+				*((uint8_t *)(ulAddr + ulSize + i)) = 0;
 			}
 		}
 
 		//CRC-Information
-		if(KNL_AUX_CRC_FUNC)
-		{
-			ulCrcCalSz = ulCrcCalSz;
+//		if(KNL_AUX_CRC_FUNC)
+//		{
+//			ulCrcCalSz = ulCrcCalSz;
 //			tCRC2_Setup.CRC_INIT_VALUE = INIT_ALL_ZERO;
 //			tCRC2_Setup.CRC_FINAL_XOR_VALUE = XOR_ALL_ZERO;
 //			tCRC2_Setup.CRC_ORDER = 7;
@@ -1716,55 +1738,67 @@ uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulA
 //			
 //			*((uint32_t *)(ulAddr+ulRtnSz-16-16-16)) = ulCrcCalSz;
 //			*((uint32_t *)(ulAddr+ulRtnSz-16-16)) = (uint32_t)ubCrc8;
-		}
+//		}
 
 		//Aux-Information
-		*((uint8_t *)(ulAddr+ulRtnSz-16)) = ubSrcNum;									//SrcNum Information
-		*((uint8_t *)(ulAddr+ulRtnSz-15)) = ubKNL_GetOpMode();				//OpMode Information
 
-		*((uint8_t *)(ulAddr+ulRtnSz-14)) = (uint8_t)(((ulFrmIdx&0x000000FF)>>0));	//Frame Index Information
-		*((uint8_t *)(ulAddr+ulRtnSz-13)) = (uint8_t)(((ulFrmIdx&0x0000FF00)>>8));
-		*((uint8_t *)(ulAddr+ulRtnSz-12)) = (uint8_t)(((ulFrmIdx&0x00FF0000)>>16));
-		*((uint8_t *)(ulAddr+ulRtnSz-11)) = (uint8_t)(((ulFrmIdx&0xFF000000)>>24));	
+		//Time Stamp
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_MSB)) = 0;
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_LSB)) = 0;
+		
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_SRCNUM)) 		 = ubSrcNum;								//SrcNum Information
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_OPMODE)) 		 = ubKNL_GetOpMode();						//OpMode Information
 
-		*((uint8_t *)(ulAddr+ulRtnSz-10)) = (uint8_t)(((ulGop&0x000000FF)>>0));	//Codec GOP Information
-		*((uint8_t *)(ulAddr+ulRtnSz-9))  = (uint8_t)(((ulGop&0x0000FF00)>>8));
-		*((uint8_t *)(ulAddr+ulRtnSz-8))  = (uint8_t)(((ulGop&0x00FF0000)>>16));
-		*((uint8_t *)(ulAddr+ulRtnSz-7))  = (uint8_t)(((ulGop&0xFF000000)>>24));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_FRMIDX + 3))) = (uint8_t)(((ulFrmIdx&0x000000FF)>>0));	//Frame Index Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_FRMIDX + 2))) = (uint8_t)(((ulFrmIdx&0x0000FF00)>>8));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_FRMIDX + 1))) = (uint8_t)(((ulFrmIdx&0x00FF0000)>>16));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_FRMIDX)) 		 = (uint8_t)(((ulFrmIdx&0xFF000000)>>24));
 
-		*((uint8_t *)(ulAddr+ulRtnSz-6))  = ubVdoGroupIdx;	//Video Group Information
-		*((uint8_t *)(ulAddr+ulRtnSz-5))  = uwKNL_GetVdoH(ubSrcNum) >> 8;
-		*((uint8_t *)(ulAddr+ulRtnSz-4))  = uwKNL_GetVdoH(ubSrcNum) & 0xFF;
-		*((uint8_t *)(ulAddr+ulRtnSz-3))  = uwKNL_GetVdoV(ubSrcNum) >> 8;
-		*((uint8_t *)(ulAddr+ulRtnSz-2))  = uwKNL_GetVdoV(ubSrcNum) & 0xFF;
-		*((uint8_t *)(ulAddr+ulRtnSz-1))  = (uint8_t)(ulRtnSz - ulTemp);
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_GOP + 3))) 	 = (uint8_t)(((ulGop&0x000000FF)>>0));		//Codec GOP Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_GOP + 2)))  	 = (uint8_t)(((ulGop&0x0000FF00)>>8));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_GOP + 1)))  	 = (uint8_t)(((ulGop&0x00FF0000)>>16));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_GOP))  		 = (uint8_t)(((ulGop&0xFF000000)>>24));
+
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_VGOP))  		 = ubVdoGroupIdx;							//Video Group Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_RES + 3)))  	 = uwKNL_GetVdoH(ubSrcNum) >> 8;
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_RES + 2)))  	 = uwKNL_GetVdoH(ubSrcNum) & 0xFF;
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_RES + 1)))  	 = uwKNL_GetVdoV(ubSrcNum) >> 8;
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_RES))  		 = uwKNL_GetVdoV(ubSrcNum) & 0xFF;
+		ubVdoIdx = (ubSrcNum <= KNL_SRC_4_MAIN)?0:1;
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_FRMSEQ))  	 = ubKNL_VdoFrameSeq[ubVdoIdx]++;
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_PADD))  		 = (uint8_t)ulDmy0Time;
 	}
 	else if(tPktType == KNL_ADO_PKT)
 	{
 		ulTemp = ulSize;
-
 		if((ulTemp % KNL_ADO_SUB_PKT_LEN) == 0)
 		{
-			ulRtnSz = ulTemp+KNL_ADO_SUB_PKT_LEN;
+			ulRtnSz = ulTemp + KNL_ADO_SUB_PKT_LEN;
 		}
 		else
 		{
-			if((ulTemp+16)  <= (((ulTemp/KNL_ADO_SUB_PKT_LEN)*KNL_ADO_SUB_PKT_LEN)+KNL_ADO_SUB_PKT_LEN))
+			if((ulTemp + 16) <= (((ulTemp / KNL_ADO_SUB_PKT_LEN) * KNL_ADO_SUB_PKT_LEN) + KNL_ADO_SUB_PKT_LEN))
 			{
-				ulRtnSz = ((ulTemp/KNL_ADO_SUB_PKT_LEN)*KNL_ADO_SUB_PKT_LEN)+KNL_ADO_SUB_PKT_LEN;
+				ulRtnSz = ((ulTemp / KNL_ADO_SUB_PKT_LEN) * KNL_ADO_SUB_PKT_LEN) + KNL_ADO_SUB_PKT_LEN;
 			}
 			else
 			{
-				ulRtnSz = ((ulTemp/KNL_ADO_SUB_PKT_LEN)*KNL_ADO_SUB_PKT_LEN)+(KNL_ADO_SUB_PKT_LEN*2);
+				ulRtnSz = ((ulTemp / KNL_ADO_SUB_PKT_LEN) * KNL_ADO_SUB_PKT_LEN) + (KNL_ADO_SUB_PKT_LEN * 2);
 			}
 		}
 		//Aux-Information
-		*((uint8_t *)(ulAddr+ulRtnSz-16)) = ubSrcNum;								//SrcNum Information
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_SRCNUM)) = ubSrcNum;					//SrcNum Information
+
+		//Time Stamp
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_MSB))   = 0;
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_LSB))   = 0;
 		
-		*((uint8_t *)(ulAddr+ulRtnSz-6))  = (uint8_t)(((ulSize&0x000000FF)>>0));	//Real-Size Information
-		*((uint8_t *)(ulAddr+ulRtnSz-5))  = (uint8_t)(((ulSize&0x0000FF00)>>8));
-		*((uint8_t *)(ulAddr+ulRtnSz-4))  = (uint8_t)(((ulSize&0x00FF0000)>>16));
-		*((uint8_t *)(ulAddr+ulRtnSz-3))  = (uint8_t)(((ulSize&0xFF000000)>>24));
+
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_ADOSIZE + 3)))  = (uint8_t)(((ulSize&0x000000FF)>>0));		//Real-Size Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_ADOSIZE + 2)))  = (uint8_t)(((ulSize&0x0000FF00)>>8));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_ADOSIZE + 1)))  = (uint8_t)(((ulSize&0x00FF0000)>>16));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_ADOSIZE))   	   = (uint8_t)(((ulSize&0xFF000000)>>24));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_FRMSEQ))  	   = ubKNL_AdoFrameSeq++;
 	}
 
 	return ulRtnSz;
@@ -3117,11 +3151,11 @@ uint8_t ubKNL_SetDispCropScaleParam(void)
 			sLcdInfor.tChRes[1].uwCropVsize = uwKNL_GetVdoV(ubDisp3Src);		
 		}
 		else if(tKNL_GetDispRotate() == KNL_DISP_ROTATE_90)
-		{	
+		{
 			if(tKNL_GetDispRotate() == KNL_DISP_ROTATE_90)
 			{
 				printd(DBG_Debug3Lvl, "Need to Add !!!!\r\n");
-			}			
+			}
 		}
 		pLcdCropScaleParam = (LCD_INFOR_TYP *)(&sLcdInfor);
 	}
@@ -3131,7 +3165,7 @@ uint8_t ubKNL_SetDispCropScaleParam(void)
 		sLcdInfor.tDispType = LCD_DISP_3T_2L1R;
 		sLcdInfor.ubChNum = 3;
 		sLcdInfor.uwLcdOutputHsize = uwLCD_GetLcdHoSize();
-		sLcdInfor.uwLcdOutputVsize = uwLCD_GetLcdVoSize();		
+		sLcdInfor.uwLcdOutputVsize = uwLCD_GetLcdVoSize();
 		
 		//Get Correspond Source
 		ubDisp1Src = ubKNL_GetDispSrc(KNL_DISP_LOCATION1);
@@ -4627,7 +4661,7 @@ void KNL_ActiveLcdDispBuf(uint8_t ubSrcNum)
 	if((tKNL_GetDispType() == KNL_DISP_H) && (tKNL_GetDispRotate() == KNL_DISP_ROTATE_0))
 	{
 		tDispLocate = tKNL_GetDispLocation(ubSrcNum);
-		
+
 		if(tDispLocate == KNL_DISP_LOCATION2)
 		{			
 			if(ubKNL_DispCh0ActiveFlg)
@@ -5799,16 +5833,16 @@ RTYSEND_VDO:
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulKNL_GetPktSZ(uint32_t ulAddr,uint32_t ulSize)
+uint32_t ulKNL_GetAdoPktSZ(uint32_t ulAddr,uint32_t ulSize)
 {
-	uint32_t ulRtnValue;	
-	
+	uint32_t ulRtnValue;
+
 	ulRtnValue = 0;
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-6))))<<0);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-5))))<<8);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-4))))<<16);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-3))))<<24);
-	
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_ADOSIZE+3)))))<<0);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_ADOSIZE+2)))))<<8);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_ADOSIZE+1)))))<<16);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-KNL_INFO_ADOSIZE))))<<24);
+
 	return ulRtnValue;
 }		
 
@@ -5978,7 +6012,7 @@ void KNL_RetryAdcBufProcess(KNL_PROCESS tProc)
 			tKNLInfo.ulDramAddr1 = tProc.ulDramAddr1;
 			tKNLInfo.ulDramAddr2 = tProc.ulDramAddr2;
 			tKNLInfo.ulSize      = tProc.ulSize;
-			if(osMessagePutToFront(KNL_AdoCdoecProcQueue, &tKNLInfo, 0) == osErrorResource)
+			if(osMessagePutToFront(KNL_AdoCodecProcQueue, &tKNLInfo, 0) == osErrorResource)
 			{
 				ubBUF_ReleaseAdcBuf(tKNLInfo.ulDramAddr2);
 				printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!!\r\n");
@@ -6005,39 +6039,48 @@ void KNL_DacBufProcess(KNL_PROCESS tProc)
 {
 	uint8_t ubTemp = BUF_FAIL, ubSrcNumMap;
 	uint8_t ubNextNode;
-//	uint32_t ulDwCnt;
+	uint32_t ulAdoPktSize = 0;
 	ADO_Queue_INFO EN_INFO;	//!< static ADO_Queue_INFO EN_INFO;
 
-	ubNextNode = ubKNL_GetNextNode(tProc.ubSrcNum,tProc.ubNextNode);
+	ulAdoPktSize = ulKNL_GetAdoPktSZ(tProc.ulDramAddr2, tProc.ulSize);
+	ubNextNode   = ubKNL_GetNextNode(tProc.ubSrcNum,tProc.ubNextNode);
 	if(ubKNL_ChkAdoFlowAct(tProc.ubSrcNum))
 	{
 		if(ubNextNode == KNL_NODE_DAC)
 		{
 			if((tADO_GetAdo32Enable() == ADO_ON) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
-				EN_INFO.EncType = AUDIO32;			
+				EN_INFO.EncType = AUDIO32;
 				EN_INFO.Audio32Addr = tProc.ulDramAddr2;
-				EN_INFO.Audio32Size	= tProc.ulSize;
+				EN_INFO.Audio32Size	= ulAdoPktSize;	//! tProc.ulSize;
+				EN_INFO.PcmAddr = 0;
 			}
 			else if((tADO_GetAACEnable() == ADO_ON) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
-				EN_INFO.EncType = AAC;			
+				EN_INFO.EncType = AAC;
 				EN_INFO.AACAddr = tProc.ulDramAddr2;
-				EN_INFO.AACSize	= tProc.ulSize;
+				EN_INFO.AACSize	= ulAdoPktSize;	//! tProc.ulSize;
 			}
 			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_MSADPCM))
 			{
 				//MS-ADPCM
-				EN_INFO.EncType = NONE;			
+				EN_INFO.EncType = NONE;
 				EN_INFO.PcmAddr = tProc.ulDramAddr2;
-				EN_INFO.PcmSize	= tProc.ulSize;
+				EN_INFO.PcmSize	= ulAdoPktSize;	//! tProc.ulSize;
+			}
+			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_ALAW))
+			{
+				//ALAW
+				EN_INFO.EncType = NONE;
+				EN_INFO.PcmAddr = tProc.ulDramAddr2;
+				EN_INFO.PcmSize	= ulAdoPktSize;	//! tProc.ulSize;
 			}
 			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
 				//PCM
-				EN_INFO.EncType = NONE;			
+				EN_INFO.EncType = NONE;
 				EN_INFO.PcmAddr = tProc.ulDramAddr2;
-				EN_INFO.PcmSize	= tProc.ulSize;
+				EN_INFO.PcmSize	= ulAdoPktSize;	//! tProc.ulSize;
 			}
 			EN_INFO.ubSrcNum = ubKNL_SrcNumMap(tProc.ubSrcNum);
 //			printf("----->Src:%d\n",EN_INFO.ubSrcNum);
@@ -6095,62 +6138,77 @@ uint32_t ulKNL_AlignAdoPktSz(uint32_t ulInputSz)
 	}
 }
 //------------------------------------------------------------------------------
+uint32_t ulKNL_GetTimeStamp1(uint32_t ulAddr,uint32_t ulSize)
+{
+	return *((uint32_t *)(ulAddr+ulSize-KNL_INFO_TIMESTP_LSB));
+}
+//------------------------------------------------------------------------------
+uint32_t ulKNL_GetTimeStamp2(uint32_t ulAddr,uint32_t ulSize)
+{
+	return *((uint32_t *)(ulAddr+ulSize-KNL_INFO_TIMESTP_MSB));
+}
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetPktSrcNum(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-16));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_SRCNUM));
 }
-
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetPktOpMode(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-15));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_OPMODE));
 }
-
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetPktFrmIdx(uint32_t ulAddr,uint32_t ulSize)
 {
 	uint32_t ulRtnValue;	
 	
 	ulRtnValue = 0;
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-14))))<<0);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-13))))<<8);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-12))))<<16);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-11))))<<24);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_FRMIDX+3)))))<<0);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_FRMIDX+2)))))<<8);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_FRMIDX+1)))))<<16);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-KNL_INFO_FRMIDX))))<<24);
 	
 	return ulRtnValue;
 }
-
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetPktGop(uint32_t ulAddr,uint32_t ulSize)
 {
 	uint32_t ulRtnValue;	
 	
 	ulRtnValue = 0;
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-10))))<<0);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-9))))<<8);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-8))))<<16);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-7))))<<24);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_GOP+3)))))<<0);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_GOP+2)))))<<8);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_GOP+1)))))<<16);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-KNL_INFO_GOP))))<<24);
 	
 	return ulRtnValue;
 }
-
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetPktVdoGop(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-6));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_VGOP));
 }
-
+//------------------------------------------------------------------------------
 uint16_t ubKNL_GetPktHRes(uint32_t ulAddr,uint32_t ulSize)
 {
-	return (*((uint8_t *)(ulAddr+ulSize-5)) << 8) + (*((uint8_t *)(ulAddr+ulSize-4)));
+	return (*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_RES+3))) << 8) + (*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_RES+2))));
 }
-
+//------------------------------------------------------------------------------
 uint16_t ubKNL_GetPktVRes(uint32_t ulAddr,uint32_t ulSize)
 {
-	return (*((uint8_t *)(ulAddr+ulSize-3)) << 8) + (*((uint8_t *)(ulAddr+ulSize-2)));
+	return (*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_RES+1))) << 8) + (*((uint8_t *)(ulAddr+ulSize-KNL_INFO_RES)));
 }
-
+//------------------------------------------------------------------------------
+uint8_t ubKNL_GetFrameSeq(uint32_t ulAddr,uint32_t ulSize)
+{
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_FRMSEQ));
+}
+//------------------------------------------------------------------------------
 uint16_t ubKNL_GetPaddLen(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-1));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_PADD));
 }
-
+//------------------------------------------------------------------------------
 uint8_t ubKNL_ChkDebugPkt(uint32_t ulAddr,uint32_t ulSize)
 {
 //	uint8_t hw_crc_8 = 0;	
@@ -6521,7 +6579,7 @@ static void KNL_AdoCodecProcThread(void const *argument)
 
 	while(1)
 	{
-        osMessageGet(KNL_AdoCdoecProcQueue, &tProc, osWaitForever);
+        osMessageGet(KNL_AdoCodecProcQueue, &tProc, osWaitForever);
 		switch(tProc.ubNextNode)
 		{
 			case KNL_NODE_ADC_BUF:
@@ -7545,7 +7603,7 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 	KNL_PROCESS tKNLInfo;
 	RX_DON Don;
 	uint32_t ulTemp;		
-	uint8_t ubIdx;	
+	uint8_t ubSrcNum;	
 	uint32_t ulRealSz;
 
 	// ADO
@@ -7571,24 +7629,24 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 		}
 		else if( ADO_GetIpReadyStatus() == ADO_IP_READY )
         {
-            ubIdx = ubKNL_GetPktSrcNum(Don.ulAddr,Don.ulSize);
+            ubSrcNum = ubKNL_GetPktSrcNum(Don.ulAddr,Don.ulSize);
 
-            if(ubKNL_ChkAdoFlowAct(ubIdx))
+            if(ubKNL_ChkAdoFlowAct(ubSrcNum))
             {
                 //(2)Request Buffer to Temp
-                if(ubKNL_SrcNumMap(ubIdx) == 0)
+                if(ubKNL_SrcNumMap(ubSrcNum) == 0)
                 {
                     ulTemp = ulBUF_GetDac0FreeBuf();
                 }
-                else if(ubKNL_SrcNumMap(ubIdx) == 1)
+                else if(ubKNL_SrcNumMap(ubSrcNum) == 1)
                 {
                     ulTemp = ulBUF_GetDac1FreeBuf();
                 }
-                else if(ubKNL_SrcNumMap(ubIdx) == 2)
+                else if(ubKNL_SrcNumMap(ubSrcNum) == 2)
                 {
                     ulTemp = ulBUF_GetDac2FreeBuf();
                 }
-                else if(ubKNL_SrcNumMap(ubIdx) == 3)
+                else if(ubKNL_SrcNumMap(ubSrcNum) == 3)
                 {
                     ulTemp = ulBUF_GetDac3FreeBuf();
                 }
@@ -7599,7 +7657,7 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 
                 if(ulTemp == BUF_FAIL)
                 {
-                    printd(DBG_ErrorLvl, "[%d]BUF_ADO Err !!!\r\n", ubIdx);
+                    printd(DBG_ErrorLvl, "[%d]BUF_ADO Err !!!\r\n", ubSrcNum);
 					BB_RxBufRelease(Don.Type,Don.tSTA);
                 }
                 else
@@ -7610,18 +7668,17 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 					if(DMAC_OK == tDmaResult)
 					{
 						//(4-1)Check Real-Size Information
-						ulRealSz = ulKNL_GetPktSZ(ulTemp,Don.ulSize);
-						//printd(DBG_Debug3Lvl, "Real-Sz:0x%x\r\n",ulRealSz);
-
+						ulRealSz = ulKNL_GetAdoPktSZ(ulTemp, Don.ulSize);
+						printd(DBG_Debug3Lvl, "Real-Sz:0x%x\r\n", ulRealSz);
 
 						//(5)Send Queue to Next Node
-						tKNLInfo.ubSrcNum    = ubIdx;
+						tKNLInfo.ubSrcNum    = ubSrcNum;
 						tKNLInfo.ulDramAddr2 = ulTemp;
-						tKNLInfo.ulSize		 = ulRealSz;
+						tKNLInfo.ulSize		 = Don.ulSize;
 						tKNLInfo.ubCurNode   = KNL_NODE_COMM_RX_ADO;
-						tKNLInfo.ubNextNode  = ubKNL_GetNextNode(ubIdx,KNL_NODE_COMM_RX_ADO);
+						tKNLInfo.ubNextNode  = ubKNL_GetNextNode(ubSrcNum,KNL_NODE_COMM_RX_ADO);
 //							KNL_DacBufProcess(tKNLInfo);
-						if(osMessagePut(KNL_AdoCdoecProcQueue, &tKNLInfo, 0) == osErrorResource)
+						if(osMessagePut(KNL_AdoCodecProcQueue, &tKNLInfo, 0) == osErrorResource)
 						{
 							ubBUF_ReleaseDac0Buf(tKNLInfo.ulDramAddr2);
 							printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!\r\n");
@@ -7633,19 +7690,19 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 
 					if( DMAC_OK != tDmaResult )
 					{
-						if(ubKNL_SrcNumMap(ubIdx) == 0)
+						if(ubKNL_SrcNumMap(ubSrcNum) == 0)
 						{
 							ubBUF_ReleaseDac0Buf(ulTemp);
 						}
-						else if(ubKNL_SrcNumMap(ubIdx) == 1)
+						else if(ubKNL_SrcNumMap(ubSrcNum) == 1)
 						{
 							ubBUF_ReleaseDac1Buf(ulTemp);
 						}
-						else if(ubKNL_SrcNumMap(ubIdx) == 2)
+						else if(ubKNL_SrcNumMap(ubSrcNum) == 2)
 						{
 							ubBUF_ReleaseDac2Buf(ulTemp);
 						}
-						else if(ubKNL_SrcNumMap(ubIdx) == 3)
+						else if(ubKNL_SrcNumMap(ubSrcNum) == 3)
 						{
 							ubBUF_ReleaseDac3Buf(ulTemp);
 						}
@@ -7732,19 +7789,19 @@ static void KNL_JpegMonitThread(void const *argument)
 	uint32_t ulInfo_YuvAddr;
 	uint32_t ulInfo_BsAddr;
 	uint32_t ulInfo_Size;	
-	
+
 	while(1)
 	{
         osMessageGet(KNL_QueueJpegMonit, &tJpegInfo, osWaitForever);
-		
+
 		//(1)Update Information First
-		ubInfo_PreNode 		= ubKNL_JpegPreNode;
-		ubInfo_PreSrc		= ubKNL_JpegSrc;
-		ubInfo_Action		= tJpegInfo.tJPEG_CodecMode;
-		ulInfo_YuvAddr		= tJpegInfo.ulJPEG_YUVAddr;
-		ulInfo_BsAddr		= tJpegInfo.ulJPEG_BsAddr;
-		ulInfo_Size			= tJpegInfo.ulJPEG_BsSize;
-		
+		ubInfo_PreNode 	= ubKNL_JpegPreNode;
+		ubInfo_PreSrc	= ubKNL_JpegSrc;
+		ubInfo_Action	= tJpegInfo.tJPEG_CodecMode;
+		ulInfo_YuvAddr	= tJpegInfo.ulJPEG_YUVAddr;
+		ulInfo_BsAddr	= tJpegInfo.ulJPEG_BsAddr;
+		ulInfo_Size		= tJpegInfo.ulJPEG_BsSize;
+
 		//(2)Release JPEG Codec
 		osSemaphoreRelease(JPEG_CodecSem);
 
@@ -7768,7 +7825,7 @@ static void KNL_JpegMonitThread(void const *argument)
 		printd(DBG_Debug3Lvl, "JPEG_Action:%d\r\n",ubInfo_Action);
 		printd(DBG_Debug3Lvl, "JPEGc_YuvAddr:0x%x\r\n",ulInfo_YuvAddr);
 		printd(DBG_Debug3Lvl, "JPEG_BsAddr:0x%x\r\n",ulInfo_BsAddr);
-		printd(DBG_Debug3Lvl, "JPEG_Size:0x%x\r\n",ulInfo_Size);		
+		printd(DBG_Debug3Lvl, "JPEG_Size:0x%x\r\n",ulInfo_Size);
 		*/
 		if((ubInfo_Action == 1) && (ubInfo_PreNode == KNL_NODE_JPG_DEC1))
 		{
@@ -7785,13 +7842,13 @@ static void KNL_JpegMonitThread(void const *argument)
 			KNL_SetNodeState(ubInfo_PreSrc,KNL_NODE_JPG_ENC,KNL_NODE_STOP);
 			printd(DBG_Debug3Lvl, "J->E[%d]:0x%x_0x%x_0x%x\r\n",ubInfo_PreSrc,ulInfo_YuvAddr,ulInfo_BsAddr,ulInfo_Size);
 		}
-		
+
 		//(3)Release BS Buffer
 		if((ubInfo_PreNode == KNL_NODE_JPG_DEC1) || (ubInfo_PreNode == KNL_NODE_JPG_DEC2))
 		{			
 			ubKNL_ReleaseBsBufAddr(ubInfo_PreNode,ubInfo_PreSrc,ulInfo_BsAddr);
 		}
-		
+
 		//(4)To Next Node
 		if(ubKNL_ChkVdoFlowAct(ubInfo_PreSrc))
 		{
@@ -7799,7 +7856,7 @@ static void KNL_JpegMonitThread(void const *argument)
 			if(ubNextNode == KNL_NODE_LCD)
 			{
 				KNL_ActiveLcdDispBuf(ubInfo_PreSrc);
-			}			
+			}
 			else
 			{
 				//Next Node
@@ -8291,7 +8348,7 @@ void KNL_ImgMonitorFunc(struct IMG_RESULT ReceiveResult)
 			printd(DBG_Debug3Lvl, "H->DOK\r\n");
 
 		//(3)Post-Process
-		ubNextNode = ubKNL_GetNextNode(ubSrcNum,KNL_NODE_H264_DEC);
+		ubNextNode = ubKNL_GetNextNode(ubSrcNum, KNL_NODE_H264_DEC);
 		if(ubKNL_ChkVdoFlowAct(ubSrcNum))
 		{
 			tNodeInfo = tKNL_GetNodeInfo(ubSrcNum, KNL_NODE_H264_DEC);
@@ -8906,10 +8963,19 @@ uint8_t ubKNL_ChkNodeFinish(uint8_t ubSrcNum)
 
 	if(ubKNL_ExistNode(ubSrcNum, KNL_NODE_VDO_BS_BUF1))
 	{
-		BUF_Reset((BUF_VDO_MAIN_BS0+ubSrcNumMap));
+		BUF_Reset((BUF_VDO_MAIN_BS0 + ubSrcNumMap));
 	}
 
 	return 1;
+}
+//------------------------------------------------------------------------------
+void KNL_SetTRXPathActivity(void)
+{
+	uint8_t ubTxAdo_Path;
+
+	ubKNL_BbPathAct = TRUE;
+	ubTxAdo_Path	= ubBB_GetTxAdoDataPath();
+	BB_SetDataPath((TXADO)ubTxAdo_Path, BB_RX_ADO_ALL_STA, BB_OPEN_ALL_PAYLOAD);
 }
 //------------------------------------------------------------------------------
 void KNL_VdoStart(uint8_t ubSrcNum)
@@ -8923,13 +8989,12 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 #endif
 
 	ubSrcNumMap = ubKNL_SrcNumMap(ubSrcNum);
-	printd(Apk_DebugLvl, "KNL_VdoStart ubSrcNum: %d, ubSrcNumMap: %d ###\n", ubSrcNum, ubSrcNumMap);
 	if(ubSrcNumMap <= KNL_STA4)
 	{
 		ubKNL_VdoFlowActiveFlg[ubSrcNum] = 1;
 		ubKNL_RcvFirstIFrame[ubSrcNum]	 = 0;
 
-		for(i=0;i<256;i++)
+		for(i = 0; i < 256; i++)
 		{
 			if(ubKNL_ExistNode(ubSrcNum,i))
 			{
@@ -8949,11 +9014,16 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 		}
 
 #if OP_AP
-		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
+		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) ||
+		   ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
 		{
 			ubRxVdo_OriPath = ubBB_GetRxVdoDataPath();
 			ubTxAdo_Path	= ubBB_GetTxAdoDataPath();
-			
+			if(TRUE == ubKNL_BbPathAct)
+			{
+				ubRxVdo_OriPath = BB_PAYLOAD_NONE;
+				ubKNL_BbPathAct = FALSE;
+			}
 			if(ubSrcNumMap == 0)
 			{
 				ubRxVdo_NewPath = ubRxVdo_OriPath | BB_OPEN_STA1_PAYLOAD;
@@ -8972,7 +9042,7 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 			}
 			BB_SetDataPath((TXADO)ubTxAdo_Path,BB_RX_ADO_ALL_STA,(PAYLOAD_PATH)ubRxVdo_NewPath);
 		}
-#endif	
+#endif
 	}
 }
 //------------------------------------------------------------------------------
@@ -8992,16 +9062,24 @@ void KNL_VdoStop(uint8_t ubSrcNum)
 		ubKNL_RcvFirstIFrame[ubSrcNum]	 	= 0;
 		ubKNL_VdoResendITwcFlg[ubSrcNumMap] = FALSE;
 		ubKNL_VdoResChgTwcFlg[ubSrcNumMap]  = FALSE;
-		for(i=0;i<256;i++)
+		for(i = 0; i < 256; i++)
 		{
 			tKNL_NodeState[ubSrcNum][i] = KNL_NODE_STOP;
 		}
-#if OP_AP
+
+		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_SEN))
+		{
+			KNL_SenStop(ubSrcNum);
+		}
+
+#if OP_AP		
 		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) ||
 		   ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
 		{
 			KNL_SRC tAdoSrcNum;
 
+			if(TRUE == ubKNL_BbPathAct)
+				return;
 			if(ptKNL_AdoRoleSrcMapT)
 				tAdoSrcNum = ptKNL_AdoRoleSrcMapT((KNL_ROLE)ubSrcNumMap);
 			if(!ubKNL_ChkDacFlowAct((uint8_t)tAdoSrcNum))
@@ -9028,10 +9106,6 @@ void KNL_VdoStop(uint8_t ubSrcNum)
 			}
 		}
 #endif
-		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_SEN))
-		{
-			KNL_SenStop(ubSrcNum);
-		}
 	}
 }
 //------------------------------------------------------------------------------
@@ -9363,8 +9437,6 @@ uint8_t KNL_WakeupDevice(KNL_ROLE tKNL_Role, uint8_t ubMode)
 void KNL_TurnOnTuningTool(void)
 {
 #ifdef OP_STA
-	KNL_SetVdoGop(15);
-	SEN_SetUvcPathFlag(1);
 	IQ_SetupTuningToolMode(KNL_TUNINGMODE_ON);
 	tKNL_TuningMode = KNL_TUNINGMODE_ON;
 #endif
