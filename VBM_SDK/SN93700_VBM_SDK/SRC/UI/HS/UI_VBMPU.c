@@ -590,7 +590,7 @@ void UI_OnInitDialog(void)
 
 	ubLogoInitStaus = 1;
 	
-	
+	printd(1,"ubWorWakeUpFlag = %d\n",ubWorWakeUpFlag);
 	if(ubWorWakeUpFlag != 1)  //20190905 yxh
 	{
 		LCDBL_ENABLE(UI_ENABLE);
@@ -2589,7 +2589,7 @@ UI_Result_t UI_SetupPuWorMode(void)
 /*    for (tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
     {
        //if (CAM_OFFLINE == tUI_CamStatus[tCamNum].tCamConnSts)
-          //continue;
+		//continue;
         tPsCmd.tDS_CamNum = tCamNum;
         tBuNotifyRet = UI_SendRequestToBU(osThreadGetId(), &tPsCmd);
         if (rUI_SUCCESS == tBuNotifyRet)
@@ -2597,10 +2597,10 @@ UI_Result_t UI_SetupPuWorMode(void)
         else
             printd(DBG_ErrorLvl, "CAM%d:WOR Setting Fail !\n", (tCamNum + 1));
     }
-*/	 
+*/
 	printd(1, "tCamViewSel.tCamViewPool[0]] %d  tCamConnSts %d \n", tCamViewSel.tCamViewPool[0],tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
 
-        if(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE)
+      if(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE)
       	{
 	        tPsCmd.tDS_CamNum = tCamViewSel.tCamViewPool[0];
 	        tBuNotifyRet = UI_SendRequestToBU(osThreadGetId(), &tPsCmd);
@@ -2609,6 +2609,20 @@ UI_Result_t UI_SetupPuWorMode(void)
 	        else
 	            printd(DBG_ErrorLvl, "CAM%d:WOR Setting Fail !\n", (tCamViewSel.tCamViewPool[0] + 1));
       	}
+	  else
+	  {
+	        APP_EventMsg_t tUI_PsMessage = {0};
+
+	        tUI_PuSetting.tPsMode = PS_WOR_MODE;
+	        UI_UpdateDevStatusInfo();
+	        tUI_PsMessage.ubAPP_Event       = APP_POWERSAVE_EVENT;
+	        tUI_PsMessage.ubAPP_Message[0]  = 3;        //! Message Length
+	        tUI_PsMessage.ubAPP_Message[1]  = PS_WOR_MODE;
+	        tUI_PsMessage.ubAPP_Message[2]  = FALSE;
+	        tUI_PsMessage.ubAPP_Message[3]  = CAM1;
+	        UI_SendMessageToAPP(&tUI_PsMessage);
+	        printd(Apk_DebugLvl, "UI_SetupPuWorMode!\n");
+	  }
 	  
     if (rUI_SUCCESS == tWorRet)
     {
@@ -13654,6 +13668,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                         tOsdImgInfo.uwYStart = 360 - 80;
                         tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
                     }
+			if(ubWorWakeUpFlag == 1)
+				LCDBL_ENABLE(UI_ENABLE);
                     //printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
                 }
                 else
@@ -13679,6 +13695,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                     ubPickupAlarmState = PICKUP_ALARM_IDLE;
                     ubPickupAlarmCheckCount = 0;
                     ubPickupAlarmTriggerCount = 0;
+			if(ubWorWakeUpFlag == 1)
+				LCDBL_ENABLE(UI_ENABLE);	
  
                 }
             }
@@ -13729,6 +13747,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     {
         UI_UpdateBarIcon_Part1();
     }
+
 }
 //------------------------------------------------------------------------------
 void UI_RedrawNoSignalOsdIcon(UI_CamNum_t tCamNum, UI_OsdImgFnType_t tOsdImgFnType)
