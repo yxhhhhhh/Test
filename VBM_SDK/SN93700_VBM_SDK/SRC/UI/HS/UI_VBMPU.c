@@ -361,7 +361,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
     uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
 
-	printd(1,"UI_KeyEventExec ptKeyEvent->ubKeyID = %x.\n",ptKeyEvent->ubKeyID);
+	//printd(1,"UI_KeyEventExec ptKeyEvent->ubKeyID = %x.\n",ptKeyEvent->ubKeyID);
 	
     if (tUI_PuSetting.ubDefualtFlag == TRUE) //恢复出厂设置只有上下左右,Enter,PowerKey键有用
     {
@@ -1503,7 +1503,8 @@ void UI_PowerKey(void)
 void UI_MenuKey(void)
 {
     OSD_IMG_INFO tOsdInfo;
-    printd(1, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt);
+
+	printd(1, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt);
     switch (tUI_State)
     {
     case UI_DISPLAY_STATE:
@@ -1572,6 +1573,8 @@ void UI_MenuKey(void)
             {
                 if (ubNoAddCamFlag == 1)
                 {
+                	if(tUI_State == UI_SUBSUBMENU_STATE)
+                		tLCD_JpegDecodeDisable();
                     OSD_LogoJpeg(OSDLOGO_WHITE_BG);
                     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_NOCAM1+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdInfo);
                     tOsdInfo.uwXStart = 175;
@@ -1607,7 +1610,8 @@ void UI_MenuKey(void)
                     tOsdInfo.uwYStart =304-104;
                     tOSD_Img2(&tOsdInfo, OSD_UPDATE);
                     */
-                    tLCD_JpegDecodeDisable();
+                      //if(tUI_State = UI_MAINMENU_STATE)
+                   // 	tLCD_JpegDecodeDisable();
                     OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
                     printd(Apk_DebugLvl, "UI_MenuKey OSD2IMG_MENU_NOSIGNAL1.\n");
                 }

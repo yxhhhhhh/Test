@@ -60,6 +60,7 @@ extern uint8_t ubPowerState;
 extern uint8_t ubShowAlarmstate;
 
 extern uint8_t ubFastShowLostLinkSta;
+extern uint8_t ubNoAddCamFlag;
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
@@ -621,6 +622,7 @@ void APP_doUnbindBU(APP_EventMsg_t *ptEventMsg)
 	tAPP_KNLInfo.tBURoleInfo[tKNL_Role].tKNL_DispLoc = KNL_DISP_LOCATION_ERR;
 	tAPP_KNLInfo.tAdoSrcRole = (tAPP_KNLInfo.tAdoSrcRole == tKNL_Role)?KNL_NONE:tAPP_KNLInfo.tAdoSrcRole;
 	APP_UpdateKNLSetupInfo();
+
 }
 #endif
 //------------------------------------------------------------------------------
