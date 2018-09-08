@@ -365,11 +365,40 @@ void UI_KeyEventExec(void *pvKeyEvent)
 	
     if (tUI_PuSetting.ubDefualtFlag == TRUE) //恢复出厂设置只有上下左右,Enter,PowerKey键有用
     {
-        if ((ptKeyEvent->ubKeyID < AKEY_UP) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
+         if ((ptKeyEvent->ubKeyID < AKEY_UP) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
         {
-            if (ptKeyEvent->ubKeyID != PKEY_ID0)
-                return;
+           		 if (ptKeyEvent->ubKeyID != PKEY_ID0)
+               		 return;
         }
+/*	//语言设置界面进行唤醒，但是唤醒之后无LOGO
+	   if (PWR_ON != ubPowerState)
+	   {
+           		 if (ptKeyEvent->ubKeyID != PKEY_ID0) //Powerkey
+           	 	{
+           	 		if(ubFS_MenuItem == 0)
+           	 		{
+           	 			if ((ptKeyEvent->ubKeyID == AKEY_UP) || (ptKeyEvent->ubKeyID == AKEY_DOWN) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
+					{
+					           printd(1,"11111111111111111111\n");
+						UI_SetSleepState(1);
+						LCDBL_ENABLE(UI_ENABLE);
+						return;
+           	 				}
+           	 		}
+				if(ubFS_MenuItem == 1)
+           	 		{
+           	 			printd(1,"22222222222222\n");
+           	 			if ((ptKeyEvent->ubKeyID >= AKEY_UP) ||(ptKeyEvent->ubKeyID <= AKEY_ENTER))
+					{
+           	 			printd(1,"333333333333333333333\n");
+						UI_SetSleepState(1);
+						LCDBL_ENABLE(UI_ENABLE);
+						return;
+           	 				}
+           	 		}
+           	 	}
+	   }	
+*/
     }
     else
     {
@@ -1344,7 +1373,7 @@ void UI_WakeUp(void)
     //  LCDBL_ENABLE(UI_ENABLE);
     //}
 
-    UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+    UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*70, UI_AutoLcdSetSleepTimerEvent);
 
     /*
     if ((TRUE == tUI_PuSetting.ubScanModeEn) && (FALSE == ubUI_ScanStartFlag))
@@ -3032,7 +3061,7 @@ void UI_PushTalkKey(void)
         }
         if (tUI_PuSetting.ubSleepMode)
         {
-            UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+            UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*70, UI_AutoLcdSetSleepTimerEvent);
         }
     }
 }
@@ -3130,6 +3159,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 	{
 		case LEFT_ARROW:
 		{
+			printd(1,"111111111111111111111111111111\n");
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{				
 				UI_MotorControl(MC_LEFT_ON);
@@ -3147,6 +3177,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 					{
 						ubFS_Timeitem = 0 ;
 					}		
+					printd(1,"111111111111111111111111111111\n");
 					UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
 				}	
 				else
@@ -3252,33 +3283,33 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 					if(NULL == pT_Num[ubFS_Timeitem])
 						return;
 
-                    if (ubFS_Timeitem == 2)
-                    {
-                        if ((ubTimeHour == 12)&&(ubTimeAMPM == 1))
-                            return;
-                        if ((ubTimeHour == 0)&&(ubTimeAMPM == 0))
-                            return;
-                    }
+		                    if (ubFS_Timeitem == 2)
+		                    {
+		                        if ((ubTimeHour == 12)&&(ubTimeAMPM == 1))
+		                            return;
+		                        if ((ubTimeHour == 0)&&(ubTimeAMPM == 0))
+		                            return;
+                  			  }
 
-                    if (*pT_Num[ubFS_Timeitem] == ubT_MaxNum[ubFS_Timeitem])
-                        *pT_Num[ubFS_Timeitem] = ubT_MinNum[ubFS_Timeitem];
-                    else
-                        (*pT_Num[ubFS_Timeitem])++;
+		                    if (*pT_Num[ubFS_Timeitem] == ubT_MaxNum[ubFS_Timeitem])
+		                        *pT_Num[ubFS_Timeitem] = ubT_MinNum[ubFS_Timeitem];
+		                    else
+		                        (*pT_Num[ubFS_Timeitem])++;
 
-                    if (ubFS_Timeitem == 0)
-                    {
-                        if ((ubTimeHour == 12)&&(ubTimeAMPM == 0))
-                        {
-                            ubTimeHour = 0;
-                        }
-                        if ((ubTimeHour == 0)&&(ubTimeAMPM == 1))
-                        {
-                            ubTimeHour = 1;
-                        }
-                    }
-                    UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
-                }
-                break;
+		                    if (ubFS_Timeitem == 0)
+		                    {
+		                        if ((ubTimeHour == 12)&&(ubTimeAMPM == 0))
+		                        {
+		                            ubTimeHour = 0;
+		                        }
+		                        if ((ubTimeHour == 0)&&(ubTimeAMPM == 1))
+		                        {
+		                            ubTimeHour = 1;
+		                        }
+	                    		}
+                    			UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
+                		}
+               		 break;
             }
         }
     case DOWN_ARROW:
@@ -4296,7 +4327,7 @@ void UI_AutoLcdSetSleepTime(uint8_t SleepMode)
     if (SleepMode == 0)
         UI_TimerDeviceEventStop(TIMER1_2);
     else
-        UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[SleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
+        UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[SleepMode]*1000*70, UI_AutoLcdSetSleepTimerEvent);
 }
 
 uint8_t UI_AutoLcdResetSleepTime(uint8_t KeyAction) //20180319
@@ -9798,6 +9829,8 @@ void UI_TempBarDisplay(uint8_t value)
     int16_t temp   = ubTempBelowZoreSta ? -value : value;
     char   str[5] = {0};
     int    i;
+    if (tUI_SyncAppState != APP_LINK_STATE)
+		return;
 
     sprintf(str, "%4d", temp);
     for (i=0; str[i]; i++) {
@@ -13574,7 +13607,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     UI_CamNum_t tCamNum;
     uint16_t uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
     OSD_IMG_INFO tOsdImgInfo;
-	
+    	printd(1,"111111UI_ShowLostLinkLogo\n");
 	if(TRUE == ubUI_ResetPeriodFlag)
 	{
 		switch(tUI_PuSetting.tPsMode)
@@ -13594,15 +13627,18 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
         return;
     if (FALSE == ubUI_ResetPeriodFlag)
     {
+            	printd(1,"UI_ShowLostLinkLogo   FALSE == ubUI_ResetPeriodFlag\n");
         uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
     }
     else if (ubCamPairOkState >= 1)
     {
+        	printd(1,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
         ubFastShowLostLinkSta = 0;
         uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 5;
     }
     else
     {
+    	printd(1,"UI_ShowLostLinkLogo tPairInfo.ubDrawFlag %d\n",tPairInfo.ubDrawFlag);
         if (tPairInfo.ubDrawFlag == FALSE)
             ubFastShowLostLinkSta = 1;
     }
@@ -14916,7 +14952,7 @@ void UI_SwitchCameraScan(uint8_t type)
     //if (ubPowerState != PWR_ON)   //20180803
     //  return;
 
-    printd(Apk_DebugLvl, "UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
+    printd(1, "UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
 #if 0
     if (ubCamOnlineNum < 2)
         return;
@@ -14955,6 +14991,7 @@ void UI_SwitchCameraScan(uint8_t type)
         if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
         //if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
       {
+      		printd(1,"tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
             tCamSwtichNum = i;
             break;
         }
@@ -14963,7 +15000,7 @@ void UI_SwitchCameraScan(uint8_t type)
     }
 
 SWITCH_CAMERA:	
-	printd(Apk_DebugLvl, "UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
+	printd(1, "UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
 	if(0xFF == tCamSwtichNum)
 		return;
 
@@ -14994,14 +15031,14 @@ void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *
     tUI_TimerParam.tEM          = TIMER_CB;
     tUI_TimerParam.pvEvent      = pvRegCb;
 
-    //printd(Apk_DebugLvl, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
+    printd(1, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
     TIMER_Start(tDevice, tUI_TimerParam);
     ubTimerDevEventStopSta = 1;
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStop(TIMER_DEVICE_t tDevice)
 {
-    ///printd(Apk_DebugLvl, "UI_TimerDeviceEventStop tDevice: %d.\n", tDevice);
+   // printd(1, "UI_TimerDeviceEventStop tDevice: %d.\n", tDevice);
     if (ubTimerDevEventStopSta == 1)
     {
         TIMER_Stop(tDevice);
@@ -15027,7 +15064,7 @@ void UI_TimerEventStart(uint32_t ulTime_ms, void *pvRegCb)
 //------------------------------------------------------------------------------
 void UI_TimerEventStop(void)
 {
-    //printd(Apk_DebugLvl, "UI_TimerEventStop TIMER2_1.\n");
+   // printd(1, "UI_TimerEventStop TIMER2_1.\n");
     TIMER_Stop(TIMER2_1);
 }
 //------------------------------------------------------------------------------
@@ -15046,7 +15083,7 @@ void UI_ScanModeTimerEvent(void)
 //------------------------------------------------------------------------------
 void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 {
-    printd(1, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
+   // printd(1, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
 	//osDelay(1);
     ubUI_ScanStartFlag = ubTimerEn;
     if (TRUE == ubTimerEn)
