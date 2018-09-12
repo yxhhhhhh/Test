@@ -1038,7 +1038,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
                         //while(1);
 	        }
 	}
-	printd(1,"tUI_PuSetting.ubDefualtFlag =%d.\n",tUI_PuSetting.ubDefualtFlag);
+	printd(Apk_DebugLvl,"tUI_PuSetting.ubDefualtFlag =%d.\n",tUI_PuSetting.ubDefualtFlag);
   }
 
 
@@ -1268,7 +1268,7 @@ void UI_PowerOnSet(void)
 //------------------------------------------------------------------------------
 void UI_EventHandles(UI_Event_t *ptEventPtr)
 {
-	printd(1,"UI_EventHandles  ubUI_PuStartUpFlag %d \n",ubUI_PuStartUpFlag);
+	printd(Apk_DebugLvl,"UI_EventHandles  ubUI_PuStartUpFlag %d \n",ubUI_PuStartUpFlag);
 	if(FALSE == ubUI_PuStartUpFlag)
 		return;
 	switch(ptEventPtr->tEventType)
@@ -1760,6 +1760,7 @@ void UI_UpArrowKey(void)
 		case UI_RECFILES_SEL_STATE:
 		case UI_RECFOLDER_SEL_STATE:
 		case UI_ENGMODE_STATE:
+			printd(1,"UI_UpArrowKey tUI_State=%x\n",tUI_State);
 			tUI_StateMap2MenuFunc[tUI_State].pvFuncPtr(UP_ARROW);
 			break;
 		default:
@@ -1785,6 +1786,7 @@ void UI_DownArrowKey(void)
 		case UI_RECFILES_SEL_STATE:
 		case UI_RECFOLDER_SEL_STATE:
 		case UI_ENGMODE_STATE:
+			printd(1,"UI_DownArrowKey tUI_State=%x\n",tUI_State);
 			tUI_StateMap2MenuFunc[tUI_State].pvFuncPtr(DOWN_ARROW);
 			break;
 		default:
@@ -1945,7 +1947,6 @@ void FactortPair(void)
         UI_SendMessageToAPP(&tUI_PairMessage);
         tPairInfo.ubDrawFlag             = TRUE;
         UI_DisableScanMode();
-        printd(Apk_DebugLvl,"FactortPair end!!!!!!!\n");
    // }
 }
 
@@ -1953,8 +1954,11 @@ void UI_EnterLongKey(void)
 {
     if (ubFactoryModeFLag == 1)
     {
-        printd(Apk_DebugLvl,"UI_EnterLongKey!!!!!!!\n");
+    	ubFactoryModeFLag = 1;
+	tUI_State = UI_DISPLAY_STATE;
         FactortPair();
+	 printd(1,"UI_EnterLongKey!!!!!!!  tUI_State =%x,\n",tUI_State);
+
     }
 
 #if SD_UPDATE_TEST
@@ -3080,6 +3084,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
     if (ubFactoryModeFLag == 1)
     {
+    	printd(1,"UI_DisplayArrowKeyFunc yesyesyesyesyes\n");
         switch (tArrowKey)
         {
         case LEFT_ARROW:
@@ -3159,7 +3164,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 	{
 		case LEFT_ARROW:
 		{
-			printd(1,"111111111111111111111111111111\n");
 			if(tUI_PuSetting.ubDefualtFlag == FALSE)
 			{				
 				UI_MotorControl(MC_LEFT_ON);
@@ -3177,7 +3181,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 					{
 						ubFS_Timeitem = 0 ;
 					}		
-					printd(1,"111111111111111111111111111111\n");
 					UI_FS_SetTimeMenuDisplay(ubFS_Timeitem);
 				}	
 				else
@@ -8335,6 +8338,7 @@ else
 	ubPairSelCamcnt++;
 	if(ubPairSelCamcnt >=3)
 		ubPairSelCamcnt = 0;	
+
 }
 
 	
@@ -8379,8 +8383,11 @@ else
     default:
         break;
 	}
-    tUI_State = UI_SUBSUBMENU_STATE;
-
+	if(ubFactoryModeFLag)
+   		 tUI_State = UI_DISPLAY_STATE;
+	else
+   		 tUI_State = UI_SUBSUBMENU_STATE;		
+	
 }
 
 void UI_DrawSettingSubMenuPage_NoSel(uint8_t type)
