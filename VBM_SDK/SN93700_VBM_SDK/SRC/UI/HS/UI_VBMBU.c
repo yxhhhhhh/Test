@@ -844,19 +844,22 @@ void UI_TempCheck(void) //20180322
 {
     UI_BUReqCmd_t tUI_TempReqCmd;
 
-    uint8_t ubReg;
-    uint8_t ubData[2] = {0};
+    uint8_t ubWrData[2] = {0};
+    uint8_t ubRdData[2] = {0};
     bool    ret = 0;
     int32_t tem = 0;
     static uint8_t ubTempInvalidCnt = 0;
 	static uint8_t temp_flag = 0;
 
 #ifdef CT75_TEMP_SENSOR
-    ubReg = 0x00;
-    ret   = bI2C_MasterProcess(pTempI2C, 0x48, &ubReg, 1, ubData, 2);
+    ubWrData[0] = 0x01;
+    ubWrData[1] = 0x81;
+    ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
+    ubWrData[0] = 0x00;
+    ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
 #else
-    ubReg = 0xE3;
-    ret   = bI2C_MasterProcess(pTempI2C, 0x40, &ubReg, 1, ubData, 2);
+    ubWrData[0] = 0xE3;
+    ret = bI2C_MasterProcess(pTempI2C, 0x40, ubWrData, 1, ubRdData, 2);
 #endif
 
     if (!ret) {
@@ -872,11 +875,11 @@ void UI_TempCheck(void) //20180322
     }
 
 #ifdef CT75_TEMP_SENSOR
-    tem   = (int8_t)ubData[0];
+    tem   = (int8_t)ubRdData[0];
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
 #else
-    tem  = 17572 * (ubData[0] * 256 + ubData[1]) / 65536 - 4685;
+    tem  = 17572 * (ubRdData[0] * 256 + ubRdData[1]) / 65536 - 4685;
     if(tem >=2000 && temp_flag == 0)
    {
 	ubTempflag = 1;
@@ -1197,7 +1200,6 @@ void UI_LoadDevStatusInfo(void)
 	}
 
     ADO_SetDacR2RVol(R2R_VOL_n0DB);
-    //ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_12DB); // 20180903
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)
