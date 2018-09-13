@@ -877,7 +877,7 @@ void UI_TempCheck(void) //20180322
     ubCurTempVal    = tem > 0 ? tem : -tem;
 #else
     tem  = 17572 * (ubData[0] * 256 + ubData[1]) / 65536 - 4685;
-    printd(Apk_DebugLvl, "### tem: %d \n", tem);
+    printd(Apk_DebugLvl, "### tem: %d ubData[0]  %d  ubData[1]  $d  \n", tem,ubData[0],ubData[1]);
     if(tem >=2000 && temp_flag == 0)
    {
 	ubTempflag = 1;

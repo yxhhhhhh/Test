@@ -6823,45 +6823,45 @@ void UI_TimeShowSystemTime(uint8_t type)
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
 #if TIME_TEST
-        #define time_offset 100
+        #define time_offset 0
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeHour/10), 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 476 - time_offset;
+        tOsdImgInfo.uwYStart = 576 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeHour%10), 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 457 - time_offset;
+        tOsdImgInfo.uwYStart = 557 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_TIMESIGN, 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 441 - time_offset;
+        tOsdImgInfo.uwYStart = 541 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeMin/10), 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 425 - time_offset;
+        tOsdImgInfo.uwYStart = 525 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeMin%10), 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 406 - time_offset;
+        tOsdImgInfo.uwYStart = 506 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_TIMESIGN, 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 390 - time_offset;
+        tOsdImgInfo.uwYStart =490 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeSec/10), 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 374 - time_offset;
+        tOsdImgInfo.uwYStart = 474 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
         tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_BAR_NUM_0 + (ubTimeSec%10), 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 0;
-        tOsdImgInfo.uwYStart = 357 - time_offset;
+        tOsdImgInfo.uwYStart = 457 - time_offset;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 #endif
     }
@@ -9840,12 +9840,20 @@ void UI_TempBarDisplay(uint8_t value)
 		return;
 
     sprintf(str, "%4d", temp);
-    for (i=0; str[i]; i++) {
+    for (i=0; str[i]; i++) 
+    {
         int img;
-        switch (str[i]) {
-        case '-': img = OSD2IMG_TEMP_BELOW; break;
-        case ' ': img = OSD2IMG_TEMP_BLANK; break;
-        default : img = OSD2IMG_BAR_NUM_0 + (str[i] - '0'); break;
+        if (str[i] >= '0' && str[i] <= '9') 
+	{
+            img = OSD2IMG_BAR_NUM_0 + (str[i] - '0');
+        }
+	 else if (str[i] == '-') 
+        {
+            img = OSD2IMG_TEMP_BELOW;
+        } 
+	 else 
+        {
+            img = OSD2IMG_TEMP_BLANK;
         }
         tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
         info.uwXStart = 0;
@@ -13614,7 +13622,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     UI_CamNum_t tCamNum;
     uint16_t uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
     OSD_IMG_INFO tOsdImgInfo;
-    	printd(1,"111111UI_ShowLostLinkLogo\n");
+    	printd(1,"111111UI_ShowLostLinkLogotUI_PuSetting.IconSts.ubShowLostLogoFlag  %d  \n",tUI_PuSetting.IconSts.ubShowLostLogoFlag);
 	if(TRUE == ubUI_ResetPeriodFlag)
 	{
 		switch(tUI_PuSetting.tPsMode)
@@ -13641,7 +13649,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     {
         	printd(1,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
         ubFastShowLostLinkSta = 0;
-        uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 5;
+        uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2;
     }
     else
     {
@@ -13649,7 +13657,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
         if (tPairInfo.ubDrawFlag == FALSE)
             ubFastShowLostLinkSta = 1;
     }
-
+	
+    	printd(1,"UI_ShowLostLinkLogo uwUI_LostPeriod %d\n",uwUI_LostPeriod);
     for (tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
     {
         if (PS_ECO_MODE == tUI_CamStatus[tCamNum].tCamPsMode)
@@ -14946,9 +14955,9 @@ void UI_SwitchCameraScan(uint8_t type)
     UI_CamNum_t tCamSwtichNum = (UI_CamNum_t)0xFF;
     UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 
-    printd(Apk_DebugLvl, "UI_SwitchCameraScan type: %d.\n", type);
+    printd(1, "UI_SwitchCameraScan type: %d.\n", type);
     for (i = 0; i < 4; i++)
-        printd(Apk_DebugLvl, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
+        printd(1, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
     if (type == 0)
     {
@@ -14959,7 +14968,7 @@ void UI_SwitchCameraScan(uint8_t type)
     //if (ubPowerState != PWR_ON)   //20180803
     //  return;
 
-    printd(1, "UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
+    printd(1, "00000000000000000UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
 #if 0
     if (ubCamOnlineNum < 2)
         return;
@@ -14975,11 +14984,13 @@ void UI_SwitchCameraScan(uint8_t type)
              {
                 if (tCamViewSel.tCamViewPool[0] == i)
 			{
+			      	printd(1,"111111111111111111111111111111111\n");
                     		return;
                 	}
                 else
                 {
                     tCamSwtichNum = i;
+		     	printd(1,"2222222222222222222222222\n");
                     goto SWITCH_CAMERA;
                 }
             }
@@ -14996,18 +15007,18 @@ void UI_SwitchCameraScan(uint8_t type)
     for (j = 0; j < 4; j++)
     {
         if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
-        //if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
+       // if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
       {
-      		printd(1,"tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
-            tCamSwtichNum = i;
-            break;
+	      	printd(1,"33333333333333333tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
+	         tCamSwtichNum = i;
+	          break;
         }
         i++;
         if (i > 3) i = 0;
     }
 
 SWITCH_CAMERA:	
-	printd(1, "UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
+	printd(1, "4444444444444444UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
 	if(0xFF == tCamSwtichNum)
 		return;
 
