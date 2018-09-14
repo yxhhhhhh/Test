@@ -262,6 +262,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
 	ubTempcnt++;
 	printd(Apk_DebugLvl,"UI_StatusCheck ubTempcnt = %d.\n",ubTempcnt);
+	if(ubTempcnt >= 36000)
+		ubTempcnt == 36003;
 
     switch(tUI_SyncAppState)
     {
