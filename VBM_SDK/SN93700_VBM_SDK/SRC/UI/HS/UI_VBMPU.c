@@ -9791,17 +9791,19 @@ void UI_TempBarDisplay(uint8_t value)
 void UI_TempBarDisplay(uint8_t value)
 {
     OSD_IMG_INFO info;
-    int16_t temp   = ubTempBelowZoreSta ? -value : value;
+    int16_t temp  = ubTempBelowZoreSta ? -value : value;
     char   str[5] = {0};
-    int    i;
+    int8_t  i;
 
     sprintf(str, "%4d", temp);
     for (i=0; str[i]; i++) {
         int img;
-        switch (str[i]) {
-        case '-': img = OSD2IMG_TEMP_BELOW; break;
-        case ' ': img = OSD2IMG_TEMP_BLANK; break;
-        default : img = OSD2IMG_BAR_NUM_0 + (str[i] - '0'); break;
+        if (str[i] >= '0' && str[i] <= '9') {
+            img = OSD2IMG_BAR_NUM_0 + (str[i] - '0');
+        } else if (str[i] == '-') {
+            img = OSD2IMG_TEMP_BELOW;
+        } else {
+            img = OSD2IMG_TEMP_BLANK;
         }
         tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
         info.uwXStart = 0;
@@ -9811,8 +9813,7 @@ void UI_TempBarDisplay(uint8_t value)
 
     tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC + (!tUI_PuSetting.ubTempunitFlag), 1, &info);
     info.uwXStart = 0;
-    info.uwYStart = 350 - 20 * i -12;
-    
+    info.uwYStart = 350 - 20 * i - 12;
     tOSD_Img2(&info, OSD_UPDATE);
 }
 

@@ -103,10 +103,6 @@ static uint16_t ubUI_McHandshake;
 static uint16_t ubUI_McPreHandshake;
 static uint8_t ubMcHandshakeLost = 0;
 
-
-uint8_t ubVoicetemp_bak = 0xff;
-uint8_t ubTemp_bak = 25;
-
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
@@ -122,8 +118,6 @@ uint8_t ubLowAlarm = 0;
 uint8_t ubSoundAlarm = 0;
 uint8_t TXSNdata[16] = {0};
 uint8_t ubTempBelowZore = 0;
-uint8_t ubTempAdjustTime = 0;
-uint8_t ubTempInvalid = 0;
 uint32_t ubTempcnt = 0;
 uint8_t ubTempflag = 0;
 uint8_t ubUpdateFWFlag = 0;
@@ -292,7 +286,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
         UI_BrightnessCheck();
 
-        if (((*pThreadCnt)%2) == 0)
+        if (((*pThreadCnt)%5) == 0)
         {
             uint16_t uwChkType = UI_SYSTEMPDATA_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
@@ -848,71 +842,53 @@ void UI_TempCheck(void) //20180322
     uint8_t ubRdData[2] = {0};
     bool    ret = 0;
     int32_t tem = 0;
-    static uint8_t ubTempInvalidCnt = 0;
-	static uint8_t temp_flag = 0;
+    static int32_t tem_last  = 0;
+    static uint8_t temp_flag = 0;
 
-#ifdef CT75_TEMP_SENSOR
-    ubWrData[0] = 0x01;
-    ubWrData[1] = 0x81;
-    ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
-    ubWrData[0] = 0x00;
-    ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
-#else
+    // try to read sensor
     ubWrData[0] = 0xE3;
     ret = bI2C_MasterProcess(pTempI2C, 0x40, ubWrData, 1, ubRdData, 2);
-#endif
+    if (ret) {
+        tem = 17572 * (ubRdData[0] * 256 + ubRdData[1]) / 65536 - 4685;
 
-    if (!ret) {
-        if (++ubTempInvalidCnt >= 5) {
-            ubTempInvalid    = 1;
-            ubTempInvalidCnt = 0;
-        } else {
-            return;
+        //++ tempture compensation
+        if (tem >= 2000 && temp_flag == 0) {
+            ubTempflag = 1;
+            temp_flag = 1;
+        } else if (tem < 2000 && temp_flag == 0) {
+            ubTempflag = 0;
+            temp_flag = 1;
         }
-    } else {
-        ubTempInvalid    = 0;
-        ubTempInvalidCnt = 0;
+
+        if (ubTempflag == 1) {
+            tem -= 50;
+            if (ubTempcnt >= 36000) {
+                tem -= 50;
+            }
+        } else {
+            tem -=50;
+        }
+        //-- tempture compensation
+
+        tem /= 100;
+        ubTempBelowZore = tem < 0;
+        ubCurTempVal    = tem > 0 ? tem : -tem;
+    } else { // try ct75 sensor
+        ubWrData[0] = 0x01;
+        ubWrData[1] = 0x81;
+        ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
+        if (!ret) return;
+        ubWrData[0] = 0x00;
+        ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
+        if (!ret) return;
+
+        tem = (int8_t)ubRdData[0];
+        ubTempBelowZore = tem < 0;
+        ubCurTempVal    = tem > 0 ? tem : -tem;
     }
 
-#ifdef CT75_TEMP_SENSOR
-    tem   = (int8_t)ubRdData[0];
-    ubTempBelowZore = tem < 0;
-    ubCurTempVal    = tem > 0 ? tem : -tem;
-#else
-    tem  = 17572 * (ubRdData[0] * 256 + ubRdData[1]) / 65536 - 4685;
-    if(tem >=2000 && temp_flag == 0)
-   {
-	ubTempflag = 1;
-	temp_flag = 1;
-    }
-    else if(tem < 2000 && temp_flag == 0)
-    {
-	ubTempflag = 0;
-	temp_flag = 1;
-    }
-
-    if(ubTempflag == 1)
-    {
-	tem -= 50;
-	if(ubTempcnt >=36000)
-		tem -= 50;
-    }
-    else
-    {
-	 tem -=50;
-    }
-
-    tem /= 100;
-    ubTempBelowZore = tem < 0;
-    ubCurTempVal    = tem > 0 ? tem : -tem;
-#endif
-    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
-
-    if (ubCurTempVal == 0xFF)
-        return;
-
-//  if (ubTemp_bak != cur_temp)
-    {
+    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", tem, ubCurTempVal, ubTempBelowZore);
+    if (tem_last != tem) {
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
         tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM]    = UI_TEMP_CHECK;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
@@ -920,10 +896,9 @@ void UI_TempCheck(void) //20180322
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  = 0;
         tUI_TempReqCmd.ubCmd_Len                = 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
-        ubTemp_bak = ubCurTempVal;
+        tem_last = tem;
     }
 }
-
 
 //------------------------------------------------------------------------------
 void UI_IspSetup(void)
