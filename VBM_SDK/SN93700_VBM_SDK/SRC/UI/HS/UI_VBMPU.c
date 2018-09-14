@@ -318,7 +318,9 @@ uint8_t ubSleepWaitCnt = 0;
 uint8_t ubWakeUpWaitCnt = 0;
 
 uint16_t ubSpeakerCount = 0;
+uint8_t ubReStartWakeUpFlag;
 uint8_t ubWorWakeUpFlag;
+
 
 uint8_t ubTimerDevEventStopSta = 0;
 uint8_t ubCamPairOkState = 0;
@@ -428,21 +430,20 @@ void UI_KeyEventExec(void *pvKeyEvent)
             if (ubPUEnterAdotestFLag == 0)
             {
                 ubPUEnterAdotestFLag = 1;
-                UI_EnterLocalAdoTest_RX();
+                //UI_EnterLocalAdoTest_RX();
             }
         }
 
         if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
         {
-            //if (ubBUEnterAdotestFLag == 0)
-            {
-                uint8_t CmdData = UI_SET_BU_ADO_TEST_CMD;
-                if (UI_SendToBUCmd(&CmdData, 1))
-                {
+            if (ubBUEnterAdotestFLag == 0)
+            {                   
+            	printd(1, "1111111111111111111111111111###\n");
+               
                     ubBUEnterAdotestFLag = 1;
                     UI_SendCMDAdoTest_TX();
                 }
-            }
+            
         }
 
         if (ptKeyEvent->ubKeyAction == KEY_DOWN_ACT)
@@ -578,8 +579,9 @@ void UI_OnInitDialog(void)
 {
 //  OSD_IMG_INFO tOsdImgInfo;
 //  uint8_t i = 0;
-
+		if(ubWorWakeUpFlag != 1)	//20190905 yxh
 		OSD_LogoJpeg(OSDLOGO_BOOT);
+
 
 	if ((DISPLAY_MODE != DISPLAY_1T1R) && wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) == RTC_WATCHDOG_CHK_TAG) {
 		printd(DBG_CriticalLvl, "PWR STS: Keep\n");
@@ -621,8 +623,11 @@ void UI_OnInitDialog(void)
 
 	ubLogoInitStaus = 1;
 	
-	LCDBL_ENABLE(UI_ENABLE);
-
+	printd(1,"ubWorWakeUpFlag = %d\n",ubWorWakeUpFlag);
+	if(ubWorWakeUpFlag != 1)  //20190905 yxh
+	{
+		LCDBL_ENABLE(UI_ENABLE);
+	}
 }
 //------------------------------------------------------------------------------
 void UI_StateReset(void)
@@ -817,12 +822,25 @@ void UI_LinkStatusCheck(uint16_t ubLinkCheckCount)
     if (ubFactoryModeFLag == 1)
     {
         static uint8_t getBuResult = 0;
-
+        static uint8_t getBuMICResult = 0;
         if (getBuResult == rUI_FAIL)
         {
             getBuResult = UI_GetBuVersion();
         }
+/*	if(ubBUEnterAdotestFLag == 1)	
+	{
+      		  if (getBuMICResult == rUI_FAIL)
+      		  	{
+			  	getBuMICResult = UI_GetBuMICTest();
+				ubBUEnterAdotestFLag =0;
+      		  	}
+	}  
+	ubBUEnterAdotestFLag = 1;
+
+	*/
     }
+    
+    
 }
 //------------------------------------------------------------------------------
 void UI_StatusCheck(uint16_t ubCheckCount)
@@ -1038,7 +1056,9 @@ void UI_StatusCheck(uint16_t ubCheckCount)
                         //while(1);
 	        }
 	}
+
 	printd(Apk_DebugLvl,"tUI_PuSetting.ubDefualtFlag =%d.\n",tUI_PuSetting.ubDefualtFlag);
+
   }
 
 
@@ -1534,8 +1554,8 @@ void UI_PowerKey(void)
 void UI_MenuKey(void)
 {
     OSD_IMG_INFO tOsdInfo;
+    printd(Apk_DebugLvl, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt);
 
-	printd(1, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt);
     switch (tUI_State)
     {
     case UI_DISPLAY_STATE:
@@ -2636,10 +2656,10 @@ UI_Result_t UI_SetupPuWorMode(void)
     tPsCmd.ubCmd[UI_SETTING_ITEM]   = UI_WORMODE_SETTING;
     tPsCmd.ubCmd[UI_SETTING_DATA]   = PS_WOR_MODE;
     tPsCmd.ubCmd_Len                = 3;
-    for (tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
+/*    for (tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
     {
-        if (CAM_OFFLINE == tUI_CamStatus[tCamNum].tCamConnSts)
-            continue;
+       //if (CAM_OFFLINE == tUI_CamStatus[tCamNum].tCamConnSts)
+		//continue;
         tPsCmd.tDS_CamNum = tCamNum;
         tBuNotifyRet = UI_SendRequestToBU(osThreadGetId(), &tPsCmd);
         if (rUI_SUCCESS == tBuNotifyRet)
@@ -2647,7 +2667,33 @@ UI_Result_t UI_SetupPuWorMode(void)
         else
             printd(DBG_ErrorLvl, "CAM%d:WOR Setting Fail !\n", (tCamNum + 1));
     }
+*/
+	printd(1, "tCamViewSel.tCamViewPool[0]] %d  tCamConnSts %d \n", tCamViewSel.tCamViewPool[0],tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
 
+      if(tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE)
+      	{
+	        tPsCmd.tDS_CamNum = tCamViewSel.tCamViewPool[0];
+	        tBuNotifyRet = UI_SendRequestToBU(osThreadGetId(), &tPsCmd);
+	        if (rUI_SUCCESS == tBuNotifyRet)
+	            tWorRet = rUI_SUCCESS;
+	        else
+	            printd(DBG_ErrorLvl, "CAM%d:WOR Setting Fail !\n", (tCamViewSel.tCamViewPool[0] + 1));
+      	}
+	  else
+	  {
+	        APP_EventMsg_t tUI_PsMessage = {0};
+
+	        tUI_PuSetting.tPsMode = PS_WOR_MODE;
+	        UI_UpdateDevStatusInfo();
+	        tUI_PsMessage.ubAPP_Event       = APP_POWERSAVE_EVENT;
+	        tUI_PsMessage.ubAPP_Message[0]  = 3;        //! Message Length
+	        tUI_PsMessage.ubAPP_Message[1]  = PS_WOR_MODE;
+	        tUI_PsMessage.ubAPP_Message[2]  = FALSE;
+	        tUI_PsMessage.ubAPP_Message[3]  = CAM1;
+	        UI_SendMessageToAPP(&tUI_PsMessage);
+	        printd(Apk_DebugLvl, "UI_SetupPuWorMode!\n");
+	  }
+	  
     if (rUI_SUCCESS == tWorRet)
     {
         APP_EventMsg_t tUI_PsMessage = {0};
@@ -9553,7 +9599,7 @@ uint8_t UI_TempCToF(uint8_t cTemp)
 
     fTemp = ctemp*18/10 + (((ctemp*18%10) >= 5)?1:0) + 32;
 
-   	//printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+   	printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = fTemp? 0 : 1;
     return (uint8_t)abs(fTemp);
 }
@@ -9567,7 +9613,7 @@ uint8_t UI_TempFToC(uint8_t fTemp)
     int16_t cTemp = 0;
 
     cTemp = ((ftemp-32)*10/18) + ((((ftemp-32)*10%18) >= 5)?1:0);
-    //printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+    printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = cTemp? 0 : 1;
      return (uint8_t)abs(cTemp);
 }
@@ -9838,6 +9884,7 @@ void UI_TempBarDisplay(uint8_t value)
     int16_t temp  = ubTempBelowZoreSta ? -value : value;
     char   str[5] = {0};
     int    i;
+
     if (tUI_SyncAppState != APP_LINK_STATE)
 		return;
 
@@ -9980,7 +10027,7 @@ uint8_t UI_SendToBUCmd(uint8_t *data, uint8_t data_len)
     int i;
     UI_PUReqCmd_t tUI_SendCmd;
 
-    printd(Apk_DebugLvl, "UI_SendToBUCmd CMD: 0x%x, tCamViewPool[0]: %d, ConnSts: %d, ID: 0x%x.\n",data[0], tCamViewSel.tCamViewPool[0], tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts, tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID);
+    printd(1, "UI_SendToBUCmd CMD: 0x%x, tCamViewPool[0]: %d, ConnSts: %d, ID: 0x%x.\n",data[0], tCamViewSel.tCamViewPool[0], tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts, tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID);
     if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
         (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
     {
@@ -10014,6 +10061,14 @@ uint8_t UI_GetBuVersion(void)
     uint8_t CmdData = UI_GET_BU_VERSION_CMD;
     return UI_SendToBUCmd(&CmdData, 1);
 }
+
+
+uint8_t UI_GetBuMICTest(void)
+{
+    uint8_t CmdData = UI_SET_BU_ADO_TEST_CMD;
+    return UI_SendToBUCmd(&CmdData, 1);
+}
+
 
 uint8_t UI_SendAlarmSettingToBu(void)
 {
@@ -10521,7 +10576,8 @@ void UI_CheckUsbCharge(void)
         {
             if (LCDBL_STATE == 0)
             {
-                if (ubWorWakeUpFlag != 1)
+                //if (ubReStartWakeUpFlag != 1)
+             	if(ubWorWakeUpFlag != 1)  //20180905  yxh
                 {
                     //LCDBL_ENABLE(UI_ENABLE);
                     //printd(Apk_DebugLvl, "UI_CheckUsbCharge LCDBL_ENABLE TRUE!\n");
@@ -13728,6 +13784,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                         tOsdImgInfo.uwYStart = 360 - 80;
                         tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
                     }
+			if(ubWorWakeUpFlag == 1)
+				LCDBL_ENABLE(UI_ENABLE);
                     //printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
                 }
                 else
@@ -13753,6 +13811,8 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                     ubPickupAlarmState = PICKUP_ALARM_IDLE;
                     ubPickupAlarmCheckCount = 0;
                     ubPickupAlarmTriggerCount = 0;
+			if(ubWorWakeUpFlag == 1)
+				LCDBL_ENABLE(UI_ENABLE);	
  
                 }
             }
@@ -13803,6 +13863,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     {
         UI_UpdateBarIcon_Part1();
     }
+
 }
 //------------------------------------------------------------------------------
 void UI_RedrawNoSignalOsdIcon(UI_CamNum_t tCamNum, UI_OsdImgFnType_t tOsdImgFnType)
@@ -13898,8 +13959,11 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 
 				if(ubClearOsdFlag == 0)
 				{
-					//if(ubWorWakeUpFlag == 1)
+					//if(ubReStartWakeUpFlag == 1)
 					//	LCDBL_ENABLE(UI_ENABLE);	
+					if(ubWorWakeUpFlag == 1)
+						LCDBL_ENABLE(UI_ENABLE);	
+
 					ubClearOsdFlag =1;
 				}
 				
@@ -14274,8 +14338,9 @@ void UI_EnterLocalAdoTest_RX(void)
     tOsdImgInfo.uwYStart = 863;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    printd(Apk_DebugLvl,"UI_EnterLocalAdoTest_RX\n");
+    printd(1,"UI_EnterLocalAdoTest_RX\n");
     ADO_SelfTest_Init(); //ADO_SelfTest_Init(5);
+    
     ADO_SelfTest_Record();
     ADO_SelfTest_Play();
     ADO_SelfTest_Close();
@@ -15405,7 +15470,10 @@ void UI_SetSpeaker(uint8_t type, uint8_t State)
         else
         {
             if (SPEAKER_STATE == TRUE)
-                SPEAKER_EN(FALSE);
+		{
+			if(ubFactoryModeFLag ==0)
+	                SPEAKER_EN(FALSE);
+            	}
             ubSpeakerCount = 0;
         }
     }
