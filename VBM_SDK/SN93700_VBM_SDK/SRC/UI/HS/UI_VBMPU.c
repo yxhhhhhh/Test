@@ -135,8 +135,8 @@ UI_ReportFuncPtr_t tUiReportMap2Func[] =
 
 
 ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
-//uint32_t ulUI_BLTable[] = {0, 3, 10, 17, 24, 31, 38, 45, 52};//ruizhiwei
-uint32_t ulUI_BLTable[] = {0, 5, 17, 26, 37, 48, 58, 67, 74};//yushun
+uint32_t ulUI_BLTable[] = {0, 3, 10, 17, 24, 31, 38, 45, 52};//ruizhiwei
+//uint32_t ulUI_BLTable[] = {0, 5, 17, 26, 37, 48, 58, 67, 74};//yushun
 
 osMutexId UI_PUMutex;
 static UI_SubMenuCamNum_t tCamSelect;
@@ -1091,12 +1091,14 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         {
             if (tUI_PuSetting.ubDefualtFlag == FALSE)
             {
+            	printd(1,"66666666666666666666\n");
                 ubLostLinkEnterSanMode++;
-                if (ubLostLinkEnterSanMode == 15)
+                /*if (ubLostLinkEnterSanMode == 15)
                 {
                     UI_SwitchCameraScan(0);
                     ubLostLinkEnterSanMode = 0;
                 }
+                */
             }
         }
         else
@@ -13623,7 +13625,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     uint16_t uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
     OSD_IMG_INFO tOsdImgInfo;
     	printd(1,"111111UI_ShowLostLinkLogotUI_PuSetting.IconSts.ubShowLostLogoFlag  %d  \n",tUI_PuSetting.IconSts.ubShowLostLogoFlag);
-	if(TRUE == ubUI_ResetPeriodFlag)
+/*	if(TRUE == ubUI_ResetPeriodFlag)
 	{
 		switch(tUI_PuSetting.tPsMode)
 		{
@@ -13637,7 +13639,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 				break;
 		}
 	}
-	
+*/	
     if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
         return;
     if (FALSE == ubUI_ResetPeriodFlag)
@@ -13649,7 +13651,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     {
         	printd(1,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
         ubFastShowLostLinkSta = 0;
-        uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2;
+        uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 5;
     }
     else
     {
@@ -14563,8 +14565,8 @@ void UI_EnableVox(void)
     UI_SendMessageToAPP(&tUI_PsMessage);
     tUI_PuSetting.tPsMode = PS_VOX_MODE;
     UI_UpdateDevStatusInfo();
-    LCD_UnInit();
-    LCD->LCD_MODE = LCD_GPIO;
+   // LCD_UnInit();
+    //LCD->LCD_MODE = LCD_GPIO;
     printd(Apk_DebugLvl, "UI_EnableVox ok.\n");
 }
 //------------------------------------------------------------------------------
@@ -15006,11 +15008,27 @@ void UI_SwitchCameraScan(uint8_t type)
 
     for (j = 0; j < 4; j++)
     {
-        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+/*        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
        // if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
       {
 	      	printd(1,"33333333333333333tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
 	         tCamSwtichNum = i;
+	          break;
+        }
+*/
+      if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
+      {
+      		if(tUI_CamStatus[i].tCamConnSts == CAM_ONLINE)
+	      {
+		      	printd(1,"33333333333333333tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
+		         tCamSwtichNum = i;
+      		}
+		else if(tUI_CamStatus[i].tCamConnSts == CAM_OFFLINE)
+		{	
+			    printd(1,"6555555555555555555555555555\n");
+			 UI_RemoveLostLinkLogo();
+			 tCamSwtichNum = i;
+		}
 	          break;
         }
         i++;

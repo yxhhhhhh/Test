@@ -150,7 +150,7 @@ typedef enum
 	LCD_PWR_OFF
 }LCD_PM_OPT;
 
-#define LCD_PM							LCD_PM_SUSPEND
+#define LCD_PM							LCD_PWR_OFF
 
 #define RTC_RECORD_PWRSTS_ADDR			0
 #define RTC_PWRSTS_KEEP_TAG				0x03
