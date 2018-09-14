@@ -867,8 +867,7 @@ void UI_TempCheck(void) //20180322
         } else {
             tem -=50;
         }
-        //-- tempture compensation
-
+	printd(1,"1111111111tem  %d ubRdData[0] %d ubRdData[1] %d\n",tem,ubRdData[0],ubRdData[1]);
         tem /= 100;
         ubTempBelowZore = tem < 0;
         ubCurTempVal    = tem > 0 ? tem : -tem;
@@ -876,24 +875,27 @@ void UI_TempCheck(void) //20180322
         ubWrData[0] = 0x01;
         ubWrData[1] = 0x81;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
-        if (!ret) goto report;
+        if (!ret) { goto report; }
         ubWrData[0] = 0x00;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
-        if (!ret) goto report;
+        if (!ret) { goto report; }
 
         tem = (int8_t)ubRdData[0];
         ubTempBelowZore = tem < 0;
         ubCurTempVal    = tem > 0 ? tem : -tem;
+	printd(1,"222222tem  %d ubRdData[0] %d \n",tem,ubRdData[0]);
+
     }
 
 report:
-    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", tem, ubCurTempVal, ubTempBelowZore);
-    if (tem_last != tem) {
+    printd(1, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
+   // if (tem_last != tem) 
+   {
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
         tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM]    = UI_TEMP_CHECK;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1]  = ubTempBelowZore;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  =!ret;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  = ret? 0 : 1;
         tUI_TempReqCmd.ubCmd_Len                = 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
         tem_last = tem;

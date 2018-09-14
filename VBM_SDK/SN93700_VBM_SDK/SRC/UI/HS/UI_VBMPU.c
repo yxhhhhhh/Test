@@ -9584,7 +9584,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
         ubTempBelowZoreSta = pvdata[1];
 		ubTempInvalidSta = pvdata[2];
 
-		//printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, %d, %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
+		printd(1, "UI_GetTempData ubRealTemp: %d, %d, %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
 		if (ubTempInvalidSta == 1)
 		{
 			ubRealTemp = 0xFF;
@@ -9597,7 +9597,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 
     if (ubRealTemp > 199)
        return;
-   // printd(1, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+   printd(1, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
     if ((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
     {
         UI_TempBarDisplay(ubRealTemp);
@@ -9841,9 +9841,11 @@ void UI_TempBarDisplay(uint8_t value)
     if (tUI_SyncAppState != APP_LINK_STATE)
 		return;
 
-
-
-    sprintf(str, "%4d", temp);
+    if (value != 0xff)
+	    sprintf(str, "%4d", temp);
+    else
+	    strcpy(str, " ---");
+	
     for (i=0; str[i]; i++) 
     {
         int img;
@@ -9864,7 +9866,7 @@ void UI_TempBarDisplay(uint8_t value)
         info.uwYStart = 350 - 20 * i;
         tOSD_Img2(&info, OSD_QUEUE);
     }
-
+	
     tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC + (!tUI_PuSetting.ubTempunitFlag), 1, &info);
     info.uwXStart = 0;
     info.uwYStart = 350 - 20 * i - 12;
