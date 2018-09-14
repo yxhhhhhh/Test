@@ -9835,11 +9835,13 @@ void UI_TempBarDisplay(uint8_t value)
 void UI_TempBarDisplay(uint8_t value)
 {
     OSD_IMG_INFO info;
-    int16_t temp   = ubTempBelowZoreSta ? -value : value;
+    int16_t temp  = ubTempBelowZoreSta ? -value : value;
     char   str[5] = {0};
     int    i;
     if (tUI_SyncAppState != APP_LINK_STATE)
 		return;
+
+
 
     sprintf(str, "%4d", temp);
     for (i=0; str[i]; i++) 
@@ -9865,8 +9867,7 @@ void UI_TempBarDisplay(uint8_t value)
 
     tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC + (!tUI_PuSetting.ubTempunitFlag), 1, &info);
     info.uwXStart = 0;
-    info.uwYStart = 350 - 20 * i -12;
-    
+    info.uwYStart = 350 - 20 * i - 12;
     tOSD_Img2(&info, OSD_UPDATE);
 }
 
