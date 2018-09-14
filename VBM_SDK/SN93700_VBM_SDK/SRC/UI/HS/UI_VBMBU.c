@@ -261,11 +261,9 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
     UI_MCStateCheck(); //20180529
 
 	ubTempcnt++;
-	if(ubTempcnt >36002)
-		ubTempcnt = 36002;
 	printd(Apk_DebugLvl,"UI_StatusCheck ubTempcnt = %d.\n",ubTempcnt);
 	if(ubTempcnt >= 36000)
-		ubTempcnt == 36003;
+		ubTempcnt = 36003;
 
     switch(tUI_SyncAppState)
     {
@@ -853,43 +851,40 @@ void UI_TempCheck(void) //20180322
     ret = bI2C_MasterProcess(pTempI2C, 0x40, ubWrData, 1, ubRdData, 2);
     if (ret) {
         tem = 17572 * (ubRdData[0] * 256 + ubRdData[1]) / 65536 - 4685;
-
-        //++ tempture compensation
-        if (tem >= 2000 && temp_flag == 0) {
-            ubTempflag = 1;
-            temp_flag = 1;
-        } else if (tem < 2000 && temp_flag == 0) {
-            ubTempflag = 0;
-            temp_flag = 1;
-        }
-
-        if (ubTempflag == 1) {
-            tem -= 50;
-            if (ubTempcnt >= 36000) {
-                tem -= 50;
-            }
-        } else {
-            tem -=50;
-        }
-	printd(1,"1111111111tem  %d ubRdData[0] %d ubRdData[1] %d\n",tem,ubRdData[0],ubRdData[1]);
-        tem /= 100;
-        ubTempBelowZore = tem < 0;
-        ubCurTempVal    = tem > 0 ? tem : -tem;
     } else { // try ct75 sensor
         ubWrData[0] = 0x01;
         ubWrData[1] = 0x81;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
-        if (!ret) { goto report; }
+        if (!ret) goto report;
         ubWrData[0] = 0x00;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
-        if (!ret) { goto report; }
+        if (!ret) goto report;
 
-        tem = (int8_t)ubRdData[0];
-        ubTempBelowZore = tem < 0;
-        ubCurTempVal    = tem > 0 ? tem : -tem;
-	printd(1,"222222tem  %d ubRdData[0] %d \n",tem,ubRdData[0]);
-
+        tem = (int16_t)((ubRdData[0] << 8) | (ubRdData[1] << 0)) * 100 / 256;
     }
+
+    //++ tempture compensation
+    if (tem >= 2000 && temp_flag == 0) {
+        ubTempflag = 1;
+        temp_flag = 1;
+    } else if (tem < 2000 && temp_flag == 0) {
+        ubTempflag = 0;
+        temp_flag = 1;
+    }
+
+    if (ubTempflag == 1) {
+        tem -= 50;
+        if (ubTempcnt >= 36000) {
+            tem -= 50;
+        }
+    } else {
+        tem -=50;
+    }
+    //-- tempture compensation
+    printd(1,"1111111111tem  %d ubRdData[0] %d ubRdData[1] %d\n",tem,ubRdData[0],ubRdData[1]);
+    tem /= 100;
+    ubTempBelowZore = tem < 0;
+    ubCurTempVal    = tem > 0 ? tem : -tem;
 
 report:
     printd(1, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
@@ -899,7 +894,7 @@ report:
         tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM]    = UI_TEMP_CHECK;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1]  = ubTempBelowZore;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  = ret? 0 : 1;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  =!ret;
         tUI_TempReqCmd.ubCmd_Len                = 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
         tem_last = tem;
