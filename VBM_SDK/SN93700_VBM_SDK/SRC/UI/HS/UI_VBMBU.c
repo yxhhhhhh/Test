@@ -845,6 +845,8 @@ void UI_TempCheck(void) //20180322
     int32_t tem = 0;
     static int32_t tem_last  = 0;
     static uint8_t temp_flag = 0;
+    uint8_t ubTempValueH = 0;
+    uint8_t ubTempValueL = 0;
 
     // try to read sensor
     ubWrData[0] = 0xE3;
@@ -881,7 +883,11 @@ void UI_TempCheck(void) //20180322
         tem -=50;
     }
     //-- tempture compensation
-    printd(1,"1111111111tem  %d ubRdData[0] %d ubRdData[1] %d\n",tem,ubRdData[0],ubRdData[1]);
+    ubTempValueH = tem >>8 & 0xff;
+    ubTempValueL = tem & 0xff;
+	
+    printd(1,"1111111111tem  %d ubTempValueH %d ubTempValueL %d\n",tem,ubTempValueH,ubTempValueL);
+
     tem /= 100;
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
@@ -895,7 +901,9 @@ report:
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1]  = ubTempBelowZore;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  =!ret;
-        tUI_TempReqCmd.ubCmd_Len                = 5;
+	 tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+3]  = ubTempValueH;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+4]  = ubTempValueL;
+        tUI_TempReqCmd.ubCmd_Len                = 7;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
         tem_last = tem;
     }

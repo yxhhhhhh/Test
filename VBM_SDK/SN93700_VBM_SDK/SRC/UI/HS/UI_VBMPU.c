@@ -39,6 +39,7 @@
 #define SD_UPDATE_TEST  0
 
 #define TIME_TEST       0
+#define TEMP_TEST       1
 
 #define ENG_MODE_TEST   0
 
@@ -9622,6 +9623,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
 
+
     if (ubUpdateFWFlag == 1)return;
 
 
@@ -9630,7 +9632,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
         ubTempBelowZoreSta = pvdata[1];
 		ubTempInvalidSta = pvdata[2];
 
-		printd(1, "UI_GetTempData ubRealTemp: %d, %d, %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
+		printd(1, "UI_GetTempData ubRealTemp: %d, ubTempBelowZoreSta %d, ubTempInvalidSta %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
 		if (ubTempInvalidSta == 1)
 		{
 			ubRealTemp = 0xFF;
@@ -9638,6 +9640,38 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 			return;
 		}
         ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+
+#if TEMP_TEST
+		uint8_t ubTempValueH = 0;
+		uint8_t ubTempValueL = 0;
+		uint16_t ubTempValue = 0;
+	    	char   str[5] = {0};
+		int i;
+
+        	ubTempValueH = pvdata[3];
+		ubTempValueL = pvdata[4];
+		
+		printd(Apk_DebugLvl, "UI_GetTempData  ubTempValueH %d, ubTempValueL %d. \n",ubTempValueH, ubTempValueL);
+		ubTempValue = ubTempValueH * 256 + ubTempValueL;
+
+		 sprintf(str, "%4d", ubTempValue);
+		 for(i = 0; str[i]; i++)
+		{
+			int img;
+			
+			 if (str[i] >= '0' && str[i] <= '9') 
+			{
+		            img = OSD2IMG_BAR_NUM_0 + (str[i] - '0');
+		        }
+			         tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
+				        info.uwXStart = 0;
+				        info.uwYStart = 550 - 20 * i;
+				        tOSD_Img2(&info, OSD_QUEUE);
+		 }
+
+		
+		
+#endif
 		
     }
 
@@ -15076,14 +15110,14 @@ void UI_SwitchCameraScan(uint8_t type)
 
     for (j = 0; j < 4; j++)
     {
-/*        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+       if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
        // if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
       {
 	      	printd(1,"33333333333333333tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
 	         tCamSwtichNum = i;
 	          break;
         }
-*/
+/*
       if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
       {
       		if(tUI_CamStatus[i].tCamConnSts == CAM_ONLINE)
@@ -15099,6 +15133,7 @@ void UI_SwitchCameraScan(uint8_t type)
 		}
 	          break;
         }
+       */
         i++;
         if (i > 3) i = 0;
     }
