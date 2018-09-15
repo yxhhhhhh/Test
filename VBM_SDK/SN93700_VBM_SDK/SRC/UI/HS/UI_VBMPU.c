@@ -39,7 +39,7 @@
 #define SD_UPDATE_TEST  0
 
 #define TIME_TEST       0
-#define TEMP_TEST       1
+#define TEMP_TEST       0
 
 #define ENG_MODE_TEST   0
 
@@ -435,18 +435,17 @@ void UI_KeyEventExec(void *pvKeyEvent)
             }
         }
 
-        if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
+/*        if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
         {
-            if (ubBUEnterAdotestFLag == 0)
-            {                   
-            	printd(1, "1111111111111111111111111111###\n");
-               
-                    ubBUEnterAdotestFLag = 1;
-                    UI_SendCMDAdoTest_TX();
-                }
-            
+		    uint8_t CmdData;
+		    uint8_t sendflag = 0;
+		   CmdData = UI_SET_BUMOTOR_SPEED_CMD;
+		   if(sendflag == 0)
+		  	 while(!UI_SendToBUCmd(&CmdData, 1));
+		   sendflag = 1;
+		   printd(1," SEND BU CMD SUCCESS!\n");	             
         }
-
+*/
         if (ptKeyEvent->ubKeyAction == KEY_DOWN_ACT)
         {
             UI_FactorymodeKeyDisplay(ptKeyEvent->ubKeyID);
@@ -1112,7 +1111,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         {
             if (tUI_PuSetting.ubDefualtFlag == FALSE)
             {
-            	printd(1,"66666666666666666666\n");
                 ubLostLinkEnterSanMode++;
                 /*if (ubLostLinkEnterSanMode == 15)
                 {
@@ -3133,31 +3131,53 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
     if (ubFactoryModeFLag == 1)
     {
-    	printd(1,"UI_DisplayArrowKeyFunc yesyesyesyesyes\n");
-        switch (tArrowKey)
-        {
-        case LEFT_ARROW:
-            UI_MotorControl(MC_LEFT_ON);
-            break;
+    	    if (tUI_SyncAppState == APP_LINK_STATE)
+    	    {
+		       uint8_t CmdData;
+		    	if(tArrowKey == LEFT_ARROW ||tArrowKey == RIGHT_ARROW || tArrowKey == UP_ARROW || tArrowKey == DOWN_ARROW);
+			{
+			   CmdData = UI_SET_BUMOTOR_SPEED_CMD;
+			   UI_SendToBUCmd(&CmdData, 1);
+			   printd(1," SEND BU CMD SUCCESS!\n");	 
+			}	
+			switch (tArrowKey)
+		        {
+		        case LEFT_ARROW:
+		            UI_MotorControl(MC_LEFT_ON);
+		            break;
 
-        case RIGHT_ARROW:
-            UI_MotorControl(MC_RIGHT_ON);
-            break;
+		        case RIGHT_ARROW:
+		            UI_MotorControl(MC_RIGHT_ON);
+		            break;
 
-        case UP_ARROW:
-            UI_MotorControl(MC_UP_ON);
-            break;
+		        case UP_ARROW:
+		            UI_MotorControl(MC_UP_ON);
+		            break;
 
-        case DOWN_ARROW:
-            UI_MotorControl(MC_DOWN_ON);
-            break;
+		        case DOWN_ARROW:
+		            UI_MotorControl(MC_DOWN_ON);
+		            break;
 
-        default:
-            break;
-        }
-        return;
+		        default:
+		            break;
+		        }
+		        return;
+    	    }
     }
-
+    else
+    {
+    	    if (tUI_SyncAppState == APP_LINK_STATE)
+    	    {
+		       uint8_t CmdData;
+		    	if(tArrowKey == LEFT_ARROW ||tArrowKey == RIGHT_ARROW || tArrowKey == UP_ARROW || tArrowKey == DOWN_ARROW);
+			{
+			   CmdData = UI_SET_BUMOTOR_NORMAL_CMD;
+			   UI_SendToBUCmd(&CmdData, 1);
+			   printd(1," SEND BU NORMAL CMD SUCCESS!\n");	 
+			}
+    		}
+    }
+	
     if ((tArrowKey == ENTER_ARROW)&&(tUI_PuSetting.ubDefualtFlag == FALSE))
     {
         //if (TRUE == tUI_PuSetting.ubScanModeEn)
@@ -3533,8 +3553,6 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 //------------------------------------------------
 void UI_VolUpKey(void)
 {
-	uint8_t CmdData;
-
         if (ubShowAlarmstate >0)
         {
             return;
@@ -3570,6 +3588,7 @@ void UI_VolUpKey(void)
     }
 
 /*	//ÐÞ¸ÄÔöÒæ 
+	uint8_t CmdData;
     if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL4)
     {
     	     CmdData = UI_SET_BUMIC12_CMD;
@@ -3609,7 +3628,7 @@ void UI_VolUpKey(void)
 
 void UI_VolDownKey(void)
 {
-	uint8_t CmdData;
+
         if (ubShowAlarmstate >0)
         {
             return;
@@ -3644,6 +3663,7 @@ void UI_VolDownKey(void)
         tUI_PuSetting.VolLvL.tVOL_UpdateLvL--;
     }
 /*
+	uint8_t CmdData;
     if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL4)
     {
     	     CmdData = UI_SET_BUMIC12_CMD;
@@ -9642,6 +9662,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
         ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
 
 #if TEMP_TEST
+   		 OSD_IMG_INFO info;
 		uint8_t ubTempValueH = 0;
 		uint8_t ubTempValueL = 0;
 		uint16_t ubTempValue = 0;
@@ -9663,10 +9684,10 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 			{
 		            img = OSD2IMG_BAR_NUM_0 + (str[i] - '0');
 		        }
-			         tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
-				        info.uwXStart = 0;
-				        info.uwYStart = 550 - 20 * i;
-				        tOSD_Img2(&info, OSD_QUEUE);
+		         tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
+		        info.uwXStart = 0;
+		        info.uwYStart = 550 - 20 * i;
+		        tOSD_Img2(&info, OSD_QUEUE);
 		 }
 
 		
@@ -13717,7 +13738,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     UI_CamNum_t tCamNum;
     uint16_t uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
     OSD_IMG_INFO tOsdImgInfo;
-    	printd(1,"111111UI_ShowLostLinkLogotUI_PuSetting.IconSts.ubShowLostLogoFlag  %d  \n",tUI_PuSetting.IconSts.ubShowLostLogoFlag);
+    	//printd(1,"111111UI_ShowLostLinkLogotUI_PuSetting.IconSts.ubShowLostLogoFlag  %d  \n",tUI_PuSetting.IconSts.ubShowLostLogoFlag);
 /*	if(TRUE == ubUI_ResetPeriodFlag)
 	{
 		switch(tUI_PuSetting.tPsMode)
@@ -13737,23 +13758,23 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
         return;
     if (FALSE == ubUI_ResetPeriodFlag)
     {
-            	printd(1,"UI_ShowLostLinkLogo   FALSE == ubUI_ResetPeriodFlag\n");
+            	//printd(1,"UI_ShowLostLinkLogo   FALSE == ubUI_ResetPeriodFlag\n");
         uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
     }
     else if (ubCamPairOkState >= 1)
     {
-        	printd(1,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
+        	//printd(1,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
         ubFastShowLostLinkSta = 0;
         uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 5;
     }
     else
     {
-    	printd(1,"UI_ShowLostLinkLogo tPairInfo.ubDrawFlag %d\n",tPairInfo.ubDrawFlag);
+    	//printd(1,"UI_ShowLostLinkLogo tPairInfo.ubDrawFlag %d\n",tPairInfo.ubDrawFlag);
         if (tPairInfo.ubDrawFlag == FALSE)
             ubFastShowLostLinkSta = 1;
     }
 	
-    	printd(1,"UI_ShowLostLinkLogo uwUI_LostPeriod %d\n",uwUI_LostPeriod);
+    	//printd(1,"UI_ShowLostLinkLogo uwUI_LostPeriod %d\n",uwUI_LostPeriod);
     for (tCamNum = CAM1; tCamNum < tUI_PuSetting.ubTotalBuNum; tCamNum++)
     {
         if (PS_ECO_MODE == tUI_CamStatus[tCamNum].tCamPsMode)
@@ -14123,6 +14144,7 @@ void UI_FactoryStatusDisplay(void)
             tOsdImgInfo.uwXStart = 635 + Factory_x_vol;
             tOsdImgInfo.uwYStart = 863;
             tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	     ubBUEnterAdotestFLag = 0;
         }
     }
     //-----------------------------------------------------------------
@@ -14372,12 +14394,22 @@ void UI_EnterLocalAdoTest_RX(void)
     tOsdImgInfo.uwYStart = 863;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    printd(1,"UI_EnterLocalAdoTest_RX\n");
+    printd(Apk_DebugLvl,"UI_EnterLocalAdoTest_RX\n");
     ADO_SelfTest_Init(); //ADO_SelfTest_Init(5);
-    
     ADO_SelfTest_Record();
     ADO_SelfTest_Play();
     ADO_SelfTest_Close();
+	
+   if (ubBUEnterAdotestFLag == 0)
+   {  	
+      //SET BU MIC&SPK TEST
+   	while(!UI_GetBuMICTest());
+	printd(1,"send MIC&SPK TEST success!\n");
+	UI_SendCMDAdoTest_TX();
+	 ubBUEnterAdotestFLag = 1;
+    }
+
+	
 }
 
 void UI_SendCMDAdoTest_TX(void)

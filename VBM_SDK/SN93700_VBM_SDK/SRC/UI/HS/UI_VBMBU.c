@@ -1484,7 +1484,51 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
    case  UI_SET_BUMIC13_5_CMD:
 		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_13p5DB); // 20180524
 		break;
-		
+
+    case UI_SET_BUMOTOR_SPEED_CMD:
+	{
+	    MC_Setup_t tMC_SettingApp;
+
+	    tMC_SettingApp.ubMC_ClockDivider = 63;
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	    tMC_SettingApp.ubMC_HighPeriod = 8;//48/24/18
+	    tMC_SettingApp.ubMC_PeriodPerStep = 8;//36/18/16
+	    tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
+	    tMC_Setup(MC_0,&tMC_SettingApp);    //left right
+
+	    tMC_SettingApp.ubMC_ClockDivider = 63;
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	    tMC_SettingApp.ubMC_HighPeriod = 12;    //18  64
+	    tMC_SettingApp.ubMC_PeriodPerStep = 12; //16  48
+	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
+
+	    printd(1,"SET MOTOR SPEED SUCCESS\n");;
+	    break;	
+    	}
+    case UI_SET_BUMOTOR_NORMAL_CMD:
+	{
+	     MC_Setup_t tMC_SettingApp;
+	    ubUI_Mc1RunFlag = 0;
+	    ubUI_Mc2RunFlag = 0;
+	    ubUI_Mc3RunFlag = 0;
+	    ubUI_Mc4RunFlag = 0;
+	    ubUI_Mc1RunCnt = 0;
+	    ubUI_Mc2RunCnt = 0;
+
+	    tMC_SettingApp.ubMC_ClockDivider = 63;
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	    tMC_SettingApp.ubMC_HighPeriod = 24;//48/24/18
+	    tMC_SettingApp.ubMC_PeriodPerStep = 18;//36/18/16
+	    tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
+	    tMC_Setup(MC_0,&tMC_SettingApp);    //left right
+
+	    tMC_SettingApp.ubMC_ClockDivider = 63;
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	    tMC_SettingApp.ubMC_HighPeriod = 36;    //18  64
+	    tMC_SettingApp.ubMC_PeriodPerStep = 36; //16  48
+	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
+	}
+	break;
     default:
         break;
     }
@@ -1616,12 +1660,13 @@ void UI_TestSetting(void *pvTSParam)
 void UI_TestCheck(void)
 {
     #define Motor0_Count    200
-    #define Motor1_Count    80
+    #define Motor1_Count    100
     #define Motor0_Wait     100
     #define Motor1_Wait     40
-    static uint16_t ubTestCount = 0;
+   uint16_t ubTestCount = 0;
 
-    printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
+    printd(1, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
+
     if (ubTestCount == 0)
     {
         MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
