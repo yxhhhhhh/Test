@@ -9669,7 +9669,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
    		 OSD_IMG_INFO info;
 		uint8_t ubTempValueH = 0;
 		uint8_t ubTempValueL = 0;
-		uint16_t ubTempValue = 0;
+		int16_t ubTempValue = 0;
 	    	char   str[6] = {0};
 		int i;
 
@@ -9677,6 +9677,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		ubTempValueL = pvdata[4];
 		
 		ubTempValue = ubTempValueH * 256 + ubTempValueL;
+		ubTempValue  = ubTempBelowZoreSta ? -ubTempValue : ubTempValue;
 		printd(1, "UI_GetTempData  ubTempValue %dubTempValueH %d, ubTempValueL %d. \n",ubTempValue,ubTempValueH, ubTempValueL);
 		 sprintf(str, "%5d", ubTempValue);
 		 for(i = 0; str[i]; i++)
@@ -9687,6 +9688,10 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 			{
 		            img = OSD2IMG_BAR_NUM_0 + (str[i] - '0');
 		        }
+			else if (str[i] == '-') 
+		        {
+		            img = OSD2IMG_TEMP_BELOW;
+		        } 
 		         tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
 		        info.uwXStart = 0;
 		        info.uwYStart = 550 - 20 * i;
