@@ -39,7 +39,7 @@
 #define SD_UPDATE_TEST  0
 
 #define TIME_TEST       0
-#define TEMP_TEST       0
+#define TEMP_TEST       1
 
 #define ENG_MODE_TEST   0
 
@@ -579,8 +579,8 @@ void UI_OnInitDialog(void)
 {
 //  OSD_IMG_INFO tOsdImgInfo;
 //  uint8_t i = 0;
-		if(ubWorWakeUpFlag != 1)	//20190905 yxh
-		OSD_LogoJpeg(OSDLOGO_BOOT);
+	if(ubWorWakeUpFlag != 1)	//20190905 yxh
+	OSD_LogoJpeg(OSDLOGO_BOOT);
 
 
 	if ((DISPLAY_MODE != DISPLAY_1T1R) && wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR) == RTC_WATCHDOG_CHK_TAG) {
@@ -1512,7 +1512,6 @@ void UI_PowerOff(void)
 
     UI_SendPwrNormalModeToBu();
     UI_UpdateDevStatusInfo();
-//  BUZ_PlayPowerOffSound();
     osDelay(600);//wait buzzer play finish
     LCDBL_ENABLE(UI_DISABLE);
     RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
@@ -1538,7 +1537,12 @@ void UI_PowerKey(void)
 
     UI_SendPwrNormalModeToBu();
     UI_UpdateDevStatusInfo();
-//  BUZ_PlayPowerOffSound();
+/*    if(ubFactoryModeFLag == 1)
+    {
+    	 OSD_LogoJpeg(OSDLOGO_BOOT);
+   	 BUZ_PlayPowerOffSound();
+    }
+*/
     osDelay(600);           //wait buzzer play finish
     LCDBL_ENABLE(UI_DISABLE);
 //  POWER_LED_IO  = 0;
@@ -3173,7 +3177,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			{
 			   CmdData = UI_SET_BUMOTOR_NORMAL_CMD;
 			   UI_SendToBUCmd(&CmdData, 1);
-			   printd(1," SEND BU NORMAL CMD SUCCESS!\n");	 
+			   printd(1," ALREADLY  SEND BU NORMAL CMD !\n");	 
 			}
     		}
     }
@@ -9666,16 +9670,15 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		uint8_t ubTempValueH = 0;
 		uint8_t ubTempValueL = 0;
 		uint16_t ubTempValue = 0;
-	    	char   str[5] = {0};
+	    	char   str[6] = {0};
 		int i;
 
         	ubTempValueH = pvdata[3];
 		ubTempValueL = pvdata[4];
 		
-		printd(Apk_DebugLvl, "UI_GetTempData  ubTempValueH %d, ubTempValueL %d. \n",ubTempValueH, ubTempValueL);
 		ubTempValue = ubTempValueH * 256 + ubTempValueL;
-
-		 sprintf(str, "%4d", ubTempValue);
+		printd(1, "UI_GetTempData  ubTempValue %dubTempValueH %d, ubTempValueL %d. \n",ubTempValue,ubTempValueH, ubTempValueL);
+		 sprintf(str, "%5d", ubTempValue);
 		 for(i = 0; str[i]; i++)
 		{
 			int img;
@@ -9688,6 +9691,8 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		        info.uwXStart = 0;
 		        info.uwYStart = 550 - 20 * i;
 		        tOSD_Img2(&info, OSD_QUEUE);
+			 tOSD_Img2(&info, OSD_UPDATE);
+
 		 }
 
 		
@@ -9942,7 +9947,7 @@ void UI_TempBarDisplay(uint8_t value)
 
     if (tUI_SyncAppState != APP_LINK_STATE)
 		return;
-
+    //printd(Apk_DebugLvl,"value %d\n",value);
     if (value != 0xff)
 	    sprintf(str, "%4d", temp);
     else
