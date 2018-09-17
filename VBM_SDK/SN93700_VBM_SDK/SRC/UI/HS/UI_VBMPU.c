@@ -750,8 +750,8 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
         UI_ReportBuConnectionStatus(pAppStsRpt->ubAPP_Report);
         break;
     case APP_VWMODESTS_RPT:
-        if (pAppStsRpt->ubAPP_Report[0] != SCAN_VIEW)
-            UI_DisableScanMode();
+       // if (pAppStsRpt->ubAPP_Report[0] != SCAN_VIEW)
+           // UI_DisableScanMode();
         break;
     case APP_VOXMODESTS_RPT:
         ubUI_StopUpdateStsBarFlag = pAppStsRpt->ubAPP_Report[0];
