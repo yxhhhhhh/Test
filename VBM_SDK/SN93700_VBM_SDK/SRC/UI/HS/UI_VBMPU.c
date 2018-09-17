@@ -38,8 +38,8 @@
 
 #define SD_UPDATE_TEST  0
 
-#define TIME_TEST       1
-#define TEMP_TEST       0
+#define TIME_TEST       0
+#define TEMP_TEST       1
 
 #define ENG_MODE_TEST   0
 
@@ -3140,7 +3140,8 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		       uint8_t CmdData;
 		    	if(tArrowKey == LEFT_ARROW ||tArrowKey == RIGHT_ARROW || tArrowKey == UP_ARROW || tArrowKey == DOWN_ARROW);
 			{
-			   CmdData = UI_SET_BUMOTOR_SPEED_CMD;
+			   CmdData = UI_SET_BUMOTOR_SPEED_H_CMD;
+			  // CmdData = UI_SET_BUMOTOR_SPEED_L_CMD;
 			   UI_SendToBUCmd(&CmdData, 1);
 			   printd(1," SEND BU CMD SUCCESS!\n");	 
 			}	
@@ -9668,18 +9669,12 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 
 #if TEMP_TEST
    		 OSD_IMG_INFO info;
-		uint8_t ubTempValueH = 0;
-		uint8_t ubTempValueL = 0;
 		int16_t ubTempValue = 0;
 	    	char   str[6] = {0};
 		int i;
 
-        	ubTempValueH = pvdata[3];
-		ubTempValueL = pvdata[4];
-		
-		ubTempValue = ubTempValueH * 256 + ubTempValueL;
-		ubTempValue  = ubTempBelowZoreSta ? -ubTempValue : ubTempValue;
-		printd(1, "UI_GetTempData  ubTempValue %dubTempValueH %d, ubTempValueL %d. \n",ubTempValue,ubTempValueH, ubTempValueL);
+		ubTempValue =ubTempBelowZoreSta ? -(int16_t)(( pvdata[3] << 8 )+ pvdata[4]) : (int16_t)(( pvdata[3] << 8 )+ pvdata[4]);
+		printd(1, "UI_GetTempData  ubTempValue %d. \n",ubTempValue);
 		 sprintf(str, "%5d", ubTempValue);
 		 for(i = 0; str[i]; i++)
 		{

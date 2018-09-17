@@ -843,6 +843,7 @@ void UI_TempCheck(void) //20180322
     uint8_t ubRdData[2] = {0};
     bool    ret = 0;
     int32_t tem = 0;
+     int32_t tem_test = 0;
     static int32_t tem_last  = 0;
     static uint8_t temp_flag = 0;
     uint8_t ubTempValueH = 0;
@@ -882,12 +883,22 @@ void UI_TempCheck(void) //20180322
     } else {
         tem -=50;
     }
-    //-- tempture compensation
-    ubTempValueH = tem >>8 & 0xff;
-    ubTempValueL = tem & 0xff;
-	
-    printd(1,"1111111111tem  %d ubTempValueH %d ubTempValueL %d\n",tem,ubTempValueH,ubTempValueL);
-
+	tem = -1049;
+   if(tem >= 0)
+   {
+	    //-- tempture compensation
+	    tem_test = tem;
+	    ubTempValueH = tem_test >> 8 & 0xff;
+	    ubTempValueL = tem_test >> 0;
+   }
+   else
+   {
+   	tem_test  = -tem;
+	ubTempValueH = tem_test >> 8 & 0xff;
+	ubTempValueL = tem_test >> 0;
+   }
+    printd(1,"1111111111tem  %d  tem_test %d  ubTempValueH %d ubTempValueL %d\n",tem,tem_test,ubTempValueH,ubTempValueL);
+    tem += tem > 0 ?  50 : -50;
     tem /= 100;
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
@@ -1493,7 +1504,7 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_13p5DB); // 20180524
 		break;
 
-    case UI_SET_BUMOTOR_SPEED_CMD:
+    case UI_SET_BUMOTOR_SPEED_H_CMD:
 	{
 	    MC_Setup_t tMC_SettingApp;
 
@@ -1534,6 +1545,30 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
 	    tMC_SettingApp.ubMC_HighPeriod = 36;    //18  64
 	    tMC_SettingApp.ubMC_PeriodPerStep = 36; //16  48
+	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
+	}
+	break;
+    case UI_SET_BUMOTOR_SPEED_L_CMD:
+	{
+	     MC_Setup_t tMC_SettingApp;
+	    ubUI_Mc1RunFlag = 0;
+	    ubUI_Mc2RunFlag = 0;
+	    ubUI_Mc3RunFlag = 0;
+	    ubUI_Mc4RunFlag = 0;
+	    ubUI_Mc1RunCnt = 0;
+	    ubUI_Mc2RunCnt = 0;
+
+	    tMC_SettingApp.ubMC_ClockDivider = 63;
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	    tMC_SettingApp.ubMC_HighPeriod = 48;//48/24/18
+	    tMC_SettingApp.ubMC_PeriodPerStep = 48;//36/18/16
+	    tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
+	    tMC_Setup(MC_0,&tMC_SettingApp);    //left right
+
+	    tMC_SettingApp.ubMC_ClockDivider = 63;
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
+	    tMC_SettingApp.ubMC_HighPeriod = 60;    //18  64
+	    tMC_SettingApp.ubMC_PeriodPerStep = 60; //16  48
 	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
 	}
 	break;
