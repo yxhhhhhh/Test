@@ -1155,5 +1155,7 @@ uint8_t UI_SendPwrVoxModeToBu(void);
 
 void UI_DisablePuAdoOnlyMode(void);
 void UI_SwitchAudioSource(UI_CamNum_t tCamNum);
+
+void UI_ExScan(void);
 #endif
 

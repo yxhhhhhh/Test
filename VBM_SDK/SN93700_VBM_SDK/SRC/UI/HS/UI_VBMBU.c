@@ -1451,11 +1451,19 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
         break;
 
     case UI_SET_BU_ADO_TEST_CMD:
-			printd(1,"UI_RecvPUCmdSetting 2222222222\n");
+        if (BuPlayRecordState == 0)
+        {
+            BuPlayRecordState = 1;
             ADO_SelfTest_Init(); //ADO_SelfTest_Init(10);
             ADO_SelfTest_Record();
             ADO_SelfTest_Play();
             ADO_SelfTest_Close();
+            BuPlayRecordState = 2;
+        }
+        else if (BuPlayRecordState == 2)
+        {
+            BuPlayRecordState = 0;
+        }
         break;
 
     case UI_SET_TALK_ON_CMD:
@@ -1663,7 +1671,7 @@ void UI_TestCheck(void)
     #define Motor1_Count    100
     #define Motor0_Wait     100
     #define Motor1_Wait     40
-   uint16_t ubTestCount = 0;
+    static uint16_t ubTestCount = 0;
 
     printd(1, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
 

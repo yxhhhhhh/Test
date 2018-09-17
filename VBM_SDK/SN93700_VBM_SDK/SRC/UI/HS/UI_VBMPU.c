@@ -38,8 +38,8 @@
 
 #define SD_UPDATE_TEST  0
 
-#define TIME_TEST       0
-#define TEMP_TEST       1
+#define TIME_TEST       1
+#define TEMP_TEST       0
 
 #define ENG_MODE_TEST   0
 
@@ -353,6 +353,9 @@ uint8_t ubVolWarnFlag  = 0;
 
 uint8_t ubEnterFactoryDelCam = 0;
 uint8_t ubFactoryDelCamFlag  = 0;
+
+uint8_t ubScanStartFlag  = 0;
+uint8_t ubScanCnt =0;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -1112,18 +1115,17 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             if (tUI_PuSetting.ubDefualtFlag == FALSE)
             {
                 ubLostLinkEnterSanMode++;
-                /*if (ubLostLinkEnterSanMode == 15)
+                if (ubLostLinkEnterSanMode == 15)
                 {
-                    UI_SwitchCameraScan(0);
+                   // UI_SwitchCameraScan(0);
                     ubLostLinkEnterSanMode = 0;
                 }
-                */
             }
         }
         else
         {
             ubLostLinkEnterSanMode = 0;
-            UI_DisableScanMode();
+             //UI_DisableScanMode();
         }
 
 /*		if ((ubTempAlarmState == HIGH_TEMP_ALARM_ING)||(ubTempAlarmState == LOW_TEMP_ALARM_ING)||(ubPickupAlarmState == PICKUP_ALARM_ING))
@@ -1237,6 +1239,8 @@ END_UPDATESTS:
         tUI_GetLinkStsMsg.ubAPP_Event       = APP_LINKSTATUS_REPORT_EVENT;
         UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
     }
+
+    UI_ExScan();	
 
     if(ubVolWarnFlag == 1)
     {
@@ -1512,6 +1516,7 @@ void UI_PowerOff(void)
 
     UI_SendPwrNormalModeToBu();
     UI_UpdateDevStatusInfo();
+//  BUZ_PlayPowerOffSound();
     osDelay(600);//wait buzzer play finish
     LCDBL_ENABLE(UI_DISABLE);
     RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
@@ -1537,12 +1542,7 @@ void UI_PowerKey(void)
 
     UI_SendPwrNormalModeToBu();
     UI_UpdateDevStatusInfo();
-/*    if(ubFactoryModeFLag == 1)
-    {
-    	 OSD_LogoJpeg(OSDLOGO_BOOT);
-   	 BUZ_PlayPowerOffSound();
-    }
-*/
+//  BUZ_PlayPowerOffSound();
     osDelay(600);           //wait buzzer play finish
     LCDBL_ENABLE(UI_DISABLE);
 //  POWER_LED_IO  = 0;
@@ -3116,7 +3116,7 @@ void UI_PushTalkKey(void)
         }
         if (tUI_PuSetting.ubSleepMode)
         {
-            UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*70, UI_AutoLcdSetSleepTimerEvent);
+            UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*60, UI_AutoLcdSetSleepTimerEvent);
         }
     }
 }
@@ -8156,6 +8156,7 @@ void UI_SetScanMenu(uint8_t value)
     case 0:
         tUI_PuSetting.ubScanTime = 0;
         tUI_PuSetting.ubScanModeEn = FALSE;
+	ubScanStartFlag =0;
         break;
 
     case 1:
@@ -13775,7 +13776,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     {
         	//printd(1,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
         ubFastShowLostLinkSta = 0;
-        uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 5;
+        uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2;
     }
     else
     {
@@ -14761,7 +14762,7 @@ void UI_DisableVox(void)
         SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode
         osDelay(50);            //???
         LCD_PWR_ENABLE;
-        osDelay(250);
+        osDelay(400);
     }
 
     UI_UpdateDevStatusInfo();
@@ -15122,6 +15123,7 @@ void UI_SwitchCameraScan(uint8_t type)
     if (ubCameraOnlineNum == 0)
         return;
 
+/*
     if (ubCameraOnlineNum == 1)
     {
         for (i = 0; i < 4; i++)
@@ -15129,9 +15131,9 @@ void UI_SwitchCameraScan(uint8_t type)
            if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
              {
                 if (tCamViewSel.tCamViewPool[0] == i)
-			{
-			      	printd(1,"111111111111111111111111111111111\n");
-                    		return;
+		{
+			printd(1,"111111111111111111111111111111111\n");
+                    	return;
                 	}
                 else
                 {
@@ -15143,44 +15145,40 @@ void UI_SwitchCameraScan(uint8_t type)
         }
         return;
     }
+ */   
 #endif
 
     if (tSearchCam == 3)
         i = 0;
     else
+    {
         i = tSearchCam+1;
+    }
+     printd(1, "11111111111CamView  %d.\n", i);	
 
     for (j = 0; j < 4; j++)
     {
-       if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
-       // if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
-      {
-	      	printd(1,"33333333333333333tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
-	         tCamSwtichNum = i;
-	          break;
-        }
-/*
-      if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
-      {
+        //if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) && (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID))
+        {
       		if(tUI_CamStatus[i].tCamConnSts == CAM_ONLINE)
-	      {
-		      	printd(1,"33333333333333333tUI_CamStatus[i].ulCAM_ID %d  tUI_CamStatus[i].tCamConnSts %d\n",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
-		         tCamSwtichNum = i;
+      		{
+	            tCamSwtichNum = i;
       		}
 		else if(tUI_CamStatus[i].tCamConnSts == CAM_OFFLINE)
-		{	
-			    printd(1,"6555555555555555555555555555\n");
-			 UI_RemoveLostLinkLogo();
-			 tCamSwtichNum = i;
+		{
+			UI_RemoveLostLinkLogo();
+			tCamSwtichNum = i;
+			//return;
 		}
 	          break;
         }
-       */
         i++;
         if (i > 3) i = 0;
     }
 
-SWITCH_CAMERA:	
+
+//SWITCH_CAMERA:	
 	printd(1, "4444444444444444UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
 	if(0xFF == tCamSwtichNum)
 		return;
@@ -15194,6 +15192,7 @@ SWITCH_CAMERA:
 	tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
 	tUI_PuSetting.tAdoSrcCamNum = tCamSwtichNum;
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
+	
 	UI_SwitchCameraSource();
 	UI_ClearBuConnectStatusFlag();
 	UI_UpdateDevStatusInfo();
@@ -15269,6 +15268,7 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
     ubUI_ScanStartFlag = ubTimerEn;
     if (TRUE == ubTimerEn)
     {
+       /*
         if ((tUI_PuSetting.ubScanTime > 0) && (tUI_PuSetting.ubScanTime < 5))
         {
             UI_TimerEventStart(ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000, UI_ScanModeTimerEvent);
@@ -15277,10 +15277,14 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
         {
             UI_TimerEventStop();
         }
+        */
+         ubScanStartFlag =1;
     }
     else
     {
-        UI_TimerEventStop();
+        //UI_TimerEventStop();
+         ubScanStartFlag =0;
+	ubScanCnt = 0;
     }
 }
 //------------------------------------------------------------------------------
@@ -15302,8 +15306,9 @@ void UI_EnableScanMode(void)
 
     if (ubShowAlarmstate > 0)
         return;
-	if(PS_ADOONLY_MODE != tUI_PuSetting.tPsMode)
-    	UI_CheckCameraSource4SV();
+	
+    //if(PS_ADOONLY_MODE != tUI_PuSetting.tPsMode)
+    //    UI_CheckCameraSource4SV();
     UI_SetupScanModeTimer(TRUE);
 }
 //------------------------------------------------------------------------------
@@ -15350,10 +15355,25 @@ void UI_ScanModeExec(void)
     UI_SetupScanModeTimer(TRUE);
 #else
     printd(Apk_DebugLvl,"UI_ScanModeExec\n");
-    UI_SwitchCameraScan(0);
-    UI_SetupScanModeTimer(TRUE);
+
+    //UI_SwitchCameraScan(0);
+    //UI_SetupScanModeTimer(TRUE);
 #endif
 }
+
+void UI_ExScan(void)
+{
+     if((ubScanStartFlag == 1)&&(ubUI_ScanStartFlag == TRUE))
+     {
+     	  printd(1,"ubScanCnt  %d\n",ubScanCnt);
+	  if(++ubScanCnt > ubCameraScanTime[tUI_PuSetting.ubScanTime]*5)
+	  {
+	  	UI_SwitchCameraScan(0);
+		ubScanCnt =0;
+	  }
+     }
+}
+
 //------------------------------------------------------------------------------
 UI_Result_t UI_CheckCameraSource4SV(void)
 {
