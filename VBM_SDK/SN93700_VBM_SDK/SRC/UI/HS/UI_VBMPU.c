@@ -304,8 +304,8 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 10;
-uint32_t ubHWVersion = 10;
+uint32_t ubPuSWVersion = 07;
+uint32_t ubHWVersion = 07;
 uint8_t ubBuHWVersion = 0;
 uint32_t ubBuSWVersion = 0;
 
@@ -354,8 +354,6 @@ uint8_t ubVolWarnFlag  = 0;
 uint8_t ubEnterFactoryDelCam = 0;
 uint8_t ubFactoryDelCamFlag  = 0;
 
-uint8_t ubScanStartFlag  = 0;
-uint8_t ubScanCnt =0;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -603,11 +601,13 @@ void UI_OnInitDialog(void)
 		tCamViewSel.tCamViewType = SINGLE_VIEW;
 	}
 
+/*
     if (tCamViewSel.tCamViewType == SCAN_VIEW) {
         UI_EnableScanMode();
     } else {
         UI_DisableScanMode();
     }
+*/
 
     UI_LoadDevStatusInfo();
     ubSetViewCam = tCamViewSel.tCamViewPool[0];
@@ -1240,7 +1240,6 @@ END_UPDATESTS:
         UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
     }
 
-    UI_ExScan();	
 
     if(ubVolWarnFlag == 1)
     {
@@ -8157,7 +8156,6 @@ void UI_SetScanMenu(uint8_t value)
     case 0:
         tUI_PuSetting.ubScanTime = 0;
         tUI_PuSetting.ubScanModeEn = FALSE;
-	ubScanStartFlag =0;
         break;
 
     case 1:
@@ -9658,7 +9656,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
         ubTempBelowZoreSta = pvdata[1];
 		ubTempInvalidSta = pvdata[2];
 
-		printd(1, "UI_GetTempData ubRealTemp: %d, ubTempBelowZoreSta %d, ubTempInvalidSta %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
+		printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempBelowZoreSta %d, ubTempInvalidSta %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
 		if (ubTempInvalidSta == 1)
 		{
 			ubRealTemp = 0xFF;
@@ -9673,8 +9671,10 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 	    	char   str[6] = {0};
 		int i;
 
-		ubTempValue =ubTempBelowZoreSta ? -(int16_t)(( pvdata[3] << 8 )+ pvdata[4]) : (int16_t)(( pvdata[3] << 8 )+ pvdata[4]);
-		printd(1, "UI_GetTempData  ubTempValue %d. \n",ubTempValue);
+		    if (ubUpdateFWFlag == 1)return;
+		//ubTempValue =ubTempBelowZoreSta ? -(int16_t)(( pvdata[3] << 8 )|pvdata[4]) : (int16_t)(( pvdata[3] << 8 )| pvdata[4]);
+		ubTempValue =(int16_t)(( pvdata[3] << 8 )| pvdata[4]);
+		printd(Apk_DebugLvl, "UI_GetTempData  ubTempValue %d. \n",ubTempValue);
 		 sprintf(str, "%5d", ubTempValue);
 		 for(i = 0; str[i]; i++)
 		{
@@ -9688,14 +9688,17 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		        {
 		            img = OSD2IMG_TEMP_BELOW;
 		        } 
-		         tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
+			 else 
+		        {
+		            img = OSD2IMG_TEMP_BLANK;
+		        }
+			 tOSD_GetOsdImgInfor(1, OSD_IMG2, img, 1, &info);
 		        info.uwXStart = 0;
 		        info.uwYStart = 550 - 20 * i;
 		        tOSD_Img2(&info, OSD_QUEUE);
-			 tOSD_Img2(&info, OSD_UPDATE);
 
 		 }
-
+			 tOSD_Img2(&info, OSD_UPDATE);
 		
 		
 #endif
@@ -9704,7 +9707,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 
     if (ubRealTemp > 199)
        return;
-   printd(1, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+   printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
     if ((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
     {
         UI_TempBarDisplay(ubRealTemp);
@@ -9946,6 +9949,7 @@ void UI_TempBarDisplay(uint8_t value)
     char   str[5] = {0};
     int    i;
 
+    if (ubUpdateFWFlag == 1)return;
     if (tUI_SyncAppState != APP_LINK_STATE)
 		return;
     //printd(Apk_DebugLvl,"value %d\n",value);
@@ -9986,7 +9990,9 @@ void UI_VolBarDisplay(uint8_t value)
 {
     OSD_IMG_INFO tOsdImgInfo;
     uint8_t i;
-
+    if (ubUpdateFWFlag == 1)return;
+    if (tUI_SyncAppState != APP_LINK_STATE)
+		return;
     if (LCD_JPEG_ENABLE == tLCD_GetJpegDecoderStatus())
         return;
 
@@ -15099,7 +15105,7 @@ void UI_SwitchCameraScan(uint8_t type)
 
     printd(1, "UI_SwitchCameraScan type: %d.\n", type);
     for (i = 0; i < 4; i++)
-        printd(1, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
+        printd(Apk_DebugLvl, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
     if (type == 0)
     {
@@ -15110,7 +15116,7 @@ void UI_SwitchCameraScan(uint8_t type)
     //if (ubPowerState != PWR_ON)   //20180803
     //  return;
 
-    printd(1, "00000000000000000UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
+    printd(Apk_DebugLvl, "00000000000000000UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
 #if 0
     if (ubCamOnlineNum < 2)
         return;
@@ -15149,7 +15155,7 @@ void UI_SwitchCameraScan(uint8_t type)
     {
         i = tSearchCam+1;
     }
-     printd(1, "11111111111CamView  %d.\n", i);	
+     printd(Apk_DebugLvl, "11111111111CamView  %d.\n", i);	
 
     for (j = 0; j < 4; j++)
     {
@@ -15174,7 +15180,7 @@ void UI_SwitchCameraScan(uint8_t type)
 
 
 //SWITCH_CAMERA:	
-	printd(1, "4444444444444444UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
+	printd(Apk_DebugLvl, "4444444444444444UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
 	if(0xFF == tCamSwtichNum)
 		return;
 
@@ -15258,12 +15264,11 @@ void UI_ScanModeTimerEvent(void)
 //------------------------------------------------------------------------------
 void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 {
-   // printd(1, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
+    printd(Apk_DebugLvl, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
 	//osDelay(1);
     ubUI_ScanStartFlag = ubTimerEn;
     if (TRUE == ubTimerEn)
     {
-       /*
         if ((tUI_PuSetting.ubScanTime > 0) && (tUI_PuSetting.ubScanTime < 5))
         {
             UI_TimerEventStart(ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000, UI_ScanModeTimerEvent);
@@ -15272,20 +15277,17 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
         {
             UI_TimerEventStop();
         }
-        */
-         ubScanStartFlag =1;
+
     }
     else
     {
-        //UI_TimerEventStop();
-         ubScanStartFlag =0;
-	ubScanCnt = 0;
+        UI_TimerEventStop();
     }
 }
 //------------------------------------------------------------------------------
 void UI_EnableScanMode(void)
 {
-    //printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
+    printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
 
     if (tUI_PuSetting.ubScanTime == 0)
     {
@@ -15317,7 +15319,7 @@ void UI_DisableScanMode(void)
 //------------------------------------------------------------------------------
 void UI_ScanModeExec(void)
 {
-    //printd(Apk_DebugLvl, "UI_ScanModeExec###\n");
+    printd(Apk_DebugLvl, "UI_ScanModeExec###\n");
 #if 0
     UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
     uint8_t ubSearchCnt;
@@ -15350,24 +15352,13 @@ void UI_ScanModeExec(void)
     UI_SetupScanModeTimer(TRUE);
 #else
     printd(Apk_DebugLvl,"UI_ScanModeExec\n");
-
-    //UI_SwitchCameraScan(0);
-    //UI_SetupScanModeTimer(TRUE);
+     UI_SetupScanModeTimer(FALSE);	
+     UI_SwitchCameraScan(0);
+     UI_SetupScanModeTimer(TRUE);
 #endif
 }
 
-void UI_ExScan(void)
-{
-     if((ubScanStartFlag == 1)&&(ubUI_ScanStartFlag == TRUE))
-     {
-     	  printd(1,"ubScanCnt  %d\n",ubScanCnt);
-	  if(++ubScanCnt > ubCameraScanTime[tUI_PuSetting.ubScanTime]*5)
-	  {
-	  	UI_SwitchCameraScan(0);
-		ubScanCnt =0;
-	  }
-     }
-}
+
 
 //------------------------------------------------------------------------------
 UI_Result_t UI_CheckCameraSource4SV(void)

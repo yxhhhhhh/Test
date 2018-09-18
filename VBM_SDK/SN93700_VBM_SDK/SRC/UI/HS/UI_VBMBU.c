@@ -106,7 +106,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint32_t ubBuSWVersion = 10;
+uint32_t ubBuSWVersion = 07;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -883,7 +883,7 @@ void UI_TempCheck(void) //20180322
     } else {
         tem -=50;
     }
-	tem = -1049;
+	#if 0
    if(tem >= 0)
    {
 	    //-- tempture compensation
@@ -897,14 +897,18 @@ void UI_TempCheck(void) //20180322
 	ubTempValueH = tem_test >> 8 & 0xff;
 	ubTempValueL = tem_test >> 0;
    }
-    printd(1,"1111111111tem  %d  tem_test %d  ubTempValueH %d ubTempValueL %d\n",tem,tem_test,ubTempValueH,ubTempValueL);
+   #else
+   ubTempValueH = (((int16_t)tem) >> 8) & 0xff;
+   ubTempValueL = (((int16_t)tem) >> 0) & 0xff;
+   #endif
+    printd(Apk_DebugLvl,"1111111111tem  %d  tem_test %d  ubTempValueH %x ubTempValueL %x\n",tem,tem_test,ubTempValueH,ubTempValueL);
     tem += tem > 0 ?  50 : -50;
     tem /= 100;
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
 
 report:
-    printd(1, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
+    printd(Apk_DebugLvl, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
    // if (tem_last != tem) 
    {
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
@@ -1453,7 +1457,7 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	static uint8_t BuTalkSpkState = 0;	
     uint8_t *pRecvPuParam = (uint8_t *)pvRecvPuParam;
     uint8_t ubPuCmd = pRecvPuParam[0];
-	printd(1,"UI_RecvPUCmdSetting  ubPuCmd =%x\n",ubPuCmd);
+	printd(Apk_DebugLvl,"UI_RecvPUCmdSetting  ubPuCmd =%x\n",ubPuCmd);
 
     switch(ubPuCmd)
     {
@@ -1521,7 +1525,7 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	    tMC_SettingApp.ubMC_PeriodPerStep = 12; //16  48
 	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
 
-	    printd(1,"SET MOTOR SPEED SUCCESS\n");;
+	    printd(Apk_DebugLvl,"SET MOTOR SPEED SUCCESS\n");;
 	    break;	
     	}
     case UI_SET_BUMOTOR_NORMAL_CMD:
@@ -1605,7 +1609,7 @@ void UI_SetIRLed(uint8_t LedState)
 		GPIO->GPIO_O4 = 1;
 
 		ubIROnOffFlag = 1;
-        printd(1, "UI_SetIRLed On###\n");
+        printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
         
     }
@@ -1616,7 +1620,7 @@ void UI_SetIRLed(uint8_t LedState)
 	 GPIO->GPIO_O4 = 0;
         UI_SetIrMode(0); //¹ØIR, ²ÊÉ«
 	ubIROnOffFlag = 0;
-        printd(1, "UI_SetIRLed Off###\n");
+        printd(Apk_DebugLvl, "UI_SetIRLed Off###\n");
         //BUZ_PlaySingleSound();
     }
 }
@@ -1708,7 +1712,7 @@ void UI_TestCheck(void)
     #define Motor1_Wait     40
     static uint16_t ubTestCount = 0;
 
-    printd(1, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
+    printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
 
     if (ubTestCount == 0)
     {
