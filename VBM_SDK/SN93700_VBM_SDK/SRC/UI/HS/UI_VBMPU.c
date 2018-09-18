@@ -354,6 +354,8 @@ uint8_t ubVolWarnFlag  = 0;
 uint8_t ubEnterFactoryDelCam = 0;
 uint8_t ubFactoryDelCamFlag  = 0;
 
+uint8_t ubScanStartFlag  = 0;
+uint8_t ubScanCnt =0;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -788,11 +790,12 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
         if ((tCamViewSel.tCamViewType == SCAN_VIEW) && (FALSE == ubUI_ScanStartFlag))
             UI_EnableScanMode();
         */
-        if ((FALSE == ubUI_ScanStartFlag) && (tUI_PuSetting.ubScanTime > 0)&& (tUI_PuSetting.ubDefualtFlag == FALSE))
+
+    }
+	   if ((FALSE == ubUI_ScanStartFlag) && (tUI_PuSetting.ubScanTime > 0)&& (tUI_PuSetting.ubDefualtFlag == FALSE))
         {
             UI_EnableScanMode();
         }
-    }
 	ubUI_PuStartUpFlag = TRUE;
 
     tUI_PuSetting.IconSts.ubClearThdCntFlag = (tUI_SyncAppState == pAppStsRpt->tAPP_State)?FALSE:TRUE;
@@ -1240,6 +1243,7 @@ END_UPDATESTS:
         UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
     }
 
+    //UI_ExScan();	
 
     if(ubVolWarnFlag == 1)
     {
@@ -1349,6 +1353,31 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
     else if (PS_WOR_MODE == tUI_PsMode)
     {
         UI_SetupPuWorMode();
+    }
+    else if(PS_ADOONLY_MODE== tUI_PsMode)
+    {
+        if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
+            (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
+        {
+            tPsCmd.tDS_CamNum               = tCamViewSel.tCamViewPool[0];
+            tPsCmd.ubCmd[UI_TWC_TYPE]       = UI_SETTING;
+            tPsCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
+            tPsCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
+            tPsCmd.ubCmd_Len                = 3;
+            if (UI_SendRequestToBU(osThreadGetId(), &tPsCmd) != rUI_SUCCESS)
+            {
+                //printd(DBG_ErrorLvl, "VOX Notify Fail !\n");
+                //return;
+                ubVOXModeToBuRet = rUI_FAIL;
+            }
+	   else
+	   {
+		ubVOXModeToBuRet = rUI_SUCCESS;
+	   }
+			
+        }
+        tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = PS_VOX_MODE;
+        UI_SetupPuAdoOnlyMode();
     }
 }
 //------------------------------------------------------------------------------
@@ -1470,8 +1499,12 @@ void UI_SetSleepState(uint8_t type)
             ubPowerState = PWR_Prep_Wakeup;
             //if (ubVoxstatus == false)
             {
-                UI_DisableVox();
-                UI_SwitchCameraSource();
+                if(PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
+                    UI_DisablePuAdoOnlyMode();
+	       else
+		  UI_DisableVox(); 
+		   
+                UI_SwitchCameraSource(); 		
             }
             if (tUI_PuSetting.ubDefualtFlag == TRUE)
                 ubFactorySettingFlag = 0;
@@ -1483,8 +1516,11 @@ void UI_SetSleepState(uint8_t type)
     else
     {
         ubPowerState = PWR_Prep_Wakeup;
-        UI_DisableVox();
-        UI_SwitchCameraSource();
+        if(PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
+              UI_DisablePuAdoOnlyMode();
+	else
+	     UI_DisableVox(); 
+        UI_SwitchCameraSource();	
         ubSwitchCamWakeupSstate = 1;
     }
 }
@@ -3131,7 +3167,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
     uint8_t ubT_MinNum[3] = {0,  0,  0};
 //  UI_CamNum_t tSelCam;
 //  UI_PUReqCmd_t tPsCmd;
-
+#if 0
     if (ubFactoryModeFLag == 1)
     {
     	    if (tUI_SyncAppState == APP_LINK_STATE)
@@ -3140,7 +3176,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 		    	if(tArrowKey == LEFT_ARROW ||tArrowKey == RIGHT_ARROW || tArrowKey == UP_ARROW || tArrowKey == DOWN_ARROW);
 			{
 			   CmdData = UI_SET_BUMOTOR_SPEED_H_CMD;
-			  // CmdData = UI_SET_BUMOTOR_SPEED_L_CMD;
+			  CmdData = UI_SET_BUMOTOR_SPEED_L_CMD;
 			   UI_SendToBUCmd(&CmdData, 1);
 			   printd(1," SEND BU CMD SUCCESS!\n");	 
 			}	
@@ -3181,7 +3217,34 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 			}
     		}
     }
-	
+	#else
+    if (ubFactoryModeFLag == 1)
+    {
+    	printd(1,"UI_DisplayArrowKeyFunc yesyesyesyesyes\n");
+        switch (tArrowKey)
+        {
+        case LEFT_ARROW:
+            UI_MotorControl(MC_LEFT_ON);
+            break;
+
+        case RIGHT_ARROW:
+            UI_MotorControl(MC_RIGHT_ON);
+            break;
+
+        case UP_ARROW:
+            UI_MotorControl(MC_UP_ON);
+            break;
+
+        case DOWN_ARROW:
+            UI_MotorControl(MC_DOWN_ON);
+            break;
+
+        default:
+            break;
+        }
+        return;
+    }
+#endif	
     if ((tArrowKey == ENTER_ARROW)&&(tUI_PuSetting.ubDefualtFlag == FALSE))
     {
         //if (TRUE == tUI_PuSetting.ubScanModeEn)
@@ -8156,6 +8219,7 @@ void UI_SetScanMenu(uint8_t value)
     case 0:
         tUI_PuSetting.ubScanTime = 0;
         tUI_PuSetting.ubScanModeEn = FALSE;
+	ubScanStartFlag =0;
         break;
 
     case 1:
@@ -9674,7 +9738,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		    if (ubUpdateFWFlag == 1)return;
 		//ubTempValue =ubTempBelowZoreSta ? -(int16_t)(( pvdata[3] << 8 )|pvdata[4]) : (int16_t)(( pvdata[3] << 8 )| pvdata[4]);
 		ubTempValue =(int16_t)(( pvdata[3] << 8 )| pvdata[4]);
-		printd(Apk_DebugLvl, "UI_GetTempData  ubTempValue %d. \n",ubTempValue);
+		printd(1, "UI_GetTempData  ubTempValue %d.pvdata[3] %d pvdata[4] %d  \n",ubTempValue,pvdata[3],pvdata[4]);
 		 sprintf(str, "%5d", ubTempValue);
 		 for(i = 0; str[i]; i++)
 		{
@@ -13766,7 +13830,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
 		}
 	}
 */	
-    if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+    if((PS_VOX_MODE == tUI_PuSetting.tPsMode)||(PS_ADOONLY_MODE == tUI_PuSetting.tPsMode))
         return;
     if (FALSE == ubUI_ResetPeriodFlag)
     {
@@ -14775,8 +14839,13 @@ void UI_DisablePuAdoOnlyMode(void)
 {
 	APP_EventMsg_t tUI_PsMessage = {0};
 
+	if (ubSwitchNormalFlag == 0)
+	     return;
+
+	ubSwitchNormalFlag =0;
+	
+	ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
 	UI_DisableScanMode();
-	UI_ClearStatusBarOsdIcon();
 	UI_ClearBuConnectStatusFlag();
 	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
 	tUI_PsMessage.ubAPP_Message[0] = 2;		//! Message Length
@@ -14784,20 +14853,30 @@ void UI_DisablePuAdoOnlyMode(void)
 	tUI_PsMessage.ubAPP_Message[2] = FALSE;
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
-	tUI_State = UI_DISPLAY_STATE;
+	tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
+	//tUI_State = UI_DISPLAY_STATE;
 	switch(tCamViewSel.tCamViewType)
 	{
 		case SINGLE_VIEW:
 		case SCAN_VIEW:
 			if(tCamViewSel.tCamViewPool[0] != tUI_PuSetting.tAdoSrcCamNum)
 				UI_SwitchAudioSource(tCamViewSel.tCamViewPool[0]);
-			if(SINGLE_VIEW == tCamViewSel.tCamViewType)
-				break;
-			UI_EnableScanMode();
+			if(tUI_PuSetting.ubScanTime > 0)
+				UI_EnableScanMode();
 			break;
 		default:
 			break;
 	}
+	if (APP_LINK_EVENT == APP_UpdateLinkStatus())
+	{
+	        SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode
+	        osDelay(50);            //???
+	        LCD_PWR_ENABLE;
+	        osDelay(400);
+	}
+
+	 UI_UpdateDevStatusInfo();
+	  printd(1, "UI_DisableAdo only  ok###\n");
 }
 
 //------------------------------------------------------------------------------
@@ -15105,7 +15184,7 @@ void UI_SwitchCameraScan(uint8_t type)
 
     printd(1, "UI_SwitchCameraScan type: %d.\n", type);
     for (i = 0; i < 4; i++)
-        printd(Apk_DebugLvl, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
+        printd(1, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
     if (type == 0)
     {
@@ -15116,7 +15195,7 @@ void UI_SwitchCameraScan(uint8_t type)
     //if (ubPowerState != PWR_ON)   //20180803
     //  return;
 
-    printd(Apk_DebugLvl, "00000000000000000UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
+    //printd(1, "00000000000000000UI_SwitchCameraScan ubCameraOnlineNum: %d, tCamViewPool[0]: %d.\n", ubCameraOnlineNum, tCamViewSel.tCamViewPool[0]);
 #if 0
     if (ubCamOnlineNum < 2)
         return;
@@ -15180,23 +15259,39 @@ void UI_SwitchCameraScan(uint8_t type)
 
 
 //SWITCH_CAMERA:	
-	printd(Apk_DebugLvl, "4444444444444444UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
+	printd(1, "4444444444444444UI_SwitchCameraScan tCamSwtichNum: 0x%x.\n", tCamSwtichNum);
 	if(0xFF == tCamSwtichNum)
 		return;
 
-      ubPickupAlarmState = PICKUP_ALARM_IDLE;
-      ubPickupAlarmCheckCount = 0;
-      ubPickupAlarmTriggerCount = 0;
-      ubShowAlarmstate  = 0;
+         ubPickupAlarmState = PICKUP_ALARM_IDLE;
+         ubPickupAlarmCheckCount = 0;
+         ubPickupAlarmTriggerCount = 0;
+         ubShowAlarmstate  = 0;
+
+	if(PS_ADOONLY_MODE != tUI_PuSetting.tPsMode)
+	{
+		tCamViewSel.tCamViewType	= SINGLE_VIEW;
+		tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
+		tUI_PuSetting.tAdoSrcCamNum = tCamSwtichNum;
+		ubSetViewCam = tCamViewSel.tCamViewPool[0];
+		
+		UI_SwitchCameraSource();
+		UI_ClearBuConnectStatusFlag();
+		UI_UpdateDevStatusInfo();
+	}
 	
-	tCamViewSel.tCamViewType	= SINGLE_VIEW;
-	tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
-	tUI_PuSetting.tAdoSrcCamNum = tCamSwtichNum;
-	ubSetViewCam = tCamViewSel.tCamViewPool[0];
+	if(PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
+	{
+		tCamViewSel.tCamViewType	= SINGLE_VIEW;
+		tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
+		tUI_PuSetting.tAdoSrcCamNum = tCamSwtichNum;
+		ubSetViewCam = tCamViewSel.tCamViewPool[0];
 	
-	UI_SwitchCameraSource();
-	UI_ClearBuConnectStatusFlag();
-	UI_UpdateDevStatusInfo();
+		UI_SwitchAudioSource(tCamSwtichNum);
+		UI_UpdateDevStatusInfo();
+	}
+
+	
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb)
@@ -15264,7 +15359,7 @@ void UI_ScanModeTimerEvent(void)
 //------------------------------------------------------------------------------
 void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 {
-    printd(Apk_DebugLvl, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
+    //printd(1, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
 	//osDelay(1);
     ubUI_ScanStartFlag = ubTimerEn;
     if (TRUE == ubTimerEn)
@@ -15277,11 +15372,13 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
         {
             UI_TimerEventStop();
         }
-
+         ubScanStartFlag =1;
     }
     else
     {
         UI_TimerEventStop();
+         ubScanStartFlag =0;
+	ubScanCnt = 0;
     }
 }
 //------------------------------------------------------------------------------
@@ -15358,7 +15455,19 @@ void UI_ScanModeExec(void)
 #endif
 }
 
-
+void UI_ExScan(void)
+{
+      //printd(1,"ubScanStartFlag  %d , ubUI_ScanStartFlag  %d\n",ubScanStartFlag,ubScanStartFlag);
+     if((ubScanStartFlag == 1)&&(ubUI_ScanStartFlag == TRUE))
+     {
+     	  //printd(1,"ubScanCnt  %d\n",ubScanCnt);
+	  if(++ubScanCnt > ubCameraScanTime[tUI_PuSetting.ubScanTime]*5)
+	  {
+	  	UI_SwitchCameraScan(0);
+		ubScanCnt =0;
+	  }
+     }
+}
 
 //------------------------------------------------------------------------------
 UI_Result_t UI_CheckCameraSource4SV(void)
@@ -15553,10 +15662,7 @@ void UI_SetSpeaker(uint8_t type, uint8_t State)
         else
         {
             if (SPEAKER_STATE == TRUE)
-		{
-			if(ubFactoryModeFLag ==0)
-	                SPEAKER_EN(FALSE);
-            	}
+                SPEAKER_EN(FALSE);
             ubSpeakerCount = 0;
         }
     }

@@ -990,7 +990,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 		case PS_ADOONLY_MODE:
 		{
 			VDO_PsFuncPtr_t tAPP_AdoOnFunc[] = {VDO_Start, VDO_Stop};
-			APP_ActFuncPtr_t tAPP_LcdFunc[]  = {LCD_Resume, LCD_Suspend};
+			APP_ActFuncPtr_t tAPP_LcdFunc[]  = {APP_LcdDisplayOn, APP_LcdDisplayOff};
 			SYS_PowerState_t tAPP_PsState[]	 = {SYS_PS0, SYS_PS1};
 			uint8_t ubAPP_PsFlag 			 = ptEventMsg->ubAPP_Message[2];
 
@@ -1002,7 +1002,10 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 			if(tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr)
 				tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr();
 			if(FALSE == ubAPP_PsFlag)
+			{
 				LCDBL_ENABLE(UI_ENABLE);
+				ubSwitchNormalFlag = 1;
+			}	
 			break;
 		}
 		#endif

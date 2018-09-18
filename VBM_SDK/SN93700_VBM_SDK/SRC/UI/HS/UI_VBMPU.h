@@ -1158,5 +1158,6 @@ void UI_DisablePuAdoOnlyMode(void);
 void UI_SwitchAudioSource(UI_CamNum_t tCamNum);
 
 void UI_ExScan(void);
+UI_Result_t UI_SetupPuAdoOnlyMode(void);
 #endif
 
