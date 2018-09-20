@@ -115,6 +115,7 @@ void ADO_PTTStart(void)
 	
 	KNL_AdoStart(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	printd(DBG_InfoLvl, "		=>PTT Play\n");
+	printd(Apk_DebugLvl, "		=>PTT Play\n");
 }
 //------------------------------------------------------------------------------
 void ADO_PTTStop(void)
@@ -122,6 +123,7 @@ void ADO_PTTStop(void)
 	KNL_AdoStop(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	ubKNL_WaitNodeFinish(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	printd(DBG_InfoLvl, "		=>PTT Stop\n");
+	printd(Apk_DebugLvl, "		=>PTT Stop\n");
 }
 #endif
 //------------------------------------------------------------------------------
@@ -133,7 +135,7 @@ KNL_SRC ADO_GetSourceNumber(KNL_ROLE tADO_KNLRole)
 void ADO_Start(KNL_ROLE tADO_Role)
 {
 	uint32_t i;
-
+	
 #ifdef VBM_PU
 	KNL_ROLE tADO_KNLRole = KNL_STA1;
 #endif
@@ -171,7 +173,7 @@ void ADO_Stop(void)
 	KNL_AdoStop(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	ubKNL_WaitNodeFinish(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 #endif
-	tADO_TargetRole = KNL_NONE;
+	tADO_TargetRole = KNL_NONE;	
 }
 //------------------------------------------------------------------------------
 void ADO_KNLParamSetup(void)
@@ -194,7 +196,7 @@ void ADO_KNLParamSetup(void)
 
 	tADO_KNLParm.Compress_method 	 = COMPRESS_NONE;
 
-	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;
+	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;	
 	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_32KB;
 	tADO_KNLParm.Audio32_En_buf_size = BUF_SIZE_8KB;
 	tADO_KNLParm.Audio32_De_buf_size = BUF_SIZE_8KB;
@@ -228,7 +230,6 @@ void ADO_KNLParamSetup(void)
 
 	ADO_Set_DeHowling_Enable(ADO_OFF);
 
-	ADO_SetDeHowlingLV(DeHowlingLV0);
 	//! wav play volume compensation
 	ADO_WavplayVolCompensation(1);
 }

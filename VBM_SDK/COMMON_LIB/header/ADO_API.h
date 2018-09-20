@@ -596,25 +596,6 @@ typedef enum
 	ADO_WAV_PLAYING
 }ADO_WAV_STATE;
 
-
-typedef enum
-{
-	DeHowlingLV0 = 0,
-	DeHowlingLV1 = 1,										//!< cant play at this state
-	DeHowlingLV2 = 2,
-	DeHowlingLV3 = 3,
-	DeHowlingLV4 = 4,
-	DeHowlingLV5 = 5,
-	DeHowlingLV6 = 6
-	//!< allow play data
-}ADO_DeHowling_LV;
-
-typedef struct 
-{
-	uint16_t Block;
-	uint16_t Smaples;
-}DeHowlingPar;
-
 //------------------------------------------------------------------------------
 void ADO_SetAudioOutState (ADO_DAC_STATE_TYPE tState);
 ADO_DAC_STATE_TYPE tADO_GetAudioOutState (void);
@@ -1182,16 +1163,6 @@ void ADO_SelfTest_Close(void);
 \endcode
 */
 void ADO_WavplayVolCompensation(uint32_t ulGainValue);
-//------------------------------------------------------------------------------
-/*!
-\brief Set DeHowling LV
-\param ADO_DeHowling_LV		DeHowling Level
-\par [Example]
-\code 
-        ADO_SetDeHowlingLV(DeHowlingLV0);
-\endcode
-*/
-void ADO_SetDeHowlingLV(ADO_DeHowling_LV LV);
 
 typedef void(*pvADO_OutputCbFunc)(uint32_t, uint32_t);
 void ADO_SetOutputCbFunc(pvADO_OutputCbFunc pOutput_Cb);

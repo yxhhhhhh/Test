@@ -162,7 +162,7 @@ void VDO_UpdateDisplayParameter(void)
 	   (KNL_NONE == tKNL_Role[1]))
 		return;
 	VDO_SwitchDisplayType(tVDO_DisplayType, tKNL_Role);
-#endif	
+#endif
 }
 //------------------------------------------------------------------------------
 void VDO_DisplayLocationSetup(KNL_ROLE tVDO_BURole, KNL_DISP_LOCATION tVDO_DispLocation)

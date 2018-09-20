@@ -11,9 +11,9 @@
 	\file		PAIR.c
 	\brief		Pairing Function
 	\author		Bing
-	\version	2018/8/27
-	\date		0.6
-	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	2018/7/20
+	\date		0.4
+	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
@@ -29,10 +29,10 @@
 #include "APP_CFG.h"
 
 #define PAIR_MAJORVER	0
-#define PAIR_MINORVER	6
+#define PAIR_MINORVER	5
 
 uint32_t        ulPAIR_Timeout,ulPAIR_TimeCnt;
-uint8_t         ubPAIR_State,ubPAIR_Number;
+uint8_t         ubPAIR_State,ubPAIR_Number,ubPAIR_PaapCnt;
 osThreadId      PAIR_ThreadId;
 osMessageQId    *xAppEventQueue;
 PAIR_RRP_Hdr    PAIR_PrpPket;
@@ -55,11 +55,8 @@ uint8_t ubTestChTable[3] =
 //------------------------------------------------------------------------------
 static void PAIR_Thread(void const *argument)
 {
-	TWC_STATUS tTwcSts;
     PAIR_EventMsg_t tPair_EvtMsg = {0};
     uint16_t uwDelayMs;
-	uint8_t ubPAIR_EndFlag = FALSE;
-
 	while(1)
 	{
 		if(ubPAIR_State == PAIR_NULL)
@@ -70,26 +67,29 @@ static void PAIR_Thread(void const *argument)
 		if(ubPAIR_State == PAIR_START)
 		{
 			PAIR_PreparePrp();
+			ubPAIR_PaapCnt = 0;
 			ulPAIR_TimeCnt = 0;
 			ubPAIR_State = PAIR_PRP;
 			uwDelayMs = PAIR_PRP_DELAY;
 		}
 		else if(ubPAIR_State == PAIR_PRP)
 		{
-			tTwcSts = tTWC_Send(TWC_AP_MASTER, TWC_PRP, (uint8_t *)&PAIR_PrpPket,sizeof(PAIR_PrpPket), 8);
-			printf("Sent TWC_PRP_%s \n", (TWC_SUCCESS == tTwcSts)?"ok":"fail");
+//			printf("Sent TWC_PRP");
+			if(tTWC_Send(TWC_AP_MASTER, TWC_PRP, (uint8_t *)&PAIR_PrpPket,sizeof(PAIR_PrpPket), 8) == TWC_SUCCESS)
+				printd(Apk_DebugLvl,"Sent TWC_PRP_ok \n");
+
 			uwDelayMs = PAIR_PRP_DELAY;
 		}
 		else if(ubPAIR_State == PAIR_PAAP)
 		{
-			tTwcSts = tTWC_Send(TWC_AP_MASTER, TWC_PAAP, (uint8_t *)&PAIR_PapPket, sizeof(PAIR_PapPket), 8);
-			printf("Sent TWC_PAAP_%s\n", (TWC_SUCCESS == tTwcSts)?"ok":"fail");
+			printd(Apk_DebugLvl,"Sent TWC_PAAP\n");
+			tTWC_Send(TWC_AP_MASTER, TWC_PAAP, (uint8_t *)&PAIR_PapPket, sizeof(PAIR_PapPket), 8);
 			uwDelayMs = PAIR_PAAP_DELAY;
-			if(FALSE == ubPAIR_EndFlag)
+			ubPAIR_PaapCnt++;
+			if(ubPAIR_PaapCnt == PAIR_PAAP_SENT_CNT)
 			{
-				ulPAIR_TimeCnt = 0;
-				ulPAIR_Timeout = 3000;
-				ubPAIR_EndFlag = TRUE;
+				ubPAIR_PaapCnt = 0;
+				ubPAIR_State = PAIR_END;
 			}
 		}
 		else if(ubPAIR_State == PAIR_END)
@@ -97,13 +97,11 @@ static void PAIR_Thread(void const *argument)
 			tTWC_StopTwcSend(TWC_AP_MASTER, TWC_PRP);
 			tTWC_StopTwcSend(TWC_AP_MASTER, TWC_PAAP);
 			BB_HoppingPairingEnd();
+			printd(Apk_DebugLvl,"PAIR_END\n");
 			tPair_EvtMsg.ubPAIR_Event 		= APP_PAIRING_SUCCESS_EVENT;
 			tPair_EvtMsg.ubPAIR_Message[0] 	= PAIR_GetStaNumber();
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
-			PAIR_SaveId();
-			printf("PAIR_END\n");
 			ulPAIR_TimeCnt = 0;
-			ubPAIR_EndFlag = FALSE;
 			osThreadSuspend(PAIR_ThreadId);
 		}
 		ulPAIR_TimeCnt += uwDelayMs;
@@ -116,28 +114,23 @@ static void PAIR_Thread(void const *argument)
 			ubPAIR_State = PAIR_TIMEOUT;
 			tPair_EvtMsg.ubPAIR_Event = APP_PAIRING_FAIL_EVENT;
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
-			printf("PAIR_TIMEOUT\n");
+			printd(Apk_DebugLvl,"PAIR_TIMEOUT\n");
 			osThreadSuspend(PAIR_ThreadId);
 		}
 		osDelay(uwDelayMs);
-#endif
+#endif		
 #if OP_AP
 		if(ubPAIR_State == PAIR_START)
 		{
-			printf("Wait PRP\n");
+			printd(Apk_DebugLvl,"Wait PRP\n");
 			uwDelayMs = PAIR_START_DELAY;
 		}
 		else if(ubPAIR_State == PAIR_PAP)
 		{
-			tTwcSts = tTWC_Send(TWC_STA1, TWC_PAP, (uint8_t *)&PAIR_PapPket, sizeof(PAIR_PapPket), 8);
-			printf("Sent PAIR_PAP_%s\n", (TWC_SUCCESS == tTwcSts)?"ok":"fail");
+//			printf("Sent PAIR_PAP "); 
+			if(tTWC_Send(TWC_STA1, TWC_PAP, (uint8_t *)&PAIR_PapPket, sizeof(PAIR_PapPket), 8)== TWC_SUCCESS)
+				printd(Apk_DebugLvl,"Sent PAIR_PAP ok \n");
 			uwDelayMs = PAIR_PAP_DELAY;
-			if(FALSE == ubPAIR_EndFlag)
-			{
-				ulPAIR_TimeCnt = 0;
-				ulPAIR_Timeout = 3000;
-				ubPAIR_EndFlag = TRUE;
-			}
 		}
 		else if(ubPAIR_State == PAIR_END)
 		{
@@ -151,10 +144,8 @@ static void PAIR_Thread(void const *argument)
 				tPair_EvtMsg.ubPAIR_Message[2] = APP_UNBIND_BU_EVENT;
 			}
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
-			PAIR_SaveId();
-			printf("PAIR_END\n");
+			printd(Apk_DebugLvl,"PAIR_END\n");
 			ulPAIR_TimeCnt = 0;
-			ubPAIR_EndFlag = FALSE;
 			tPair_EvtMsg.ubPAIR_Message[2] = APP_REFRESH_EVENT;
 			osThreadSuspend(PAIR_ThreadId);
 		}
@@ -168,7 +159,7 @@ static void PAIR_Thread(void const *argument)
 			tPair_EvtMsg.ubPAIR_Event = APP_PAIRING_FAIL_EVENT;
 			osMessagePut(*xAppEventQueue, &tPair_EvtMsg, 5000);
 			osThreadSuspend(PAIR_ThreadId);
-		}
+		} 
 		osDelay(uwDelayMs);
 #endif
 	}
@@ -179,19 +170,20 @@ void PAIR_Init(osMessageQId *pvMsgQId)
     xAppEventQueue = pvMsgQId;
 	ulPAIR_SFAddr = pSF_Info->ulSize - (PAIR_SF_START_SECTOR * pSF_Info->ulSecSize);
 #if (OP_STA||OP_AP_SLAVE)
-	if(tTWC_RegTransCbFunc(TWC_PAP, NULL, PAIR_Pap) == TWC_FAIL)
-		printf("Register Pair PAP TWC Fail !\n");
-	if(tTWC_RegTransCbFunc(TWC_PAAP, PAIR_PaapResp, NULL) == TWC_FAIL)
-		printf("Register Pair PAAP TWC Fail !\n");
+	if(tTWC_RegTransCbFunc(TWC_PAP,NULL,PAIR_Pap) == TWC_FAIL)
+	{
+	}
 #endif		
 #if OP_AP
-	if(tTWC_RegTransCbFunc(TWC_PRP, NULL, PAIR_Prp) == TWC_FAIL)
-		printf("Register Pair PRP TWC Fail !\n");
-    if(tTWC_RegTransCbFunc(TWC_PAAP, NULL, PAIR_Paap) == TWC_FAIL)
-		printf("Register Pair PAAP TWC Fail !\n");
+	if(tTWC_RegTransCbFunc(TWC_PRP,NULL,PAIR_Prp) == TWC_FAIL)
+	{
+	}	
+    if(tTWC_RegTransCbFunc(TWC_PAAP,NULL,PAIR_Paap) == TWC_FAIL)
+	{
+	}
 	tPAIR_DelStaNum = PAIR_AP_ASSIGN;
 #endif
-    ubPAIR_State  = PAIR_NULL;
+    ubPAIR_State  = PAIR_NULL;	
 	PAIR_LoadId();
 	osThreadDef(PAIR_Thread, PAIR_Thread, THREAD_PRIO_PAIRING_HANDLER, 1, THREAD_STACK_PAIRING_HANDLER);
     PAIR_ThreadId = osThreadCreate(osThread(PAIR_Thread), NULL);
@@ -246,7 +238,7 @@ uint8_t *PAIR_GetId(PAIR_TAG tPair_StaNum)
         return (tPair_StaNum <= PAIR_STA4)?(uint8_t *)&(PAIR_IdTable.ulSTA_ID[tPair_StaNum]):(uint8_t *)&ubPAIR_InvaildID;
 }
 //------------------------------------------------------------------------------
-void PAIR_Start(PAIR_TAG tPair_StaNum, uint32_t ulPair_Timeout, uint8_t ubPairTxPower)
+void PAIR_Start(PAIR_TAG tPair_StaNum, uint32_t ulPair_Timeout,uint8_t ubPairTxPower)
 {
     if( ubPAIR_State > PAIR_TIMEOUT)
     {
@@ -305,21 +297,16 @@ void PAIR_Pap(TWC_TAG GetSta,uint8_t *pData)
     {
         memcpy(&PAIR_PapPket, pData, sizeof(PAIR_PapPket));
 		memcpy(&PAIR_IdTable, pData, sizeof(PAIR_ID_TABLE));
-//        PAIR_SaveId();
+        PAIR_SaveId();
         ubPAIR_State = PAIR_PAAP;
     }
     else if(((pData[0] == PAIR_PrpPket.ubTxNumber)||(PAIR_PrpPket.ubTxNumber == PAIR_AP_ASSIGN))&&(PAIR_PrpPket.ubIdCheckKey == pData[ubTemp*4+8]) && (ubPAIR_State == PAIR_PRP))
     {
         memcpy(&PAIR_PapPket, pData, sizeof(PAIR_PapPket));
 		memcpy(&PAIR_IdTable, pData, sizeof(PAIR_ID_TABLE));
-//        PAIR_SaveId();
+        PAIR_SaveId();
         ubPAIR_State = PAIR_PAAP;
     }
-}
-//------------------------------------------------------------------------------
-void PAIR_PaapResp(TWC_TAG GetSta, TWC_STATUS tStatus)
-{
-	ubPAIR_State = PAIR_END;
 }
 //------------------------------------------------------------------------------
 void PAIR_LoadPairingResult(uint8_t *pRole)
@@ -422,7 +409,7 @@ void PAIR_Paap(TWC_TAG GetSta,uint8_t *pData)
         if(memcmp(&PAIR_PapPket , pData, sizeof(PAIR_RAP_Hdr))==0)
         {
 			memcpy(&PAIR_IdTable, pData, sizeof(PAIR_ID_TABLE));
-//            PAIR_SaveId();
+            PAIR_SaveId();
             ubPAIR_State = PAIR_END;
         }
         else

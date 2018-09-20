@@ -249,14 +249,6 @@ uint32_t ulBUF_FsBufAddr;
 //REC
 uint32_t ulBUF_RecBufAddr;
 
-//USBD path
-uint8_t ubBUF_VdoUsbdBufTag[BUF_NUM_USBD_VDO];
-uint32_t ulBUF_VdoUsbdBufAddr[BUF_NUM_USBD_VDO];	
-uint8_t ubBUF_VdoUsbdBufNum;
-uint8_t ubBUF_AdoUsbdBufTag[BUF_NUM_USBD_ADO];
-uint32_t ulBUF_AdoUsbdBufAddr[BUF_NUM_USBD_ADO];	
-uint8_t ubBUF_AdoUsbdBufNum;
-
 uint32_t ulBUF_FreeBufAddr;
 uint32_t ulBUF_InitFreeBufAddr;
 
@@ -362,6 +354,7 @@ void BUF_Reset(uint8_t ubBufMode)
 		}
 		ubBUF_VdoMainBs3BufIdx 	= ubBUF_VdoMainBs3BufNum-1;
 	}
+	
 	else if(ubBufMode == BUF_VDO_AUX_BS0)
 	{
 		for(i=0;i<ubBUF_VdoAuxBs0BufNum;i++)
@@ -394,6 +387,7 @@ void BUF_Reset(uint8_t ubBufMode)
 		}
 		ubBUF_VdoAuxBs3BufIdx = ubBUF_VdoAuxBs3BufNum-1;
 	}
+	
 	else if(ubBufMode == BUF_VDO_SUB_BS00)
 	{
 		for(i=0;i<ubBUF_VdoSubBs00BufNum;i++)
@@ -495,23 +489,9 @@ void BUF_Reset(uint8_t ubBufMode)
 	{
 		for(i=0;i<ubBUF_Dac3BufNum;i++)
 		{
-			ubBUF_Dac3BufTag[i]	= BUF_FREE;
+			ubBUF_Dac3BufTag[i]	= BUF_FREE;			
 		}
-		ubBUF_Dac3BufIdx = ubBUF_Dac3BufNum-1;
-	}
-	else if(ubBufMode == BUF_USBD_VDO)
-	{
-		for(i=0;i<ubBUF_VdoUsbdBufNum;i++)
-		{
-			ubBUF_VdoUsbdBufTag[i]	= BUF_FREE;
-		}
-	}
-	else if(ubBufMode == BUF_USBD_ADO)
-	{
-		for(i=0;i<ubBUF_AdoUsbdBufNum;i++)
-		{
-			ubBUF_AdoUsbdBufTag[i]	= BUF_FREE;
-		}
+		ubBUF_Dac3BufIdx = ubBUF_Dac3BufNum-1;		
 	}
 }
 
@@ -937,28 +917,6 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
 		ulBUF_FreeBufAddr = ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
         printd(DBG_Debug3Lvl, "REC--->BUF_BufInit->ulBUF_FreeBufAddr:0x%X\n",ulBUF_FreeBufAddr); 
     }
-	else if(ubBufMode == BUF_USBD_VDO)
-	{
-		for(i=0;i<ubBufNum;i++)
-		{
-			ubBUF_VdoUsbdBufTag[i]	= BUF_FREE;
-			ulBUF_VdoUsbdBufAddr[i] = ulBUF_FreeBufAddr;
-			ulBUF_FreeBufAddr		= ulBUF_FreeBufAddr+ulUnitSz;
-			ulBUF_FreeBufAddr 		= ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
-		}
-		ubBUF_VdoUsbdBufNum	= ubBufNum;
-	}
-	else if(ubBufMode == BUF_USBD_ADO)
-	{
-		for(i=0;i<ubBufNum;i++)
-		{
-			ubBUF_AdoUsbdBufTag[i]	= BUF_FREE;
-			ulBUF_AdoUsbdBufAddr[i] = ulBUF_FreeBufAddr;
-			ulBUF_FreeBufAddr		= ulBUF_FreeBufAddr+ulUnitSz;
-			ulBUF_FreeBufAddr 		= ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
-		}
-		ubBUF_AdoUsbdBufNum	= ubBufNum;
-	}
 	else if(ubBufMode == BUF_JPG_BS)
 	{
 		for(i = 0; i < ubBufNum; i++)
@@ -2103,78 +2061,6 @@ uint8_t ubBUF_ReleaseDac5Buf(uint32_t ulBufAddr)
 	osSemaphoreRelease(tBUF_Dac5BufAcc);
 #endif
 	return ubDacResult;
-}
-
-uint32_t ulBUF_GetVdoUsbdFreeBuf(void)
-{
-	uint8_t ubBufIdx;
-	
-	for(ubBufIdx = 0; ubBufIdx < BUF_NUM_USBD_VDO; ubBufIdx++)
-	{
-		if(ubBUF_VdoUsbdBufTag[ubBufIdx] == BUF_FREE)
-			break;
-	}
-	if(BUF_NUM_USBD_VDO == ubBufIdx)
-	{
-		printd(DBG_ErrorLvl, "Get USBD VDO Buf Err !\n");
-		return BUF_FAIL;
-	}
-	ubBUF_VdoUsbdBufTag[ubBufIdx] = BUF_USED;
-	return ulBUF_VdoUsbdBufAddr[ubBufIdx];
-}
-
-uint32_t ulBUF_GetAdoUsbdFreeBuf(void)
-{
-	uint8_t ubBufIdx;
-	
-	for(ubBufIdx = 0; ubBufIdx < BUF_NUM_USBD_ADO; ubBufIdx++)
-	{
-		if(ubBUF_AdoUsbdBufTag[ubBufIdx] == BUF_FREE)
-			break;
-	}
-	if(BUF_NUM_USBD_ADO == ubBufIdx)
-	{
-		printd(DBG_ErrorLvl, "Get USBD ADO Buf Err !\n");
-		return BUF_FAIL;
-	}
-	ubBUF_AdoUsbdBufTag[ubBufIdx] = BUF_USED;
-	return ulBUF_AdoUsbdBufAddr[ubBufIdx];
-}
-
-uint8_t ubBUF_ReleaseVdoUsbdBuf(uint32_t ulBufAddr)
-{
-	uint8_t ubBufIdx = BUF_NUM_USBD_VDO;
-
-	for(ubBufIdx = 0; ubBufIdx < BUF_NUM_USBD_VDO; ubBufIdx++)
-	{
-		if(ulBufAddr == ulBUF_VdoUsbdBufAddr[ubBufIdx])
-			break;
-	}
-	if(BUF_NUM_USBD_VDO == ubBufIdx)
-	{
-//		printd(DBG_ErrorLvl, "Fail @ubBUF_ReleaseVdoUsbdBuf !!!\r\n");
-		return BUF_FAIL;
-	}
-	ubBUF_VdoUsbdBufTag[ubBufIdx] = BUF_FREE;
-	return BUF_OK;
-}
-
-uint8_t ubBUF_ReleaseAdoUsbdBuf(uint32_t ulBufAddr)
-{
-	uint8_t ubBufIdx = BUF_NUM_USBD_ADO;
-
-	for(ubBufIdx = 0; ubBufIdx < BUF_NUM_USBD_ADO; ubBufIdx++)
-	{
-		if(ulBufAddr == ulBUF_AdoUsbdBufAddr[ubBufIdx])
-			break;
-	}
-	if(BUF_NUM_USBD_ADO == ubBufIdx)
-	{
-//		printd(DBG_ErrorLvl, "Fail @ubBUF_ReleaseAdoUsbdBuf !!!\r\n");
-		return BUF_FAIL;
-	}
-	ubBUF_AdoUsbdBufTag[ubBufIdx] = BUF_FREE;
-	return BUF_OK;	
 }
 
 //Get IP or Function Buffer Address

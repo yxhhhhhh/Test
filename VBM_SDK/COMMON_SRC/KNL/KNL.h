@@ -11,8 +11,8 @@
 	\file		KNL.h
 	\brief		Kernel Control header file
 	\author		Justin Chen
-	\version	1.16
-	\date		2018/08/21
+	\version	1.13
+	\date		2018/08/02
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -681,13 +681,6 @@ void KNL_VdoStart(uint8_t ubSrcNum);
 \return(no)
 */
 void KNL_VdoStop(uint8_t ubSrcNum);
-
-//------------------------------------------------------------------------
-/*!
-\brief BB Datapath activity
-\return(no)
-*/
-void KNL_SetTRXPathActivity(void);
 
 //------------------------------------------------------------------------
 /*!

@@ -70,7 +70,7 @@ void BSP_DriversInit(void)
 	GPIO->GPIO_OE10 = 0;
 
 	//! USB_DET	
-	GPIO->GPIO_OE11 = 0;//PWM11 /GLB->PADIO11 = 3会导致开机进不了系统,一直卡在开机logo
+	GPIO->GPIO_OE11 = 0;
 
 	//! FCHG_ON
 	GPIO->GPIO_OE12 = 1;

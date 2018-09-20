@@ -1,0 +1,6 @@
+!.gitignore
+!SN93700_VBM_BU_HS.sct
+!SN93700_VBM_PU_HS.sct
+!Boot_Hook.bin
+!Boot_Hook.hex
+!ISPMemDrive.bin

@@ -843,7 +843,7 @@ void UI_TempCheck(void) //20180322
     uint8_t ubRdData[2] = {0};
     bool    ret = 0;
     int32_t tem = 0;
-     int32_t tem_test = 0;
+    int32_t tem_test = 0;
     static int32_t tem_last  = 0;
     static uint8_t temp_flag = 0;
     uint8_t ubTempValueH = 0;
@@ -883,24 +883,11 @@ void UI_TempCheck(void) //20180322
     } else {
         tem -=50;
     }
-	#if 0
-   if(tem >= 0)
-   {
-	    //-- tempture compensation
-	    tem_test = tem;
-	    ubTempValueH = tem_test >> 8 & 0xff;
-	    ubTempValueL = tem_test >> 0;
-   }
-   else
-   {
-   	tem_test  = -tem;
-	ubTempValueH = tem_test >> 8 & 0xff;
-	ubTempValueL = tem_test >> 0;
-   }
-   #else
-   ubTempValueH = (((int16_t)tem) >> 8) & 0xff;
-   ubTempValueL = (((int16_t)tem) >> 0) & 0xff;
-   #endif
+    //-- tempture compensation
+
+    ubTempValueH = (((int16_t)tem) >> 8) & 0xff;
+    ubTempValueL = (((int16_t)tem) >> 0) & 0xff;
+
     printd(Apk_DebugLvl,"1111111111tem  %d  tem_test %d  ubTempValueH %x ubTempValueL %x\n",tem,tem_test,ubTempValueH,ubTempValueL);
     tem += tem > 0 ?  50 : -50;
     tem /= 100;
@@ -909,14 +896,14 @@ void UI_TempCheck(void) //20180322
 
 report:
     printd(Apk_DebugLvl, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
-   // if (tem_last != tem) 
-   {
+    // if (tem_last != tem) 
+    {
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
         tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM]    = UI_TEMP_CHECK;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1]  = ubTempBelowZore;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  =!ret;
-	 tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+3]  = ubTempValueH;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+3]  = ubTempValueH;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+4]  = ubTempValueL;
         tUI_TempReqCmd.ubCmd_Len                = 7;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
