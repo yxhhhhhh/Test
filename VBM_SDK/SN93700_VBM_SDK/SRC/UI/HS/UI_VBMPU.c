@@ -782,13 +782,11 @@ void UI_UpdateAppStatus(void *ptAppStsReport)
             UI_EnableScanMode();
         */
 
-    }
 	   if ((FALSE == ubUI_ScanStartFlag) && (tUI_PuSetting.ubScanTime > 0)&& (tUI_PuSetting.ubDefualtFlag == FALSE))
-        {
-            UI_EnableScanMode();
-        }
-	ubUI_PuStartUpFlag = TRUE;
-
+	   {
+	       UI_EnableScanMode();
+	   }
+	   ubUI_PuStartUpFlag = TRUE;
     }
     tUI_PuSetting.IconSts.ubClearThdCntFlag = (tUI_SyncAppState == pAppStsRpt->tAPP_State)?FALSE:TRUE;
     tUI_SyncAppState = pAppStsRpt->tAPP_State;
@@ -1288,9 +1286,6 @@ void UI_PowerOnSet(void)
 //------------------------------------------------------------------------------
 void UI_EventHandles(UI_Event_t *ptEventPtr)
 {
-	printd(Apk_DebugLvl,"UI_EventHandles  ubUI_PuStartUpFlag %d \n",ubUI_PuStartUpFlag);
-	if(FALSE == ubUI_PuStartUpFlag)
-		return;
 	switch(ptEventPtr->tEventType)
 	{
 		case AKEY_EVENT:
@@ -15279,20 +15274,6 @@ void UI_ScanModeExec(void)
      UI_SwitchCameraScan(0);
      UI_SetupScanModeTimer(TRUE);
 #endif
-}
-
-void UI_ExScan(void)
-{
-      //printd(1,"ubScanStartFlag  %d , ubUI_ScanStartFlag  %d\n",ubScanStartFlag,ubScanStartFlag);
-     if((ubScanStartFlag == 1)&&(ubUI_ScanStartFlag == TRUE))
-     {
-     	  //printd(1,"ubScanCnt  %d\n",ubScanCnt);
-	  if(++ubScanCnt > ubCameraScanTime[tUI_PuSetting.ubScanTime]*5)
-	  {
-	  	UI_SwitchCameraScan(0);
-		ubScanCnt =0;
-	  }
-     }
 }
 
 //------------------------------------------------------------------------------
