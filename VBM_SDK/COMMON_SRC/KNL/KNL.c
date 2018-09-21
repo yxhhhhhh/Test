@@ -1519,7 +1519,7 @@ void KNL_BlockInit(void)
 #endif
 
 #ifdef VBM_BU
-		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_13p5DB); // 20180524
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_16p5DB); // 20180524
 #endif
 		SDADC->AGC_OFF = 1;
 		

@@ -35,7 +35,7 @@
 #define osUI_SIGNALS    0x6A
 
 #define MC_ENABLE  1
-
+#define MC_AUYO_TEST_ENABLE  1
 #define TEST_MODE  0
 
 /**
@@ -106,7 +106,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint32_t ubBuSWVersion = 07;
+uint8_t ubBuSWVersion = 11;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -122,6 +122,7 @@ uint32_t ubTempcnt = 0;
 uint8_t ubTempflag = 0;
 uint8_t ubUpdateFWFlag = 0;
 uint8_t ubIROnOffFlag = 0;
+uint8_t ubAutoMotorTestFlag = 0;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -331,7 +332,13 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         break;
     }
     //PAIRING_LED_IO = 0;
-
+#if MC_AUYO_TEST_ENABLE
+	if(ubAutoMotorTestFlag == 1)
+	{
+		UI_TestCheck();
+		GPIO->GPIO_O4 = 1;
+	}
+#endif
     UI_StatusCheck(*pThreadCnt);
     tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
     UI_SendMessageToAPP(&tUI_GetLinkStsMsg);
@@ -1186,6 +1193,8 @@ void UI_LoadDevStatusInfo(void)
 	}
 
     ADO_SetDacR2RVol(R2R_VOL_n0DB);
+    ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_16p5DB); // 20180920
+
 }
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)
@@ -1266,7 +1275,7 @@ void UI_MotoControlInit(void)
 
     tMC_SettingApp.ubMC_ClockDivider = 63;
     tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-    tMC_SettingApp.ubMC_HighPeriod = 36;    //18  64
+    tMC_SettingApp.ubMC_HighPeriod =36 ;    //18  64
     tMC_SettingApp.ubMC_PeriodPerStep = 36; //16  48
     tMC_Setup(MC_1,&tMC_SettingApp);    //up down
 #endif
@@ -1487,12 +1496,12 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
         ubSoundAlarm = pRecvPuParam[3];
         break;
 
-    case UI_SET_BUMIC12_CMD:
-		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_12DB); // 20180903
+    case UI_SET_BUMIC5_8_CMD:
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_13p5DB); // 20180903
 		break;
 		
-   case  UI_SET_BUMIC13_5_CMD:
-		//ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_13p5DB); // 20180524
+   case  UI_SET_BUMIC1_4_CMD:
+		ADO_SetSigmaDeltaAdcGain(ADO_SIG_BOOST_0DB, ADO_SIG_PGA_16p5DB); // 20180524
 		break;
 
     case UI_SET_BUMOTOR_SPEED_H_CMD:
@@ -1508,8 +1517,8 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 
 	    tMC_SettingApp.ubMC_ClockDivider = 63;
 	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	    tMC_SettingApp.ubMC_HighPeriod = 12;    //18  64
-	    tMC_SettingApp.ubMC_PeriodPerStep = 12; //16  48
+	    tMC_SettingApp.ubMC_HighPeriod = 24;    //18  64
+	    tMC_SettingApp.ubMC_PeriodPerStep = 18; //16  48
 	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
 
 	    printd(Apk_DebugLvl,"SET MOTOR SPEED SUCCESS\n");;
@@ -1551,7 +1560,7 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 
 	    tMC_SettingApp.ubMC_ClockDivider = 63;
 	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	    tMC_SettingApp.ubMC_HighPeriod = 48;//48/24/18
+	    tMC_SettingApp.ubMC_HighPeriod = 60;//48/24/18
 	    tMC_SettingApp.ubMC_PeriodPerStep = 48;//36/18/16
 	    tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
 	    tMC_Setup(MC_0,&tMC_SettingApp);    //left right
@@ -1559,10 +1568,13 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	    tMC_SettingApp.ubMC_ClockDivider = 63;
 	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
 	    tMC_SettingApp.ubMC_HighPeriod = 60;    //18  64
-	    tMC_SettingApp.ubMC_PeriodPerStep = 60; //16  48
+	    tMC_SettingApp.ubMC_PeriodPerStep = 48; //16  48
 	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
 	}
 	break;
+	case UI_SET_BUMOTOR_AUTO_CMD:
+		ubAutoMotorTestFlag = 1;
+		break;
     default:
         break;
     }
@@ -1624,7 +1636,7 @@ void UI_BrightnessCheck(void) //20180408
 
     uwDetLvl = uwSADC_GetReport(1);
 
-	if(uwDetLvl < 0x32)
+	if(uwDetLvl < 0x28)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
@@ -1693,10 +1705,10 @@ void UI_TestSetting(void *pvTSParam)
 
 void UI_TestCheck(void)
 {
-    #define Motor0_Count    200
-    #define Motor1_Count    100
-    #define Motor0_Wait     100
-    #define Motor1_Wait     40
+    #define Motor0_Count    100
+    #define Motor1_Count    40
+    #define Motor0_Wait     10
+    #define Motor1_Wait     10
     static uint16_t ubTestCount = 0;
 
     printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);

@@ -77,7 +77,7 @@ UI_KeyEventMap_t UiKeyEventMap[] =
     {AKEY_PS,           0,          UI_BuPowerSaveKey,          NULL},
     {AKEY_PS,           20,         UI_PuPowerSaveKey,          NULL},
     {AKEY_PTT,          0,          UI_PushTalkKeyShort,        NULL},
-    {AKEY_PTT,          7,          UI_PushTalkKey,             NULL},
+    {AKEY_PTT,          3,          UI_PushTalkKey,             NULL},
     {PKEY_ID0,          0,          UI_PowerKeyShort,           NULL},
     {PKEY_ID0,          20,         UI_PowerKey,                NULL},
     {GKEY_ID0,          0,          UI_VolUpKey,                NULL},
@@ -303,8 +303,8 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 07;
-uint32_t ubHWVersion = 07;
+uint32_t ubPuSWVersion = 11;
+uint32_t ubHWVersion = 11;
 uint8_t ubBuHWVersion = 0;
 uint32_t ubBuSWVersion = 0;
 
@@ -432,17 +432,15 @@ void UI_KeyEventExec(void *pvKeyEvent)
             }
         }
 
-/*        if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
+        if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
         {
 		    uint8_t CmdData;
 		    uint8_t sendflag = 0;
-		   CmdData = UI_SET_BUMOTOR_SPEED_CMD;
-		   if(sendflag == 0)
-		  	 while(!UI_SendToBUCmd(&CmdData, 1));
-		   sendflag = 1;
-		   printd(1," SEND BU CMD SUCCESS!\n");	             
+		   CmdData = UI_SET_BUMOTOR_AUTO_CMD;
+		  UI_SendToBUCmd(&CmdData, 1);
+		   printd(1," SEND BU CMD !\n");	             
         }
-*/
+
         if (ptKeyEvent->ubKeyAction == KEY_DOWN_ACT)
         {
             UI_FactorymodeKeyDisplay(ptKeyEvent->ubKeyID);
@@ -3579,27 +3577,25 @@ void UI_VolUpKey(void)
     }
 
 
-/*	//脨脼赂脛脭枚脪忙 
+
 	uint8_t CmdData;
-=======
-/*	//修改增益 
->>>>>>> parent of 49dc01d... 鍚堝苟33鐗堟湰
+
+//修改增益 
     if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL4)
     {
-    	     CmdData = UI_SET_BUMIC12_CMD;
+    	     CmdData = UI_SET_BUMIC5_8_CMD;
             UI_SendToBUCmd(&CmdData, 1);
 		printd(1,"121212121212send BU 12DB !\n");
 
     }
     else
     {
-            CmdData = UI_SET_BUMIC13_5_CMD;
+            CmdData = UI_SET_BUMIC1_4_CMD;
             UI_SendToBUCmd(&CmdData, 1);
 	printd(1,"131313131313send BU 12DB !\n");
 
     }
 
-*/
 
     UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
     ubMenuKeyPairing = 0;
@@ -3657,22 +3653,22 @@ void UI_VolDownKey(void)
     {
         tUI_PuSetting.VolLvL.tVOL_UpdateLvL--;
     }
-/*
+
 	uint8_t CmdData;
     if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL > VOL_LVL4)
     {
-    	     CmdData = UI_SET_BUMIC12_CMD;
+    	     CmdData = UI_SET_BUMIC5_8_CMD;
             UI_SendToBUCmd(&CmdData, 1);
 		printd(1,"121212121212send BU 12DB !\n");
     }
     else
     {
-            CmdData = UI_SET_BUMIC13_5_CMD;
+            CmdData = UI_SET_BUMIC1_4_CMD;
             UI_SendToBUCmd(&CmdData, 1);
 		printd(1,"131313131313send BU 12DB !\n");
 
     }
-*/
+
     UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
     ubMenuKeyPairing = 0;
     tUI_State = UI_DISPLAY_STATE;
@@ -6362,7 +6358,7 @@ void UI_PlayAlarmSound(uint8_t type)
     {
         ADO_Stop(); // by xiao
         ADO_SetDacMute(DAC_MR_0p5DB_8SAMPLE, ADO_OFF); // by xiao
-        ADO_SetDacR2RVol(R2R_VOL_n5p6DB);
+        ADO_SetDacR2RVol(R2R_VOL_n0DB);
         if (ubAlarmPlayState == 0)
         {
             ubAlarmPlayState = 1;
@@ -14686,8 +14682,8 @@ void UI_EnableVox(void)
     UI_SendMessageToAPP(&tUI_PsMessage);
     tUI_PuSetting.tPsMode = PS_VOX_MODE;
     UI_UpdateDevStatusInfo();
-   // LCD_UnInit();
-    //LCD->LCD_MODE = LCD_GPIO;
+    LCD_UnInit();
+    LCD->LCD_MODE = LCD_GPIO;
     printd(Apk_DebugLvl, "UI_EnableVox ok.\n");
 }
 //------------------------------------------------------------------------------
