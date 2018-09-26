@@ -36,6 +36,7 @@
 
 #define MC_ENABLE  1
 #define MC_AUYO_TEST_ENABLE  1
+#define NOCONNECT_MC_AUYO_TEST_ENABLE  0
 #define TEST_MODE  0
 
 /**
@@ -106,7 +107,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint8_t ubBuSWVersion = 11;
+uint8_t ubBuSWVersion = 12;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -123,6 +124,9 @@ uint8_t ubTempflag = 0;
 uint8_t ubUpdateFWFlag = 0;
 uint8_t ubIROnOffFlag = 0;
 uint8_t ubAutoMotorTestFlag = 0;
+uint8_t ubAutoMotorTestFlag_NoConnect = 0;
+
+
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -338,6 +342,13 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 		UI_TestCheck();
 		GPIO->GPIO_O4 = 1;
 	}
+
+#endif
+
+
+#if NOCONNECT_MC_AUYO_TEST_ENABLE
+	UI_TestCheck();
+	GPIO->GPIO_O4 = 1;
 #endif
     UI_StatusCheck(*pThreadCnt);
     tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
@@ -1266,18 +1277,19 @@ void UI_MotoControlInit(void)
     ubUI_Mc1RunCnt = 0;
     ubUI_Mc2RunCnt = 0;
 
-    tMC_SettingApp.ubMC_ClockDivider = 63;
-    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-    tMC_SettingApp.ubMC_HighPeriod = 24;//48/24/18
-    tMC_SettingApp.ubMC_PeriodPerStep = 18;//36/18/16
+    //V1.1									//电机极限测试	//V1.0 
+    tMC_SettingApp.ubMC_ClockDivider = 63;		//63						//63
+    tMC_SettingApp.ubMC_ClockPerPeriod = 255;	//255					//255
+    tMC_SettingApp.ubMC_HighPeriod = 24;			//24						//24
+    tMC_SettingApp.ubMC_PeriodPerStep = 14;		//14						//18
     tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
-    tMC_Setup(MC_0,&tMC_SettingApp);    //left right
+    tMC_Setup(MC_0,&tMC_SettingApp);    			//left right
 
-    tMC_SettingApp.ubMC_ClockDivider = 63;
-    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-    tMC_SettingApp.ubMC_HighPeriod =36 ;    //18  64
-    tMC_SettingApp.ubMC_PeriodPerStep = 36; //16  48
-    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
+    tMC_SettingApp.ubMC_ClockDivider = 12;		//12						//63
+    tMC_SettingApp.ubMC_ClockPerPeriod = 200;	//200					//255
+    tMC_SettingApp.ubMC_HighPeriod = 110;    		//110					//36
+    tMC_SettingApp.ubMC_PeriodPerStep = 70;		 //55					//36
+    tMC_Setup(MC_1,&tMC_SettingApp);    			//up down
 #endif
 }
 
@@ -1534,18 +1546,19 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	    ubUI_Mc1RunCnt = 0;
 	    ubUI_Mc2RunCnt = 0;
 
-	    tMC_SettingApp.ubMC_ClockDivider = 63;
-	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	    tMC_SettingApp.ubMC_HighPeriod = 24;//48/24/18
-	    tMC_SettingApp.ubMC_PeriodPerStep = 18;//36/18/16
+	    //V1.1									//电机极限测试	//V1.0 
+	    tMC_SettingApp.ubMC_ClockDivider = 63;		//63						//63
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;	//255					//255
+	    tMC_SettingApp.ubMC_HighPeriod = 24;			//24						//24
+	    tMC_SettingApp.ubMC_PeriodPerStep = 14;		//14						//18
 	    tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
-	    tMC_Setup(MC_0,&tMC_SettingApp);    //left right
+	    tMC_Setup(MC_0,&tMC_SettingApp);    			//left right
 
-	    tMC_SettingApp.ubMC_ClockDivider = 63;
-	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;
-	    tMC_SettingApp.ubMC_HighPeriod = 36;    //18  64
-	    tMC_SettingApp.ubMC_PeriodPerStep = 36; //16  48
-	    tMC_Setup(MC_1,&tMC_SettingApp);    //up down
+	    tMC_SettingApp.ubMC_ClockDivider = 12;		//12						//63
+	    tMC_SettingApp.ubMC_ClockPerPeriod = 200;	//200					//255
+	    tMC_SettingApp.ubMC_HighPeriod = 110;    		//110					//36
+	    tMC_SettingApp.ubMC_PeriodPerStep = 70;		 //55					//36
+	    tMC_Setup(MC_1,&tMC_SettingApp);    			//up down
 	}
 	break;
     case UI_SET_BUMOTOR_SPEED_L_CMD:
@@ -1573,8 +1586,12 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	}
 	break;
 	case UI_SET_BUMOTOR_AUTO_CMD:
-		ubAutoMotorTestFlag = 1;
-		break;
+		if(ubAutoMotorTestFlag == 0)
+		{
+			printd(1,"OPEN AUTO\n");
+			ubAutoMotorTestFlag = 1;
+			break;
+		}
     default:
         break;
     }
@@ -1603,12 +1620,11 @@ void UI_SetIRLed(uint8_t LedState)
     //printd(Apk_DebugLvl, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
     if ((GPIO->GPIO_O4 == 0) && (LedState == 1))
     {
-		UI_SetIrMode(1); //开IR, 黑白色
-		osDelay(50);
-		GPIO->GPIO_O4 = 1;
-
-		ubIROnOffFlag = 1;
-        printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
+	UI_SetIrMode(1); //开IR, 黑白色
+	osDelay(50);
+	GPIO->GPIO_O4 = 1;
+	ubIROnOffFlag = 1;
+    	printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
         
     }
@@ -1617,6 +1633,7 @@ void UI_SetIRLed(uint8_t LedState)
     {
 
 	 GPIO->GPIO_O4 = 0;
+	 osDelay(50);
         UI_SetIrMode(0); //关IR, 彩色
 	ubIROnOffFlag = 0;
         printd(Apk_DebugLvl, "UI_SetIRLed Off###\n");
@@ -1682,6 +1699,7 @@ void UI_BuInit(void)
     pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
     GPIO->GPIO_O4 = 0;
     tUI_BuStsInfo.tNightModeFlag = 1;
+    ubAutoMotorTestFlag_NoConnect = 1;
     UI_readSN();
 }
 
@@ -1705,8 +1723,8 @@ void UI_TestSetting(void *pvTSParam)
 
 void UI_TestCheck(void)
 {
-    #define Motor0_Count    100
-    #define Motor1_Count    40
+    #define Motor0_Count    70	//100
+    #define Motor1_Count    30  //40
     #define Motor0_Wait     10
     #define Motor1_Wait     10
     static uint16_t ubTestCount = 0;
