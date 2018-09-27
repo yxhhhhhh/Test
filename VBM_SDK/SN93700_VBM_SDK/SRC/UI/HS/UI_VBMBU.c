@@ -36,7 +36,7 @@
 
 #define MC_ENABLE  1
 #define MC_AUYO_TEST_ENABLE  1
-#define NOCONNECT_MC_AUYO_TEST_ENABLE  1
+#define NOCONNECT_MC_AUYO_TEST_ENABLE  0
 #define TEST_MODE  0
 
 /**
@@ -340,7 +340,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	if(ubAutoMotorTestFlag == 1)
 	{
 		UI_TestCheck();
-		GPIO->GPIO_O4 = 1;
+		//GPIO->GPIO_O4 = 1;
 	}
 
 #endif
