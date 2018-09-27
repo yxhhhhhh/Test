@@ -36,7 +36,7 @@
 
 #define MC_ENABLE  1
 #define MC_AUYO_TEST_ENABLE  1
-#define NOCONNECT_MC_AUYO_TEST_ENABLE  0
+#define NOCONNECT_MC_AUYO_TEST_ENABLE  1
 #define TEST_MODE  0
 
 /**
@@ -1725,8 +1725,8 @@ void UI_TestCheck(void)
 {
     #define Motor0_Count    70	//100
     #define Motor1_Count    30  //40
-    #define Motor0_Wait     10
-    #define Motor1_Wait     10
+    #define Motor0_Wait     15
+    #define Motor1_Wait     15
     static uint16_t ubTestCount = 0;
 
     printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
@@ -1763,7 +1763,7 @@ void UI_TestCheck(void)
     {
         MC_Stop(MC_1);
     }
-    else if (ubTestCount > (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count*2 + Motor1_Wait*2))
+    else if (ubTestCount > (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count*2 + Motor1_Wait*6))
     {
         ubTestCount = 0;
         return;

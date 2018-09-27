@@ -1493,8 +1493,8 @@ void UI_SetSleepState(uint8_t type)
                 UI_SwitchCameraSource();
             }
             if (tUI_PuSetting.ubDefualtFlag == TRUE)
-                ubFactorySettingFlag = 0;
-
+                 ubFactorySettingFlag = 0;
+			
             ubSwitchCamWakeupSstate = 1;
         }
 
@@ -1517,15 +1517,18 @@ void UI_PowerKeyShort(void)
     if(tUI_SyncAppState == APP_PAIRING_STATE)
         return;
     
-
-
+ /* if (tUI_PuSetting.ubDefualtFlag == TRUE)
+    {
+    	tLCD_JpegDecodeDisable();
+    }
+*/
 #if Current_Test
     UI_SetSleepState(0);
 #else
     UI_PowerKeyDeal();
 #endif
 
-    printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
+    printd(1, "UI_PowerKeyShort###\n");
 }
 
 void UI_PowerOff(void)
