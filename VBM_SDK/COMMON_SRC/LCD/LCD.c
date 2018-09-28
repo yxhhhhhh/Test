@@ -645,9 +645,9 @@ void LCD_Init (LCD_OUTPUT_TYP tLcdOutput)
 		GPIO->GPIO_O3 = 1;
 		TIMER_Delay_ms(20);
 		GPIO->GPIO_O3 = 0;
-		TIMER_Delay_ms(100);
+		TIMER_Delay_ms(20);
 		GPIO->GPIO_O3 = 1;
-		TIMER_Delay_ms(100);
+		TIMER_Delay_ms(20);
 #endif
 
 		switch (tLcdOutput)
