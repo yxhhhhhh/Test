@@ -544,40 +544,26 @@ void UI_KeyEventExec(void *pvKeyEvent)
             if (ubUI_PttStartFlag == FALSE)
                 ubUI_KeyEventIdx = 0;
 
-	     if(tUI_PuSetting.ubDefualtFlag == FALSE)
-	     	{
-	            if (UiKeyEventMap[uwIdx].KeyEventFuncPtr)
-	            {
-	                if (ptKeyEvent->ubKeyAction == KEY_DOWN_ACT  || ptKeyEvent->ubKeyAction == KEY_CNT_ACT)
-	                {
-	                	printd(1,"443333333333333333ptKeyEvent->uwKeyCnt =%d\n",ptKeyEvent->uwKeyCnt);
-	                	if(((ptKeyEvent->ubKeyID == GKEY_ID0)  || (ptKeyEvent->ubKeyID == GKEY_ID1)) && (ptKeyEvent->uwKeyCnt % 3 == 0))
-	                	{
-	                		//printd(1,"111111111111111111\n");
-					UiKeyEventMap[uwIdx].KeyEventFuncPtr();
-	                	}
-				else if((ptKeyEvent->ubKeyID == AKEY_UP)   || (ptKeyEvent->ubKeyID == AKEY_DOWN) ||
-	           			   (ptKeyEvent->ubKeyID == AKEY_LEFT) || (ptKeyEvent->ubKeyID == AKEY_RIGHT))
-				{
-	                		printd(1,"22222222222222\n");
-					UiKeyEventMap[uwIdx].KeyEventFuncPtr();	
-				}
-	                }
-
-	            }
-	     	}
-		else
+            if (UiKeyEventMap[uwIdx].KeyEventFuncPtr)
+            {
+                if (ptKeyEvent->ubKeyAction == KEY_CNT_ACT)
+                {
+                	printd(Apk_DebugLvl,"443333333333333333ptKeyEvent->uwKeyCnt =%d\n",ptKeyEvent->uwKeyCnt);
+                	if(((ptKeyEvent->ubKeyID == GKEY_ID0)  || (ptKeyEvent->ubKeyID == GKEY_ID1)) && (ptKeyEvent->uwKeyCnt % 3 == 0))
+                	{
+                		printd(Apk_DebugLvl,"111111111111111111\n");
+				UiKeyEventMap[uwIdx].KeyEventFuncPtr();
+                	}
+                }
+		  else if(ptKeyEvent->ubKeyAction == KEY_DOWN_ACT )
 		 {
-		     if (UiKeyEventMap[uwIdx].KeyEventFuncPtr)
-	            {
-	                if (ptKeyEvent->ubKeyAction == KEY_DOWN_ACT)
-	                {
-					UiKeyEventMap[uwIdx].KeyEventFuncPtr();	
-	                }
-
-	            }
+                		printd(Apk_DebugLvl,"44444444444444444444\n");
+				UiKeyEventMap[uwIdx].KeyEventFuncPtr();	
 		 }
-            break;
+   	       break;
+
+            }
+
         }
 
         if ((ptKeyEvent->ubKeyID  == UiKeyEventMap[uwIdx].ubKeyID) &&
@@ -2003,7 +1989,10 @@ void UI_EnterLongKey(void)
 	 printd(1,"UI_EnterLongKey!!!!!!!  tUI_State =%x,\n",tUI_State);
 
     }
-
+    //if (ubShowAlarmstate > 0)
+            //return;
+        
+	 printd(1,"UI_EnterLongKey!!!!!!!\n");
 #if SD_UPDATE_TEST
     KNL_SDUpgradeFwFunc();
 #endif
@@ -3856,6 +3845,8 @@ uint8_t UI_CheckStopAlarm(void)
 		ubPickupAlarmState = PICKUP_ALARM_OFF;
 	    return 1;
 	}
+
+	printd(1,"ubPickupAlarmState  %dubShowAlarmstate %d \n ",ubPickupAlarmState,ubShowAlarmstate);
 
     return 0;
 }
@@ -6388,7 +6379,7 @@ void UI_PlayAlarmSound(uint8_t type)
         ubAlertSetting = tUI_PuSetting.ubSoundAlertSetting;
     }
 
-    printd(Apk_DebugLvl, "UI_PlayAlarmSound ubAlertSetting: %d, ubPlayAlarmCount: %d.\n", ubAlertSetting, ubPlayAlarmCount);
+    printd(1, "UI_PlayAlarmSound ubAlertSetting: %d, ubPlayAlarmCount: %d.\n", ubAlertSetting, ubPlayAlarmCount);
     if (++ubPlayAlarmCount > (ubAlertTime[ubAlertSetting]*100/20))
     {
         ubPlayAlarmCount = 0; //200
@@ -10632,9 +10623,11 @@ void UI_GetBatLevel(uint16_t checkcount)
 {
     uint8_t usbdet, i;
     int16_t percent;
-    static uint16_t batmap[] = {
-        3500, 3637, 3699, 3802, 3985, 4253, 4500
+    static uint16_t batmap[] = 
+    {
+        3500,3598,3665,3788,3984,4350,4500//3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
+printd(1,"UI_GetBatLevel UI_GetUsbDet %d ubGetBatVoltage %d\n",UI_GetUsbDet(),uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024);
     usbdet  = !UI_GetUsbDet();
     ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 100 : 0); // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50  : 0); // old board
@@ -10665,6 +10658,8 @@ void UI_GetBatLevel(uint16_t checkcount)
     } else {
         ubBatLvLIdx = BAT_LVL0;
     }
+		printd(1,"iiiiii %d  percent %d ubGetBatPercent %d ubBatLvLIdx %d\n",i,percent,ubGetBatPercent,ubBatLvLIdx);
+
     if (!usbdet && ubGetBatVoltage < 3500) {
         if (++ubBatLowCount == 10) {
             UI_PowerOff();

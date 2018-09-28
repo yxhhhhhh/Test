@@ -1281,7 +1281,7 @@ void UI_MotoControlInit(void)
     tMC_SettingApp.ubMC_ClockDivider = 63;		//63						//63
     tMC_SettingApp.ubMC_ClockPerPeriod = 255;	//255					//255
     tMC_SettingApp.ubMC_HighPeriod = 24;			//24						//24
-    tMC_SettingApp.ubMC_PeriodPerStep = 14;		//14						//18
+    tMC_SettingApp.ubMC_PeriodPerStep = 18;		//14						//18
     tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
     tMC_Setup(MC_0,&tMC_SettingApp);    			//left right
 
@@ -1550,7 +1550,7 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
 	    tMC_SettingApp.ubMC_ClockDivider = 63;		//63						//63
 	    tMC_SettingApp.ubMC_ClockPerPeriod = 255;	//255					//255
 	    tMC_SettingApp.ubMC_HighPeriod = 24;			//24						//24
-	    tMC_SettingApp.ubMC_PeriodPerStep = 14;		//14						//18
+	    tMC_SettingApp.ubMC_PeriodPerStep = 18;		//14						//18
 	    tMC_SettingApp.tMC_Inv = MC_NormalWaveForm;
 	    tMC_Setup(MC_0,&tMC_SettingApp);    			//left right
 
