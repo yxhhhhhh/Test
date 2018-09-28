@@ -873,9 +873,10 @@ void APP_LcdDisplayOff(void)
 {
 	LCD_Suspend();
 #if (LCD_PM == LCD_PWR_OFF)
-	LCD_Suspend();
+//	LCD_Suspend();
 	LCD_UnInit();
 	LCD->LCD_MODE = LCD_GPIO;
+	GPIO->GPIO_O3 = 0;
 	LCD_Stop();
 	GLB->LCD_FUNC_DIS  = 1;
 	SSP->SSP_GPIO_MODE = 1;
