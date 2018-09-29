@@ -15210,10 +15210,10 @@ SWITCH_CAMERA:
 	if(0xFF == tCamSwtichNum)
 		return;
 
-      ubPickupAlarmState = PICKUP_ALARM_IDLE;
-     ubPickupAlarmCheckCount = 0;
-      ubPickupAlarmTriggerCount = 0;
-     ubShowAlarmstate  = 0;
+      //ubPickupAlarmState = PICKUP_ALARM_IDLE;
+     //ubPickupAlarmCheckCount = 0;
+      //ubPickupAlarmTriggerCount = 0;
+     //ubShowAlarmstate  = 0;
 	
 	tCamViewSel.tCamViewType	= SINGLE_VIEW;
 	tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
