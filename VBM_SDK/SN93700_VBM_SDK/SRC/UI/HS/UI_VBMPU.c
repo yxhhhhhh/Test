@@ -10627,17 +10627,19 @@ void UI_GetBatLevel(uint16_t checkcount)
     {
         3500,3598,3665,3788,3984,4350,4500//3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
-    printd(1,"UI_GetBatLevel UI_GetUsbDet %d ubGetBatVoltage %d\n",UI_GetUsbDet(),uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024);
-    //! CHG_ON
+    //printd(1,"UI_GetBatLevel UI_GetUsbDet %d ubGetBatVoltage %d\n",UI_GetUsbDet(),uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024);
+
+    usbdet  = !UI_GetUsbDet();
+
+	//! CHG_ON
     GPIO->GPIO_O13 = 1;
     osDelay(50);
 	
-    usbdet  = !UI_GetUsbDet();
-    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 - (usbdet ? 100 : 0); // new board
+    ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 ; // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50  : 0); // old board
+    printd(1,"UI_GetBatLevel   usbdet %d  ubGetBatVoltage %d\n",usbdet,ubGetBatVoltage);
 
     GPIO->GPIO_O13 = 0;
-    printd(1,"UI_GetBatLevel ubGetBatVoltage %d\n",ubGetBatVoltage);
 
     for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
         if (ubGetBatVoltage <= batmap[i]) break;
@@ -15211,7 +15213,7 @@ SWITCH_CAMERA:
       ubPickupAlarmState = PICKUP_ALARM_IDLE;
      ubPickupAlarmCheckCount = 0;
       ubPickupAlarmTriggerCount = 0;
-      ubShowAlarmstate  = 0;
+     ubShowAlarmstate  = 0;
 	
 	tCamViewSel.tCamViewType	= SINGLE_VIEW;
 	tCamViewSel.tCamViewPool[0] = tCamSwtichNum;
