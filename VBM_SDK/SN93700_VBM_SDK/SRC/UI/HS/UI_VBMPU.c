@@ -6405,7 +6405,7 @@ void UI_PlayAlarmSound(uint8_t type)
     {
         ADO_Stop(); // by xiao
         ADO_SetDacMute(DAC_MR_0p5DB_8SAMPLE, ADO_OFF); // by xiao
-        ADO_SetDacR2RVol(R2R_VOL_n0DB);
+        ADO_SetDacR2RVol(R2R_VOL_n3DB);
         if (ubAlarmPlayState == 0)
         {
             ubAlarmPlayState = 1;
@@ -14239,6 +14239,10 @@ void UI_FactoryStatusDisplay(void)
         KNL_ROLE tKNL_Role = (KNL_ROLE)(UI_GetCamViewPoolID());
         ubper_temp = 100 - KNL_GetPerValue(tKNL_Role);
         uint8_t ubRssiVal = KNL_GetRssiValue(tKNL_Role);
+	//uint8_t ubRXSLAVEVal = KNL_GetPerValue(4);
+       // uint8_t ubRXMASTERVal = KNL_GetPerValue(5);
+
+	//printd(1,"ubRXSLAVEVal %d, ubRXMASTERVal %d \n",ubRXSLAVEVal,ubRXMASTERVal);
 
         if ( ubper_temp < 100)
         {
