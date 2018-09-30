@@ -303,8 +303,8 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 13;
-uint32_t ubHWVersion = 13;
+uint32_t ubPuSWVersion = 14;
+uint32_t ubHWVersion = 14;
 uint8_t ubBuHWVersion = 0;
 uint32_t ubBuSWVersion = 0;
 
@@ -1887,6 +1887,8 @@ void UI_EnterKey(void)
 		UI_StopPlayAlarm();
 		return;
 	}
+	if (tUI_PuSetting.tPsMode == PS_VOX_MODE)
+		return;
 	switch(tUI_State)
 	{
 		case UI_DISPLAY_STATE:
@@ -14239,10 +14241,10 @@ void UI_FactoryStatusDisplay(void)
         KNL_ROLE tKNL_Role = (KNL_ROLE)(UI_GetCamViewPoolID());
         ubper_temp = 100 - KNL_GetPerValue(tKNL_Role);
         uint8_t ubRssiVal = KNL_GetRssiValue(tKNL_Role);
-	//uint8_t ubRXSLAVEVal = KNL_GetPerValue(4);
-       // uint8_t ubRXMASTERVal = KNL_GetPerValue(5);
-
-	//printd(1,"ubRXSLAVEVal %d, ubRXMASTERVal %d \n",ubRXSLAVEVal,ubRXMASTERVal);
+	for(int i = 0; i < 6; i++)
+	{
+	 	printd(1,"KNL_GetPerValue(%d) =  %d, KNL_GetRssiValue = %d \n",i,KNL_GetPerValue(i),KNL_GetRssiValue(i));
+	}
 
         if ( ubper_temp < 100)
         {
