@@ -36,7 +36,7 @@
 
 #define MC_ENABLE  1
 #define MC_AUYO_TEST_ENABLE  1
-#define NOCONNECT_MC_AUYO_TEST_ENABLE  0
+#define NOCONNECT_MC_AUYO_TEST_ENABLE  1
 #define TEST_MODE  0
 
 /**
@@ -107,7 +107,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint8_t ubBuSWVersion = 13;
+uint8_t ubBuSWVersion = 14;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -124,7 +124,7 @@ uint8_t ubTempflag = 0;
 uint8_t ubUpdateFWFlag = 0;
 uint8_t ubIROnOffFlag = 0;
 uint8_t ubAutoMotorTestFlag = 0;
-uint8_t ubAutoMotorTestFlag_NoConnect = 0;
+uint32_t ubAutoMotorTestCount_NoConnect = 0;
 
 
 //------------------------------------------------------------------------------
@@ -346,7 +346,9 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
 
 #if NOCONNECT_MC_AUYO_TEST_ENABLE
-	UI_TestCheck();
+	printd(1,"NOCONNECT_MC_AUYO_TEST_ENABLE  ubAutoMotorTestCount_NoConnect %d\n",ubAutoMotorTestCount_NoConnect);
+	if(ubAutoMotorTestCount_NoConnect <= 2000)
+		UI_TestCheck();
 #endif
     UI_StatusCheck(*pThreadCnt);
     tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
@@ -1697,7 +1699,6 @@ void UI_BuInit(void)
     pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
     GPIO->GPIO_O4 = 0;
     tUI_BuStsInfo.tNightModeFlag = 1;
-    ubAutoMotorTestFlag_NoConnect = 1;
     UI_readSN();
 }
 
@@ -1724,11 +1725,11 @@ void UI_TestCheck(void)
     #define Motor0_Count    70	//100
     #define Motor1_Count    30  //40
     #define Motor0_Wait     15
-    #define Motor1_Wait     15
+    #define Motor1_Wait     12
     static uint16_t ubTestCount = 0;
 
     printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
-#if 1
+#if 0
     if (ubTestCount == 0)
     {
         MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
@@ -1767,25 +1768,44 @@ void UI_TestCheck(void)
         return;
     }
 #else
+    #define Motor_Count    15  //40
+	
     if (ubTestCount == 0)
     {
-        MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady); //水平,正转
+        MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady); //垂直,正转
     }
-    else if (ubTestCount == Motor1_Count)
+    else if (ubTestCount == Motor_Count)
     {
         MC_Stop(MC_1);
     }
-    else if (ubTestCount == (Motor1_Count + Motor1_Wait))
+    else if (ubTestCount == Motor_Count *2)
     {
-        MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//水平,反转
+        MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);//zhong ,反转
     }
-    else if (ubTestCount == (Motor1_Count*2 + Motor1_Wait))
+    else if (ubTestCount == Motor_Count *3)
     {
         MC_Stop(MC_1);
     }
-    else if (ubTestCount > ( Motor1_Count*2 + Motor1_Wait*3))
+    else if (ubTestCount == Motor_Count *4)
+    {
+        MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady); //垂直,正转
+    }
+    else if (ubTestCount == Motor_Count *5)
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount ==Motor_Count *6)
+    {
+        MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//垂直,反转
+    }
+    else if (ubTestCount == Motor_Count *7)
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount >Motor_Count *8)
     {
         ubTestCount = 0;
+	ubAutoMotorTestCount_NoConnect ++;
         return;
     }
 #endif
