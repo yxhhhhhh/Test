@@ -340,7 +340,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	if(ubAutoMotorTestFlag == 1)
 	{
 		UI_TestCheck();
-		//GPIO->GPIO_O4 = 1;
 	}
 
 #endif
@@ -348,7 +347,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
 #if NOCONNECT_MC_AUYO_TEST_ENABLE
 	UI_TestCheck();
-	GPIO->GPIO_O4 = 1;
 #endif
     UI_StatusCheck(*pThreadCnt);
     tUI_GetLinkStsMsg.ubAPP_Event = APP_LINKSTATUS_REPORT_EVENT;
@@ -1730,7 +1728,7 @@ void UI_TestCheck(void)
     static uint16_t ubTestCount = 0;
 
     printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
-
+#if 1
     if (ubTestCount == 0)
     {
         MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
@@ -1768,7 +1766,29 @@ void UI_TestCheck(void)
         ubTestCount = 0;
         return;
     }
-
+#else
+    if (ubTestCount == 0)
+    {
+        MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady); //水平,正转
+    }
+    else if (ubTestCount == Motor1_Count)
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount == (Motor1_Count + Motor1_Wait))
+    {
+        MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//水平,反转
+    }
+    else if (ubTestCount == (Motor1_Count*2 + Motor1_Wait))
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount > ( Motor1_Count*2 + Motor1_Wait*3))
+    {
+        ubTestCount = 0;
+        return;
+    }
+#endif
     ubTestCount++;
 }
 
