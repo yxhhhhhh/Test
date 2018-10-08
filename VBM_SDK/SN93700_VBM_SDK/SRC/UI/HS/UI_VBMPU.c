@@ -8411,6 +8411,8 @@ if (ubFactoryModeFLag == 0)
             tOsdImgInfo.uwYStart = 284 + 31;
             tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
         }
+	 UI_SendPwrNormalModeToBu();
+
 }
 else
 {

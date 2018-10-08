@@ -1651,8 +1651,8 @@ void UI_BrightnessCheck(void) //20180408
     uint16_t uwDetLvl = 0x3FF;
 
 	printd(1,"UI_BrightnessCheck tUI_BuStsInfo.tCamPsMode = %x\n",tUI_BuStsInfo.tCamPsMode);
-   // if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
-	 //return;	
+   if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
+	 return;	
 
     uwDetLvl = uwSADC_GetReport(1);
 
