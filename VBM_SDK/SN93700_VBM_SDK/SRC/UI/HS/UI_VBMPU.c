@@ -1324,32 +1324,34 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 {
 //  OSD_IMG_INFO tOsdImgInfo;
     UI_PUReqCmd_t tPsCmd;
-
+    int i = 0;
     printd(Apk_DebugLvl, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
     if (PS_VOX_MODE == tUI_PsMode)
     {
-        if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
-            (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
-        {
-            tPsCmd.tDS_CamNum               = tCamViewSel.tCamViewPool[0];
-            tPsCmd.ubCmd[UI_TWC_TYPE]       = UI_SETTING;
-            tPsCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
-            tPsCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
-            tPsCmd.ubCmd_Len                = 3;
-            if (UI_SendRequestToBU(osThreadGetId(), &tPsCmd) != rUI_SUCCESS)
-            {
-                //printd(DBG_ErrorLvl, "VOX Notify Fail !\n");
-                //return;
-                ubVOXModeToBuRet = rUI_FAIL;
-            }
-	   else
-	   {
-		ubVOXModeToBuRet = rUI_SUCCESS;
-	   }
-			
-        }
-        tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = PS_VOX_MODE;
-        UI_EnableVox();
+    	 for( i = 0; i < 4; i++)
+    	 {
+	        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&(tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+		 {
+		            tPsCmd.tDS_CamNum            = tUI_CamStatus[i].ulCAM_ID;
+		            tPsCmd.ubCmd[UI_TWC_TYPE]        = UI_SETTING;
+		            tPsCmd.ubCmd[UI_SETTING_ITEM]  = UI_VOXMODE_SETTING;
+		            tPsCmd.ubCmd[UI_SETTING_DATA] = PS_VOX_MODE;
+		            tPsCmd.ubCmd_Len                = 3;
+		            if (UI_SendRequestToBU(osThreadGetId(), &tPsCmd) != rUI_SUCCESS)
+		            {
+		                //printd(DBG_ErrorLvl, "VOX Notify Fail !\n");
+		                //return;
+		                ubVOXModeToBuRet = rUI_FAIL;
+		            }
+			   else
+			   {
+				ubVOXModeToBuRet = rUI_SUCCESS;
+			   }
+					
+		 }
+	}
+	        tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = PS_VOX_MODE;
+	        UI_EnableVox();
     }
     else if (PS_WOR_MODE == tUI_PsMode)
     {
@@ -1514,12 +1516,12 @@ void UI_PowerKeyShort(void)
     UI_PowerKeyDeal();
 #endif
 
-    printd(1, "UI_PowerKeyShort###\n");
+    printd(Apk_DebugLvl, "UI_PowerKeyShort###\n");
 }
 
 void UI_PowerOff(void)
 {
-    printd(Apk_DebugLvl, "UI_PowerOff Power OFF!\n");
+    printd(Apk_DebugLvl, "11111111111UI_PowerOff Power OFF!\n");
 
     UI_SendPwrNormalModeToBu();
     UI_UpdateDevStatusInfo();
@@ -1534,7 +1536,7 @@ void UI_PowerOff(void)
 //------------------------------------------------------------------------------
 void UI_PowerKey(void)
 {
-    printd(Apk_DebugLvl, "UI_PowerKey###\n");
+    printd(Apk_DebugLvl, "2222222222UI_PowerKey###\n");
 
     if (ubFactoryModeFLag == 1)
     {
@@ -1556,7 +1558,7 @@ void UI_PowerKey(void)
 //  SIGNAL_LED_IO = 0;
     RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
     RTC_SetGPO_1(0, RTC_PullDownEnable);
-    printd(Apk_DebugLvl, "UI_PowerKey Power OFF!\n");
+    printd(Apk_DebugLvl, "3333333333UI_PowerKey Power OFF!\n");
     RTC_PowerDisable();
     while(1);
 }
@@ -10234,20 +10236,24 @@ uint8_t UI_SendPwrNormalModeToBu(void)
 
     if (tUI_PuSetting.tPsMode != POWER_NORMAL_MODE)
     {
-        if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
-            (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
-        {
-            tPwrCmd.tDS_CamNum              = tCamViewSel.tCamViewPool[0];
-            tPwrCmd.ubCmd[UI_TWC_TYPE]      = UI_SETTING;
-            tPwrCmd.ubCmd[UI_SETTING_ITEM]  = UI_VOXMODE_SETTING;
-            tPwrCmd.ubCmd[UI_SETTING_DATA]  = POWER_NORMAL_MODE;
-            tPwrCmd.ubCmd_Len               = 3;
-            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
-            {
-                printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Fail!\n");
-                return rUI_FAIL;
-            }
-        }
+    	printd(1,"99999999999999999999UI_SendPwrNormalModeToBu \n");
+    	for( int i = 0; i < 4; i++)
+    	{
+	        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&
+	            (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+	        {
+	            tPwrCmd.tDS_CamNum              = tUI_CamStatus[i].ulCAM_ID;
+	            tPwrCmd.ubCmd[UI_TWC_TYPE]      = UI_SETTING;
+	            tPwrCmd.ubCmd[UI_SETTING_ITEM]  = UI_VOXMODE_SETTING;
+	            tPwrCmd.ubCmd[UI_SETTING_DATA]  = POWER_NORMAL_MODE;
+	            tPwrCmd.ubCmd_Len               = 3;
+	            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
+	            {
+	                printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Fail!\n");
+	                return rUI_FAIL;
+	            }
+	        }
+    	}
         tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
         printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Cam%d ok.\n", tCamViewSel.tCamViewPool[0]);
         return rUI_SUCCESS;

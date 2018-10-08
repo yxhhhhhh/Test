@@ -36,7 +36,7 @@
 
 #define MC_ENABLE  1
 #define MC_AUYO_TEST_ENABLE  1
-#define NOCONNECT_MC_AUYO_TEST_ENABLE  1
+#define NOCONNECT_MC_AUYO_TEST_ENABLE  0
 #define TEST_MODE  0
 
 /**
@@ -290,7 +290,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             uint16_t uwChkType = UI_SYSVOICELVL_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
         }
-
+	printd(1,"UI_UpdateStatus APP_LINK_STATE  UI_BrightnessCheck() gogogo!\n");
         UI_BrightnessCheck();
 
         if (((*pThreadCnt)%5) == 0)
@@ -390,6 +390,7 @@ static void UI_SysCheckStatus(void const *argument)
 
         if (uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
         {
+        	printd(1,"UI_SysCheckStatus uwUI_ChkType & UI_SYSIRLEDDATA_CHK  UI_BrightnessCheck() gogogo!\n");
 //          UI_BrightnessCheck();
             uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
         }
@@ -622,14 +623,16 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         break;
     case POWER_NORMAL_MODE:
         if (PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
-        	{
-            UI_DisableVox();
-	   if(ubIROnOffFlag == 1)
-	   {
+        {
+            	UI_DisableVox();
+	   	if(ubIROnOffFlag == 1)
+	   	{
 		    GPIO->GPIO_O4 = 1;
-	        	    printf("vox on IR ON \n");
-	   }			
-        	}		
+	           printf("vox on IR ON \n");
+	   	}
+		printd(1,"000000000000000000UI_PowerSaveSetting POWER_NORMAL_MODE goggoggo \n");
+		//UI_BrightnessCheck();
+        }		
         break;
     default:
         break;
@@ -1648,6 +1651,7 @@ void UI_BrightnessCheck(void) //20180408
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
 
+	printd(1,"UI_BrightnessCheck tUI_BuStsInfo.tCamPsMode = %x\n",tUI_BuStsInfo.tCamPsMode);
     if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
 	 return;	
 
