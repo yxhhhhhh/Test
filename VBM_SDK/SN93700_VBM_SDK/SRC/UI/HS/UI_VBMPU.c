@@ -1295,6 +1295,7 @@ void UI_PuInit(void)
 void UI_PowerOnSet(void)
 {
     printd(Apk_DebugLvl, "UI_PowerOnSet ubZoomScale: %d.\n", tUI_PuSetting.ubZoomScale);
+    UI_SendPwrNormalModeToBu();
     UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
 }
 //------------------------------------------------------------------------------
@@ -1523,7 +1524,7 @@ void UI_PowerOff(void)
 {
     printd(Apk_DebugLvl, "11111111111UI_PowerOff Power OFF!\n");
 
-    UI_SendPwrNormalModeToBu();
+    //UI_SendPwrNormalModeToBu();
     UI_UpdateDevStatusInfo();
 //  BUZ_PlayPowerOffSound();
     osDelay(600);//wait buzzer play finish
@@ -1549,7 +1550,7 @@ void UI_PowerKey(void)
         tUI_PuSetting.ubDefualtFlag = 2;
     }
 
-    UI_SendPwrNormalModeToBu();
+    //UI_SendPwrNormalModeToBu();
     UI_UpdateDevStatusInfo();
 //  BUZ_PlayPowerOffSound();
     osDelay(600);           //wait buzzer play finish
@@ -10234,7 +10235,7 @@ uint8_t UI_SendPwrNormalModeToBu(void)
 {
     UI_PUReqCmd_t tPwrCmd;
 
-    if (tUI_PuSetting.tPsMode != POWER_NORMAL_MODE)
+   // if (tUI_PuSetting.tPsMode != POWER_NORMAL_MODE)
     {
     	printd(1,"99999999999999999999UI_SendPwrNormalModeToBu \n");
     	for( int i = 0; i < 4; i++)
@@ -10249,13 +10250,13 @@ uint8_t UI_SendPwrNormalModeToBu(void)
 	            tPwrCmd.ubCmd_Len               = 3;
 	            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
 	            {
-	                printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Fail!\n");
+	                printd(1, "UI_SendPwrNormalModeToBu Fail!\n");
 	                return rUI_FAIL;
 	            }
 	        }
     	}
         tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
-        printd(Apk_DebugLvl, "UI_SendPwrNormalModeToBu Cam%d ok.\n", tCamViewSel.tCamViewPool[0]);
+        printd(1, "UI_SendPwrNormalModeToBu Cam%d ok.\n", tCamViewSel.tCamViewPool[0]);
         return rUI_SUCCESS;
     }
 

@@ -290,7 +290,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             uint16_t uwChkType = UI_SYSVOICELVL_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
         }
-	printd(1,"UI_UpdateStatus APP_LINK_STATE  UI_BrightnessCheck() gogogo!\n");
+	//printd(1,"UI_UpdateStatus APP_LINK_STATE  UI_BrightnessCheck() gogogo!\n");
         UI_BrightnessCheck();
 
         if (((*pThreadCnt)%5) == 0)
@@ -390,7 +390,7 @@ static void UI_SysCheckStatus(void const *argument)
 
         if (uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
         {
-        	printd(1,"UI_SysCheckStatus uwUI_ChkType & UI_SYSIRLEDDATA_CHK  UI_BrightnessCheck() gogogo!\n");
+        	//printd(1,"UI_SysCheckStatus uwUI_ChkType & UI_SYSIRLEDDATA_CHK  UI_BrightnessCheck() gogogo!\n");
 //          UI_BrightnessCheck();
             uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
         }
@@ -1620,26 +1620,25 @@ void UI_SetIrMode(uint8_t mode)
 
 void UI_SetIRLed(uint8_t LedState)
 {
-    //printd(Apk_DebugLvl, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
+   // printd(1, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
     if ((GPIO->GPIO_O4 == 0) && (LedState == 1))
     {
 	UI_SetIrMode(1); //开IR, 黑白色
 	osDelay(50);
 	GPIO->GPIO_O4 = 1;
 	ubIROnOffFlag = 1;
-    	printd(Apk_DebugLvl, "UI_SetIRLed On###\n");
+    	printd(1, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
         
     }
 
     if ((GPIO->GPIO_O4 == 1) && (LedState == 0))
     {
-
 	 GPIO->GPIO_O4 = 0;
 	 osDelay(50);
         UI_SetIrMode(0); //关IR, 彩色
 	ubIROnOffFlag = 0;
-        printd(Apk_DebugLvl, "UI_SetIRLed Off###\n");
+        printd(1, "UI_SetIRLed Off###\n");
         //BUZ_PlaySingleSound();
     }
 }
@@ -1652,8 +1651,8 @@ void UI_BrightnessCheck(void) //20180408
     uint16_t uwDetLvl = 0x3FF;
 
 	printd(1,"UI_BrightnessCheck tUI_BuStsInfo.tCamPsMode = %x\n",tUI_BuStsInfo.tCamPsMode);
-    if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
-	 return;	
+   // if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
+	 //return;	
 
     uwDetLvl = uwSADC_GetReport(1);
 
@@ -1674,7 +1673,7 @@ void UI_BrightnessCheck(void) //20180408
 	}
 
 	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-    printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+    //printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
         if (ubCheckMinIrCnt >= IR_CHECK_CNT)
