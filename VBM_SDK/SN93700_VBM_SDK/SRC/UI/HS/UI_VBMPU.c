@@ -352,6 +352,7 @@ uint8_t ubVolWarnFlag  = 0;
 
 uint8_t ubEnterFactoryDelCam = 0;
 uint8_t ubFactoryDelCamFlag  = 0;
+uint8_t ubSendModeNum  = 0;
 
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
@@ -959,6 +960,11 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 #endif
 
         ubCameraOnlineNum = UI_GetCamOnLineNum(0);
+	if(ubSendModeNum <=10)
+	{
+		UI_SendPwrNormalModeToBu();
+		ubSendModeNum++;
+	}
         if(ubMenuKeyPairing >= 2)
         {
             ubMenuKeyPairing++;
@@ -10246,6 +10252,7 @@ uint8_t UI_SendPwrNormalModeToBu(void)
     	printd(1,"99999999999999999999UI_SendPwrNormalModeToBu \n");
     	for( int i = 0; i < 4; i++)
     	{
+    		printd(1,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
 	        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&
 	            (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
 	        {
@@ -10277,6 +10284,8 @@ uint8_t UI_SendPwrVoxModeToBu(void)
     {
  	for( int i = 0; i < 4; i++)
     	{
+    	    		printd(1,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
+
 	       if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&
 	            (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
 	        {
