@@ -110,7 +110,7 @@ uint8_t ubTemp_bak = 25;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint32_t ubBuSWVersion = 10;
+uint32_t ubBuSWVersion = 11;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -268,6 +268,8 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
 	ubTempcnt++;
 	printd(Apk_DebugLvl,"UI_StatusCheck ubTempcnt = %d.\n",ubTempcnt);
+	if(ubTempcnt >= 36000)
+		ubTempcnt = 36003;
 
     switch(tUI_SyncAppState)
     {
@@ -844,80 +846,68 @@ void UI_TempCheck(void) //20180322
 {
     UI_BUReqCmd_t tUI_TempReqCmd;
 
-    uint8_t ubReg;
-    uint8_t ubData[2] = {0};
+    uint8_t ubWrData[2] = {0};
+    uint8_t ubRdData[2] = {0};
     bool    ret = 0;
     int32_t tem = 0;
-    static uint8_t ubTempInvalidCnt = 0;
-	static uint8_t temp_flag = 0;
+    int32_t tem_test = 0;
+    static int32_t tem_last  = 0;
+    static uint8_t temp_flag = 0;
 
-#ifdef CT75_TEMP_SENSOR
-    ubReg = 0x00;
-    ret   = bI2C_MasterProcess(pTempI2C, 0x48, &ubReg, 1, ubData, 2);
-#else
-    ubReg = 0xE3;
-    ret   = bI2C_MasterProcess(pTempI2C, 0x40, &ubReg, 1, ubData, 2);
-#endif
+    // try to read sensor
+    ubWrData[0] = 0xE3;
+    ret = bI2C_MasterProcess(pTempI2C, 0x40, ubWrData, 1, ubRdData, 2);
+    if (ret) {
+        tem = 17572 * (ubRdData[0] * 256 + ubRdData[1]) / 65536 - 4685;
+    } else { // try ct75 sensor
+        ubWrData[0] = 0x01;
+        ubWrData[1] = 0x81;
+        ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
+        if (!ret) goto report;
+        ubWrData[0] = 0x00;
+        ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
+        if (!ret) goto report;
 
-    if (!ret) {
-        if (++ubTempInvalidCnt >= 5) {
-            ubTempInvalid    = 1;
-            ubTempInvalidCnt = 0;
-        } else {
-            return;
+        tem = (int16_t)((ubRdData[0] << 8) | (ubRdData[1] << 0)) * 100 / 256;
+    }
+
+    //++ tempture compensation
+    if (tem >= 2000 && temp_flag == 0) {
+        ubTempflag = 1;
+        temp_flag = 1;
+    } else if (tem < 2000 && temp_flag == 0) {
+        ubTempflag = 0;
+        temp_flag = 1;
+    }
+
+    if (ubTempflag == 1) {
+        tem -= 50;
+        if (ubTempcnt >= 36000) {
+            tem -= 50;
         }
     } else {
-        ubTempInvalid    = 0;
-        ubTempInvalidCnt = 0;
+        tem -=50;
     }
+    //-- tempture compensation
 
-#ifdef CT75_TEMP_SENSOR
-    tem   = (int8_t)ubData[0];
-    ubTempBelowZore = tem < 0;
-    ubCurTempVal    = tem > 0 ? tem : -tem;
-#else
-    tem  = 17572 * (ubData[0] * 256 + ubData[1]) / 65536 - 4685;
-    if(tem >=2000 && temp_flag == 0)
-   {
-	ubTempflag = 1;
-	temp_flag = 1;
-    }
-    else if(tem < 2000 && temp_flag == 0)
-    {
-	ubTempflag = 0;
-	temp_flag = 1;
-    }
 
-    if(ubTempflag == 1)
-    {
-	tem -= 50;
-	if(ubTempcnt >=36000)
-		tem -= 50;
-    }
-    else
-    {
-	 tem -=50;
-    }
-
+    tem += tem > 0 ?  50 : -50;
     tem /= 100;
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
-#endif
-    printd(Apk_DebugLvl, "### tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d ubTempInvalid :%d \n", tem, ubCurTempVal,ubTempBelowZore,ubTempInvalid);
 
-    if (ubCurTempVal == 0xFF)
-        return;
-
-//  if (ubTemp_bak != cur_temp)
+report:
+    printd(Apk_DebugLvl, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
+    // if (tem_last != tem) 
     {
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
         tUI_TempReqCmd.ubCmd[UI_REPORT_ITEM]    = UI_TEMP_CHECK;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1]  = ubTempBelowZore;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  = 0;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  =!ret;
         tUI_TempReqCmd.ubCmd_Len                = 5;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
-        ubTemp_bak = ubCurTempVal;
+        tem_last = tem;
     }
 }
 
