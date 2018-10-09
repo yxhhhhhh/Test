@@ -303,8 +303,8 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 14;
-uint32_t ubHWVersion = 14;
+uint32_t ubPuSWVersion = 15;
+uint32_t ubHWVersion = 15;
 uint8_t ubBuHWVersion = 0;
 uint32_t ubBuSWVersion = 0;
 
@@ -1290,6 +1290,8 @@ void UI_PuInit(void)
         UI_FactoryStatusDisplay();
     }
     printd(Apk_DebugLvl, "UI_PuInit ok.\n");
+  // UI_SendPwrNormalModeToBu();
+
 }
 
 void UI_PowerOnSet(void)
@@ -1525,6 +1527,7 @@ void UI_PowerOff(void)
     printd(Apk_DebugLvl, "11111111111UI_PowerOff Power OFF!\n");
 
     //UI_SendPwrNormalModeToBu();
+    UI_SendPwrVoxModeToBu();
     UI_UpdateDevStatusInfo();
 //  BUZ_PlayPowerOffSound();
     osDelay(600);//wait buzzer play finish
@@ -1551,6 +1554,7 @@ void UI_PowerKey(void)
     }
 
     //UI_SendPwrNormalModeToBu();
+    UI_SendPwrVoxModeToBu();
     UI_UpdateDevStatusInfo();
 //  BUZ_PlayPowerOffSound();
     osDelay(600);           //wait buzzer play finish
@@ -10271,19 +10275,22 @@ uint8_t UI_SendPwrVoxModeToBu(void)
 
    // if (tUI_PuSetting.tPsMode != PS_VOX_MODE)
     {
-        if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
-            (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
-        {
-            tPwrCmd.tDS_CamNum               = tCamViewSel.tCamViewPool[0];
-            tPwrCmd.ubCmd[UI_TWC_TYPE]       = UI_SETTING;
-            tPwrCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
-            tPwrCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
-            tPwrCmd.ubCmd_Len                = 3;
-            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
-            {
-                return rUI_FAIL;
-            }
-        }
+ 	for( int i = 0; i < 4; i++)
+    	{
+	       if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&
+	            (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
+	        {
+	            tPwrCmd.tDS_CamNum               =  tUI_CamStatus[i].ulCAM_ID;
+	            tPwrCmd.ubCmd[UI_TWC_TYPE]       = UI_SETTING;
+	            tPwrCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
+	            tPwrCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
+	            tPwrCmd.ubCmd_Len                = 3;
+	            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
+	            {
+	                return rUI_FAIL;
+	            }
+        	   }
+	}
         return rUI_SUCCESS;
     }
 

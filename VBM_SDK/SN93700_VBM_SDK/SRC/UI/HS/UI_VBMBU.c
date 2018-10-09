@@ -107,7 +107,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint8_t ubBuSWVersion = 14;
+uint8_t ubBuSWVersion = 15;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -1673,7 +1673,7 @@ void UI_BrightnessCheck(void) //20180408
 	}
 
 	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-    //printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+    printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
         if (ubCheckMinIrCnt >= IR_CHECK_CNT)
