@@ -554,13 +554,11 @@ void UI_KeyEventExec(void *pvKeyEvent)
                 	printd(Apk_DebugLvl,"443333333333333333ptKeyEvent->uwKeyCnt =%d\n",ptKeyEvent->uwKeyCnt);
                 	if(((ptKeyEvent->ubKeyID == GKEY_ID0)  || (ptKeyEvent->ubKeyID == GKEY_ID1)) && (ptKeyEvent->uwKeyCnt % 3 == 0))
                 	{
-                		printd(Apk_DebugLvl,"111111111111111111\n");
 				UiKeyEventMap[uwIdx].KeyEventFuncPtr();
                 	}
                 }
 		  else if(ptKeyEvent->ubKeyAction == KEY_DOWN_ACT )
 		 {
-                		printd(Apk_DebugLvl,"44444444444444444444\n");
 				UiKeyEventMap[uwIdx].KeyEventFuncPtr();	
 		 }
    	       break;
@@ -981,7 +979,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
                 OSD_EraserImg2(&tOsdInfo);
                 ubMenuKeyPairing = 0;
                 tUI_State = UI_DISPLAY_STATE;
-			
+		  
 		  if (ubNoAddCamFlag == 1)
 	    	  {
 	            OSD_LogoJpeg(OSDLOGO_WHITE_BG);
@@ -1004,7 +1002,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	                tOsdImgInfo.uwYStart = 360 - 80;
 	                tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 	            }
-	            printd(1, "11111111111111UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
+	            printd(Apk_DebugLvl, "11111111111111UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
 	        }
     
                 return;
@@ -1323,7 +1321,6 @@ void UI_PuInit(void)
 void UI_PowerOnSet(void)
 {
     printd(Apk_DebugLvl, "UI_PowerOnSet ubZoomScale: %d.\n", tUI_PuSetting.ubZoomScale);
-    UI_SendPwrNormalModeToBu();
     UI_Zoom_SetScaleParam(tUI_PuSetting.ubZoomScale);
 }
 //------------------------------------------------------------------------------
@@ -1511,7 +1508,7 @@ void UI_SetSleepState(uint8_t type)
             }
             if (tUI_PuSetting.ubDefualtFlag == TRUE)
                  ubFactorySettingFlag = 0;
-			
+
             ubSwitchCamWakeupSstate = 1;
         }
 
@@ -1688,7 +1685,7 @@ void UI_MenuKey(void)
                         tOsdInfo.uwYStart = 360 - 80;
                         tOSD_Img2(&tOsdInfo, OSD_UPDATE);
                     }
-                    printd(1, "0000000000000000000UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.tUI_State = %d\n",tUI_State);
+                    printd(1, "0000000000000000000 UI_MenuKey OSD2IMG_MENU_NOCAM1.tUI_State = %d\n",tUI_State);
                 }
                 else
                 {
@@ -2989,7 +2986,7 @@ void UI_PushTalkKeyShort(void)
                         }
 
 						
-                        printd(1, "222222222222222UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
+                        printd(Apk_DebugLvl, "222222222222222 UI_PushTalkKeyShort OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
                     }
                     else
                     {
@@ -3815,7 +3812,7 @@ void UI_CleanSquealAlert(void)
                 tOsdImgInfo.uwYStart = 360 - 80;
                 tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
             }
-            printd(1, "44444444444444UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAMtUI_State = %d\n",tUI_State);
+            printd(Apk_DebugLvl, "44444444444444UI_CleanSquealAlert OSD2IMG_MENU_NOCAMtUI_State = %d\n",tUI_State);
         }
     
    
@@ -4181,7 +4178,7 @@ void UI_ShowSysVolume(uint8_t value)
                 tOsdImgInfo.uwYStart = 360 - 80;
                 tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
             }
-            printd(1, "5555555555555555UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
+            printd(Apk_DebugLvl, "5555555555555555 UI_ShowSysVolume OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
         }
     }
 
@@ -8512,6 +8509,7 @@ else
         {
             ubMenuKeyPairing = 2;
         }
+		
         if(ubFactoryModeFLag == 0)
         {
             tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SUBSUBMENU_BG, 1, &tOsdImgInfo);
@@ -8524,7 +8522,7 @@ else
             tOsdImgInfo.uwYStart = 284 +31;
             tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
         }
-
+        ubCamPairOkState = 0;
         break;
     default:
         break;
@@ -10066,7 +10064,7 @@ void UI_TempBarDisplay(uint8_t value)
     int    i;
 
     if (ubUpdateFWFlag == 1)return;
-    if (tUI_SyncAppState != APP_LINK_STATE)
+    if (tUI_SyncAppState != APP_LINK_STATE || tUI_PuSetting.ubDefualtFlag == TRUE)
 		return;
     //printd(Apk_DebugLvl,"value %d\n",value);
     if (value != 0xff)
@@ -13898,9 +13896,9 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
             	//printd(1,"UI_ShowLostLinkLogo   FALSE == ubUI_ResetPeriodFlag\n");
         uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2; //UI_SHOWLOSTLOGO_PERIOD * 5
     }
-    else if (ubCamPairOkState >= 1)
+    else if (ubCamPairOkState >=1)
     {
-        	//printd(1,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
+        printd(Apk_DebugLvl,"UI_ShowLostLinkLogo ubCamPairOkState >= 1\n");
         ubFastShowLostLinkSta = 0;
         uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 2;
     }
@@ -13921,6 +13919,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
             return;
         }
     }
+	printd(Apk_DebugLvl,"tUI_PuSetting.IconSts.ubShowLostLogoFlag %d   *pThreadCnt %d ubFastShowLostLinkSta %d \n",tUI_PuSetting.IconSts.ubShowLostLogoFlag,*pThreadCnt,ubFastShowLostLinkSta);
 
     if (((FALSE == tUI_PuSetting.IconSts.ubShowLostLogoFlag) && (*pThreadCnt == uwUI_LostPeriod))
         || ((FALSE == tUI_PuSetting.IconSts.ubShowLostLogoFlag) && (ubFastShowLostLinkSta == 1)))
@@ -13978,7 +13977,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                     }
 			if(ubWorWakeUpFlag == 1)
 				LCDBL_ENABLE(UI_ENABLE);
-                    printd(1, "66666666666666UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
+                    printd(Apk_DebugLvl, "66666666666666 UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
                 }
                 else
                 {

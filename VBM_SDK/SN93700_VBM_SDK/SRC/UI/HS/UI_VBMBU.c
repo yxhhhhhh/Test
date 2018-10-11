@@ -455,7 +455,7 @@ void UI_UpdateBUStatusToPU(void)
 	if (ubVersionResut == rUI_FAIL) {
 		ubVersionResut = UI_SendVersionToPu();
 	}
-   printd(1,"ubSNValueResut +=%d\n",ubSNValueResut);
+   printd(Apk_DebugLvl,"ubSNValueResut +=%d\n",ubSNValueResut);
 
    if (ubSNValueResut < 16) {
         ubSNValueResut+= UI_SendSnValueToPu(ubSNValueResut);
