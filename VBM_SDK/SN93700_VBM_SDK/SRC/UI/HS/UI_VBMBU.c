@@ -125,6 +125,7 @@ uint8_t ubUpdateFWFlag = 0;
 uint8_t ubIROnOffFlag = 0;
 uint8_t ubAutoMotorTestFlag = 0;
 uint32_t ubAutoMotorTestCount_NoConnect = 0;
+uint8_t ubSNValueResut = 0;
 
 
 //------------------------------------------------------------------------------
@@ -324,7 +325,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         }
 		if(ubIROnOffFlag == 1)
 			GPIO->GPIO_O4 = 0;
-			
+	ubSNValueResut = 0;		
         break;
     case APP_PAIRING_STATE:
         //if ((*pThreadCnt % UI_PAIRINGLED_PERIOD) == 0)
@@ -449,21 +450,17 @@ void UI_UpdateBUStatusToPU(void)
     //  UI_SendRequestToPU(NULL, &tUI_BuSts);
 
 	static uint8_t ubVersionResut = rUI_FAIL;
-	static uint8_t ubSNValueResut = 0;
+
 
 	if (ubVersionResut == rUI_FAIL) {
 		ubVersionResut = UI_SendVersionToPu();
 	}
-
-//	if (ubSNValueResut == 0 || ubSNValueResut ==1)
-	{
-//		ubSNValueResut = UI_SendSnValueToPu();
-	}
-
+   printd(1,"ubSNValueResut +=%d\n",ubSNValueResut);
 
    if (ubSNValueResut < 16) {
         ubSNValueResut+= UI_SendSnValueToPu(ubSNValueResut);
     }
+
 }
 
 //------------------------------------------------------------------------------
