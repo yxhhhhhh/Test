@@ -354,6 +354,8 @@ uint8_t ubEnterFactoryDelCam = 0;
 uint8_t ubFactoryDelCamFlag  = 0;
 uint8_t ubSendModeNum  = 0;
 
+uint8_t ubFactoryVoxOnFlag  = 0;
+uint8_t ubFactoryVoxOnCnt  = 0;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -669,6 +671,8 @@ void UI_StateReset(void)
 	if(tTWC_RegTransCbFunc(TWC_UI_SETTING, UI_RecvBUResponse, UI_RecvBURequest) != TWC_SUCCESS)
 		printd(DBG_ErrorLvl, "UI Setting 2-way command fail!\n");
 	UI_LoadDevStatusInfo();
+
+	ubFactoryVoxOnFlag  = 0;
 }
 //------------------------------------------------------------------------------
 void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
@@ -1000,7 +1004,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	                tOsdImgInfo.uwYStart = 360 - 80;
 	                tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 	            }
-	            printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+	            printd(1, "11111111111111UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
 	        }
     
                 return;
@@ -1044,6 +1048,22 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 #if Current_Test
         UI_CheckPowerMode();
 #endif
+
+    ubFactoryVoxOnCnt ++;	
+
+    if((ubFactoryVoxOnFlag == 1)&&(ubFactoryVoxOnCnt == 1))
+    {	
+        VDO_Stop();
+	tLCD_JpegDecodeDisable();
+	OSD_LogoJpeg(OSDLOGO_LOGO_BG);
+	VDO_Stop();
+	UI_FS_MenuDisplay(ubFS_MenuItem);
+	ubFactoryVoxOnFlag = 0;
+	LCDBL_ENABLE(UI_ENABLE);
+	ubSwitchNormalFlag = 1;	
+	ubFactoryVoxOnCnt =0;
+    }
+
     }
 
 
@@ -1668,7 +1688,7 @@ void UI_MenuKey(void)
                         tOsdInfo.uwYStart = 360 - 80;
                         tOSD_Img2(&tOsdInfo, OSD_UPDATE);
                     }
-                    printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+                    printd(1, "0000000000000000000UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.tUI_State = %d\n",tUI_State);
                 }
                 else
                 {
@@ -2944,7 +2964,7 @@ void UI_PushTalkKeyShort(void)
                 if (APP_LOSTLINK_STATE == tUI_SyncAppState)
                 {
                     tLCD_JpegDecodeDisable();
-
+			
                     if (ubNoAddCamFlag == 1)
                     {
                         OSD_LogoJpeg(OSDLOGO_WHITE_BG);
@@ -2967,7 +2987,9 @@ void UI_PushTalkKeyShort(void)
                             tOsdInfo.uwYStart = 360 - 80;
                             tOSD_Img2(&tOsdInfo, OSD_UPDATE);
                         }
-                        printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+
+						
+                        printd(1, "222222222222222UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
                     }
                     else
                     {
@@ -3574,6 +3596,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 
 			                        UI_LoadDevStatusInfo();
 			                        tUI_PuSetting.ubDefualtFlag = FALSE;
+						ubFactorySettingFLag = tUI_PuSetting.ubDefualtFlag;
 			                        UI_TimeSetSystemTime();
 			                        tUI_PuSetting.ubLangageFlag = ubLangageFlag;
 			                        UI_UpdateDevStatusInfo();
@@ -3792,7 +3815,7 @@ void UI_CleanSquealAlert(void)
                 tOsdImgInfo.uwYStart = 360 - 80;
                 tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
             }
-            printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+            printd(1, "44444444444444UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAMtUI_State = %d\n",tUI_State);
         }
     
    
@@ -4136,7 +4159,6 @@ void UI_ShowSysVolume(uint8_t value)
         tOsdImgInfo.uwXStart = 48;
         tOsdImgInfo.uwYStart = 0;   //0;
         OSD_EraserImg2(&tOsdImgInfo);
-
         if (ubNoAddCamFlag == 1 && ubVolWarnFlag == 0)
         {
             OSD_LogoJpeg(OSDLOGO_WHITE_BG);
@@ -4159,7 +4181,7 @@ void UI_ShowSysVolume(uint8_t value)
                 tOsdImgInfo.uwYStart = 360 - 80;
                 tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
             }
-            printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+            printd(1, "5555555555555555UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
         }
     }
 
@@ -9284,6 +9306,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
             printd(Apk_DebugLvl, "defulat ~~~\n");
             UI_UpdateDevStatusInfo();
             ubFactorySettingFlag = 0;
+	    ubFactoryVoxOnFlag  = 0;		
 
             tOsdImgInfo.uwHSize  = 720;
             tOsdImgInfo.uwVSize  = 1280;
@@ -9294,7 +9317,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
             //osDelay(100);
             //WDT_Disable(WDT_RST);
             //WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
-            //while(1);
+            while(1);
         }
     else
     {
@@ -9717,7 +9740,7 @@ uint8_t UI_TempCToF(uint8_t cTemp)
 
     fTemp = ctemp*18/10 + (((ctemp*18%10) >= 5)?1:0) + 32;
 
-   	printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+   	//printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = fTemp? 0 : 1;
     return (uint8_t)abs(fTemp);
 }
@@ -9731,7 +9754,7 @@ uint8_t UI_TempFToC(uint8_t fTemp)
     int16_t cTemp = 0;
 
     cTemp = ((ftemp-32)*10/18) + ((((ftemp-32)*10%18) >= 5)?1:0);
-    printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+   // printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = cTemp? 0 : 1;
      return (uint8_t)abs(cTemp);
 }
@@ -10249,10 +10272,10 @@ uint8_t UI_SendPwrNormalModeToBu(void)
 
    // if (tUI_PuSetting.tPsMode != POWER_NORMAL_MODE)
     {
-    	printd(1,"99999999999999999999UI_SendPwrNormalModeToBu \n");
+    	printd(Apk_DebugLvl,"99999999999999999999UI_SendPwrNormalModeToBu \n");
     	for( int i = 0; i < 4; i++)
     	{
-    		printd(1,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
+    		printd(Apk_DebugLvl,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
 	        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&
 	            (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
 	        {
@@ -10659,14 +10682,14 @@ void UI_GetBatLevel(uint16_t checkcount)
     usbdet  = !UI_GetUsbDet();
 
 	//! CHG_ON
-    GPIO->GPIO_O13 = 1;
-    osDelay(50);
+    //GPIO->GPIO_O13 = 1;
+    //osDelay(50);
 	
     ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 ; // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50  : 0); // old board
-    printd(1,"UI_GetBatLevel   usbdet %d  ubGetBatVoltage %d\n",usbdet,ubGetBatVoltage);
+  //  printd(1,"UI_GetBatLevel   usbdet %d  ubGetBatVoltage %d\n",usbdet,ubGetBatVoltage);
 
-    GPIO->GPIO_O13 = 0;
+    //GPIO->GPIO_O13 = 0;
 
     for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
         if (ubGetBatVoltage <= batmap[i]) break;
@@ -10694,7 +10717,7 @@ void UI_GetBatLevel(uint16_t checkcount)
     } else {
         ubBatLvLIdx = BAT_LVL0;
     }
-		printd(1,"iiiiii %d  percent %d ubGetBatPercent %d ubBatLvLIdx %d\n",i,percent,ubGetBatPercent,ubBatLvLIdx);
+		//printd(1,"iiiiii %d  percent %d ubGetBatPercent %d ubBatLvLIdx %d\n",i,percent,ubGetBatPercent,ubBatLvLIdx);
 
     if (!usbdet && ubGetBatVoltage < 3500) {
         if (++ubBatLowCount == 10) {
@@ -13955,7 +13978,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                     }
 			if(ubWorWakeUpFlag == 1)
 				LCDBL_ENABLE(UI_ENABLE);
-                    //printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+                    printd(1, "66666666666666UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
                 }
                 else
                 {
@@ -14852,6 +14875,7 @@ void UI_DisableVox(void)
         }
     }
 #else
+    if(ubFactorySettingFLag == 0)
     ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
 #endif
 
@@ -14863,7 +14887,7 @@ void UI_DisableVox(void)
     tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
     tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
 
-    if (APP_LINK_EVENT == APP_UpdateLinkStatus())
+    if ((APP_LINK_EVENT == APP_UpdateLinkStatus())&&(ubFactorySettingFLag == 0))
     {
         SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode
         osDelay(50);            //???

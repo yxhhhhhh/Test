@@ -63,6 +63,11 @@ extern uint8_t ubShowAlarmstate;
 
 extern uint8_t ubFastShowLostLinkSta;
 extern uint8_t ubNoAddCamFlag;
+extern uint8_t ubFS_MenuItem;
+extern uint8_t ubFactoryVoxOnFlag;
+extern uint8_t ubFactoryVoxOnCnt;
+
+
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
@@ -890,7 +895,7 @@ void APP_LcdDisplayOn(void)
 	LCD_Resume();
 #endif
 #if (LCD_PM == LCD_PWR_OFF)
-	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
+	if((APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())||(ubFactorySettingFLag == 1))
 	{
 		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
 		osDelay(50);			//???
@@ -906,17 +911,28 @@ void APP_LcdDisplayOn(void)
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
 	osDelay(30);
-	VDO_Start();
+	//VDO_Start();
+	if(ubFactorySettingFLag == 1)
+	{
+		printf("default \n");
+		ubFactoryVoxOnFlag =1;
+		ubFactoryVoxOnCnt =0;
+	}
+	else
+		VDO_Start();
 	
 	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
 		printd(Apk_DebugLvl,"11111APP_LOSTLINK_EVENT == APP_UpdateLinkStatus().\n");
 		UI_RemoveLostLinkLogo();
 		ubFastShowLostLinkSta = 1;
-	}	
-	LCDBL_ENABLE(UI_ENABLE);
+	}
+	if(ubFactorySettingFLag == 0)
+	{
+		LCDBL_ENABLE(UI_ENABLE);
 
-	ubSwitchNormalFlag = 1;
+		ubSwitchNormalFlag = 1;
+	}	
 	
 #endif
 }
