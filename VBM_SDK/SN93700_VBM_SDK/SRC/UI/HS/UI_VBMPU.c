@@ -383,7 +383,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
            	 		{
            	 			if ((ptKeyEvent->ubKeyID == AKEY_UP) || (ptKeyEvent->ubKeyID == AKEY_DOWN) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
 					{
-					           printd(1,"11111111111111111111\n");
 						UI_SetSleepState(1);
 						LCDBL_ENABLE(UI_ENABLE);
 						return;
@@ -391,10 +390,8 @@ void UI_KeyEventExec(void *pvKeyEvent)
            	 		}
 				if(ubFS_MenuItem == 1)
            	 		{
-           	 			printd(1,"22222222222222\n");
            	 			if ((ptKeyEvent->ubKeyID >= AKEY_UP) ||(ptKeyEvent->ubKeyID <= AKEY_ENTER))
 					{
-           	 			printd(1,"333333333333333333333\n");
 						UI_SetSleepState(1);
 						LCDBL_ENABLE(UI_ENABLE);
 						return;
@@ -486,6 +483,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 
     if (ptKeyEvent->ubKeyID != PKEY_ID0)
     {
+	printd(Apk_DebugLvl,"UI_CameraResetCycleTime gogogo\n");
         UI_CameraResetCycleTime(ptKeyEvent->ubKeyAction);
     }
 
@@ -500,7 +498,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
         {
             if (ubShowAlarmstate) // UI_GetAlarmStatus()
                 return;
-        	printd(1,"22222222222222\n");
 
 //          UI_DPTZ_KeyRelease(ptKeyEvent->ubKeyID);
             UI_MotorControl((ptKeyEvent->ubKeyID > AKEY_DOWN)?1:0);
@@ -551,7 +548,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
             {
                 if (ptKeyEvent->ubKeyAction == KEY_CNT_ACT)
                 {
-                	printd(Apk_DebugLvl,"443333333333333333ptKeyEvent->uwKeyCnt =%d\n",ptKeyEvent->uwKeyCnt);
+                	printd(Apk_DebugLvl," ptKeyEvent->uwKeyCnt =%d\n",ptKeyEvent->uwKeyCnt);
                 	if(((ptKeyEvent->ubKeyID == GKEY_ID0)  || (ptKeyEvent->ubKeyID == GKEY_ID1)) && (ptKeyEvent->uwKeyCnt % 3 == 0))
                 	{
 				UiKeyEventMap[uwIdx].KeyEventFuncPtr();
@@ -1002,7 +999,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	                tOsdImgInfo.uwYStart = 360 - 80;
 	                tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 	            }
-	            printd(Apk_DebugLvl, "11111111111111UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
+	            printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
 	        }
     
                 return;
@@ -1114,6 +1111,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
             while(1);
         }
     }
+    
 }
 //------------------------------------------------------------------------------
 void UI_UpdateStatus(uint16_t *pThreadCnt)
@@ -1547,7 +1545,7 @@ void UI_PowerKeyShort(void)
 
 void UI_PowerOff(void)
 {
-    printd(Apk_DebugLvl, "11111111111UI_PowerOff Power OFF!\n");
+    printd(Apk_DebugLvl, " UI_PowerOff Power OFF!\n");
 
     //UI_SendPwrNormalModeToBu();
     UI_SendPwrVoxModeToBu();
@@ -1563,7 +1561,7 @@ void UI_PowerOff(void)
 //------------------------------------------------------------------------------
 void UI_PowerKey(void)
 {
-    printd(Apk_DebugLvl, "2222222222UI_PowerKey###\n");
+    printd(Apk_DebugLvl, " UI_PowerKey###\n");
 
     if (ubFactoryModeFLag == 1)
     {
@@ -1586,7 +1584,7 @@ void UI_PowerKey(void)
 //  SIGNAL_LED_IO = 0;
     RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, RTC_PWRSTS_KEEP_TAG);
     RTC_SetGPO_1(0, RTC_PullDownEnable);
-    printd(Apk_DebugLvl, "3333333333UI_PowerKey Power OFF!\n");
+    printd(Apk_DebugLvl, " UI_PowerKey Power OFF!\n");
     RTC_PowerDisable();
     while(1);
 }
@@ -1594,7 +1592,7 @@ void UI_PowerKey(void)
 void UI_MenuKey(void)
 {
     OSD_IMG_INFO tOsdInfo;
-    printd(Apk_DebugLvl, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt);
+    printd(Apk_DebugLvl, "UI_MenuKey tUI_State: 0x%x.  tUI_PuSetting.VolLvL.ubVOL_UpdateCnt  =%d ubShowAlarmstate %d\n", tUI_State,tUI_PuSetting.VolLvL.ubVOL_UpdateCnt,ubShowAlarmstate);
     switch (tUI_State)
     {
     case UI_DISPLAY_STATE:
@@ -1685,7 +1683,7 @@ void UI_MenuKey(void)
                         tOsdInfo.uwYStart = 360 - 80;
                         tOSD_Img2(&tOsdInfo, OSD_UPDATE);
                     }
-                    printd(1, "0000000000000000000 UI_MenuKey OSD2IMG_MENU_NOCAM1.tUI_State = %d\n",tUI_State);
+                    printd(Apk_DebugLvl, " UI_MenuKey OSD2IMG_MENU_NOCAM1.tUI_State = %d\n",tUI_State);
                 }
                 else
                 {
@@ -1912,6 +1910,7 @@ void UI_RightArrowKey(void)
 //------------------------------------------------------------------------------
 void UI_EnterKey(void)
 {
+	printd(1,"UI_EnterKey\n");
 	if(UI_CheckStopAlarm() == 1)
 	{
 		UI_StopPlayAlarm();
@@ -1940,7 +1939,7 @@ void UI_EnterKey(void)
 		case UI_RECFOLDER_SEL_STATE:
 		case UI_RECPLAYLIST_STATE:
 		case UI_ENGMODE_STATE:
-		case UI_PAIRING_STATE:		
+		case UI_PAIRING_STATE:	
 			tUI_StateMap2MenuFunc[tUI_State].pvFuncPtr(ENTER_ARROW);
 			break;
 		default:
@@ -2986,7 +2985,7 @@ void UI_PushTalkKeyShort(void)
                         }
 
 						
-                        printd(Apk_DebugLvl, "222222222222222 UI_PushTalkKeyShort OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
+                        printd(Apk_DebugLvl, " UI_PushTalkKeyShort OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
                     }
                     else
                     {
@@ -3260,7 +3259,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
             UI_UpdateDevStatusInfo();
         }
 #else
-        printd(Apk_DebugLvl,"UI_ScanModeExec\n");
+        printd(1,"UI_ScanModeExec\n");
         UI_SwitchCameraScan(1); //20180622
 #endif
     }
@@ -3812,7 +3811,7 @@ void UI_CleanSquealAlert(void)
                 tOsdImgInfo.uwYStart = 360 - 80;
                 tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
             }
-            printd(Apk_DebugLvl, "44444444444444UI_CleanSquealAlert OSD2IMG_MENU_NOCAMtUI_State = %d\n",tUI_State);
+            printd(Apk_DebugLvl, " UI_CleanSquealAlert OSD2IMG_MENU_NOCAMtUI_State = %d\n",tUI_State);
         }
     
    
@@ -3881,7 +3880,7 @@ uint8_t UI_CheckStopAlarm(void)
 	    return 1;
 	}
 
-	printd(1,"ubPickupAlarmState  %dubShowAlarmstate %d \n ",ubPickupAlarmState,ubShowAlarmstate);
+	printd(Apk_DebugLvl,"ubPickupAlarmState  %dubShowAlarmstate %d \n ",ubPickupAlarmState,ubShowAlarmstate);
 
     return 0;
 }
@@ -6292,7 +6291,7 @@ void UI_ShowAlarm(uint8_t type)
 
 	//if(type<3)
 	ubShowAlarmType = type;
-    printd(Apk_DebugLvl, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d.\n", type, ubShowAlarmstate);
+    printd(1, "UI_ShowAlarm type: %d, ubShowAlarmstate: %d tUI_State %x .ubPickupAlarmState =%d\n", type, ubShowAlarmstate,tUI_State,ubPickupAlarmState);
 
     if ((ubMotor0State != MC_LEFT_RIGHT_OFF) || (ubMotor1State != MC_UP_DOWN_OFF))
     {
@@ -6413,7 +6412,8 @@ void UI_PlayAlarmSound(uint8_t type)
         ubAlertSetting = tUI_PuSetting.ubSoundAlertSetting;
     }
 
-    printd(1, "UI_PlayAlarmSound ubAlertSetting: %d, ubPlayAlarmCount: %d.\n", ubAlertSetting, ubPlayAlarmCount);
+    printd(Apk_DebugLvl, "UI_PlayAlarmSound ubAlertSetting: %d, ubPlayAlarmCount: %d. \n", ubAlertSetting, ubPlayAlarmCount);
+    printd(Apk_DebugLvl,"tUI_State =%x ubPickupAlarmState =%d\n",tUI_State,ubPickupAlarmState);
     if (++ubPlayAlarmCount > (ubAlertTime[ubAlertSetting]*100/20))
     {
         ubPlayAlarmCount = 0; //200
@@ -6738,7 +6738,7 @@ void UI_PickupAlarmCheck(void)
     }
     else if (ubPickupAlarmState == PICKUP_ALARM_OFF)
     {
-        printd(1, "PICKUP: (%d) ------\n", ubPickupAlarmTriggerCount);
+        printd(Apk_DebugLvl, "PICKUP: (%d) ------tUI_State  = %x  ubPickupAlarmState = %d \n", ubPickupAlarmTriggerCount,tUI_State,ubPickupAlarmState);
         if (ubPickupAlarmTriggerCount < PICk_ALARM_INTERVAL) //30s
         {
             ubPickupAlarmTriggerCount++;
@@ -7351,7 +7351,7 @@ void UI_Zoom_SetScaleParam(uint8_t tZoomScale)
     uint32_t ulLcd_HSize = uwLCD_GetLcdHoSize();
     uint32_t ulLcd_VSize = uwLCD_GetLcdVoSize();
 
-    //printd(Apk_DebugLvl, "UI_Zoom_SetScaleParam tZoomScale: %d, tUI_PuSetting.ubZoomScale: %d.\r\n", tZoomScale, tUI_PuSetting.ubZoomScale);
+    printd(1, "UI_Zoom_SetScaleParam tZoomScale: %d, tUI_PuSetting.ubZoomScale: %d.\r\n", tZoomScale, tUI_PuSetting.ubZoomScale);
 
     if (tZoomScale == 0) //off
     {
@@ -8097,6 +8097,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 {
     APP_EventMsg_t tUI_UnindBuMsg = {0};
 
+	printd(1,"UI_CamDeleteCamera\n");
     if (type)
     {
         if (tUI_CamStatus[CameraId].ulCAM_ID != INVALID_ID)
@@ -8275,6 +8276,10 @@ void UI_CameraResetCycleTime(uint8_t KeyAction)
 {
     if (ubFactoryModeFLag == 1)
         return;
+
+    if (ubShowAlarmstate >0)
+    	return;
+		
 
     if (KeyAction == KEY_UP_ACT)
     {
@@ -9300,10 +9305,9 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 
             LCDBL_ENABLE(FALSE);
             ubFactoryDeleteCam = 1;
-            //UI_CamDeleteCamera(1, 0);
+            UI_CamDeleteCamera(1, 0);
             printd(Apk_DebugLvl, "defulat ~~~\n");
             UI_UpdateDevStatusInfo();
-            ubFactorySettingFlag = 0;
 	    ubFactoryVoxOnFlag  = 0;		
 
             tOsdImgInfo.uwHSize  = 720;
@@ -9315,7 +9319,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
             //osDelay(100);
             //WDT_Disable(WDT_RST);
             //WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
-            while(1);
+           // while(1);
         }
     else
     {
@@ -9446,8 +9450,8 @@ void UI_FS_LangageMenuDisplay(uint8_t value)
 void UI_FS_SetTimeMenuDisplay(uint8_t value)
 {
     OSD_IMG_INFO tOsdImgInfo;
-	printd(1,"1111111111111UI_FS_SetTimeMenuDisplay  tUI_PuSetting.tPsMode %x  value =%d \n",tUI_PuSetting.tPsMode,value);
-	printd(1,"ubTimeAMPM %d  ubTimeMin %d ubTimeHour %d \n",ubTimeAMPM,ubTimeMin,ubTimeHour );
+	printd(Apk_DebugLvl," UI_FS_SetTimeMenuDisplay  tUI_PuSetting.tPsMode %x  value =%d \n",tUI_PuSetting.tPsMode,value);
+	printd(Apk_DebugLvl,"ubTimeAMPM %d  ubTimeMin %d ubTimeHour %d \n",ubTimeAMPM,ubTimeMin,ubTimeHour );
 
 //  EN_MODE_UI  tEnUI;
 
@@ -10270,7 +10274,7 @@ uint8_t UI_SendPwrNormalModeToBu(void)
 
    // if (tUI_PuSetting.tPsMode != POWER_NORMAL_MODE)
     {
-    	printd(Apk_DebugLvl,"99999999999999999999UI_SendPwrNormalModeToBu \n");
+    	printd(Apk_DebugLvl," UI_SendPwrNormalModeToBu \n");
     	for( int i = 0; i < 4; i++)
     	{
     		printd(Apk_DebugLvl,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
@@ -10660,7 +10664,7 @@ void UI_MotorStateCheck(void)
     else if (ubMotor0State == MC_RIGHT_TOP)
     {
         //ubMC0OnCount = 0;
-    }
+    }      
     else if (ubMotor0State == MC_LEFT_RIGHT_OFF)
     {
         //ubMC0OnCount = 0;
@@ -10675,19 +10679,19 @@ void UI_GetBatLevel(uint16_t checkcount)
     {
         3500,3598,3665,3788,3984,4350,4500//3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
+    static uint8_t usbdet_last = 0;
     //printd(1,"UI_GetBatLevel UI_GetUsbDet %d ubGetBatVoltage %d\n",UI_GetUsbDet(),uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024);
-
     usbdet  = !UI_GetUsbDet();
 
 	//! CHG_ON
-    //GPIO->GPIO_O13 = 1;
-    //osDelay(50);
+//  GPIO->GPIO_O13 = 1;
+//  osDelay(50);
 	
     ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 ; // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50  : 0); // old board
   //  printd(1,"UI_GetBatLevel   usbdet %d  ubGetBatVoltage %d\n",usbdet,ubGetBatVoltage);
 
-    //GPIO->GPIO_O13 = 0;
+//  GPIO->GPIO_O13 = 0;
 
     for (i=1; i<sizeof(batmap)/sizeof(batmap[0]); i++) {
         if (ubGetBatVoltage <= batmap[i]) break;
@@ -10695,15 +10699,34 @@ void UI_GetBatLevel(uint16_t checkcount)
     percent = (i-1) * 20 + 20 * (ubGetBatVoltage - batmap[i-1]) / (batmap[i] - batmap[i-1]);
     percent = percent < 100 ? percent : 100;
     percent = percent > 0   ? percent : 0;
-    if (checkcount > 10) {
-        if (usbdet) {
-            if (ubGetBatPercent < percent) ubGetBatPercent++;
-        } else {
-            if (ubGetBatPercent > percent) ubGetBatPercent--;
-        }
-    } else {
-        ubGetBatPercent = percent;
+
+/*    if (usbdet_last != usbdet) 
+    {
+        usbdet_last = usbdet;
+        if (!usbdet)
+	 {
+            ubGetBatPercent = percent;
+    	 }
     }
+    else 
+    {
+	*/    if (checkcount > 10) 
+	    {
+	        if (usbdet) 
+		 {
+	            if (ubGetBatPercent < percent) ubGetBatPercent++;
+	        } 
+		 else 
+   		 {
+	            if (ubGetBatPercent > percent) ubGetBatPercent--;
+	        }
+	    } 
+	    else 
+	    {
+	        ubGetBatPercent = percent;
+	    }
+    //}
+
     if (ubGetBatPercent > 75) {
         ubBatLvLIdx = BAT_LVL0 + 4;
     } else if (ubGetBatPercent > 50) {
@@ -13648,7 +13671,7 @@ void UI_UpdateBarIcon_Part2(void)
     tSelCamNum = tCamViewSel.tCamViewPool[0];
 
     //printd(Apk_DebugLvl, "UI_UpdateBarIcon_Part2 tSelCamNum: %d.\n", tSelCamNum);
-	printd(1,"tUI_PuSetting.ubScanModeEn =%d. tUI_PuSetting.ubScanTime = %d ubCameraOnlineNum =%d\n",tUI_PuSetting.ubScanModeEn,tUI_PuSetting.ubScanTime,ubCameraOnlineNum);
+	printd(Apk_DebugLvl,"tUI_PuSetting.ubScanModeEn =%d. tUI_PuSetting.ubScanTime = %d ubCameraOnlineNum =%d\n",tUI_PuSetting.ubScanModeEn,tUI_PuSetting.ubScanTime,ubCameraOnlineNum);
     //if ((tUI_PuSetting.ubScanModeEn == FALSE) && (tUI_PuSetting.ubScanTime == 0) && (ubCameraOnlineNum < 2))
     if(ubCameraOnlineNum < 2)
     {
@@ -13977,7 +14000,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                     }
 			if(ubWorWakeUpFlag == 1)
 				LCDBL_ENABLE(UI_ENABLE);
-                    printd(Apk_DebugLvl, "66666666666666 UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
+                    printd(Apk_DebugLvl, " UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1tUI_State = %d\n",tUI_State);
                 }
                 else
                 {
@@ -15200,7 +15223,9 @@ void UI_SwitchCameraScan(uint8_t type)
     UI_CamNum_t tCamSwtichNum = (UI_CamNum_t)0xFF;
     UI_CamNum_t tSearchCam = tCamViewSel.tCamViewPool[0];
 
-    printd(Apk_DebugLvl, "UI_SwitchCameraScan type: %d.\n", type);
+    printd(1, "UI_SwitchCameraScan type: %d.\n", type);
+
+ 
     for (i = 0; i < 4; i++)
         printd(Apk_DebugLvl, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
@@ -15365,7 +15390,7 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 //------------------------------------------------------------------------------
 void UI_EnableScanMode(void)
 {
-    printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.\n", tUI_PuSetting.ubScanTime);
+    printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.ubShowAlarmstate =%d\n", tUI_PuSetting.ubScanTime,ubShowAlarmstate);
 
     if (tUI_PuSetting.ubScanTime == 0)
     {

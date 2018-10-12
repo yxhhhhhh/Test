@@ -900,7 +900,7 @@ void APP_LcdDisplayOn(void)
 		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
 		osDelay(50);			//???
 		LCD_PWR_ENABLE;
-		osDelay(400);
+		osDelay(200);
 	}
 	
 	GLB->LCD_FUNC_DIS  = 0;
@@ -910,7 +910,7 @@ void APP_LcdDisplayOn(void)
 	UI_PowerOnSet();
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
-	osDelay(30);
+	osDelay(200);
 	//VDO_Start();
 	if(ubFactorySettingFLag == 1)
 	{
