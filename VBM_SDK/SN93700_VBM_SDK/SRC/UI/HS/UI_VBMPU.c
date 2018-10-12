@@ -9878,10 +9878,13 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
         break;
 
     case UI_BU_CMD_IR_VALUE:
-        ubGetIR1Temp = pvdata[1];
-        ubGetIR2Temp = pvdata[2];
-        //printd(Apk_DebugLvl, "IR Temp %d ### \n",(ubGetIR1Temp<<8)+ubGetIR2Temp);
-        break;
+	 if ((tCamViewSel.tCamViewPool[0] == tCamNum) && (CAM_ONLINE == tUI_CamStatus[tCamNum].tCamConnSts))
+	 {     
+		ubGetIR1Temp = pvdata[1];
+	        ubGetIR2Temp = pvdata[2];
+	        //printd(Apk_DebugLvl, "IR Temp %d ### \n",(ubGetIR1Temp<<8)+ubGetIR2Temp);
+	 }
+	        break;
     default:
         break;
     }
@@ -10689,7 +10692,7 @@ void UI_GetBatLevel(uint16_t checkcount)
 	
     ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 ; // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50  : 0); // old board
-  //  printd(1,"UI_GetBatLevel   usbdet %d  ubGetBatVoltage %d\n",usbdet,ubGetBatVoltage);
+   printd(1,"UI_GetBatLevel   usbdet %d  ubGetBatVoltage %d\n",usbdet,ubGetBatVoltage);
 
 //  GPIO->GPIO_O13 = 0;
 
@@ -10700,7 +10703,7 @@ void UI_GetBatLevel(uint16_t checkcount)
     percent = percent < 100 ? percent : 100;
     percent = percent > 0   ? percent : 0;
 
-/*    if (usbdet_last != usbdet) 
+    if (usbdet_last != usbdet) 
     {
         usbdet_last = usbdet;
         if (!usbdet)
@@ -10710,7 +10713,7 @@ void UI_GetBatLevel(uint16_t checkcount)
     }
     else 
     {
-	*/    if (checkcount > 10) 
+	    if (checkcount > 10) 
 	    {
 	        if (usbdet) 
 		 {
@@ -10725,7 +10728,7 @@ void UI_GetBatLevel(uint16_t checkcount)
 	    {
 	        ubGetBatPercent = percent;
 	    }
-    //}
+    }
 
     if (ubGetBatPercent > 75) {
         ubBatLvLIdx = BAT_LVL0 + 4;
