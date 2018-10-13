@@ -8527,7 +8527,8 @@ else
             tOsdImgInfo.uwYStart = 284 +31;
             tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
         }
-        ubCamPairOkState = 0;
+	 if(ubNoAddCamFlag == 1)
+        	ubCamPairOkState = 0;
         break;
     default:
         break;
@@ -9305,7 +9306,7 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
 
             LCDBL_ENABLE(FALSE);
             ubFactoryDeleteCam = 1;
-            UI_CamDeleteCamera(1, 0);
+            //UI_CamDeleteCamera(1, 0);
             printd(Apk_DebugLvl, "defulat ~~~\n");
             UI_UpdateDevStatusInfo();
 	    ubFactoryVoxOnFlag  = 0;		
