@@ -107,7 +107,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint8_t ubBuSWVersion = 16;
+uint8_t ubBuSWVersion = 15;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -1642,17 +1642,60 @@ void UI_SetIRLed(uint8_t LedState)
 
 void UI_BrightnessCheck(void) //20180408
 {
-	#define IR_CHECK_CNT	2
+    #define IR_CHECK_CNT	2
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
 
-	printd(1,"UI_BrightnessCheck tUI_BuStsInfo.tCamPsMode = %x\n",tUI_BuStsInfo.tCamPsMode);
-   if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
+
+    printd(Apk_DebugLvl,"UI_BrightnessCheck tUI_BuStsInfo.tCamPsMode = %x\n",tUI_BuStsInfo.tCamPsMode);
+    if(tUI_BuStsInfo.tCamPsMode == PS_VOX_MODE)
 	 return;	
 
     uwDetLvl = uwSADC_GetReport(1);
 
+#if 1
+    static uint16_t ubLastDetValue = 0;
+    uint16_t uwDetdifferent = 0;
+    static uint8_t uwVdochangeflag = 0;
+    if(uwDetLvl > ubLastDetValue)
+	 uwDetdifferent = uwDetLvl - ubLastDetValue;
+    else
+	 uwDetdifferent = ubLastDetValue - uwDetLvl;
+    printd(1,"UI_BrightnessCheck uwDetLvl %d ubLastDetValue %d   uwDetdifferent = %x\n",uwDetLvl,ubLastDetValue,uwDetdifferent);
+    ubLastDetValue  = uwDetLvl;
+
+    if( uwDetdifferent > 0x05)
+    {
+	  uwVdochangeflag = 0;
+	  return;	
+    }
+    uwVdochangeflag ++;
+    printd(1,"UI_BrightnessCheck  uwDetdifferent <=0x05 uwVdochangeflag %d\n",uwVdochangeflag);
+
+    if(uwVdochangeflag < 2)
+    {
+	return;
+    }
+    uwVdochangeflag = 0;
+    printd(1,"UI_BrightnessCheck gogogogo  uwVdochangeflag %d\n",uwVdochangeflag);
+	
+	if(uwDetLvl < 0x19)
+	{
+		ubCheckMinIrCnt++;
+		ubCheckMaxIrCnt = 0;
+	}
+	else if(uwDetLvl >= 0x28)
+	{
+		ubCheckMaxIrCnt++;
+		ubCheckMinIrCnt = 0;
+	}
+	else if(uwDetLvl > 0x3FF)
+	{
+		ubCheckMaxIrCnt = 0;
+		ubCheckMinIrCnt = 0;
+	}
+#else
 	if(uwDetLvl < 0x28)
 	{
 		ubCheckMinIrCnt++;
@@ -1668,9 +1711,9 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMaxIrCnt = 0;
 		ubCheckMinIrCnt = 0;
 	}
-
+#endif
 	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-    printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+    printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
     if (tUI_BuStsInfo.tNightModeFlag)
     {
         if (ubCheckMinIrCnt >= IR_CHECK_CNT)
