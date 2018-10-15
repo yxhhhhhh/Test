@@ -864,6 +864,8 @@ void UI_StatusCheck(uint16_t ubCheckCount)
     static uint8_t ubSetAlarmRet = rUI_FAIL;
     static uint8_t ubNightModeRet = rUI_FAIL;
 
+    printd(1,"ubPowerState %d  tUI_PuSetting.tPsMode  %x\n",ubPowerState,tUI_PuSetting.tPsMode );
+
     if (ubFactoryModeFLag == 1)
     {
         if (ubCheckCount%5 == 0)
@@ -3148,6 +3150,11 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
     uint8_t ubT_MinNum[3] = {0,  0,  0};
 //  UI_CamNum_t tSelCam;
 //  UI_PUReqCmd_t tPsCmd;
+	printd(Apk_DebugLvl,"UI_DisplayArrowKeyFunc\n");
+
+    if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+	return;
+
 #if 1
     if (ubFactoryModeFLag == 1)
     {
