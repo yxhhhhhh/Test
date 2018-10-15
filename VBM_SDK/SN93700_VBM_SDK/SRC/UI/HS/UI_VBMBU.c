@@ -1657,7 +1657,6 @@ void UI_BrightnessCheck(void) //20180408
 #if 1
     static uint16_t ubLastDetValue = 0;
     uint16_t uwDetdifferent = 0;
-    static uint8_t uwVdochangeflag = 0;
     if(uwDetLvl > ubLastDetValue)
 	 uwDetdifferent = uwDetLvl - ubLastDetValue;
     else
@@ -1667,18 +1666,9 @@ void UI_BrightnessCheck(void) //20180408
 
     if( uwDetdifferent > 0x05)
     {
-	  uwVdochangeflag = 0;
 	  return;	
     }
-    uwVdochangeflag ++;
-    printd(1,"UI_BrightnessCheck  uwDetdifferent <=0x05 uwVdochangeflag %d\n",uwVdochangeflag);
-
-    if(uwVdochangeflag < 2)
-    {
-	return;
-    }
-    uwVdochangeflag = 0;
-    printd(1,"UI_BrightnessCheck gogogogo  uwVdochangeflag %d\n",uwVdochangeflag);
+    printd(1,"UI_BrightnessCheck  uwDetdifferent <=0x05\n");
 	
 	if(uwDetLvl < 0x19)
 	{
