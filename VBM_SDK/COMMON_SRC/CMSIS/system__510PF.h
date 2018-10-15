@@ -103,6 +103,8 @@ typedef enum
 #define Current_Test	1
 #define Current_Mode	PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
 
+#define SCREEN_RZW	1
+
 #define Apk_DebugLvl	5 // 5 1
 #define printd(level, ...)    ((level <= lSYS_DebugLvl) ? printf(__VA_ARGS__) : 0 )
 

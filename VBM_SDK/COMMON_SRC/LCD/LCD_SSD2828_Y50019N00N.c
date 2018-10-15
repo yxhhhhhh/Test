@@ -470,8 +470,11 @@ bool bLCD_MIPI_SSD2828_Init(void)
                                     //!< HS[0]: LP mode
 
     // lcd pannel init
+#if SCREEN_RZW 
     lcd_panel_init(panel0_init_regs);  	//current
-    //lcd_panel_init(panel1_init_regs);	//ÓîË³
+#else
+    lcd_panel_init(panel1_init_regs);	//ÓîË³
+#endif
     return true;
 }
 

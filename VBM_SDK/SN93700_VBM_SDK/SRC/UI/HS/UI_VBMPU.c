@@ -136,8 +136,12 @@ UI_ReportFuncPtr_t tUiReportMap2Func[] =
 
 
 ADO_R2R_VOL tUI_VOLTable[] = {R2R_VOL_n45DB, R2R_VOL_n39p1DB, R2R_VOL_n29p8DB, R2R_VOL_n26p2DB, R2R_VOL_n21p4DB, R2R_VOL_n14p6DB, R2R_VOL_n11p9DB, R2R_VOL_n5p6DB, R2R_VOL_n0DB};
+
+#if SCREEN_RZW 
 uint32_t ulUI_BLTable[] = {0, 3, 10, 17, 24, 31, 38, 45, 52};//ruizhiwei
-//uint32_t ulUI_BLTable[] = {0, 5, 17, 26, 37, 48, 58, 67, 74};//yushun
+#else
+uint32_t ulUI_BLTable[] = {0, 5, 17, 26, 37, 48, 58, 67, 74};//yushun
+#endif
 
 osMutexId UI_PUMutex;
 static UI_SubMenuCamNum_t tCamSelect;
@@ -303,8 +307,8 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 15;
-uint32_t ubHWVersion = 15;
+uint32_t ubPuSWVersion = 16;
+uint32_t ubHWVersion = 16;
 uint8_t ubBuHWVersion = 0;
 uint32_t ubBuSWVersion = 0;
 

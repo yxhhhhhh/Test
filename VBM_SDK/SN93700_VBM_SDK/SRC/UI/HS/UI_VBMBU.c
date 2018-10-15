@@ -107,7 +107,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint8_t ubBuSWVersion = 15;
+uint8_t ubBuSWVersion = 16;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -1642,7 +1642,7 @@ void UI_SetIRLed(uint8_t LedState)
 
 void UI_BrightnessCheck(void) //20180408
 {
-	#define IR_CHECK_CNT	1
+	#define IR_CHECK_CNT	2
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
