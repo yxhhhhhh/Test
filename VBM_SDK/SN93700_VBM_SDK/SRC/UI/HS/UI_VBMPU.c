@@ -430,11 +430,28 @@ void UI_KeyEventExec(void *pvKeyEvent)
     {
         if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I9 == 0))
         {
-            if (ubPUEnterAdotestFLag == 0)
+ /*           if (ubPUEnterAdotestFLag == 0)
             {
                 ubPUEnterAdotestFLag = 1;
                 //UI_EnterLocalAdoTest_RX();
             }
+*/
+	     //if (ubFactoryModeFLag== 1)
+	     {
+	     	if(ubEnterFactoryDelCam == 0)
+	     	{
+	     	    if(ubFactoryDelCamFlag == 0)	
+		    	 ubFactoryDelCamFlag = 1;
+		     ubEnterFactoryDelCam =1;
+		}
+	    
+	        if(FALSE == ubUI_PttStartFlag)	
+	        {
+			ubEnterFactoryDelCam =0;
+		}
+
+		return;	
+	     }	
         }
 
         if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
@@ -3064,22 +3081,6 @@ void UI_PushTalkKey(void)
     if(APP_LOSTLINK_STATE == tUI_SyncAppState)
         return;
 
-     if (ubFactoryModeFLag== 1)
-     {
-     	if(ubEnterFactoryDelCam == 0)
-     	{
-     	    if(ubFactoryDelCamFlag == 0)	
-	    	 ubFactoryDelCamFlag = 1;
-	     ubEnterFactoryDelCam =1;
-	}
-    
-        if(FALSE == ubUI_PttStartFlag)	
-        	{
-		ubEnterFactoryDelCam =0;
-	}
-
-	return;	
-     }	
 
    // printd(Apk_DebugLvl, "UI_PushTalkKey ubUI_PttStartFlag: %d.\n", ubUI_PttStartFlag);
     if(TRUE == ubUI_PttStartFlag)
@@ -14326,10 +14327,6 @@ void UI_FactoryStatusDisplay(void)
         KNL_ROLE tKNL_Role = (KNL_ROLE)(UI_GetCamViewPoolID());
         ubper_temp = 100 - KNL_GetPerValue(tKNL_Role);
         uint8_t ubRssiVal = KNL_GetRssiValue(tKNL_Role);
-	for(int i = 0; i < 6; i++)
-	{
-	 	printd(1,"KNL_GetPerValue(%d) =  %d, KNL_GetRssiValue = %d \n",i,KNL_GetPerValue(i),KNL_GetRssiValue(i));
-	}
 
         if ( ubper_temp < 100)
         {
