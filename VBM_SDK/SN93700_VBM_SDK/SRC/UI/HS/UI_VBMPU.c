@@ -2035,6 +2035,10 @@ void FactortPair(void)
 
 void UI_EnterLongKey(void)
 {
+
+    if (ubShowAlarmstate >0)
+    	return;
+	
     if (ubFactoryModeFLag == 1)
     {
     	ubFactoryModeFLag = 1;
@@ -3076,7 +3080,10 @@ void UI_PushTalkKey(void)
 {
     OSD_IMG_INFO tOsdInfo;
     uint8_t CmdData = 0;
-	
+
+
+    if (ubShowAlarmstate >0)
+    	return	
 
     if(APP_LOSTLINK_STATE == tUI_SyncAppState)
         return;
@@ -3689,7 +3696,7 @@ void UI_VolUpKey(void)
 
 
     UI_ShowSysVolume(tUI_PuSetting.VolLvL.tVOL_UpdateLvL);
-    ubMenuKeyPairing = 0;
+    ubMenuKeyPairing = 0;	
 	if(ubFactoryModeFLag ==0)
 	{
 	    if (tUI_PuSetting.VolLvL.tVOL_UpdateLvL == VOL_LVL5)
