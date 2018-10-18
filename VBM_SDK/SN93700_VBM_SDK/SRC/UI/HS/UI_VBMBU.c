@@ -107,7 +107,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint8_t ubBuSWVersion = 15;
+uint8_t ubBuSWVersion = 16;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -1755,14 +1755,13 @@ void UI_TestSetting(void *pvTSParam)
 
 void UI_TestCheck(void)
 {
-    #define Motor0_Count    70	//100
+    #define Motor0_Count    85	//100
     #define Motor1_Count    30  //40
-    #define Motor0_Wait     15
-    #define Motor1_Wait     12
+    #define Motor_Wait     12
     static uint16_t ubTestCount = 0;
 
     printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
-#if 0
+#if 1
     if (ubTestCount == 0)
     {
         MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
@@ -1800,6 +1799,86 @@ void UI_TestCheck(void)
         ubTestCount = 0;
         return;
     }
+
+/*
+   if (ubTestCount == 0)
+    {
+        MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
+    }
+    else if (ubTestCount == Motor0_Count)
+    {
+        MC_Stop(MC_0);
+    }
+    else if (ubTestCount == (Motor0_Count + Motor_Wait))
+    {
+        MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);//垂直,正转
+    }
+    else if (ubTestCount == (Motor0_Count + Motor_Wait + Motor1_Count))
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount == (Motor0_Count  + Motor1_Count  + Motor_Wait *2 ))
+    {
+        MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//垂直,反转
+    }
+    else if (ubTestCount == (Motor0_Count  + Motor1_Count *2 + Motor_Wait *2 ))
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount == (Motor0_Count + Motor1_Count * 2+ Motor_Wait  * 3))
+    {
+        MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady); //水平,反转
+    }
+    else if (ubTestCount == (Motor0_Count +Motor0_Count /2 + Motor1_Count*2 + Motor_Wait *3))
+    {
+        MC_Stop(MC_0);
+    }
+    else if (ubTestCount == (Motor0_Count +Motor0_Count /2  + Motor1_Count*2 + Motor_Wait *4))
+    {
+        MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);//垂直,正转
+    }
+    else if (ubTestCount == (Motor0_Count +Motor0_Count /2  + Motor1_Count*3 + Motor_Wait *4))
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount == (Motor0_Count +Motor0_Count /2  + Motor1_Count*3 + Motor_Wait *5))
+    {
+        MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//垂直,反转
+    }
+    else if (ubTestCount == (Motor0_Count +Motor0_Count /2  + Motor1_Count*4 + Motor_Wait *5))
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount == (Motor0_Count +Motor0_Count /2  + Motor1_Count*4 + Motor_Wait *6))
+    {
+        MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady); //水平,反转
+    }
+    else if (ubTestCount == (Motor0_Count *2  + Motor1_Count*4 + Motor_Wait *6))
+    {
+        MC_Stop(MC_0);
+    }
+    else if (ubTestCount == (Motor0_Count *2  + Motor1_Count*4 + Motor_Wait *7))
+    {
+        MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);//垂直,正转
+    }
+    else if (ubTestCount == (Motor0_Count *2  + Motor1_Count*5 + Motor_Wait *7))
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount == (Motor0_Count *2  + Motor1_Count*5 + Motor_Wait *8))
+    {
+        MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady);//垂直,反转
+    }
+    else if (ubTestCount == (Motor0_Count *2  + Motor1_Count*6 + Motor_Wait *8))
+    {
+        MC_Stop(MC_1);
+    }
+    else if (ubTestCount == (Motor0_Count *2  + Motor1_Count*6 + Motor_Wait *9))
+    {
+        ubTestCount = 0;
+        return;
+    }
+*/
 #else
     #define Motor_Count    15  //40
 	

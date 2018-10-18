@@ -91,7 +91,7 @@ static UI_MenuFuncPtr_t tUI_StateMap2MenuFunc[UI_STATE_MAX] =
 {
 	[UI_DISPLAY_STATE]			= UI_DisplayArrowKeyFunc,
 	[UI_MAINMENU_STATE] 		= UI_Menu,
-	[UI_SUBMENU_STATE]  		= UI_SubMenu,
+	[UI_SUBMENU_STATE]  			= UI_SubMenu,
 	[UI_SUBSUBMENU_STATE]  		= UI_SubSubMenu,
 	[UI_SUBSUBSUBMENU_STATE]  	= UI_SubSubSubMenu,
 	[UI_CAM_SEL_STATE]			= UI_CameraSelection,
@@ -101,7 +101,7 @@ static UI_MenuFuncPtr_t tUI_StateMap2MenuFunc[UI_STATE_MAX] =
 	[UI_SET_BUECOMODE_STATE] 	= UI_BuPowerSaveModeSelection,
 	[UI_CAMSETTINGMENU_STATE]	= UI_CameraSettingMenu,
 	[UI_SET_CAMCOLOR_STATE] 	= UI_CameraColorSetting,
-	[UI_DPTZ_CONTROL_STATE]		= UI_DPTZ_Control,
+	[UI_DPTZ_CONTROL_STATE]	= UI_DPTZ_Control,
 	[UI_MD_WINDOW_STATE]		= UI_MD_Window,
 	[UI_PAIRING_STATE]			= UI_PairingControl,
 	[UI_DUALVIEW_CAMSEL_STATE]  = UI_CameraSelection4DualView,
@@ -3083,7 +3083,7 @@ void UI_PushTalkKey(void)
 
 
     if (ubShowAlarmstate >0)
-    	return	
+    	return;	
 
     if(APP_LOSTLINK_STATE == tUI_SyncAppState)
         return;
@@ -10749,6 +10749,7 @@ void UI_GetBatLevel(uint16_t checkcount)
 	        ubGetBatPercent = percent;
 	    }
     }
+   printd(1,"UI_GetBatLevel   percent %d  ubGetBatPercent%d \n",percent,ubGetBatPercent);
 
     if (ubGetBatPercent > 75) {
         ubBatLvLIdx = BAT_LVL0 + 4;
