@@ -51,6 +51,8 @@
 #define UI_TEMPMENU	0
 #define UI_NOTEMPMENU	1
 
+#define UI_WORMENU    1
+
 #define Factory_x_vol   10
 #define Factory_y_vol   80
 /**
@@ -185,6 +187,7 @@ uint8_t ubFlickerFlag = 0;
 uint8_t ubDefualtFlag = 0;
 uint8_t ubTempunitFlag = 0;
 uint8_t ubNightmodeFlag[4] = {0,0,0,0};
+uint8_t ubWorFlag = 0;
 
 uint8_t ubTimeHour = 12;
 uint8_t ubTimeMin = 0;
@@ -8585,13 +8588,23 @@ void UI_DrawSettingSubMenuPage_NoSel(uint8_t type)
 		}
 		
 	#else
-	for(i = 0; i < 7; i++)
-	{	
-		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT+(i*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-		tOsdImgInfo.uwXStart= 118+(i*76);
-		tOsdImgInfo.uwYStart =729;	
-		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
-	}
+		#if  UI_WORMENU
+			for(i = 0; i < 8; i++)
+			{	
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT+(i*2)+ (72*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 80+(i*76);
+				tOsdImgInfo.uwYStart =729;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+			}
+		#else
+			for(i = 0; i < 7; i++)
+			{	
+				tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT+(i*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+				tOsdImgInfo.uwXStart= 118+(i*76);
+				tOsdImgInfo.uwYStart =729;	
+				tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+			}
+		#endif
 	#endif
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_SETTING_S, 1, &tOsdImgInfo);
@@ -8610,10 +8623,17 @@ void UI_DrawSettingSubMenuPage(void)
 	tOsdImgInfo.uwYStart =729;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 #else
+      #if  UI_WORMENU
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT_S+ (72*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart= 80+(0*76);
+	tOsdImgInfo.uwYStart =729;	
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+      #else	  
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT_S+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart= 118+(0*76);
 	tOsdImgInfo.uwYStart =729;	
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+     #endif	
 #endif	
 
     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_SETTING, 1, &tOsdImgInfo);
@@ -8658,15 +8678,27 @@ void UI_SettingSubmenuDisplay(void)
 		}
 		
 	#else
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT+(ubSubMenuItemPreFlag*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 118+(ubSubMenuItemPreFlag*76);
-	tOsdImgInfo.uwYStart =729;	
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+	    #if  UI_WORMENU
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT+(ubSubMenuItemPreFlag*2)+ (72*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 80+(ubSubMenuItemPreFlag*76);
+		tOsdImgInfo.uwYStart =729;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT_S+(ubSubMenuItemFlag*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
-	tOsdImgInfo.uwXStart= 118+(ubSubMenuItemFlag*76);
-	tOsdImgInfo.uwYStart =729;	
-	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT_S+(ubSubMenuItemFlag*2)+ (72*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 80+(ubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =729;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	    #else	
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT+(ubSubMenuItemPreFlag*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 118+(ubSubMenuItemPreFlag*76);
+		tOsdImgInfo.uwYStart =729;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);	
+
+		tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_CAM_NIGHT_S+(ubSubMenuItemFlag*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+		tOsdImgInfo.uwXStart= 118+(ubSubMenuItemFlag*76);
+		tOsdImgInfo.uwYStart =729;	
+		tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+	   #endif	
 	#endif
 
     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_SETTING, 1, &tOsdImgInfo);
@@ -8698,9 +8730,15 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 5;
 				else  ubSubMenuItemFlag--;	
 			#else
+			     #if  UI_WORMENU
+				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+				if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 7;
+				else  ubSubMenuItemFlag--;		
+			     #else
 				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
 				if(0 == ubSubMenuItemFlag) ubSubMenuItemFlag = 6;
-				else  ubSubMenuItemFlag--;		
+				else  ubSubMenuItemFlag--;	
+			      #endif	 
 			#endif	
 			UI_SettingSubmenuDisplay();
 		break;	
@@ -8710,8 +8748,13 @@ void UI_SettingSubMenuPage(UI_ArrowKey_t tArrowKey)
 				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
 				if(++ubSubMenuItemFlag>=6) ubSubMenuItemFlag = 0;	
 			#else
+			    #if  UI_WORMENU
+				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
+				if(++ubSubMenuItemFlag>=8) ubSubMenuItemFlag = 0;	
+			    #else
 				ubSubMenuItemPreFlag =  ubSubMenuItemFlag;
 				if(++ubSubMenuItemFlag>=7) ubSubMenuItemFlag = 0;	
+			    #endif	
 			#endif
 			UI_SettingSubmenuDisplay();
 		break;	
@@ -8798,7 +8841,12 @@ void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem)
         ubSubSubMenuItemFlag = tUI_PuSetting.ubFlickerFlag;
         UI_FlickerDisplay(ubSubSubMenuItemFlag);
         break;
-
+		
+    case WOR_ITEM:
+	    ubSubSubMenuItemFlag = tUI_PuSetting.ubFlickerFlag;
+   	    UI_WorDisplay(ubSubSubMenuItemFlag);
+        break;
+		
     case DEFAULT_ITEM:
         UI_DefualtDisplay(ubSubSubMenuItemFlag);
         break;
@@ -8893,6 +8941,30 @@ void UI_LangageDisplay(uint8_t value)
     tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
+void UI_WorDisplay(uint8_t value)
+{
+    OSD_IMG_INFO tOsdImgInfo;
+    uint8_t i;
+
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_SUBMENU_WOR, 1, &tOsdImgInfo);
+    tOsdImgInfo.uwXStart= 49;
+    tOsdImgInfo.uwYStart =284;
+    tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+
+    for (i = 0; i < 2; i++)
+    {
+        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_NO-(i*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart= 424+(i*76);
+        tOsdImgInfo.uwYStart =284;
+        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+    }
+
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_NO_S-(value*2)+ (70*tUI_PuSetting.ubLangageFlag ), 1, &tOsdImgInfo);
+    tOsdImgInfo.uwXStart= 424+(value*76);
+    tOsdImgInfo.uwYStart =284;
+    tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+
+}
 void UI_FlickerDisplay(uint8_t value)
 {
     OSD_IMG_INFO tOsdImgInfo;
@@ -9038,6 +9110,10 @@ void UI_SettingSubSubMenuPage(UI_ArrowKey_t tArrowKey)
         ubDefualtFlag = ubSubSubMenuItemFlag;
         break;
 
+     case WOR_ITEM:
+    	ubWorFlag = ubSubSubMenuItemFlag;	
+	break;
+
     case TEMPUNIT_ITEM:
         ubTempunitFlag = ubSubSubMenuItemFlag;
         break;
@@ -9138,6 +9214,17 @@ void UI_SettingSubSubMenuUpKey(uint8_t SubMenuItem)
         ubFlickerFlag = ubSubSubMenuItemFlag;
         UI_FlickerDisplay(ubFlickerFlag);
         break;
+		
+    case WOR_ITEM:
+        if (ubSubSubMenuItemFlag == 1)
+            ubSubSubMenuItemFlag = 0;
+        else
+            ubSubSubMenuItemFlag =1;
+
+        ubWorFlag = ubSubSubMenuItemFlag;
+        UI_WorDisplay(ubWorFlag);
+        break;
+
 
     case DEFAULT_ITEM:
         if (ubSubSubMenuItemFlag == 1)
@@ -9227,6 +9314,17 @@ void UI_SettingSubSubMenuDownKey(uint8_t SubMenuItem)
         ubFlickerFlag = ubSubSubMenuItemFlag;
         UI_FlickerDisplay(ubFlickerFlag);
         break;
+
+    case WOR_ITEM:
+        if (ubSubSubMenuItemFlag == 1)
+            ubSubSubMenuItemFlag = 0;
+        else
+            ubSubSubMenuItemFlag =1;
+
+        ubWorFlag = ubSubSubMenuItemFlag;
+        UI_WorDisplay(ubWorFlag);
+        break;
+		
     case DEFAULT_ITEM:
         if (ubSubSubMenuItemFlag == 1)
             ubSubSubMenuItemFlag = 0;
@@ -9298,6 +9396,11 @@ void UI_SettingSubSubMenuEnterKey(uint8_t SubMenuItem)
         UI_FlickerDisplay(ubFlickerFlag);
         //UI_UpdateDevStatusInfo();
         break;
+
+    case WOR_ITEM:
+		
+
+	break;	
 
     case DEFAULT_ITEM:
         if (ubDefualtFlag == 1)
