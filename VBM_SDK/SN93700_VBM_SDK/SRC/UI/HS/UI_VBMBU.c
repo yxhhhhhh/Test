@@ -1770,31 +1770,31 @@ void UI_TestCheck(void)
     {
         MC_Stop(MC_0);
     }
-    else if (ubTestCount == (Motor0_Count + Motor0_Wait))
+    else if (ubTestCount == (Motor0_Count + Motor_Wait))
     {
         MC_Start(MC_0, 0, MC_Counterclockwise, MC_WaitReady);//水平,反转
     }
-    else if (ubTestCount == (Motor0_Count*2 + Motor0_Wait))
+    else if (ubTestCount == (Motor0_Count*2 + Motor_Wait))
     {
         MC_Stop(MC_0);
     }
-    else if (ubTestCount == (Motor0_Count*2 + Motor0_Wait*2))
+    else if (ubTestCount == (Motor0_Count*2 + Motor_Wait*2))
     {
         MC_Start(MC_1, 0, MC_Clockwise, MC_WaitReady);//垂直,正转
     }
-    else if (ubTestCount == (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count))
+    else if (ubTestCount == (Motor0_Count*2 + Motor_Wait*2 + Motor1_Count))
     {
         MC_Stop(MC_1);
     }
-    else if (ubTestCount == (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count + Motor1_Wait))
+    else if (ubTestCount == (Motor0_Count*2 + Motor_Wait*3 + Motor1_Count))
     {
         MC_Start(MC_1, 0, MC_Counterclockwise, MC_WaitReady); //垂直,反转
     }
-    else if (ubTestCount == (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count*2 + Motor1_Wait))
+    else if (ubTestCount == (Motor0_Count*2 + Motor_Wait*3 + Motor1_Count*2 ))
     {
         MC_Stop(MC_1);
     }
-    else if (ubTestCount > (Motor0_Count*2 + Motor0_Wait*2 + Motor1_Count*2 + Motor1_Wait*6))
+    else if (ubTestCount > (Motor0_Count*2 + Motor_Wait*6 + Motor1_Count*2 ))
     {
         ubTestCount = 0;
         return;
