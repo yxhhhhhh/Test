@@ -1642,7 +1642,7 @@ void UI_SetIRLed(uint8_t LedState)
 
 void UI_BrightnessCheck(void) //20180408
 {
-    #define IR_CHECK_CNT	2
+    #define IR_CHECK_CNT	1
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
@@ -1657,6 +1657,8 @@ void UI_BrightnessCheck(void) //20180408
 #if 1
     static uint16_t ubLastDetValue = 0;
     uint16_t uwDetdifferent = 0;
+    static uint16_t uwDetAdjustcnt = 0;
+
     if(uwDetLvl > ubLastDetValue)
 	 uwDetdifferent = uwDetLvl - ubLastDetValue;
     else
@@ -1666,10 +1668,15 @@ void UI_BrightnessCheck(void) //20180408
 
     if( uwDetdifferent > 0x05)
     {
+        uwDetAdjustcnt = 0;
 	  return;	
     }
     printd(1,"UI_BrightnessCheck  uwDetdifferent <=0x05\n");
-	
+    uwDetAdjustcnt++;
+    
+    if(uwDetAdjustcnt > 1)
+    {
+       printd(1,"UI_BrightnessCheck  uwDetAdjustcnt > 1 uwDetLvl = %d \n",uwDetLvl);
 	if(uwDetLvl < 0x19)
 	{
 		ubCheckMinIrCnt++;
@@ -1685,6 +1692,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMaxIrCnt = 0;
 		ubCheckMinIrCnt = 0;
 	}
+    }
 #else
 	if(uwDetLvl < 0x28)
 	{
@@ -1710,12 +1718,14 @@ void UI_BrightnessCheck(void) //20180408
         {
             UI_SetIRLed(1);
             ubCheckMinIrCnt = 0;
+            uwDetAdjustcnt = 0;
         }
 
         if (ubCheckMaxIrCnt >= IR_CHECK_CNT)
         {
             UI_SetIRLed(0);
             ubCheckMaxIrCnt = 0;
+            uwDetAdjustcnt = 0;
         }
     }
     else
@@ -1723,6 +1733,7 @@ void UI_BrightnessCheck(void) //20180408
         UI_SetIRLed(0);
         ubCheckMaxIrCnt = 0;
         ubCheckMinIrCnt = 0;
+        uwDetAdjustcnt = 0;
     }
 }
 
