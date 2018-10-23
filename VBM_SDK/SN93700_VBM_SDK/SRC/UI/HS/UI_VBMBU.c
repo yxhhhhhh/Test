@@ -122,10 +122,11 @@ uint8_t ubTempBelowZore = 0;
 uint32_t ubTempcnt = 0;
 uint8_t ubTempflag = 0;
 uint8_t ubUpdateFWFlag = 0;
-uint8_t ubIROnOffFlag = 0;
 uint8_t ubAutoMotorTestFlag = 0;
 uint32_t ubAutoMotorTestCount_NoConnect = 0;
 uint8_t ubSNValueResut = 0;
+uint8_t ubPowerOffchangeIRMode = 0;
+uint8_t ubVoxchangeIRMode = 0;
 
 
 //------------------------------------------------------------------------------
@@ -308,7 +309,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             ubTalkCnt = 0;
             SPEAKER_EN(TRUE);
         }
-
+        ubPowerOffchangeIRMode = 0;
         if ((*pThreadCnt % UI_UPDATESTS_PERIOD) != 0)
             UI_UpdateBUStatusToPU();
         (*pThreadCnt)++;
@@ -323,8 +324,14 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             else if (++ubUI_WorWakeUpCnt > (6000 / UI_TASK_PERIOD))
                 UI_PowerSaveSetting(&tUI_BuStsInfo.tCamPsMode);
         }
-		if(ubIROnOffFlag == 1)
-			GPIO->GPIO_O4 = 0;
+        if(ubPowerOffchangeIRMode == 0)
+        {
+            GPIO->GPIO_O4 = 0;	
+            osDelay(50);
+            UI_SetIrMode(0); //关IR, 彩色
+            ubPowerOffchangeIRMode =1;
+            printd(1,"Lostlink Closr IR Mode\n");
+        }
 	ubSNValueResut = 0;		
         break;
     case APP_PAIRING_STATE:
@@ -590,11 +597,15 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         */
         tUI_BuStsInfo.tCamPsMode = PS_VOX_MODE;
 
-        if(ubIROnOffFlag == 1)
+        if(ubVoxchangeIRMode == 0)
         {
-       	    GPIO->GPIO_O4 = 0;
-        	    printf("vox on IR off \n");
-	 }
+            GPIO->GPIO_O4 = 0;
+            osDelay(50);
+            UI_SetIrMode(0); //关IR, 彩se
+            ubVoxchangeIRMode = 1;
+            printd(1,"VOX  Close IR Mode\n");
+            
+        }
 			
         UI_UpdateDevStatusInfo();
         printd(DBG_InfoLvl, "       => VOX Mode Enable\n");
@@ -622,14 +633,10 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         if (PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode)
         {
             	UI_DisableVox();
-	   	if(ubIROnOffFlag == 1)
-	   	{
-		    GPIO->GPIO_O4 = 1;
-	           printf("vox on IR ON \n");
-	   	}
-		printd(1,"000000000000000000UI_PowerSaveSetting POWER_NORMAL_MODE goggoggo \n");
-		//UI_BrightnessCheck();
-        }		
+        }	
+        tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
+        ubVoxchangeIRMode = 0;
+       printd(1,"NORMAL  START\n");
         break;
     default:
         break;
@@ -1601,9 +1608,11 @@ void UI_SetIrMode(uint8_t mode)
 	if(mode == 1)
 	{
 		AWB_Stop();
-		osDelay(100);
+		osDelay(500);
+        	osDelay(500);
 		SEN_SetIrMode(1);
 		ISP_SetIQSaturation(0);
+              printd(1,"UI_SetIrMode  mode == 11111\n");
 	}
 	else
 	{
@@ -1611,19 +1620,20 @@ void UI_SetIrMode(uint8_t mode)
 		AWB_Start();
 		SEN_SetIrMode(0);
 		ISP_SetIQSaturation(128);
+              printd(1,"UI_SetIrMode  mode == 0000000000\n");
+
 	}
 
 }
 
 void UI_SetIRLed(uint8_t LedState)
 {
-   // printd(1, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
+   printd(1, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
     if ((GPIO->GPIO_O4 == 0) && (LedState == 1))
     {
 	UI_SetIrMode(1); //开IR, 黑白色
 	osDelay(50);
 	GPIO->GPIO_O4 = 1;
-	ubIROnOffFlag = 1;
     	printd(1, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
         
@@ -1634,7 +1644,6 @@ void UI_SetIRLed(uint8_t LedState)
 	 GPIO->GPIO_O4 = 0;
 	 osDelay(50);
         UI_SetIrMode(0); //关IR, 彩色
-	ubIROnOffFlag = 0;
         printd(1, "UI_SetIRLed Off###\n");
         //BUZ_PlaySingleSound();
     }
@@ -1646,6 +1655,10 @@ void UI_BrightnessCheck(void) //20180408
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
     uint16_t uwDetLvl = 0x3FF;
+    
+    static uint16_t ubLastDetValue = 0;
+    uint16_t uwDetdifferent = 0;
+    static uint16_t uwDetAdjustcnt = 0;
 
 
     printd(Apk_DebugLvl,"UI_BrightnessCheck tUI_BuStsInfo.tCamPsMode = %x\n",tUI_BuStsInfo.tCamPsMode);
@@ -1654,10 +1667,6 @@ void UI_BrightnessCheck(void) //20180408
 
     uwDetLvl = uwSADC_GetReport(1);
 
-#if 1
-    static uint16_t ubLastDetValue = 0;
-    uint16_t uwDetdifferent = 0;
-    static uint16_t uwDetAdjustcnt = 0;
 
     if(uwDetLvl > ubLastDetValue)
 	 uwDetdifferent = uwDetLvl - ubLastDetValue;
@@ -1671,13 +1680,12 @@ void UI_BrightnessCheck(void) //20180408
         uwDetAdjustcnt = 0;
 	  return;	
     }
-    printd(1,"UI_BrightnessCheck  uwDetdifferent <=0x05\n");
     uwDetAdjustcnt++;
-    
+    printd(1,"UI_BrightnessCheck  uwDetAdjustcnt  =%d \n",uwDetAdjustcnt);
     if(uwDetAdjustcnt > 1)
     {
        printd(1,"UI_BrightnessCheck  uwDetAdjustcnt > 1 uwDetLvl = %d \n",uwDetLvl);
-	if(uwDetLvl < 0x19)
+	if(uwDetLvl <= 0x19)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
@@ -1692,48 +1700,31 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMaxIrCnt = 0;
 		ubCheckMinIrCnt = 0;
 	}
-    }
-#else
-	if(uwDetLvl < 0x28)
-	{
-		ubCheckMinIrCnt++;
-		ubCheckMaxIrCnt = 0;
-	}
-	else if(uwDetLvl >= 0xFA)
-	{
-		ubCheckMaxIrCnt++;
-		ubCheckMinIrCnt = 0;
-	}
-	else if(uwDetLvl > 0x3FF)
-	{
-		ubCheckMaxIrCnt = 0;
-		ubCheckMinIrCnt = 0;
-	}
-#endif
-	UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-    printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
-    if (tUI_BuStsInfo.tNightModeFlag)
-    {
-        if (ubCheckMinIrCnt >= IR_CHECK_CNT)
+	  UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
+        printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. tUI_BuStsInfo.tNightModeFlag %d\n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt,tUI_BuStsInfo.tNightModeFlag);
+        if (tUI_BuStsInfo.tNightModeFlag)
         {
-            UI_SetIRLed(1);
-            ubCheckMinIrCnt = 0;
-            uwDetAdjustcnt = 0;
-        }
+            if (ubCheckMinIrCnt >= IR_CHECK_CNT)
+            {
+                UI_SetIRLed(1);
+                ubCheckMinIrCnt = 0;
+            }
 
-        if (ubCheckMaxIrCnt >= IR_CHECK_CNT)
+            if (ubCheckMaxIrCnt >= IR_CHECK_CNT)
+            {
+                UI_SetIRLed(0);
+                ubCheckMaxIrCnt = 0;
+            }
+        }
+        else
         {
             UI_SetIRLed(0);
             ubCheckMaxIrCnt = 0;
-            uwDetAdjustcnt = 0;
+            ubCheckMinIrCnt = 0;
         }
-    }
-    else
-    {
-        UI_SetIRLed(0);
-        ubCheckMaxIrCnt = 0;
-        ubCheckMinIrCnt = 0;
-        uwDetAdjustcnt = 0;
+        
+         uwDetAdjustcnt = 0;
+
     }
 }
 
@@ -2176,7 +2167,6 @@ uint8_t UI_SendSnValueToPu(uint8_t n)
         printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Fail!\n");
         return 0;
     }
-	printd(DBG_ErrorLvl, "UI_SendSnVolumeToPu Success!!\n");
 
     return 4;
 }
