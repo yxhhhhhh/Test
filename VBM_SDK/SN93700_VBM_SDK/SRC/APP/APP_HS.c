@@ -107,6 +107,7 @@ static void APP_WatchDogThread(void const *argument);
 void RTC_PowerOff(void)
 {
 	printd(DBG_Debug1Lvl, "RTC_PowerOff Power OFF!\n");
+       RTC_SetGPO_1(0, RTC_PullDownEnable);
 	RTC_WriteUserRam(RECORD_PWRSTS_ADDR, PWRSTS_KEEP);
 	RTC_PowerDisable();
 	while(1);
