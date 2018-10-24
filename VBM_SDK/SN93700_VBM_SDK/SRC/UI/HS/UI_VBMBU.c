@@ -107,7 +107,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint8_t ubBuSWVersion = 16;
+uint16_t ubBuSWVersion = 161;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -603,7 +603,7 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
             osDelay(50);
             UI_SetIrMode(0); //¹ØIR, ²Êse
             ubVoxchangeIRMode = 1;
-            printd(1,"VOX  Close IR Mode\n");
+            printd(1,"PS_VOX_MODE  Close IR Mode\n");
             
         }
 			
@@ -636,7 +636,7 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         }	
         tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
         ubVoxchangeIRMode = 0;
-       printd(1,"NORMAL  START\n");
+       printd(1,"POWER_NORMAL_MODE  START\n");
         break;
     default:
         break;
@@ -1608,11 +1608,9 @@ void UI_SetIrMode(uint8_t mode)
 	if(mode == 1)
 	{
 		AWB_Stop();
-		osDelay(500);
-        	osDelay(500);
+		osDelay(100);
 		SEN_SetIrMode(1);
 		ISP_SetIQSaturation(0);
-              printd(1,"UI_SetIrMode  mode == 11111\n");
 	}
 	else
 	{
@@ -1620,7 +1618,6 @@ void UI_SetIrMode(uint8_t mode)
 		AWB_Start();
 		SEN_SetIrMode(0);
 		ISP_SetIQSaturation(128);
-              printd(1,"UI_SetIrMode  mode == 0000000000\n");
 
 	}
 
@@ -1628,7 +1625,7 @@ void UI_SetIrMode(uint8_t mode)
 
 void UI_SetIRLed(uint8_t LedState)
 {
-   printd(1, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
+   //printd(1, "UI_SetIRLed LedState: %d, GPIO->GPIO_O4: %d.\n", LedState, GPIO->GPIO_O4);
     if ((GPIO->GPIO_O4 == 0) && (LedState == 1))
     {
 	UI_SetIrMode(1); //¿ªIR, ºÚ°×É«
@@ -1681,10 +1678,10 @@ void UI_BrightnessCheck(void) //20180408
 	  return;	
     }
     uwDetAdjustcnt++;
-    printd(1,"UI_BrightnessCheck  uwDetAdjustcnt  =%d \n",uwDetAdjustcnt);
+    
     if(uwDetAdjustcnt > 1)
     {
-       printd(1,"UI_BrightnessCheck  uwDetAdjustcnt > 1 uwDetLvl = %d \n",uwDetLvl);
+       printd(Apk_DebugLvl,"UI_BrightnessCheck  uwDetAdjustcnt =%d  uwDetAdjustcnt > 1 uwDetLvl = %d \n",uwDetAdjustcnt,uwDetLvl);
 	if(uwDetLvl <= 0x19)
 	{
 		ubCheckMinIrCnt++;
@@ -1701,7 +1698,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMinIrCnt = 0;
 	}
 	  UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-        printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. tUI_BuStsInfo.tNightModeFlag %d\n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt,tUI_BuStsInfo.tNightModeFlag);
+        printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
         if (tUI_BuStsInfo.tNightModeFlag)
         {
             if (ubCheckMinIrCnt >= IR_CHECK_CNT)
@@ -1944,9 +1941,9 @@ uint8_t UI_SendVersionToPu(void)
     tUI_VersionReqCmd.ubCmd[UI_REPORT_ITEM]     = UI_BU_TO_PU_CMD;
     tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA]     = UI_BU_CMD_VERSION;
     tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+1]   = ubBuHWVersion;
-    tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+2]   = ubBuSWVersion/10;
-    tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+3]   = ubBuSWVersion%10;
-    tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+4]   = 0;
+    tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+2]   = ubBuSWVersion/100;
+    tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+3]   = ubBuSWVersion/10%10;
+    tUI_VersionReqCmd.ubCmd[UI_REPORT_DATA+4]   = ubBuSWVersion%10;
     tUI_VersionReqCmd.ubCmd_Len                 = 7;
 
     if (rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_VersionReqCmd))

@@ -307,10 +307,10 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 16;
-uint32_t ubHWVersion = 16;
+uint32_t ubPuSWVersion = 161;
+uint32_t ubHWVersion = 161;
 uint8_t ubBuHWVersion = 0;
-uint32_t ubBuSWVersion = 0;
+uint16_t ubBuSWVersion = 0;
 
 uint32_t ubPttEndCount = 0;
 
@@ -9861,7 +9861,7 @@ void UI_GetBUCMDData(UI_CamNum_t tCamNum, void *pvTrig)
     {
     case UI_BU_CMD_VERSION:
         ubBuHWVersion = pvdata[1];
-        ubBuSWVersion = pvdata[2]*10 + pvdata[3];
+        ubBuSWVersion = pvdata[2]*100 + pvdata[3]*10 +pvdata[4];
         break;
 
     case UI_BU_CMD_PS_MODE:
@@ -11014,32 +11014,56 @@ void UI_VerDisplay(void)
 {
 	OSD_IMG_INFO tOsdImgInfo;
 
+
+        //SW
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0 + (ubPuSWVersion%10), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 280 ;
-	tOsdImgInfo.uwYStart = 393 ;
+	tOsdImgInfo.uwYStart = 364 ;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_DECIMAL, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 280 ;
-	tOsdImgInfo.uwYStart = 415;
+	tOsdImgInfo.uwYStart = 383;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+ (ubPuSWVersion/10), 1, &tOsdImgInfo);
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+ (ubPuSWVersion/10%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 280;
+	tOsdImgInfo.uwYStart = 393;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+    
+    	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_DECIMAL, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 280 ;
+	tOsdImgInfo.uwYStart = 412;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+ (ubPuSWVersion/100), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 280;
 	tOsdImgInfo.uwYStart = 422;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
+
+       // HW
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0 + (ubHWVersion%10), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 355;
-	tOsdImgInfo.uwYStart = 407;
+	tOsdImgInfo.uwYStart = 378;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 	
 	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_DECIMAL, 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 355;
+	tOsdImgInfo.uwYStart = 397;
+	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+ (ubHWVersion/10%10), 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 355;
+	tOsdImgInfo.uwYStart = 407;
+	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+    
+    	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_DECIMAL, 1, &tOsdImgInfo);
+	tOsdImgInfo.uwXStart = 355;
 	tOsdImgInfo.uwYStart = 426;
 	tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+ (ubHWVersion/10), 1, &tOsdImgInfo);
+	tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_SN_NUM0+ (ubHWVersion/100), 1, &tOsdImgInfo);
 	tOsdImgInfo.uwXStart = 355;
 	tOsdImgInfo.uwYStart = 436;
 	tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
@@ -14439,7 +14463,7 @@ void UI_FactoryStatusDisplay(void)
         tOsdImgInfo.uwYStart = 900+ Factory_y_vol;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubBuSWVersion/10)*2, 1, &tOsdImgInfo);
+        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubBuSWVersion/100)*2, 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
         tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
@@ -14449,9 +14473,19 @@ void UI_FactoryStatusDisplay(void)
         tOsdImgInfo.uwYStart = 900 - 32 - 24+ Factory_y_vol;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubBuSWVersion%10)*2, 1, &tOsdImgInfo);
+        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubBuSWVersion/10%10)*2, 1, &tOsdImgInfo);
         tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
         tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
+        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+        
+        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_FACTORY_POINT , 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+        tOsdImgInfo.uwYStart = 900 - 64 - 48+ Factory_y_vol;
+        tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+        tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubBuSWVersion%10)*2, 1, &tOsdImgInfo);
+        tOsdImgInfo.uwXStart = 245 + Factory_x_vol;
+        tOsdImgInfo.uwYStart = 900 - 96 - 48 + Factory_y_vol;
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
     }
 
@@ -14462,7 +14496,7 @@ void UI_FactoryStatusDisplay(void)
     tOsdImgInfo.uwYStart = 900+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion/10)*2, 1, &tOsdImgInfo);
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion/100)*2, 1, &tOsdImgInfo);
     tOsdImgInfo.uwXStart = 310 + Factory_x_vol;
     tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
@@ -14472,9 +14506,19 @@ void UI_FactoryStatusDisplay(void)
     tOsdImgInfo.uwYStart = 900 - 32 - 24+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion%10)*2, 1, &tOsdImgInfo);
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion/10%10)*2, 1, &tOsdImgInfo);
     tOsdImgInfo.uwXStart = 310 + Factory_x_vol;
     tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
+    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_FACTORY_POINT , 1, &tOsdImgInfo);
+    tOsdImgInfo.uwXStart = 310 + Factory_x_vol;
+    tOsdImgInfo.uwYStart = 900 -64 - 48+ Factory_y_vol;
+    tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion%10)*2, 1, &tOsdImgInfo);
+    tOsdImgInfo.uwXStart = 310 + Factory_x_vol;
+    tOsdImgInfo.uwYStart = 900 - 96 - 48 + Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
     UI_DisplaySN(380 + Factory_x_vol, 1000, ubSD_ChkCardIn(SD_1) ? "ON " : "OFF", 3);
