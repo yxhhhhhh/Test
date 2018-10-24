@@ -1761,6 +1761,7 @@ void UI_TestCheck(void)
 
     printd(Apk_DebugLvl, "UI_TestCheck ubTestCount: %d.\n", ubTestCount);
 #if 1
+/*
     if (ubTestCount == 0)
     {
         MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
@@ -1799,7 +1800,7 @@ void UI_TestCheck(void)
         return;
     }
 
-/*
+*/
    if (ubTestCount == 0)
     {
         MC_Start(MC_0, 0, MC_Clockwise, MC_WaitReady); //水平,正转
@@ -1877,7 +1878,7 @@ void UI_TestCheck(void)
         ubTestCount = 0;
         return;
     }
-*/
+
 #else
     #define Motor_Count    15  //40
 	

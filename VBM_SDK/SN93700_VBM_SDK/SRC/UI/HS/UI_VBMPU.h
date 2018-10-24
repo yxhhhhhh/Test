@@ -247,17 +247,32 @@ typedef enum
    TEMPUNIT_ITEM,
 }UI_SettingSubMenuItemList_t;
 #else
-typedef enum
-{
-    NIGHTMODE_ITEM,
-    FLICKER_ITEM,
-    LANGUAGESET_ITEM,
-    DEFAULT_ITEM,
-     TEMPUNIT_ITEM,
-    PRODUCT_INFO_ITEM,
-    CONTACT_ITEM,
-    SETTINGITEM_MAX,
-}UI_SettingSubMenuItemList_t;
+#if 1
+	typedef enum
+	{
+	    NIGHTMODE_ITEM,
+	    FLICKER_ITEM,
+	    WOR_ITEM,
+	    LANGUAGESET_ITEM,
+	    DEFAULT_ITEM,
+	     TEMPUNIT_ITEM,
+	    PRODUCT_INFO_ITEM,
+	    CONTACT_ITEM,
+	    SETTINGITEM_MAX,
+	}UI_SettingSubMenuItemList_t;
+#else
+	typedef enum
+	{
+	    NIGHTMODE_ITEM,
+	    FLICKER_ITEM,
+	    LANGUAGESET_ITEM,
+	    DEFAULT_ITEM,
+	     TEMPUNIT_ITEM,
+	    PRODUCT_INFO_ITEM,
+	    CONTACT_ITEM,
+	    SETTINGITEM_MAX,
+	}UI_SettingSubMenuItemList_t;
+#endif
 #endif
 
 typedef enum
@@ -727,6 +742,7 @@ typedef struct
     uint8_t             ubSleepMode;
     uint8_t             ubZoomScale;
     uint8_t             ubFlickerFlag;
+    uint8_t		      ubWorFlag;
     uint8_t             ubLangageFlag;
     uint8_t             ubTempunitFlag;
     uint8_t             NightmodeFlag;
@@ -1043,6 +1059,7 @@ void UI_SettingSubmenuDisplay(void);
 void UI_DrawSettingSubSubMenuPage(uint8_t SubMenuItem);
 void UI_NightModeDisplay(uint8_t value);
 void UI_LangageDisplay(uint8_t value);
+void UI_WorDisplay(uint8_t value);
 void UI_FlickerDisplay(uint8_t value);
 void UI_DefualtDisplay(uint8_t value);
 void UI_TempUnitDisplay(uint8_t value);
