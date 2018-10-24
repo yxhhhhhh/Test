@@ -742,7 +742,6 @@ typedef struct
     uint8_t             ubSleepMode;
     uint8_t             ubZoomScale;
     uint8_t             ubFlickerFlag;
-    uint8_t		      ubWorFlag;
     uint8_t             ubLangageFlag;
     uint8_t             ubTempunitFlag;
     uint8_t             NightmodeFlag;
