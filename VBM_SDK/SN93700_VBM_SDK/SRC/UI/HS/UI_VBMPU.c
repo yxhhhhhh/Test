@@ -3644,6 +3644,9 @@ void UI_VolUpKey(void)
         {
             return;
         }
+
+        if (ubMotor0State != MC_LEFT_RIGHT_OFF || ubMotor1State != MC_UP_DOWN_OFF)
+            return;
 		
     /*
     if (tUI_State != UI_DISPLAY_STATE)
@@ -3722,6 +3725,8 @@ void UI_VolDownKey(void)
         {
             return;
         }
+        if(ubMotor0State != MC_LEFT_RIGHT_OFF || ubMotor1State != MC_UP_DOWN_OFF)
+            return;
 		
     /*
     if (tUI_State != UI_DISPLAY_STATE)
@@ -10199,7 +10204,7 @@ uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
 
     return rUI_FAIL;
 }
-
+ 
 uint8_t UI_SendNightModeToBu(uint8_t CameraId,uint8_t flag)
 {
         printd(Apk_DebugLvl,"UI_SendNightModeToBu CameraId %d flag   = %d (tUI_PuSetting.NightmodeFlag>>CameraId)&0x01 = 0x%x \n",CameraId,flag,(tUI_PuSetting.NightmodeFlag>>CameraId)&0x01);
