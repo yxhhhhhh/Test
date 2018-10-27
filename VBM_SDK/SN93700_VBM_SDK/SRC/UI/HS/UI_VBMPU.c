@@ -926,7 +926,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
                 ubSetAlarmRet = UI_SendAlarmSettingToBu();
 
             if (ubNightModeRet == rUI_FAIL)
-                ubNightModeRet = UI_SendNightModeToBu();
+                ubNightModeRet = UI_SendNightModeToBu(ubSubSubSubMenuItemFlag,0);
 
             if (ubPowerState == PWR_ON)
             {
@@ -9414,7 +9414,7 @@ void UI_NightModeSubSubSubMenuPage(UI_ArrowKey_t tArrowKey)
         tUI_PuSetting.NightmodeFlag |=(ubSubSubSubMenuItemFlag<<ubSubSubMenuItemFlag);
         printd(Apk_DebugLvl, "UI_NightModeSubSubSubMenuPage tUI_PuSetting.NightmodeFlag: 0x%x.\n", tUI_PuSetting.NightmodeFlag);
         //UI_UpdateDevStatusInfo();
-        UI_SendNightModeToBu();
+        UI_SendNightModeToBu(ubSubSubMenuItemFlag,1);
         UI_NightModeDisplay(ubSubSubMenuItemFlag);
 
     case LEFT_ARROW:
@@ -10182,7 +10182,7 @@ uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
     if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
         (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
     {
-        tUI_NightModeReqCmd.tDS_CamNum                  = tCamViewSel.tCamViewPool[0];
+        tUI_NightModeReqCmd.tDS_CamNum                  = CameraId;
         tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]          = UI_SETTING;
         tUI_NightModeReqCmd.ubCmd[UI_SETTING_ITEM]      = UI_NIGHTMODE_SETTING;
         tUI_NightModeReqCmd.ubCmd[UI_SETTING_DATA]      = CameraId;
@@ -10200,9 +10200,15 @@ uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
     return rUI_FAIL;
 }
 
-uint8_t UI_SendNightModeToBu(void)
+uint8_t UI_SendNightModeToBu(uint8_t CameraId,uint8_t flag)
 {
-    return UI_CamNightModeCmd(tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
+        printd(1,"UI_SendNightModeToBu CameraId %d flag   = %d (tUI_PuSetting.NightmodeFlag>>CameraId)&0x01 = 0x%x \n",CameraId,flag,(tUI_PuSetting.NightmodeFlag>>CameraId)&0x01);
+        printd(1,"UI_SendNightModeToBu tCamViewSel.tCamViewPool[0] %d   (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01 = 0x%x \n",tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
+       if(flag == 1)  
+           return UI_CamNightModeCmd(CameraId, (tUI_PuSetting.NightmodeFlag>>CameraId)&0x01);
+       else
+           return UI_CamNightModeCmd(tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
+
 }
 
 uint8_t UI_CamvLDCModeCmd(uint8_t value)
