@@ -877,16 +877,42 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOff(void)
 {
-	LCD_Suspend();
+#if (LCD_PM == LCD_PM_SUSPEND)
+    LCD_Suspend();
+#endif
+
 #if (LCD_PM == LCD_PWR_OFF)
-//	LCD_Suspend();
-	LCD_UnInit();
-	LCD->LCD_MODE = LCD_GPIO;
-	GPIO->GPIO_O3 = 0;
-	LCD_Stop();
-	GLB->LCD_FUNC_DIS  = 1;
-	SSP->SSP_GPIO_MODE = 1;
-	LCD_PWR_DISABLE;
+    LCD_Suspend();
+    LCD_UnInit();
+
+    LCD->LCD_MODE = LCD_GPIO ;
+    LCD_Stop();
+    GLB->LCD_FUNC_DIS  = 1;
+    SSP->SSP_GPIO_MODE = 1;
+    GPIO->GPIO_O3 = 0; // ssd2828_rst
+    LCD_PWR_DISABLE;
+
+#if 0
+    LCD->LCD_GPIO_OE = 0XFFFFFFF;
+    LCD->LCD_GPIO_O  = 0X0000000;
+
+    SSP->SSP_CLK_GPIO_OE = 1;
+    SSP->SSP_FS_GPIO_OE  = 1;
+    SSP->SSP_TX_GPIO_OE  = 1;
+    SSP->SSP_RX_GPIO_OE  = 1;
+    SSP->SSP_CLK_GPIO_O  = 0;
+    SSP->SSP_FS_GPIO_O   = 0;
+    SSP->SSP_TX_GPIO_O   = 0;
+    SSP->SSP_RX_GPIO_O   = 0;
+
+    GLB->PADIO48   = 0;
+    GLB->PADIO49   = 0;
+    GPIO->GPIO_OE6 = 1;
+    GPIO->GPIO_OE7 = 1;
+    GPIO->GPIO_O6  = 0;
+    GPIO->GPIO_O7  = 0;
+#endif
+
 #endif
 }
 //------------------------------------------------------------------------------
@@ -903,7 +929,7 @@ void APP_LcdDisplayOn(void)
 		LCD_PWR_ENABLE;
 		osDelay(200);
 	}
-	
+
 	GLB->LCD_FUNC_DIS  = 0;
 	VDO_Stop();	
 	LCD_Init(LCD_LCD_PANEL);	
@@ -933,8 +959,7 @@ void APP_LcdDisplayOn(void)
 		LCDBL_ENABLE(UI_ENABLE);
 
 		ubSwitchNormalFlag = 1;
-	}	
-	
+	}
 #endif
 }
 #endif
