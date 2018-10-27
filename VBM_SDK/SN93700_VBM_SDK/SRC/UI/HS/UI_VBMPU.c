@@ -10179,8 +10179,8 @@ uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
     UI_PUReqCmd_t tUI_NightModeReqCmd;
 
     //printd(Apk_DebugLvl, "UI_CamNightModeCmd CameraId: %d, NightMode: %d.\n", CameraId, NightMode);
-    if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
-        (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
+    if ((tUI_CamStatus[CameraId].ulCAM_ID != INVALID_ID) &&
+        (tUI_CamStatus[CameraId].tCamConnSts == CAM_ONLINE))
     {
         tUI_NightModeReqCmd.tDS_CamNum                  = CameraId;
         tUI_NightModeReqCmd.ubCmd[UI_TWC_TYPE]          = UI_SETTING;
@@ -10202,8 +10202,8 @@ uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode)
 
 uint8_t UI_SendNightModeToBu(uint8_t CameraId,uint8_t flag)
 {
-        printd(1,"UI_SendNightModeToBu CameraId %d flag   = %d (tUI_PuSetting.NightmodeFlag>>CameraId)&0x01 = 0x%x \n",CameraId,flag,(tUI_PuSetting.NightmodeFlag>>CameraId)&0x01);
-        printd(1,"UI_SendNightModeToBu tCamViewSel.tCamViewPool[0] %d   (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01 = 0x%x \n",tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
+        printd(Apk_DebugLvl,"UI_SendNightModeToBu CameraId %d flag   = %d (tUI_PuSetting.NightmodeFlag>>CameraId)&0x01 = 0x%x \n",CameraId,flag,(tUI_PuSetting.NightmodeFlag>>CameraId)&0x01);
+        printd(Apk_DebugLvl,"UI_SendNightModeToBu tCamViewSel.tCamViewPool[0] %d   (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01 = 0x%x \n",tCamViewSel.tCamViewPool[0], (tUI_PuSetting.NightmodeFlag>>tCamViewSel.tCamViewPool[0])&0x01);
        if(flag == 1)  
            return UI_CamNightModeCmd(CameraId, (tUI_PuSetting.NightmodeFlag>>CameraId)&0x01);
        else
