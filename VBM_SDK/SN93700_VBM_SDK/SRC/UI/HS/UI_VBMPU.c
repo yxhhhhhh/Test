@@ -881,8 +881,6 @@ void UI_StatusCheck(uint16_t ubCheckCount)
     static uint8_t ubSetAlarmRet = rUI_FAIL;
     static uint8_t ubNightModeRet = rUI_FAIL;
 
-    printd(1,"ubPowerState %d  tUI_PuSetting.tPsMode  %x\n",ubPowerState,tUI_PuSetting.tPsMode );
-
     if (ubFactoryModeFLag == 1)
     {
         if (ubCheckCount%5 == 0)
@@ -1067,29 +1065,27 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         UI_CheckPowerMode();
 #endif
 
-    ubFactoryVoxOnCnt ++;	
+        ubFactoryVoxOnCnt ++;	
 
-    if((ubFactoryVoxOnFlag == 1)&&(ubFactoryVoxOnCnt == 1))
-    {	
-        VDO_Stop();
-	tLCD_JpegDecodeDisable();
-	OSD_LogoJpeg(OSDLOGO_LOGO_BG);
-	VDO_Stop();
-	UI_FS_MenuDisplay(ubFS_MenuItem);
-	ubFactoryVoxOnFlag = 0;
-	LCDBL_ENABLE(UI_ENABLE);
-	ubSwitchNormalFlag = 1;	
-	ubFactoryVoxOnCnt =0;
-    }
-
+        if((ubFactoryVoxOnFlag == 1)&&(ubFactoryVoxOnCnt == 1))
+        {
+            VDO_Stop();
+            tLCD_JpegDecodeDisable();
+            OSD_LogoJpeg(OSDLOGO_LOGO_BG);
+            UI_FS_MenuDisplay(ubFS_MenuItem);
+            ubFactoryVoxOnFlag = 0;
+            LCDBL_ENABLE(UI_ENABLE);
+            ubSwitchNormalFlag = 1;	
+            ubFactoryVoxOnCnt =0;
+        }
     }
 
 
     if (ubFactoryModeFLag== 1)
     {
         static uint8_t ubCamId = 0;
-	if(1 == ubFactoryDelCamFlag)
-	{
+        if (1 == ubFactoryDelCamFlag)
+        {
 	        if (tUI_CamStatus[ubCamId].ulCAM_ID != INVALID_ID)
 	        {
 	            UI_CamDeleteCamera(1, ubCamId);
@@ -1099,22 +1095,20 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 	        {
 	            ubCamId = 0;  
 
-		    ubFactoryDelCamFlag =0;
-		    printf("factory del finish\n");
-		    osDelay(200);
-		    UI_LoadDevStatusInfo();		
-		    tUI_PuSetting.ubDefualtFlag = 0;
+                ubFactoryDelCamFlag =0;
+                printf("factory del finish\n");
+                osDelay(200);
+                UI_LoadDevStatusInfo();		
+                tUI_PuSetting.ubDefualtFlag = 0;
 
-		    // WDT_Disable(WDT_RST);
-                       //WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot	
-                        //while(1);
-	        }
-	}
+                // WDT_Disable(WDT_RST);
+                //WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot	
+                //while(1);
+            }
+        }
 
-	printd(Apk_DebugLvl,"tUI_PuSetting.ubDefualtFlag =%d.\n",tUI_PuSetting.ubDefualtFlag);
-
-  }
-
+        printd(Apk_DebugLvl,"tUI_PuSetting.ubDefualtFlag =%d.\n",tUI_PuSetting.ubDefualtFlag);
+    }
 
 	
     if (ubFactoryDeleteCam == 1)
@@ -1532,7 +1526,6 @@ void UI_SetSleepState(uint8_t type)
 
             ubSwitchCamWakeupSstate = 1;
         }
-
     }
     else
     {
@@ -10703,7 +10696,6 @@ void UI_GetBatLevel(uint16_t checkcount)
         3500,3598,3665,3788,3984,4350,4500//3500, 3637, 3699, 3802, 3985, 4253, 4500
     };
     static uint8_t usbdet_last = 0;
-    //printd(1,"UI_GetBatLevel UI_GetUsbDet %d ubGetBatVoltage %d\n",UI_GetUsbDet(),uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024);
     usbdet  = !UI_GetUsbDet();
 
 	//! CHG_ON
@@ -10712,7 +10704,6 @@ void UI_GetBatLevel(uint16_t checkcount)
 	
     ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3030 * 2 / 1024 ; // new board
 //  ubGetBatVoltage = uwSADC_GetReport(SADC_CH4) * 3300 * 2 / 1024 - (usbdet ? 50  : 0); // old board
-   printd(1,"UI_GetBatLevel   usbdet %d  ubGetBatVoltage %d\n",usbdet,ubGetBatVoltage);
 
 //  GPIO->GPIO_O13 = 0;
 
@@ -10749,7 +10740,6 @@ void UI_GetBatLevel(uint16_t checkcount)
 	        ubGetBatPercent = percent;
 	    }
     }
-   printd(1,"UI_GetBatLevel   percent %d  ubGetBatPercent%d \n",percent,ubGetBatPercent);
 
     if (ubGetBatPercent > 75) {
         ubBatLvLIdx = BAT_LVL0 + 4;
@@ -14942,7 +14932,7 @@ void UI_DisableVox(void)
     if (ubSwitchNormalFlag == 0)
         return;
 
-    ubSwitchNormalFlag =0;
+    ubSwitchNormalFlag = 0;
 
 #if 0
     if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
@@ -14961,8 +14951,10 @@ void UI_DisableVox(void)
         }
     }
 #else
-    if(ubFactorySettingFLag == 0)
-    ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
+    if(ubFactorySettingFLag == 0) {
+        ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
+        osDelay(200);
+    }
 #endif
 
     tUI_PsMessage.ubAPP_Event      = APP_POWERSAVE_EVENT;

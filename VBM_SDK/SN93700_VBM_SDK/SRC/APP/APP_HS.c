@@ -885,6 +885,7 @@ void APP_LcdDisplayOff(void)
     LCD_Suspend(); osDelay(10);
     LCD_UnInit();
 
+    /*
     // pull down LCD_HSYNC
     GLB->PADIO27   = 0;
     GPIO->GPIO_OE13= 1;
@@ -902,13 +903,15 @@ void APP_LcdDisplayOff(void)
     GPIO->GPIO_OE7 = 1;
     GPIO->GPIO_O6  = 0;
     GPIO->GPIO_O7  = 0;
+    */
 
     LCD->LCD_MODE = LCD_GPIO;
-    LCD->LCD_GPIO_OE = 0xFFFFFFF;
-    LCD->LCD_GPIO_O  = 0x0000000;
+//  LCD->LCD_GPIO_OE = 0xFFFFFFF;
+//  LCD->LCD_GPIO_O  = 0x0000000;
     GLB->LCD_FUNC_DIS = 1;
 
-    SSP->SSP_GPIO_MODE = 1;
+    SSP->SSP_GPIO_MODE   = 1;
+    /*
     SSP->SSP_CLK_GPIO_OE = 1;
     SSP->SSP_FS_GPIO_OE  = 1;
     SSP->SSP_TX_GPIO_OE  = 1;
@@ -917,29 +920,11 @@ void APP_LcdDisplayOff(void)
     SSP->SSP_FS_GPIO_O   = 0;
     SSP->SSP_TX_GPIO_O   = 0;
     SSP->SSP_RX_GPIO_O   = 0;
+    */
     osDelay(10);
 
     GPIO->GPIO_O3 = 0; osDelay(10); // ssd2828_rst
     LCD_PWR_DISABLE;   osDelay(10);
-
-#if 0
-    SSP->SSP_CLK_GPIO_OE = 1;
-    SSP->SSP_FS_GPIO_OE  = 1;
-    SSP->SSP_TX_GPIO_OE  = 1;
-    SSP->SSP_RX_GPIO_OE  = 1;
-    SSP->SSP_CLK_GPIO_O  = 0;
-    SSP->SSP_FS_GPIO_O   = 0;
-    SSP->SSP_TX_GPIO_O   = 0;
-    SSP->SSP_RX_GPIO_O   = 0;
-
-    GLB->PADIO48   = 0;
-    GLB->PADIO49   = 0;
-    GPIO->GPIO_OE6 = 1;
-    GPIO->GPIO_OE7 = 1;
-    GPIO->GPIO_O6  = 0;
-    GPIO->GPIO_O7  = 0;
-#endif
-
 #endif
 }
 //------------------------------------------------------------------------------
@@ -963,20 +948,18 @@ void APP_LcdDisplayOn(void)
 	}
 
 	GLB->LCD_FUNC_DIS = 0;
-//	VDO_Stop();
 	LCD_Init(LCD_LCD_PANEL);	
 	LCD_SetGammaLevel(4);
 	UI_PowerOnSet();
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
-	osDelay(200);
 	if (ubFactorySettingFLag == 1)
 	{
 		printf("default \n");
-		ubFactoryVoxOnFlag =1;
-		ubFactoryVoxOnCnt =0;
+		VDO_Stop();
+		ubFactoryVoxOnFlag = 1;
+		ubFactoryVoxOnCnt  = 0;
 	}
-//	else VDO_Start();
 	
 	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
@@ -986,6 +969,7 @@ void APP_LcdDisplayOn(void)
 	}
 	if(ubFactorySettingFLag == 0)
 	{
+		osDelay(100);
 		LCDBL_ENABLE(UI_ENABLE);
 		ubSwitchNormalFlag = 1;
 	}
