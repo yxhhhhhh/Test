@@ -14973,13 +14973,14 @@ void UI_DisableVox(void)
     tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
     tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamPsMode = POWER_NORMAL_MODE;
 
+#if 0
     if ((APP_LINK_EVENT == APP_UpdateLinkStatus())&&(ubFactorySettingFLag == 0))
     {
         SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode
-        osDelay(50);            //???
         LCD_PWR_ENABLE;
-        osDelay(400);
+        osDelay(200);
     }
+#endif
 
     UI_UpdateDevStatusInfo();
     printd(Apk_DebugLvl, "UI_DisableVox ok###\n");
