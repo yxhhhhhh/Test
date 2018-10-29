@@ -1698,7 +1698,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMinIrCnt = 0;
 	}
 	  UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
-        printd(Apk_DebugLvl, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d. \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt);
+        printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d.tUI_BuStsInfo.tNightModeFlag %d \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt,tUI_BuStsInfo.tNightModeFlag);
         if (tUI_BuStsInfo.tNightModeFlag)
         {
             if (ubCheckMinIrCnt >= IR_CHECK_CNT)

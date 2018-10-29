@@ -667,14 +667,20 @@ uint8_t APP_UpdateLinkStatus(void)
 	}
 	if(ubAPP_Event == APP_LOSTLINK_EVENT)
 		ubLinkonceflag = 0;
+	if(ubFactorySettingFLag  == 1 && ubAPP_Event == APP_LINK_EVENT)
+	{
+             VDO_Stop();
+  
+      }
 
 	if((ubAPP_Event == APP_LINK_EVENT)&&(ubLinkonceflag == 0))
 	{
+
 		if(ubPowerState == PWR_ON)
 		{
 			if(LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus())
 			{
-					UI_PowerOnSet();
+				UI_PowerOnSet();
 				ubLinkonceflag = 1;
 			}
 		}

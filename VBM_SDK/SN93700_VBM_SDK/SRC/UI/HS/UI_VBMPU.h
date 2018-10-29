@@ -1123,7 +1123,7 @@ uint8_t UI_GetUsbDet(void);
 uint8_t UI_GetBatChgFull(void);
 uint8_t UI_CamvLDCModeCmd(uint8_t value);
 uint8_t UI_CamNightModeCmd(uint8_t CameraId, uint8_t NightMode);
-uint8_t UI_SendNightModeToBu(void);
+uint8_t UI_SendNightModeToBu(uint8_t CameraId,uint8_t flag);
 uint8_t UI_GetBuVersion(void);
 
 uint8_t UI_GetBuMICTest(void);
