@@ -883,17 +883,69 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOff(void)
 {
-	LCD_Suspend();
+#if (LCD_PM == LCD_PM_SUSPEND)
+    LCD_Suspend();
+#endif
+
 #if (LCD_PM == LCD_PWR_OFF)
-//	LCD_Suspend();
-	LCD_UnInit();
-	LCD->LCD_MODE = LCD_GPIO;
-        printd(1,"APP_LcdDisplayOff\n");
-	GPIO->GPIO_O3 = 0;
-	LCD_Stop();
-	GLB->LCD_FUNC_DIS  = 1;
-	SSP->SSP_GPIO_MODE = 1;
-	LCD_PWR_DISABLE;
+    LCD_Suspend(); osDelay(10);
+    LCD_UnInit();
+
+    // pull down LCD_HSYNC
+    GLB->PADIO27   = 0;
+    GPIO->GPIO_OE13= 1;
+    GPIO->GPIO_O13 = 0;
+
+    // pull down LCD_VSYNC
+    GLB->PADIO28   = 0;
+    GPIO->GPIO_OE0 = 1;
+    GPIO->GPIO_O0  = 0;
+
+    // pull down SPI_CS & SPI_MO
+    GLB->PADIO48   = 0;
+    GLB->PADIO49   = 0;
+    GPIO->GPIO_OE6 = 1;
+    GPIO->GPIO_OE7 = 1;
+    GPIO->GPIO_O6  = 0;
+    GPIO->GPIO_O7  = 0;
+
+    LCD->LCD_MODE = LCD_GPIO;
+    LCD->LCD_GPIO_OE = 0xFFFFFFF;
+    LCD->LCD_GPIO_O  = 0x0000000;
+    GLB->LCD_FUNC_DIS = 1;
+
+    SSP->SSP_GPIO_MODE = 1;
+    SSP->SSP_CLK_GPIO_OE = 1;
+    SSP->SSP_FS_GPIO_OE  = 1;
+    SSP->SSP_TX_GPIO_OE  = 1;
+    SSP->SSP_RX_GPIO_OE  = 1;
+    SSP->SSP_CLK_GPIO_O  = 0;
+    SSP->SSP_FS_GPIO_O   = 0;
+    SSP->SSP_TX_GPIO_O   = 0;
+    SSP->SSP_RX_GPIO_O   = 0;
+    osDelay(10);
+
+    GPIO->GPIO_O3 = 0; osDelay(10); // ssd2828_rst
+    LCD_PWR_DISABLE;   osDelay(10);
+
+#if 0
+    SSP->SSP_CLK_GPIO_OE = 1;
+    SSP->SSP_FS_GPIO_OE  = 1;
+    SSP->SSP_TX_GPIO_OE  = 1;
+    SSP->SSP_RX_GPIO_OE  = 1;
+    SSP->SSP_CLK_GPIO_O  = 0;
+    SSP->SSP_FS_GPIO_O   = 0;
+    SSP->SSP_TX_GPIO_O   = 0;
+    SSP->SSP_RX_GPIO_O   = 0;
+
+    GLB->PADIO48   = 0;
+    GLB->PADIO49   = 0;
+    GPIO->GPIO_OE6 = 1;
+    GPIO->GPIO_OE7 = 1;
+    GPIO->GPIO_O6  = 0;
+    GPIO->GPIO_O7  = 0;
+#endif
+
 #endif
 }
 //------------------------------------------------------------------------------
@@ -902,32 +954,35 @@ void APP_LcdDisplayOn(void)
 #if (LCD_PM == LCD_PM_SUSPEND)
 	LCD_Resume();
 #endif
+
 #if (LCD_PM == LCD_PWR_OFF)
-	if((APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())||(ubFactorySettingFLag == 1))
+    GLB->PADIO27 = 5;
+    GLB->PADIO28 = 5;
+    GLB->PADIO48 = 1;
+    GLB->PADIO49 = 1;
+
+//	if((APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())||(ubFactorySettingFLag == 1))
 	{
 		SSP->SSP_GPIO_MODE = 0; //0:Normal SSP Mode 
-		osDelay(50);			//???
 		LCD_PWR_ENABLE;
-		osDelay(200);
+		osDelay(100);
 	}
-	
-	GLB->LCD_FUNC_DIS  = 0;
-	VDO_Stop();	
+
+	GLB->LCD_FUNC_DIS = 0;
+//	VDO_Stop();
 	LCD_Init(LCD_LCD_PANEL);	
 	LCD_SetGammaLevel(4);
 	UI_PowerOnSet();
 	KNL_VdoDisplayParamUpdate();
 	LCD_Start();
 	osDelay(200);
-	//VDO_Start();
-	if(ubFactorySettingFLag == 1)
+	if (ubFactorySettingFLag == 1)
 	{
 		printf("default \n");
 		ubFactoryVoxOnFlag =1;
 		ubFactoryVoxOnCnt =0;
 	}
-	else
-		VDO_Start();
+//	else VDO_Start();
 	
 	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
 	{
@@ -938,10 +993,8 @@ void APP_LcdDisplayOn(void)
 	if(ubFactorySettingFLag == 0)
 	{
 		LCDBL_ENABLE(UI_ENABLE);
-
 		ubSwitchNormalFlag = 1;
-	}	
-	
+	}
 #endif
 }
 #endif
