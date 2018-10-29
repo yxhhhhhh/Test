@@ -308,6 +308,7 @@ uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
 uint32_t ubPuSWVersion = 161;
+uint32_t ubFactoryPuSWVersion = 110;
 uint32_t ubHWVersion = 161;
 uint8_t ubBuHWVersion = 0;
 uint16_t ubBuSWVersion = 0;
@@ -14497,7 +14498,7 @@ void UI_FactoryStatusDisplay(void)
     tOsdImgInfo.uwYStart = 900+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion/100)*2, 1, &tOsdImgInfo);
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubFactoryPuSWVersion/100)*2, 1, &tOsdImgInfo);
     tOsdImgInfo.uwXStart = 310 + Factory_x_vol;
     tOsdImgInfo.uwYStart = 900 - 32+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
@@ -14507,7 +14508,7 @@ void UI_FactoryStatusDisplay(void)
     tOsdImgInfo.uwYStart = 900 - 32 - 24+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion/10%10)*2, 1, &tOsdImgInfo);
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubFactoryPuSWVersion/10%10)*2, 1, &tOsdImgInfo);
     tOsdImgInfo.uwXStart = 310 + Factory_x_vol;
     tOsdImgInfo.uwYStart = 900 - 32 - 24 - 32+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
@@ -14517,7 +14518,7 @@ void UI_FactoryStatusDisplay(void)
     tOsdImgInfo.uwYStart = 900 -64 - 48+ Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 
-    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubPuSWVersion%10)*2, 1, &tOsdImgInfo);
+    tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_DIS_TIME_0_S + (ubFactoryPuSWVersion%10)*2, 1, &tOsdImgInfo);
     tOsdImgInfo.uwXStart = 310 + Factory_x_vol;
     tOsdImgInfo.uwYStart = 900 - 96 - 48 + Factory_y_vol;
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
