@@ -30,6 +30,9 @@
 #include "PAIR.h"
 #include "SD_API.h"
 
+
+//#define tOSD_Img2(a, b)  do {} while (0)
+
 #define osUI_SIGNALS    0x66
 
 #define UI_TEST_MODE    0
@@ -657,6 +660,7 @@ void UI_OnInitDialog(void)
 	printd(1,"ubWorWakeUpFlag = %d\n",ubWorWakeUpFlag);
 	if(ubWorWakeUpFlag != 1)  //20190905 yxh
 	{
+              UI_PowerOnSet();
 		LCDBL_ENABLE(UI_ENABLE);
 	}
 }

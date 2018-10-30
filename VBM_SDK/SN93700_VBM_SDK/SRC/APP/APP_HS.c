@@ -680,7 +680,7 @@ uint8_t APP_UpdateLinkStatus(void)
 		{
 			if(LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus())
 			{
-				UI_PowerOnSet();
+                            printd(Apk_DebugLvl,"APP_UpdateLinkStatus LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus() \n");
 				ubLinkonceflag = 1;
 			}
 		}
@@ -936,6 +936,8 @@ void APP_LcdDisplayOff(void)
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOn(void)
 {
+	printd(1,"APP_LcdDisplayOn \n");
+
 #if (LCD_PM == LCD_PM_SUSPEND)
 	LCD_Resume();
 #endif
@@ -961,7 +963,6 @@ void APP_LcdDisplayOn(void)
 	LCD_Start();
 	if (ubFactorySettingFLag == 1)
 	{
-		printf("default \n");
 		VDO_Stop();
 		ubFactoryVoxOnFlag = 1;
 		ubFactoryVoxOnCnt  = 0;
