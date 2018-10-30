@@ -294,10 +294,28 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 	uint8_t     *pBuf, temp;	
 	uint16_t 	uwPID = 0;
 	uint32_t 	i;	
-	
+
+	GLB->PADIO45   = 0;
+	GPIO->GPIO_OE3 = 1;
+	GPIO->GPIO_O3  = 1;
+
+	// I2C
+	GLB->PADIO13   = 4;
+	GLB->PADIO14   = 4;
+
+	// REST
+	GLB->PADIO15   = 0;
+	GPIO->GPIO_OE1 = 1;
+	GPIO->GPIO_O1  = 1;
+	TIMER_Delay_ms(20);
+	GPIO->GPIO_O1  = 0;
+	TIMER_Delay_ms(20);
+	GPIO->GPIO_O1  = 1;
+	TIMER_Delay_ms(20);
+
 	pI2C_type = pI2C_MasterInit(I2C_2, I2C_SCL_400K);
 	IQ_SetI2cType(pI2C_type);
-    
+
 //_RETRY:    
 	pBuf = (uint8_t*)&uwPID;  
 	// I2C by Read Sensor ID
@@ -398,8 +416,9 @@ uint8_t ubSEN_Open(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 		// enable sensor PCLK
 		SEN->SEN_CLK_EN = 1;	
 
-		//delay 1ms
-		TIMER_Delay_us(1000);		
+		//delay 20ms
+		TIMER_Delay_us(20*1000);
+
 		// Initial dummy sensor
 		if (ubSEN_Start(setting,ubFPS) != 1)
 		{

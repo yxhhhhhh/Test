@@ -594,25 +594,6 @@ void SEN_InitProcess(void)
 
     if (bSEN_InitFlg == FALSE)
     {
-#ifdef VBM_BU
-        GLB->PADIO45   = 0;
-        GPIO->GPIO_OE3 = 1;
-        GPIO->GPIO_O3  = 1;
-
-        // I2C
-        GLB->PADIO13   = 4;
-        GLB->PADIO14   = 4;
-
-        // REST
-        GLB->PADIO15   = 0;
-        GPIO->GPIO_OE1 = 1;
-        GPIO->GPIO_O1  = 1;
-        TIMER_Delay_ms(100);
-        GPIO->GPIO_O1  = 0;
-        TIMER_Delay_ms(100);
-        GPIO->GPIO_O1  = 1;
-#endif
-
         // Initial sensor value.
         SEN_SetSensorInitVal();
         // Set AXI rate
