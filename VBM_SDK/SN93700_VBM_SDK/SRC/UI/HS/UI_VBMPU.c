@@ -892,7 +892,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 
 #if AUTO_RESTART
 
-        if(ubCheckCount > 50)
+        if(ubCheckCount > 150)
         {
         	uint8_t ubKNL_PsValue = 0;
 
@@ -14314,7 +14314,7 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 
             //UI_FactoryStatusDisplay();
 
-            UI_VolBarDisplay(OSD_QUEUE);
+            UI_VolBarDisplay(ubGetVoiceTemp);
         }
     }
     //if (TRUE == ubUI_ShowTimeFlag)
