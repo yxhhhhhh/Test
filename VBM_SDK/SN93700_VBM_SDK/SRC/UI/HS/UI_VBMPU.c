@@ -56,6 +56,10 @@
 
 #define Factory_x_vol   10
 #define Factory_y_vol   80
+
+#define AUTO_RESTART    0
+
+
 /**
  * Key event mapping table
  *
@@ -885,6 +889,28 @@ void UI_StatusCheck(uint16_t ubCheckCount)
     OSD_IMG_INFO tOsdImgInfo;
     static uint8_t ubSetAlarmRet = rUI_FAIL;
     static uint8_t ubNightModeRet = rUI_FAIL;
+
+#if AUTO_RESTART
+
+        if(ubCheckCount > 50)
+        {
+        	uint8_t ubKNL_PsValue = 0;
+
+        	ubKNL_PsValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
+        	ubKNL_PsValue &= 0xF;
+        	ubKNL_PsValue |= 0x40;
+            RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, ubKNL_PsValue);
+            printd(1,"AUTO RESTART\n");
+            osDelay(200);
+ 
+            WDT_Disable(WDT_RST);
+            WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
+            while(1);
+        }
+
+#endif
+
+
 
     if (ubFactoryModeFLag == 1)
     {
