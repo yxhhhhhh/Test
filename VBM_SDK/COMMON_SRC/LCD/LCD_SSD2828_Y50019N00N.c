@@ -25,7 +25,7 @@
 //------------------------------------------------------------------------------
 #if (LCD_PANEL == LCD_SSD2828_Y50019N00N)
 
-static uint32_t *plLCD_SpiData;
+static uint32_t *plLCD_SpiData = NULL;
 //------------------------------------------------------------------------------
 static uint16_t LCD_SSD2828_RegRd(uint8_t ubReg)
 {
@@ -408,23 +408,23 @@ bool bLCD_MIPI_SSD2828_Init(void)
     SPI_Setup_t spi_setup;
 
     printd(DBG_Debug3Lvl,"MIPI SSD2828 Init\n");
+    if (!plLCD_SpiData) = osUncachedMalloc(4);
+    if (!plLCD_SpiData) {
+        printd(DBG_CriticalLvl, "LCD: osUncachedMalloc fail!!\n");
+        while(1);
+    }
 
     spi_setup.ubSPI_CPOL = 0;
     spi_setup.ubSPI_CPHA = 0;
     spi_setup.tSPI_Mode  = SPI_MASTER;
     spi_setup.uwClkDiv   = ((float)160 / GLB->APBC_RATE) + 0.99 - 1;    // SPI Clock <= 1.5MHz
-
-    plLCD_SpiData = osUncachedMalloc(4);
-    if (plLCD_SpiData == NULL) {
-        printd(DBG_CriticalLvl, "LCD: osUncachedMalloc fail!!\n");
-        while(1);
-    }
     SPI_Init(&spi_setup);
 	TIMER_Delay_ms(20);
     if (0x2828 != (uwId = LCD_SSD2828_RegRd(0xB0))) {
         printd(DBG_ErrorLvl, "LCD: SSD2828 Fail %X\n", uwId);
         return false;
     }
+
     LCD_SSD2828_RegWr(0xB1, 0x0418);   // VSA = 2,HSA = 2
     LCD_SSD2828_RegWr(0xB2, 0x1030);   // VBP = 14,VBP = 42
     LCD_SSD2828_RegWr(0xB3, 0x0fc8);   // VFP = 16,HFP = 44
