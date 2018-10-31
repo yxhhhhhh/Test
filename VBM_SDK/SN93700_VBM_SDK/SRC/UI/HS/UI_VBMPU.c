@@ -10591,7 +10591,11 @@ void UI_MotorControl(uint8_t Value)
     //UI_EnableMotor((Value&0x01)?(Value>>4):0);
 
     if ((Value == MC_UP_DOWN_OFF) || (Value == MC_LEFT_RIGHT_OFF))
+    {
+        UI_MotorDisplay(MC_LEFT_RIGHT_OFF);
+        UI_MotorDisplay(MC_UP_DOWN_OFF);
         UI_EnableMotor(0);
+    }
     UI_MotorDisplay(Value);
 }
 
@@ -15298,7 +15302,13 @@ void UI_SwitchCameraScan(uint8_t type)
 
     printd(1, "UI_SwitchCameraScan type: %d.\n", type);
 
- 
+     if ((ubMotor0State == MC_LEFT_RIGHT_OFF) || (ubMotor1State == MC_UP_DOWN_OFF))
+    {
+        UI_MotorDisplay(MC_LEFT_RIGHT_OFF);
+        UI_MotorDisplay(MC_UP_DOWN_OFF);
+        UI_EnableMotor(0);
+    }
+
     for (i = 0; i < 4; i++)
         printd(Apk_DebugLvl, "### tUI_CamStatus[%d].ulCAM_ID: 0x%x, tUI_CamStatus[%d].tCamConnSts: %d.\n", i, tUI_CamStatus[i].ulCAM_ID, i, tUI_CamStatus[i].tCamConnSts);
 
