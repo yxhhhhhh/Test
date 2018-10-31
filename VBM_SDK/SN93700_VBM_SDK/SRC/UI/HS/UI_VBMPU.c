@@ -2119,7 +2119,7 @@ void UI_CameraSettingMenu1Key(void)
         UI_CameraSelectionKey();
         return;
     }
-    UI_DrawCameraSettingMenu(UI_CAMISP_SETUP);
+    //UI_DrawCameraSettingMenu(UI_CAMISP_SETUP);
 }
 //------------------------------------------------------------------------------
 void UI_CameraSettingMenu2Key(void)
@@ -2128,7 +2128,7 @@ void UI_CameraSettingMenu2Key(void)
 	   (SINGLE_VIEW != tCamViewSel.tCamViewType))
 		return;
 
-    UI_DrawCameraSettingMenu(UI_CAMFUNC_SETUP);
+    //UI_DrawCameraSettingMenu(UI_CAMFUNC_SETUP);
 }
 //------------------------------------------------------------------------------
 void UI_DrawColorSettingMenu(void)
@@ -2290,7 +2290,7 @@ void UI_CameraSettingMenu(UI_ArrowKey_t tArrowKey)
             }
             if (UI_MD_ITEM == tUI_CamSetItem)
             {
-                UI_DrawMDSettingScreen();
+                //UI_DrawMDSettingScreen();
                 tUI_CamSetItem = UI_COLOR_ITEM;
                 tUI_State = UI_MD_WINDOW_STATE;
                 return;
@@ -13991,7 +13991,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     {
         if (PS_ECO_MODE == tUI_CamStatus[tCamNum].tCamPsMode)
         {
-            UI_DrawPUStatusIcon();
+            //UI_DrawPUStatusIcon();
             UI_DrawBUStatusIcon();
             return;
         }
@@ -14761,7 +14761,7 @@ void UI_ReportBuConnectionStatus(void *pvConnectionSts)
                 if (FALSE == ubUI_PsStsFlag)
                 {
                     tLCD_JpegDecodeDisable();
-                    UI_DrawPUStatusIcon();
+                    //UI_DrawPUStatusIcon();
                     UI_DrawBUStatusIcon();
                     ubUI_PsStsFlag = TRUE;
                 }
