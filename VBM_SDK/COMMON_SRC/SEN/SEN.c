@@ -592,6 +592,19 @@ void SEN_InitProcess(void)
 {
     uint8_t ubSrc;
 
+	GLB->PADIO45   = 0;
+	GPIO->GPIO_OE3 = 1;
+	GPIO->GPIO_O3  = 1;
+
+	// I2C
+	GLB->PADIO13   = 4;
+	GLB->PADIO14   = 4;
+
+	// REST
+	GLB->PADIO15   = 0;
+	GPIO->GPIO_OE1 = 1;
+	GPIO->GPIO_O1  = 1; TIMER_Delay_ms(20);
+
     if (bSEN_InitFlg == FALSE)
     {
         // Initial sensor value.
