@@ -1185,11 +1185,12 @@ void KNL_BlockInit(void)
 	if(ubKNL_ChkExistNode(KNL_NODE_SEN))
 	{
 #ifdef OP_STA
+            
 		uint8_t ubSrcNum = KNL_SRC_NONE;
 		SEN_RegisterEventQueue(KNL_VdoInProcQueue);
 		SEN_RegisterEventNode(KNL_NODE_SEN_YUV_BUF);
 		SEN_SetIspFinishCbFunc(KNL_ImgStabNotifyFunc);
-        SEN_LoadIQData();
+              SEN_LoadIQData();
 		SEN_InitProcess();
 		ubSrcNum = ubSEN_GetPathSrc(SENSOR_PATH1);
 		if((ubKNL_GetRole() <= KNL_STA4) && (KNL_SRC_NONE != ubSrcNum))
