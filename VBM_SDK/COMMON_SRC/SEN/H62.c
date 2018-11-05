@@ -402,9 +402,7 @@ uint8_t ubSEN_Open(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 		TIMER_Delay_us(20*1000);
 
         GPIO->GPIO_O1 = 0; TIMER_Delay_ms(20);
-        GPIO->GPIO_O1 = 1; 
-        GPIO->GPIO_O14 = 0;  TIMER_Delay_ms(20);
-
+        GPIO->GPIO_O1 = 1; TIMER_Delay_ms(20);
 
 		// Initial dummy sensor
 		if (ubSEN_Start(setting,ubFPS) != 1)
