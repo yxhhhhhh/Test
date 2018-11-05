@@ -39,7 +39,7 @@
 //#define Current_Test  0
 //#define Current_Mode  PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
 
-#define SD_UPDATE_TEST  0
+#define SD_UPDATE_TEST  1
 
 #define TIME_TEST       0
 #define TEMP_TEST       0
@@ -315,9 +315,9 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 161;
+uint32_t ubPuSWVersion = 162;
 uint32_t ubFactoryPuSWVersion = 110;
-uint32_t ubHWVersion = 161;
+uint32_t ubHWVersion = 162;
 uint8_t ubBuHWVersion = 0;
 uint16_t ubBuSWVersion = 0;
 
@@ -9785,7 +9785,7 @@ void UI_GetVolData(UI_CamNum_t tCamNum, void *pvTrig)
     }
 
 
-    //printd(Apk_DebugLvl, "ubGetVoiceTemp %d \n",ubGetVoiceTemp);
+    printd(1, "ubGetVoiceTemp %d \n",ubGetVoiceTemp);
     //printd(Apk_DebugLvl, "ubGetIR1Temp %d \n",ubGetIR1Temp);
     //printd(Apk_DebugLvl, "ubGetIR2Temp %d \n",ubGetIR2Temp);
 
