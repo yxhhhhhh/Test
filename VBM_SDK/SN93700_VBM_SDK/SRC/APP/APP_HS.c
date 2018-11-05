@@ -883,13 +883,11 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOff(void)
 {
-#if (LCD_PM == LCD_PM_SUSPEND)
-    LCD_Suspend();
-#endif
-
-#if (LCD_PM == LCD_PWR_OFF)
-    LCD_Suspend(); osDelay(10);
-    LCD_UnInit();
+    if (LCD_PM == LCD_PM_SUSPEND) {
+        LCD_Suspend();
+    } else if (LCD_PM == LCD_PWR_OFF) {
+        LCD_Suspend(); osDelay(10);
+        LCD_UnInit();
 
     /*
     // pull down LCD_HSYNC
@@ -929,24 +927,22 @@ void APP_LcdDisplayOff(void)
     */
     osDelay(10);
 
-    GPIO->GPIO_O3 = 0; osDelay(10); // ssd2828_rst
-    LCD_PWR_DISABLE;   osDelay(10);
-#endif
+        GPIO->GPIO_O3 = 0; osDelay(10); // ssd2828_rst
+        LCD_PWR_DISABLE;   osDelay(10);
+    }
 }
 //------------------------------------------------------------------------------
 void APP_LcdDisplayOn(void)
 {
-	printd(1,"APP_LcdDisplayOn \n");
+	printd(1,"APP_LcdDisplayOn  LCD_PM %d \n",LCD_PM);
 
-#if (LCD_PM == LCD_PM_SUSPEND)
-	LCD_Resume();
-#endif
-
-#if (LCD_PM == LCD_PWR_OFF)
-    GLB->PADIO27 = 5;
-    GLB->PADIO28 = 5;
-    GLB->PADIO48 = 1;
-    GLB->PADIO49 = 1;
+    if (LCD_PM == LCD_PM_SUSPEND) {
+        LCD_Resume();
+    } else if (LCD_PM == LCD_PWR_OFF) {
+        GLB->PADIO27 = 5;
+        GLB->PADIO28 = 5;
+        GLB->PADIO48 = 1;
+        GLB->PADIO49 = 1;
 
 //	if((APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())||(ubFactorySettingFLag == 1))
 	{
@@ -955,32 +951,34 @@ void APP_LcdDisplayOn(void)
 		osDelay(100);
 	}
 
-	GLB->LCD_FUNC_DIS = 0;
-	LCD_Init(LCD_LCD_PANEL);	
-	LCD_SetGammaLevel(4);
-	UI_PowerOnSet();
-	KNL_VdoDisplayParamUpdate();
-	LCD_Start();
-	if (ubFactorySettingFLag == 1)
-	{
-		VDO_Stop();
-		ubFactoryVoxOnFlag = 1;
-		ubFactoryVoxOnCnt  = 0;
-	}
-	
-	if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
-	{
-		printd(Apk_DebugLvl,"11111APP_LOSTLINK_EVENT == APP_UpdateLinkStatus().\n");
-		UI_RemoveLostLinkLogo();
-		ubFastShowLostLinkSta = 1;
-	}
-	if(ubFactorySettingFLag == 0)
-	{
-		osDelay(100);
-		LCDBL_ENABLE(UI_ENABLE);
-		ubSwitchNormalFlag = 1;
-	}
-#endif
+        GLB->LCD_FUNC_DIS = 0;
+
+        LCD_Init(LCD_LCD_PANEL);	
+        LCD_SetGammaLevel(4);
+        UI_PowerOnSet();
+        KNL_VdoDisplayParamUpdate();
+        LCD_Start();
+
+        if (ubFactorySettingFLag == 1)
+        {
+            VDO_Stop();
+            ubFactoryVoxOnFlag = 1;
+            ubFactoryVoxOnCnt  = 0;
+        }
+        
+        if(APP_LOSTLINK_EVENT == APP_UpdateLinkStatus())
+        {
+            printd(Apk_DebugLvl,"11111APP_LOSTLINK_EVENT == APP_UpdateLinkStatus().\n");
+            UI_RemoveLostLinkLogo();
+            ubFastShowLostLinkSta = 1;
+        }
+        if(ubFactorySettingFLag == 0)
+        {
+            osDelay(100);
+            LCDBL_ENABLE(UI_ENABLE);
+            ubSwitchNormalFlag = 1;
+        }
+    }
 }
 #endif
 //------------------------------------------------------------------------------
