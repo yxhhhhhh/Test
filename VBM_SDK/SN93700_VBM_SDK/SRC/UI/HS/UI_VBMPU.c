@@ -59,6 +59,7 @@
 
 #define AUTO_RESTART    0
 
+#define AUTO_LCD_SWITCH    0
 
 /**
  * Key event mapping table
@@ -908,6 +909,16 @@ void UI_StatusCheck(uint16_t ubCheckCount)
             while(1);
         }
 
+#endif
+
+#if AUTO_LCD_SWITCH
+    if(ubCheckCount >= 100)
+    {
+        if(ubCheckCount % 50 == 0 )
+        {
+            UI_SetSleepState(0);
+        }
+    }
 #endif
 
 
@@ -14147,11 +14158,12 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
             UI_ClearStatusBarOsdIcon();
             tLCD_JpegDecodeDisable();
             OSD_LogoJpeg(OSDLOGO_LOGO_BG);
-
+/*
             tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TITLE, 1, &tOsdImgInfo);
             tOsdImgInfo.uwXStart= 51;
             tOsdImgInfo.uwYStart =462 - 150;
             tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+            */
         }
         ubClearOsdFlag =0;
         ubUI_ResetPeriodFlag = TRUE;
