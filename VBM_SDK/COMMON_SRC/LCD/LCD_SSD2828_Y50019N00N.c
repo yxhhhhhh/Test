@@ -408,7 +408,7 @@ bool bLCD_MIPI_SSD2828_Init(void)
     SPI_Setup_t spi_setup;
 
     printd(DBG_Debug3Lvl,"MIPI SSD2828 Init\n");
-    if (!plLCD_SpiData) = osUncachedMalloc(4);
+    if (!plLCD_SpiData) plLCD_SpiData = osUncachedMalloc(4);
     if (!plLCD_SpiData) {
         printd(DBG_CriticalLvl, "LCD: osUncachedMalloc fail!!\n");
         while(1);
