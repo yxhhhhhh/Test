@@ -2078,11 +2078,13 @@ void UI_EnterLongKey(void)
         
 	 printd(1,"UI_EnterLongKey!!!!!!!\n");
 #if SD_UPDATE_TEST
-    KNL_SDUpgradeFwFunc();
+    if(ubFactoryModeFLag == 0)
+        KNL_SDUpgradeFwFunc();
 #endif
 
 #if ENG_MODE_TEST
-    UI_EngModeKey();
+    if(ubFactoryModeFLag == 0)
+        UI_EngModeKey();
 #endif
 }
 //------------------------------------------------------------------------------
