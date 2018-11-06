@@ -14151,12 +14151,12 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
             UI_ClearStatusBarOsdIcon();
             tLCD_JpegDecodeDisable();
             OSD_LogoJpeg(OSDLOGO_LOGO_BG);
-/*
+
             tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_FACTORY_TITLE, 1, &tOsdImgInfo);
             tOsdImgInfo.uwXStart= 51;
             tOsdImgInfo.uwYStart =462 - 150;
             tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
-            */
+            
         }
         ubClearOsdFlag =0;
         ubUI_ResetPeriodFlag = TRUE;
