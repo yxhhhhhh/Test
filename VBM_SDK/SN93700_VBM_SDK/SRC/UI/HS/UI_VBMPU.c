@@ -445,22 +445,13 @@ void UI_KeyEventExec(void *pvKeyEvent)
                 //UI_EnterLocalAdoTest_RX();
             }
 */
-	     //if (ubFactoryModeFLag== 1)
-	     {
 	     	if(ubEnterFactoryDelCam == 0)
 	     	{
 	     	    if(ubFactoryDelCamFlag == 0)	
 		    	 ubFactoryDelCamFlag = 1;
 		     ubEnterFactoryDelCam =1;
 		}
-	    
-	        if(FALSE == ubUI_PttStartFlag)	
-	        {
-			ubEnterFactoryDelCam =0;
-		}
-
 		return;	
-	     }	
         }
 
         if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I10 == 0))
@@ -1128,25 +1119,25 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         static uint8_t ubCamId = 0;
         if (1 == ubFactoryDelCamFlag)
         {
+             if (ubCamId > 3)
+	        {
+	             ubCamId = 0;  
+
+                    ubPairSelCamcnt = 0;
+                    ubFactoryDelCamFlag =0;
+                    ubEnterFactoryDelCam = 0;
+                    
+                    printf("factory del finish\n");
+                    osDelay(200);
+                    UI_LoadDevStatusInfo();		
+                    tUI_PuSetting.ubDefualtFlag = 0;
+               }
 	        if (tUI_CamStatus[ubCamId].ulCAM_ID != INVALID_ID)
 	        {
 	            UI_CamDeleteCamera(1, ubCamId);
 	        }
 	        ubCamId++;
-	        if (ubCamId > 4)
-	        {
-	            ubCamId = 0;  
-
-                ubFactoryDelCamFlag =0;
-                printf("factory del finish\n");
-                osDelay(200);
-                UI_LoadDevStatusInfo();		
-                tUI_PuSetting.ubDefualtFlag = 0;
-
-                // WDT_Disable(WDT_RST);
-                //WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot	
-                //while(1);
-            }
+	       
         }
 
         printd(Apk_DebugLvl,"tUI_PuSetting.ubDefualtFlag =%d.\n",tUI_PuSetting.ubDefualtFlag);
@@ -8156,7 +8147,7 @@ void UI_CamDeleteCamera(uint8_t type, uint8_t CameraId)
 {
     APP_EventMsg_t tUI_UnindBuMsg = {0};
 
-	printd(1,"UI_CamDeleteCamera\n");
+	printd(1,"UI_CamDeleteCamera type %d  CameraId %d \n",type,CameraId);
     if (type)
     {
         if (tUI_CamStatus[CameraId].ulCAM_ID != INVALID_ID)
@@ -8543,7 +8534,7 @@ else
         UI_UpdateDevStatusInfo();
 
 	ubPairSelCamcnt++;
-	if(ubPairSelCamcnt >=3)
+	if(ubPairSelCamcnt > 3)
 		ubPairSelCamcnt = 0;	
 
 }
