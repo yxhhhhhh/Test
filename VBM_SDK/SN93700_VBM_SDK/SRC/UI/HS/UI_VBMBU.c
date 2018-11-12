@@ -1682,12 +1682,12 @@ void UI_BrightnessCheck(void) //20180408
     if(uwDetAdjustcnt > 1)
     {
        printd(Apk_DebugLvl,"UI_BrightnessCheck  uwDetAdjustcnt =%d  uwDetAdjustcnt > 1 uwDetLvl = %d \n",uwDetAdjustcnt,uwDetLvl);
-	if(uwDetLvl <= 0x19)
+	if(uwDetLvl <= 0x78)
 	{
 		ubCheckMinIrCnt++;
 		ubCheckMaxIrCnt = 0;
 	}
-	else if(uwDetLvl >= 0x28)
+	else if(uwDetLvl >= 0xC8)
 	{
 		ubCheckMaxIrCnt++;
 		ubCheckMinIrCnt = 0;
