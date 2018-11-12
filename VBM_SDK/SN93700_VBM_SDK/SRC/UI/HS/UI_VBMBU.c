@@ -847,10 +847,10 @@ void UI_VoiceCheck (void)
 
         tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]      = UI_REPORT;
         tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM]   = UI_VOICE_CHECK;
-        tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA]   = voice_temp;
-		//tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+1] = ir_temp1;
-		//tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;			
-		tUI_VoiceReqCmd.ubCmd_Len  			  	= 3;
+        tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA]   = voice_temp > 5? 0 : voice_temp;
+	 //tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+1] = ir_temp1;
+	 //tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;			
+	 tUI_VoiceReqCmd.ubCmd_Len  			  	= 3;
         UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
 
         ubCurSoundVal = voice_temp;

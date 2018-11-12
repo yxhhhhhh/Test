@@ -9777,6 +9777,8 @@ void UI_GetVolData(UI_CamNum_t tCamNum, void *pvTrig)
         ubGetVoiceTemp = pvdata[0];
     }
 
+    if(ubGetVoiceTemp > 5)
+        ubGetVoiceTemp = 5;
 
     printd(1, "ubGetVoiceTemp %d \n",ubGetVoiceTemp);
     //printd(Apk_DebugLvl, "ubGetIR1Temp %d \n",ubGetIR1Temp);
