@@ -287,12 +287,17 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 //      if (MD_ON == tUI_BuStsInfo.MdParam.ubMD_Mode)
 //          UI_MDTrigger();
 
-//      if (((*pThreadCnt)%3) == 0)
+        if (((*pThreadCnt)%1) == 0)
         {
             uint16_t uwChkType = UI_SYSVOICELVL_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
         }
 	//printd(1,"UI_UpdateStatus APP_LINK_STATE  UI_BrightnessCheck() gogogo!\n");
+	 if (((*pThreadCnt)%3) == 0)
+        {
+            uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
+            osMessagePut(osUI_SysChkQue, &uwChkType, 0);
+        }
        //UI_BrightnessCheck();
 
         if (((*pThreadCnt)%5) == 0)
