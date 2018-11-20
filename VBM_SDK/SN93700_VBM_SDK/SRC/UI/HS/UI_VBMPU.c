@@ -3109,6 +3109,8 @@ void UI_PushTalkKey(void)
     OSD_IMG_INFO tOsdInfo;
     uint8_t CmdData = 0;
 
+    if(tUI_SyncAppState == APP_PAIRING_STATE)
+            return;
 
     if (ubShowAlarmstate >0)
     	return;	
