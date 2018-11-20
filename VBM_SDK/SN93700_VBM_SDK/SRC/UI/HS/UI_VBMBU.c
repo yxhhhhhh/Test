@@ -293,7 +293,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
         }
 	//printd(1,"UI_UpdateStatus APP_LINK_STATE  UI_BrightnessCheck() gogogo!\n");
-        UI_BrightnessCheck();
+       //UI_BrightnessCheck();
 
         if (((*pThreadCnt)%5) == 0)
         {
@@ -399,7 +399,7 @@ static void UI_SysCheckStatus(void const *argument)
         if (uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
         {
         	//printd(1,"UI_SysCheckStatus uwUI_ChkType & UI_SYSIRLEDDATA_CHK  UI_BrightnessCheck() gogogo!\n");
-//          UI_BrightnessCheck();
+            UI_BrightnessCheck();
             uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
         }
     }
@@ -857,7 +857,7 @@ void UI_VoiceCheck (void)
     //  ubVoicetemp_bak = voice_temp;
     //}
 
-    UI_SendPickupVolumeToPu(ulUI_AdcRpt);
+    //UI_SendPickupVolumeToPu(ulUI_AdcRpt);
 }
 
 void UI_TempCheck(void) //20180322
