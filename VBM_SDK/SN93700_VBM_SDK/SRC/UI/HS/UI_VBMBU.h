@@ -300,8 +300,8 @@ void UI_ResetDevSetting(void);
 void UI_LoadDevStatusInfo(void);
 void UI_UpdateDevStatusInfo(void);
 
-void UI_VoiceCheck(void);
-void UI_TempCheck(void);
+uint8_t UI_VoiceCheck(void);
+uint8_t UI_TempCheck(void);
 
 void UI_MotoControlInit(void);
 void UI_MCStateCheck(void);

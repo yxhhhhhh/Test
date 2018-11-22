@@ -107,7 +107,8 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint16_t ubBuSWVersion = 162;
+uint16_t ubBuSWVersion = 163;
+uint16_t uwDetLvl = 0x3FF;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -242,8 +243,8 @@ void UI_StatusCheck(uint16_t pThreadCnt)
 		WDT_RST_Enable(WDT_CLK_EXTCLK, WDT_TIMEOUT_CNT);
 	//if(((pThreadCnt)%3) == 0)
 	{
-		uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
-		osMessagePut(osUI_SysChkQue, &uwChkType, 0);
+		///uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
+		//osMessagePut(osUI_SysChkQue, &uwChkType, 0);
 	}
 
     if (ubTalkCnt == 0)
@@ -292,19 +293,22 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             uint16_t uwChkType = UI_SYSVOICELVL_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
         }
-	//printd(1,"UI_UpdateStatus APP_LINK_STATE  UI_BrightnessCheck() gogogo!\n");
+        
 	 if (((*pThreadCnt)%3) == 0)
         {
             uint16_t uwChkType = UI_SYSIRLEDDATA_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
-        }
-       //UI_BrightnessCheck();
 
+        }
+    
         if (((*pThreadCnt)%5) == 0)
         {
             uint16_t uwChkType = UI_SYSTEMPDATA_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
+
         }
+        
+       UI_BrightnessCheck();
 
         if (ubTalkCnt >= 1)
             ubTalkCnt++;
@@ -404,8 +408,10 @@ static void UI_SysCheckStatus(void const *argument)
         if (uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
         {
         	//printd(1,"UI_SysCheckStatus uwUI_ChkType & UI_SYSIRLEDDATA_CHK  UI_BrightnessCheck() gogogo!\n");
-            UI_BrightnessCheck();
+            //UI_BrightnessCheck();
+            UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
             uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
+
         }
     }
 }
@@ -816,7 +822,7 @@ void UI_AECSetting(void *pvAecMode)
 	printd(DBG_InfoLvl, "		=> AEC %s\n", (CAMSET_ON == tUI_BuStsInfo.tCamAecMode)?"ON":"OFF");
 }
 
-void UI_VoiceCheck (void)
+uint8_t UI_VoiceCheck (void)
 {
     UI_BUReqCmd_t tUI_VoiceReqCmd;
     uint32_t ulUI_AdcRpt = 0;
@@ -848,24 +854,30 @@ void UI_VoiceCheck (void)
 
     //if (ubVoicetemp_bak != voice_temp)
     //{
-    //  printd(Apk_DebugLvl, "voice_temp: %d \n",voice_temp);
+      printd(Apk_DebugLvl, "voice_temp: %d \n",voice_temp);
 
         tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]      = UI_REPORT;
         tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM]   = UI_VOICE_CHECK;
-        tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA]   = voice_temp > 5? 0 : voice_temp;
+        tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA]   = voice_temp > 5? 5 : voice_temp;
 	 //tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+1] = ir_temp1;
 	 //tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA+2] = ir_temp2;			
 	 tUI_VoiceReqCmd.ubCmd_Len  			  	= 3;
-        UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
+        if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd))
+        {
+		printd(DBG_ErrorLvl, "UI_SendVoiceValueToPu Fail!\n");
+		return rUI_FAIL;
+	  }
 
         ubCurSoundVal = voice_temp;
+        return rUI_SUCCESS;
+
     //  ubVoicetemp_bak = voice_temp;
     //}
 
     //UI_SendPickupVolumeToPu(ulUI_AdcRpt);
 }
 
-void UI_TempCheck(void) //20180322
+uint8_t UI_TempCheck(void) //20180322
 {
     UI_BUReqCmd_t tUI_TempReqCmd;
 
@@ -936,8 +948,14 @@ report:
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+3]  = ubTempValueH;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+4]  = ubTempValueL;
         tUI_TempReqCmd.ubCmd_Len                = 7;
-        UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
+        if(rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_TempReqCmd))
+       {
+		printd(DBG_ErrorLvl, "UI_SendTempValueToPu Fail!\n");
+		return rUI_FAIL;
+	}
         tem_last = tem;
+        return rUI_SUCCESS;
+
     }
 }
 
@@ -1656,7 +1674,6 @@ void UI_BrightnessCheck(void) //20180408
     #define IR_CHECK_CNT	1
     static uint16_t ubCheckMinIrCnt = 0;
     static uint16_t ubCheckMaxIrCnt = 0;
-    uint16_t uwDetLvl = 0x3FF;
     
     static uint16_t ubLastDetValue = 0;
     uint16_t uwDetdifferent = 0;
@@ -1702,7 +1719,7 @@ void UI_BrightnessCheck(void) //20180408
 		ubCheckMaxIrCnt = 0;
 		ubCheckMinIrCnt = 0;
 	}
-	  UI_SendIRValueToPu(uwDetLvl>>8, uwDetLvl&0xFF);
+    
         printd(1, "UI_BrightnessCheck uwDetLvl: 0x%x, Min: %d, Max: %d.tUI_BuStsInfo.tNightModeFlag %d \n", uwDetLvl, ubCheckMinIrCnt, ubCheckMaxIrCnt,tUI_BuStsInfo.tNightModeFlag);
         if (tUI_BuStsInfo.tNightModeFlag)
         {
