@@ -13715,8 +13715,8 @@ void UI_UpdateBarIcon_Part1(void)
         tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
         ubChargShowCnt = 0;
     }
-
-   // tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+    if(tUI_SyncAppState == APP_LOSTLINK_STATE)
+        tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
 void UI_UpdateBarIcon_Part2(void)
