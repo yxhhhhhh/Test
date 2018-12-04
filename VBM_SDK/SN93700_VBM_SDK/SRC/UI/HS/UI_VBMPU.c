@@ -1676,8 +1676,8 @@ void UI_MenuKey(void)
             {
                 if (ubNoAddCamFlag == 1)
                 {
-                	if(tUI_State == UI_SUBSUBMENU_STATE)
-                		tLCD_JpegDecodeDisable();
+                    tLCD_JpegDecodeDisable();
+                    
                     OSD_LogoJpeg(OSDLOGO_WHITE_BG);
                     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_NOCAM1+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdInfo);
                     tOsdInfo.uwXStart = 175;
