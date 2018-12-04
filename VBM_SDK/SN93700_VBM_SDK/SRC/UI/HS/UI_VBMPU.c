@@ -1151,7 +1151,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         break;
     case APP_LOSTLINK_STATE:
 	printd(Apk_DebugLvl,"UI_UpdateStatus ubLostLinkEnterSanMode = %d.tUI_PuSetting.ubDefualtFlag = %d",ubLostLinkEnterSanMode,tUI_PuSetting.ubDefualtFlag);
-
 	ubShowAlarmstate  = 0;
     if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 		ubVOXModeToBuRet = rUI_FAIL;
@@ -1218,7 +1217,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         }
         break;
     case APP_LINK_STATE:
-
         UI_LinkStatusCheck(*pThreadCnt);
         if (tUI_PuSetting.ubDefualtFlag == FALSE)
         {
@@ -1268,6 +1266,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         UI_UpdateBarIcon_Part1();
         UI_DrawPairingStatusIcon();
         osMutexRelease(UI_PUMutex);
+
         return;
     default:
         break;
@@ -6899,7 +6898,6 @@ void UI_TimeSetSystemTime(void) //add by wjb
     tUI_PuSetting.tSysCalendar.uwYear = 2018;
     tUI_PuSetting.tSysCalendar.ubMonth = 1;
     tUI_PuSetting.tSysCalendar.ubDate = 1;
-
     printd(Apk_DebugLvl, "UI_TimeSetSystemTime ubTimeHour: %d, ubTimeMin: %d, ubTimeAMPM: %d.\n", ubTimeHour, ubTimeMin, ubTimeAMPM);
     if (ubTimeAMPM)
     {
@@ -10127,7 +10125,7 @@ void UI_TempBarDisplay(uint8_t value)
     tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_BAR_TEMPC + (!tUI_PuSetting.ubTempunitFlag), 1, &info);
     info.uwXStart = 0;
     info.uwYStart = 350 - 20 * i - 12;
-    tOSD_Img2(&info, OSD_UPDATE);
+    tOSD_Img2(&info, OSD_QUEUE);
 }
 
 
@@ -10135,6 +10133,7 @@ void UI_VolBarDisplay(uint8_t value)
 {
     OSD_IMG_INFO tOsdImgInfo;
     uint8_t i;
+
     if (ubUpdateFWFlag == 1)return;
     if (tUI_SyncAppState != APP_LINK_STATE)
 		return;
@@ -13659,7 +13658,6 @@ void UI_UpdateBarIcon_Part1(void)
     OSD_IMG_INFO tOsdImgInfo;
     uint16_t uwAntLvLIdx = ANT_NOSIGNAL;
     static uint8_t ubChargShowCnt = 0;
-
     UI_CamNum_t tSelCamNum = tCamViewSel.tCamViewPool[0];
 
     uwAntLvLIdx = 6 - tUI_CamStatus[tSelCamNum].tCamAntLvl;
@@ -13718,7 +13716,7 @@ void UI_UpdateBarIcon_Part1(void)
         ubChargShowCnt = 0;
     }
 
-    tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+   // tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 
 void UI_UpdateBarIcon_Part2(void)
@@ -13834,7 +13832,7 @@ void UI_UpdateBarIcon_Part2(void)
     tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
 #endif
 
-    tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
+   // tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 }
 //------------------------------------------------------------------------------
 void UI_RedrawBuConnectStatusIcon(UI_CamNum_t tCamNum)
