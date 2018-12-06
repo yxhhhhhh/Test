@@ -2044,7 +2044,7 @@ void UI_EnterLongKey(void)
         
 	 printd(1,"UI_EnterLongKey!!!!!!!\n");
 #if SD_UPDATE_TEST
-    if(ubFactoryModeFLag == 0)
+    if(ubFactoryModeFLag == 0 && ubSD_ChkCardIn(SD_1))
         KNL_SDUpgradeFwFunc();
 #endif
 
