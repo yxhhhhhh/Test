@@ -487,6 +487,7 @@ UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
     UI_Result_t tReq_Result = rUI_SUCCESS;
     osEvent tReq_Event;
     uint8_t ubUI_TwcRetry = 5;
+    osMutexWait(APP_UpdateMutex, osWaitForever);
 
     while(--ubUI_TwcRetry)
     {
@@ -510,6 +511,7 @@ UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
         tosUI_Notify.iSignals   = NULL;
         tosUI_Notify.tReportSts = rUI_SUCCESS;
     }
+    	osMutexRelease(APP_UpdateMutex);
     return tReq_Result;
 }
 //------------------------------------------------------------------------------
