@@ -15383,7 +15383,7 @@ SWITCH_CAMERA:
 	ubSetViewCam = tCamViewSel.tCamViewPool[0];
 	UI_SwitchCameraSource();
 	UI_ClearBuConnectStatusFlag();
-	UI_UpdateDevStatusInfo();
+	//UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
 void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *pvRegCb)
