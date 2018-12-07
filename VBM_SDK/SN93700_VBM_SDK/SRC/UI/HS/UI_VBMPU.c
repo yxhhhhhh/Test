@@ -695,7 +695,7 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 			
 			tLCD_JpegDecodeDisable();
 			OSD_LogoJpeg(OSDLOGO_FW_OK);
-			osDelay(1000);
+			osDelay(2000);
             break;	
 		
 		case FWU_UPG_FAIL:
@@ -703,7 +703,7 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 		{
 			tLCD_JpegDecodeDisable();
 			OSD_LogoJpeg(OSDLOGO_FW_FAIL);
-			osDelay(1000);
+			osDelay(2000);
 			ubClearOsdFlag = 0;
 			break;
 		}
@@ -1676,7 +1676,8 @@ void UI_MenuKey(void)
             {
                 if (ubNoAddCamFlag == 1)
                 {
-                    tLCD_JpegDecodeDisable();
+                    if(tUI_State == UI_SUBSUBMENU_STATE)
+                            tLCD_JpegDecodeDisable();
                     
                     OSD_LogoJpeg(OSDLOGO_WHITE_BG);
                     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_NOCAM1+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdInfo);
@@ -1713,8 +1714,8 @@ void UI_MenuKey(void)
                     tOsdInfo.uwYStart =304-104;
                     tOSD_Img2(&tOsdInfo, OSD_UPDATE);
                     */
-                      //if(tUI_State = UI_MAINMENU_STATE)
-                   // 	tLCD_JpegDecodeDisable();
+                      if(tUI_State == UI_SUBSUBMENU_STATE)
+                     	tLCD_JpegDecodeDisable();
                     OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
                     printd(Apk_DebugLvl, "UI_MenuKey OSD2IMG_MENU_NOSIGNAL1.\n");
                 }
