@@ -94,6 +94,8 @@ osMutexId UI_BUMutex;
 static void UI_SysCheckStatus(void const *argument);
 osMessageQId osUI_SysChkQue;
 
+osMutexId UI_TWCMutex;
+
 static uint8_t ubUI_Mc1RunFlag;
 static uint8_t ubUI_Mc2RunFlag;
 static uint8_t ubUI_Mc3RunFlag;
@@ -167,6 +169,8 @@ void UI_StateReset(void)
 {
     osMutexDef(UI_BUMutex);
     UI_BUMutex = osMutexCreate(osMutex(UI_BUMutex));
+		osMutexDef(UI_TWCMutex);
+		UI_TWCMutex = osMutexCreate(osMutex(UI_TWCMutex));
     osMessageQDef(UiSysChkSts, 10, uint16_t);
     osUI_SysChkQue = osMessageCreate(osMessageQ(UiSysChkSts), NULL);
     osThreadDef(UiSysChkThd, UI_SysCheckStatus, THREAD_PRIO_UISYSCHK_HANDLER, 1, THREAD_STACK_UISYSCHK_HANDLER);
@@ -487,8 +491,8 @@ UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
     UI_Result_t tReq_Result = rUI_SUCCESS;
     osEvent tReq_Event;
     uint8_t ubUI_TwcRetry = 5;
-    osMutexWait(APP_UpdateMutex, osWaitForever);
-
+    osMutexWait(UI_TWCMutex,osWaitForever);
+        
     while(--ubUI_TwcRetry)
     {
         if (tTWC_Send(TWC_AP_MASTER, TWC_UI_SETTING, ptReqCmd->ubCmd, ptReqCmd->ubCmd_Len, 10) == TWC_SUCCESS)
@@ -498,6 +502,7 @@ UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
     if (!ubUI_TwcRetry)
     {
         tTWC_StopTwcSend(TWC_AP_MASTER, TWC_UI_SETTING);
+	 osMutexRelease(UI_TWCMutex);
         return rUI_FAIL;
     }
     tosUI_Notify.thread_id = thread_id;
@@ -511,7 +516,7 @@ UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
         tosUI_Notify.iSignals   = NULL;
         tosUI_Notify.tReportSts = rUI_SUCCESS;
     }
-    	osMutexRelease(APP_UpdateMutex);
+    osMutexRelease(UI_TWCMutex);
     return tReq_Result;
 }
 //------------------------------------------------------------------------------
