@@ -1160,7 +1160,6 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         ubUI_SendMsg2AppFlag = ((tUI_State == UI_DISPLAY_STATE)||(tUI_State == UI_SUBSUBMENU_STATE))?TRUE:FALSE;
         break;
     case APP_LOSTLINK_STATE:
-	printd(Apk_DebugLvl,"UI_UpdateStatus ubLostLinkEnterSanMode = %d.tUI_PuSetting.ubDefualtFlag = %d",ubLostLinkEnterSanMode,tUI_PuSetting.ubDefualtFlag);
 	ubShowAlarmstate  = 0;
     if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
 		ubVOXModeToBuRet = rUI_FAIL;
@@ -1686,7 +1685,7 @@ void UI_MenuKey(void)
             {
                 if (ubNoAddCamFlag == 1)
                 {
-                    if(tUI_State == UI_SUBSUBMENU_STATE)
+                   // if(tUI_State == UI_SUBSUBMENU_STATE)
                             tLCD_JpegDecodeDisable();
                     
                     OSD_LogoJpeg(OSDLOGO_WHITE_BG);
