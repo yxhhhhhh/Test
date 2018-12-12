@@ -820,10 +820,12 @@ void APP_FWUgradeStatusReport(uint8_t ubStsReport)
 			break;
 		case FWU_UPG_DEVTAG_FAIL:
 		case FWU_UPG_FAIL:
+          			SYS_Reboot();
 //			KNL_ReStart();
-			VDO_Start();
+/*			VDO_Start();
 			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 			UI_StartUpdateThread();
+*/
 			break;
 		default:
 			break;
