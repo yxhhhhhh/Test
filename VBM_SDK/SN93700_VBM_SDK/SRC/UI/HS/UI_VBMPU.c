@@ -14251,7 +14251,7 @@ void UI_RedrawStatusBar(uint16_t *pThreadCnt)
 			   	UI_UpdateBarIcon_Part1();
 				UI_UpdateBarIcon_Part2();	
 				UI_VolBarDisplay(ubGetVoiceTemp);
-				UI_TempBarDisplay(ubRealTemp);
+				//UI_TempBarDisplay(ubRealTemp);
 				if(ubPairOK_SwitchCam == 1)
 				{
 					UI_DisableScanMode();
