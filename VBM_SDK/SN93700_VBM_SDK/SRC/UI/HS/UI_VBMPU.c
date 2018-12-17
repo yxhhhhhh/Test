@@ -728,16 +728,26 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 			
 			tLCD_JpegDecodeDisable();
 			OSD_LogoJpeg(OSDLOGO_FW_OK);
-			osDelay(1000);
+			osDelay(2000);
+                     ubUpdateFWFlag =0;
             break;	
 		
 		case FWU_UPG_FAIL:
 		case FWU_UPG_DEVTAG_FAIL:
 		{
+          		uint8_t ubKNL_PsValue = 0;
+
+			ubKNL_PsValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
+			ubKNL_PsValue &= 0xF;
+			ubKNL_PsValue |= 0x40;
+			RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, ubKNL_PsValue);
+            
 			tLCD_JpegDecodeDisable();
 			OSD_LogoJpeg(OSDLOGO_FW_FAIL);
-			osDelay(1000);
+			osDelay(2000);
 			ubClearOsdFlag = 0;
+                     ubUpdateFWFlag =0;
+
 			break;
 		}
 		
