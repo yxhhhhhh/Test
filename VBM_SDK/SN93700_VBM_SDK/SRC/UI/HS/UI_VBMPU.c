@@ -1756,7 +1756,7 @@ void UI_MenuKey(void)
             {
                 if (ubNoAddCamFlag == 1)
                 {
-                	if(tUI_State == UI_SUBSUBMENU_STATE)
+                	//if(tUI_State == UI_SUBSUBMENU_STATE)
                 		tLCD_JpegDecodeDisable();
                     OSD_LogoJpeg(OSDLOGO_WHITE_BG);
                     tOSD_GetOsdImgInfor (1, OSD_IMG2, OSD2IMG_MENU_NOCAM1+ (21*tUI_PuSetting.ubLangageFlag), 1, &tOsdInfo);
@@ -1794,7 +1794,7 @@ void UI_MenuKey(void)
                     tOSD_Img2(&tOsdInfo, OSD_UPDATE);
                     */
                       //if(tUI_State = UI_MAINMENU_STATE)
-                   // 	tLCD_JpegDecodeDisable();
+                            tLCD_JpegDecodeDisable();
                     OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
                     printd(Apk_DebugLvl, "UI_MenuKey OSD2IMG_MENU_NOSIGNAL1.\n");
                 }
