@@ -889,10 +889,16 @@ void UI_TempCheck(void) //20180322
         ubWrData[0] = 0x01;
         ubWrData[1] = 0x81;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
-        if (!ret) goto report;
+        if (!ret) {
+            pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+            goto report;
+        }
         ubWrData[0] = 0x00;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
-        if (!ret) goto report;
+        if (!ret) {
+            pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+            goto report;
+        }
 
         tem = (int16_t)((ubRdData[0] << 8) | (ubRdData[1] << 0)) * 100 / 256;
     }
