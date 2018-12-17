@@ -484,6 +484,11 @@ void APP_LinkStateFunc(APP_EventMsg_t *ptEventMsg)
 						tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_MENU_TALKBACK, 1, &tOsdImgInfo);
 						tOsdImgInfo.uwXStart = 259;
 						tOsdImgInfo.uwYStart = 515;	
+						tOSD_Img2(&tOsdImgInfo, OSD_QUEUE);
+                        
+                                          tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_TALK_DISTANCE, 1, &tOsdImgInfo);
+						tOsdImgInfo.uwXStart = 570;
+						tOsdImgInfo.uwYStart = 0;	
 						tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
 					}
 					else

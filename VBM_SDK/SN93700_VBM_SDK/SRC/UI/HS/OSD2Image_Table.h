@@ -165,6 +165,7 @@ OSD2IMGPOOL(DIS_ALARM_BG,			0x3000,	       0,        0)
 OSD2IMGPOOL(DIS_ALARMON,			0x3000,	       0,        0)
 OSD2IMGPOOL(DIS_LOWTEMP,			0x3000,	       0,        0)
 OSD2IMGPOOL(DIS_HIGHTEMP,			0x3000,	       0,        0)
+OSD2IMGPOOL(TALK_DISTANCE,			0x3000,	       0,        0)
 //----------------pubic menu
 OSD2IMGPOOL(MENU_BRI_MIN,			0x3000,	       0,        0)
 OSD2IMGPOOL(MENU_BRI_MAX,			0x3000,	       0,        0)
