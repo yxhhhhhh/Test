@@ -315,9 +315,9 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 162;
+uint32_t ubPuSWVersion = 165;
 uint32_t ubFactoryPuSWVersion = 110;
-uint32_t ubHWVersion = 162;
+uint32_t ubHWVersion = 165;
 uint8_t ubBuHWVersion = 0;
 uint16_t ubBuSWVersion = 0;
 
