@@ -340,8 +340,8 @@ uint8_t ubCamPairOkState = 0;
 uint8_t ubAlarmWakeupType = 0;
 uint8_t ubSwitchCamWakeupSstate = 0;
 
-uint8_t ubNormalModeToBuRet = rUI_FAIL;
-uint8_t ubVOXModeToBuRet = rUI_FAIL;
+uint8_t ubNormalModeToBuRet[4]= {0};
+uint8_t ubVOXModeToBuRet[4]= {0};
 
 uint8_t ubAlarmOnlyAlertFlag  = 0;
 uint8_t ubFactoryDeleteCam = 0;
@@ -369,6 +369,10 @@ uint8_t ubSendModeNum  = 0;
 
 uint8_t ubFactoryVoxOnFlag  = 0;
 uint8_t ubFactoryVoxOnCnt  = 0;
+
+uint8_t ubSendNormalInfocnt = 0;
+uint8_t ubSendVoxInfocnt = 0;
+
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
@@ -892,23 +896,24 @@ void UI_StatusCheck(uint16_t ubCheckCount)
     static uint8_t ubSetAlarmRet = rUI_FAIL;
     static uint8_t ubNightModeRet = rUI_FAIL;
 
+
 #if AUTO_RESTART
 
-        if(ubCheckCount > 150)
-        {
-        	uint8_t ubKNL_PsValue = 0;
+    if(ubCheckCount > 150)
+    {
+    	uint8_t ubKNL_PsValue = 0;
 
-        	ubKNL_PsValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
-        	ubKNL_PsValue &= 0xF;
-        	ubKNL_PsValue |= 0x40;
-            RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, ubKNL_PsValue);
-            printd(1,"AUTO RESTART\n");
-            osDelay(200);
- 
-            WDT_Disable(WDT_RST);
-            WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
-            while(1);
-        }
+    	ubKNL_PsValue  = wRTC_ReadUserRam(RTC_RECORD_PWRSTS_ADDR);
+    	ubKNL_PsValue &= 0xF;
+    	ubKNL_PsValue |= 0x40;
+        RTC_WriteUserRam(RTC_RECORD_PWRSTS_ADDR, ubKNL_PsValue);
+        printd(1,"AUTO RESTART\n");
+        osDelay(200);
+
+        WDT_Disable(WDT_RST);
+        WDT_RST_Enable(WDT_CLK_EXTCLK, 1);//reboot
+        while(1);
+    }
 
 #endif
 
@@ -971,14 +976,18 @@ void UI_StatusCheck(uint16_t ubCheckCount)
 
             if (ubPowerState == PWR_ON)
             {
-                if (ubNormalModeToBuRet == rUI_FAIL)
-                    ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
+                if (ubNormalModeToBuRet[ubSendNormalInfocnt] == rUI_FAIL && 
+                    tUI_CamStatus[ubSendNormalInfocnt].ulCAM_ID != INVALID_ID && 
+                    (tUI_CamStatus[ubSendNormalInfocnt].tCamConnSts == CAM_ONLINE))
+                    ubNormalModeToBuRet[ubSendNormalInfocnt] = UI_SendPwrNormalModeToBu(ubSendNormalInfocnt);
             }
-	   if(ubPowerState == PWR_Sleep_Complete)
-	   {
-		if(ubVOXModeToBuRet == rUI_FAIL)
-			ubVOXModeToBuRet = UI_SendPwrVoxModeToBu();
-	   }
+            if(ubPowerState == PWR_Sleep_Complete)
+            {
+                 if (ubVOXModeToBuRet[ubSendVoxInfocnt] == rUI_FAIL && 
+                    tUI_CamStatus[ubSendVoxInfocnt].ulCAM_ID != INVALID_ID && 
+                    (tUI_CamStatus[ubSendVoxInfocnt].tCamConnSts == CAM_ONLINE))                    
+                    ubVOXModeToBuRet[ubSendVoxInfocnt] = UI_SendPwrVoxModeToBu(ubSendVoxInfocnt);
+            }
 			
 
             ubLinkStateCheckCount = 0;
@@ -1003,7 +1012,19 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         }
 
         if (ubPowerState != PWR_ON)
-            ubNormalModeToBuRet = 0;
+        {
+             if(ubNormalModeToBuRet[ubSendNormalInfocnt] != 0)
+            {
+                ubNormalModeToBuRet[ubSendNormalInfocnt] = 0;
+            }
+        }
+        if (ubPowerState != PWR_Sleep_Complete)
+        {
+             if(ubVOXModeToBuRet[ubSendVoxInfocnt] != 0)
+            {
+                ubVOXModeToBuRet[ubSendVoxInfocnt]  = 0;
+            }
+        }
 
         if (ubSpeakerCount >= 1)
             ubSpeakerCount++;
@@ -1011,23 +1032,13 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         if (ubSpeakerCount == 4)
             UI_SetSpeaker(1, TRUE);
 
-        /*
-        if((APP_PAIRING_STATE == tUI_SyncAppState) || (ubShowAlarmstate > 0))
-        {
-            UI_TimerDeviceEventStop(TIMER1_2);
-        }
-        */
 
 #if Current_Test
         UI_CheckPowerMode();
 #endif
 
         ubCameraOnlineNum = UI_GetCamOnLineNum(0);
-	if(ubSendModeNum <=10)
-	{
-		UI_SendPwrNormalModeToBu();
-		ubSendModeNum++;
-	}
+
         if(ubMenuKeyPairing >= 2)
         {
             ubMenuKeyPairing++;
@@ -1089,7 +1100,19 @@ void UI_StatusCheck(uint16_t ubCheckCount)
         ubNightModeRet = rUI_FAIL;
 
         if (ubPowerState != PWR_ON)
-            ubNormalModeToBuRet = 0;
+        {
+             if(ubNormalModeToBuRet[ubSendNormalInfocnt] != 0)
+            {
+                ubNormalModeToBuRet[ubSendNormalInfocnt] = 0;
+            }
+        }
+        if (ubPowerState != PWR_Sleep_Complete)
+        {
+             if(ubVOXModeToBuRet[ubSendVoxInfocnt] != 0)
+            {
+                ubVOXModeToBuRet[ubSendVoxInfocnt]  = 0;
+            }
+        }
 
         if (ubSpeakerCount >= 1)
             ubSpeakerCount++;
@@ -1171,6 +1194,13 @@ void UI_StatusCheck(uint16_t ubCheckCount)
             while(1);
         }
     }
+
+    if(++ubSendNormalInfocnt > 3)
+        ubSendNormalInfocnt =0;
+
+    
+    if(++ubSendVoxInfocnt > 3)
+        ubSendVoxInfocnt =0;
     
 }
 //------------------------------------------------------------------------------
@@ -1197,7 +1227,12 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 
 	ubShowAlarmstate  = 0;
     if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
-		ubVOXModeToBuRet = rUI_FAIL;
+    {
+        if(ubVOXModeToBuRet[ubSendVoxInfocnt] != 1)
+        {
+            ubVOXModeToBuRet[ubSendVoxInfocnt]  = 1;
+        };
+    }
 	
     if ((tUI_PuSetting.ubScanTime > 0) && (UI_GetCamOnLineNum(0) != 0))
         {
@@ -1425,11 +1460,12 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 		            {
 		                //printd(DBG_ErrorLvl, "VOX Notify Fail !\n");
 		                //return;
-		                ubVOXModeToBuRet = rUI_FAIL;
+		                ubVOXModeToBuRet[i] = rUI_FAIL;
 		            }
 			   else
 			   {
-				ubVOXModeToBuRet = rUI_SUCCESS;
+                            printd(1, " UI_SwitchMode VOX tUI_CamStatus[cam].ulCAM_ID %d ok.\n", tUI_CamStatus[i].ulCAM_ID);
+				ubVOXModeToBuRet[i] = rUI_SUCCESS;
 			   }
 					
 		 }
@@ -1607,7 +1643,7 @@ void UI_PowerOff(void)
     printd(Apk_DebugLvl, " UI_PowerOff Power OFF!\n");
 
     //UI_SendPwrNormalModeToBu();
-    UI_SendPwrVoxModeToBu();
+    //UI_SendPwrVoxModeToBu();
     UI_UpdateDevStatusInfo();
 //  BUZ_PlayPowerOffSound();
     osDelay(600);//wait buzzer play finish
@@ -1634,7 +1670,7 @@ void UI_PowerKey(void)
     }
 
     //UI_SendPwrNormalModeToBu();
-    UI_SendPwrVoxModeToBu();
+    //UI_SendPwrVoxModeToBu();
     UI_UpdateDevStatusInfo();
 //  BUZ_PlayPowerOffSound();
     osDelay(600);           //wait buzzer play finish
@@ -8509,7 +8545,7 @@ if (ubFactoryModeFLag == 0)
             tOsdImgInfo.uwYStart = 284 + 31;
             tOSD_Img2(&tOsdImgInfo, OSD_UPDATE);
         }
-	 UI_SendPwrNormalModeToBu();
+	 UI_SendPwrNormalModeToBu(ubPairSelCam);
 
 }
 else
@@ -9792,7 +9828,7 @@ void UI_GetVolData(UI_CamNum_t tCamNum, void *pvTrig)
     if(ubGetVoiceTemp > 5)
         ubGetVoiceTemp = 5;
 
-    printd(1, "ubGetVoiceTemp %d \n",ubGetVoiceTemp);
+    printd(Apk_DebugLvl, "ubGetVoiceTemp %d \n",ubGetVoiceTemp);
     //printd(Apk_DebugLvl, "ubGetIR1Temp %d \n",ubGetIR1Temp);
     //printd(Apk_DebugLvl, "ubGetIR2Temp %d \n",ubGetIR2Temp);
 
@@ -10344,65 +10380,60 @@ uint8_t UI_SendAlarmSettingToBu(void)
     return UI_SendToBUCmd(CmdData, 4);
 }
 
-uint8_t UI_SendPwrNormalModeToBu(void)
+uint8_t UI_SendPwrNormalModeToBu(uint8_t i)
 {
-    UI_PUReqCmd_t tPwrCmd;
+        UI_PUReqCmd_t tPwrCmd;
+        uint8_t cam = i;
+        
+    	 printd(1," UI_SendPwrNormalModeToBu  cam %d\n",cam);
+    		//printd(Apk_DebugLvl,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
 
-   // if (tUI_PuSetting.tPsMode != POWER_NORMAL_MODE)
-    {
-    	printd(Apk_DebugLvl," UI_SendPwrNormalModeToBu \n");
-    	for( int i = 0; i < 4; i++)
-    	{
-    		printd(Apk_DebugLvl,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
-	        if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&
-	            (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
-	        {
-	            tPwrCmd.tDS_CamNum              = tUI_CamStatus[i].ulCAM_ID;
-	            tPwrCmd.ubCmd[UI_TWC_TYPE]      = UI_SETTING;
-	            tPwrCmd.ubCmd[UI_SETTING_ITEM]  = UI_VOXMODE_SETTING;
-	            tPwrCmd.ubCmd[UI_SETTING_DATA]  = POWER_NORMAL_MODE;
-	            tPwrCmd.ubCmd_Len               = 3;
-	            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
-	            {
-	                printd(1, "UI_SendPwrNormalModeToBu Fail!\n");
-	                return rUI_FAIL;
-	            }
-	        }
+        if ((tUI_CamStatus[cam].ulCAM_ID != INVALID_ID) &&
+            (tUI_CamStatus[cam].tCamConnSts == CAM_ONLINE))
+        {
+            tPwrCmd.tDS_CamNum              = tUI_CamStatus[cam].ulCAM_ID;
+            tPwrCmd.ubCmd[UI_TWC_TYPE]      = UI_SETTING;
+            tPwrCmd.ubCmd[UI_SETTING_ITEM]  = UI_VOXMODE_SETTING;
+            tPwrCmd.ubCmd[UI_SETTING_DATA]  = POWER_NORMAL_MODE;
+            tPwrCmd.ubCmd_Len               = 3;
+            
+            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
+            {
+                printd(1, "UI_SendPwrNormalModeToBu Fail!\n");
+                return rUI_FAIL;
+            }
+            
+            tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
+            printd(1, "UI_SendPwrNormalModeToBu tUI_CamStatus[cam].ulCAM_ID %d ok.\n", tUI_CamStatus[cam].ulCAM_ID);
+            return rUI_SUCCESS;
     	}
-        tUI_PuSetting.tPsMode = POWER_NORMAL_MODE;
-        printd(1, "UI_SendPwrNormalModeToBu Cam%d ok.\n", tCamViewSel.tCamViewPool[0]);
-        return rUI_SUCCESS;
-    }
-
-    return rUI_FAIL;
+        
+        return rUI_FAIL;
 }
 
-uint8_t UI_SendPwrVoxModeToBu(void)
+uint8_t UI_SendPwrVoxModeToBu(uint8_t i)
 {
-    UI_PUReqCmd_t tPwrCmd;
+         UI_PUReqCmd_t tPwrCmd;
+         uint8_t cam = i;
 
-   // if (tUI_PuSetting.tPsMode != PS_VOX_MODE)
-    {
- 	for( int i = 0; i < 4; i++)
-    	{
-    	    		printd(1,"tUI_CamStatus[i].ulCAM_ID =%d   tUI_CamStatus[i].tCamConnSts =%d\n ",tUI_CamStatus[i].ulCAM_ID,tUI_CamStatus[i].tCamConnSts);
+        printd(1,"UI_SendPwrVoxModeToBu tUI_CamStatus[cam].ulCAM_ID =%d   tUI_CamStatus[cam].tCamConnSts =%d\n ",tUI_CamStatus[cam].ulCAM_ID,tUI_CamStatus[cam].tCamConnSts);
 
-	       if ((tUI_CamStatus[i].ulCAM_ID != INVALID_ID) &&
-	            (tUI_CamStatus[i].tCamConnSts == CAM_ONLINE))
-	        {
-	            tPwrCmd.tDS_CamNum               =  tUI_CamStatus[i].ulCAM_ID;
-	            tPwrCmd.ubCmd[UI_TWC_TYPE]       = UI_SETTING;
-	            tPwrCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
-	            tPwrCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
-	            tPwrCmd.ubCmd_Len                = 3;
-	            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
-	            {
-	                return rUI_FAIL;
-	            }
-        	   }
-	}
-        return rUI_SUCCESS;
-    }
+       if ((tUI_CamStatus[cam].ulCAM_ID != INVALID_ID) &&
+            (tUI_CamStatus[cam].tCamConnSts == CAM_ONLINE))
+        {
+            tPwrCmd.tDS_CamNum               =  tUI_CamStatus[cam].ulCAM_ID;
+            tPwrCmd.ubCmd[UI_TWC_TYPE]       = UI_SETTING;
+            tPwrCmd.ubCmd[UI_SETTING_ITEM]   = UI_VOXMODE_SETTING;
+            tPwrCmd.ubCmd[UI_SETTING_DATA]   = PS_VOX_MODE;
+            tPwrCmd.ubCmd_Len                = 3;
+            if (UI_SendRequestToBU(osThreadGetId(), &tPwrCmd) != rUI_SUCCESS)
+            {
+                return rUI_FAIL;
+            }
+            
+                return rUI_SUCCESS;
+    	   }
+
 
     return rUI_FAIL;
 }
@@ -15016,9 +15047,14 @@ void UI_DisableVox(void)
         }
     }
 #else
-    if(ubFactorySettingFLag == 0) {
-        ubNormalModeToBuRet = UI_SendPwrNormalModeToBu();
-        osDelay(200);
+    if(ubFactorySettingFLag == 0)
+    {
+            if (ubNormalModeToBuRet[ubSendNormalInfocnt] == rUI_FAIL && 
+            tUI_CamStatus[ubSendNormalInfocnt].ulCAM_ID != INVALID_ID && 
+            (tUI_CamStatus[ubSendNormalInfocnt].tCamConnSts == CAM_ONLINE))
+                ubNormalModeToBuRet[ubSendNormalInfocnt] = UI_SendPwrNormalModeToBu(ubSendNormalInfocnt);
+            
+                osDelay(200);
     }
 #endif
 

@@ -1135,7 +1135,7 @@ uint8_t UI_GetBuPsMode(void);
 void UI_SetSleepState(uint8_t type);
 void UI_CheckPowerMode(void);
 uint8_t UI_SendAlarmSettingToBu(void);
-uint8_t UI_SendPwrNormalModeToBu(void);
+uint8_t UI_SendPwrNormalModeToBu(uint8_t i);
 void UI_SetSpeaker(uint8_t type, uint8_t State);
 void UI_CameraResetCycleTime(uint8_t KeyAction);
 void UI_TriggerWakeUpAlarm(void);
@@ -1151,7 +1151,8 @@ void UI_ShowAlarm(uint8_t type);
 void UI_DisplayAlarmSubmenu(void);
 void UI_DisplaySquealAlert(void);
 void UI_CleanSquealAlert(void);
-uint8_t UI_SendPwrVoxModeToBu(void);
+uint8_t UI_SendPwrVoxModeToBu(uint8_t i);
+
 
 #endif
 
