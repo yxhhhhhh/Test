@@ -9884,7 +9884,11 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 			UI_TempBarDisplay(ubRealTemp);
 			return;
 		}
-        ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+        
+        if(pvdata[0] > 50 || (pvdata[0] > 10 && pvdata[1])) 
+            ubRealTemp = 0xFF;
+        else
+            ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
 
 #if TEMP_TEST
    		 OSD_IMG_INFO info;
@@ -9926,8 +9930,6 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		
     }
 
-    if (ubRealTemp > 199)
-       return;
    printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
     if ((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
     {
