@@ -15331,8 +15331,8 @@ void UI_LoadDevStatusInfo(void)
     else
         ubAlarmIconFlag = 1;
 
-    ubRealTemp = tUI_PuSetting.ubTempunitFlag?ubRealTemp:UI_TempCToF(ubRealTemp);
-    printd(Apk_DebugLvl, "UI_LoadDevStatusInfo ubRealTemp: %d, ubTempunitFlag: %d.\n", ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+    //ubRealTemp = tUI_PuSetting.ubTempunitFlag?ubRealTemp:UI_TempCToF(ubRealTemp);
+    //printd(Apk_DebugLvl, "UI_LoadDevStatusInfo ubRealTemp: %d, ubTempunitFlag: %d.\n", ubRealTemp, tUI_PuSetting.ubTempunitFlag);
     UI_GetPairCamInfo();
 
     tPairInfo.ubDrawFlag = FALSE;
