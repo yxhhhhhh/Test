@@ -32,9 +32,13 @@ typedef enum
 {
 	USBD_UVC_MODE = 1,
 	USBD_MSC_MODE,
-	USBD_MULTI_MODE,
+	USBD_COMPOSITE_MODE,
 	USBD_UNKNOWN_MODE,
 }USBD_ClassMode_t;
+
+#ifdef OP_AP
+#define USBD_DEFU_CLASS		USBD_MSC_MODE
+#endif
 
 typedef enum
 {
@@ -57,9 +61,23 @@ typedef enum
     USB_UVC_VGA_WIDTH       = 640,
 }USBD_ResolutionType_t;
 
-typedef void(*pvUsbdXuCbFunc)(uint8_t ubMode, uint32_t *pulBuf);
+typedef enum
+{
+	USBD_OPC_TUNNING = 0,
+	USBD_OPC_NVR 	 = 5,
+	USBD_OPC_MAX
+}USBD_XuOpc_t;
 
-USBD_STATUS tUSBD_RegXuCbFunc(pvUsbdXuCbFunc pvCb);
+typedef enum
+{
+	USBDM_OPC_ADO = 0,
+	USBDM_OPC_MAX,
+}USBD_MscOpc_t;
+
+typedef void(*pvUsbdXuCbFunc)(uint8_t, uint32_t *);
+typedef void(*pvUsbdMscCbFunc)(uint8_t *);
+typedef void(*pvUvcReleaseBufCbFunc)(uint32_t);
+
 //------------------------------------------------------------------------------
 /*!
 \brief USB Device initial
@@ -67,6 +85,12 @@ USBD_STATUS tUSBD_RegXuCbFunc(pvUsbdXuCbFunc pvCb);
 \return(no)
 */
 void USBD_Init(USBD_ClassMode_t tClassMode);
+//------------------------------------------------------------------------------
+/*!
+\brief USB Device uninitial
+\return(no)
+*/
+void USBD_UnInit(void);
 //------------------------------------------------------------------------------
 /*!
 \brief USB Device Start
@@ -97,6 +121,29 @@ USBD_ClassMode_t tUSBD_GetClassMode(void);
 uint32_t USBD_BufSetup(uint32_t ulBUF_StartAddr);
 //------------------------------------------------------------------------------
 /*!
+\brief Callback function for USBD MSC
+\param tOpc 	Operation code
+\param pvCb		Callback function
+\return status
+*/
+USBD_STATUS tUSBD_RegMscCbFunc(USBD_MscOpc_t tOpc, pvUsbdMscCbFunc pvCb);
+//------------------------------------------------------------------------------
+/*!
+\brief Callback function for USBD UVC XU
+\param tOpc 	Operation code
+\param pvCb		Callback function
+\return status
+*/
+USBD_STATUS tUSBD_RegXuCbFunc(USBD_XuOpc_t tOpc, pvUsbdXuCbFunc pvCb);
+//------------------------------------------------------------------------------
+/*!
+\brief Register release buffer callback function for UVC Bulk
+\param pvReleaseCb 		Call back function
+\return(no)
+*/
+USBD_STATUS tUSBD_RegUvcReleaseBuffCbFunc(pvUvcReleaseBufCbFunc pvReleaseCb);
+//------------------------------------------------------------------------------
+/*!
 \brief Get video format of UVC
 \return Video format
 */
@@ -125,10 +172,10 @@ uint8_t ubUVC_CheckResolution(uint16_t uwH_Size, uint16_t uwV_Size);
 \brief Update video image through UVC path
 \param pImg_Buf 		Video Image buffer
 \param ulImg_Size 		Video Image Size
-\return Video Mode
+\return result
 */
-void uvc_update_image(uint32_t *pImg_Buf, uint32_t ulImg_Size);
-//------------------------------------------------------------------------
+uint8_t uvc_update_image(uint32_t *pImg_Buf, uint32_t ulImg_Size);
+//------------------------------------------------------------------------------
 /*!
 \brief 	Get USBD Version	
 \return	Version

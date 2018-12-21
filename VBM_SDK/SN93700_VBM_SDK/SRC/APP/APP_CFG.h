@@ -32,7 +32,7 @@
 #define THREAD_PRIO_KNL_TWC_MONIT		osPriorityNormal
 #define THREAD_PRIO_KNL_VDOIN_PROC		osPriorityAboveNormal
 #define THREAD_PRIO_ADO_ENC_PROC		osPriorityAboveNormal
-#define THREAD_PRIO_ADO_DEC_PROC		osPriorityHigh
+#define THREAD_PRIO_ADO_DEC_PROC		osPriorityNormal		//! osPriorityHigh
 #define THREAD_PRIO_COMM_TX_VDO			osPriorityHigh
 #define THREAD_PRIO_COMM_RX_VDO			osPriorityNormal
 #define THREAD_PRIO_COMM_RX_ADO			osPriorityNormal
@@ -131,6 +131,16 @@ typedef struct
 #define	DISPLAY_4T1R  					4
 #define DISPLAY_MODE					DISPLAY_4T1R
 
+//! APP Audio Encode Type
+#define AUDIO32_ENC 					0
+#define ALAW_ENC						1
+#define APP_ADOENC_TYPE					AUDIO32_ENC
+
+//! APP Audio aec/nr process by hw/sw define
+#define AEC_NR_SW						0
+#define AEC_NR_HW						1
+#define APP_ADO_AEC_NR_TYPE				AEC_NR_SW
+
 //! APP Display Resolution
 typedef enum
 {
@@ -150,7 +160,7 @@ typedef enum
 	LCD_PWR_OFF
 }LCD_PM_OPT;
 
-#define LCD_PM							LCD_PWR_OFF   //LCD_PM_SUSPEND
+#define LCD_PM							LCD_PWR_OFF
 
 #define RTC_RECORD_PWRSTS_ADDR			0
 #define RTC_PWRSTS_KEEP_TAG				0x03

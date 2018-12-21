@@ -11,8 +11,8 @@
 	\file		H62.h
 	\brief		Sensor H62 header
 	\author		BoCun
-	\version	1.1
-	\date		2018-07-06
+	\version	1.2
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -55,32 +55,6 @@
 //==============================================================================
 // FUNCTION
 //==============================================================================
-//------------------------------------------------------------------------
-/*!
-\brief Read data from sensor register.
-\param 	ubAddress 	Sensor address.
-\param 	pValue 		Point of sensor register.
-\retval Value		Sensor register data.
-\retval False		0->read sensor fail.
-\par [Example]
-\code 
-		ulSEN_I2C_Read(0x04, &ubValue);
-\endcode
-*/
-uint32_t ulSEN_I2C_Read(uint8_t ubAddress, uint8_t *pValue);
-//------------------------------------------------------------------------
-/*!
-\brief Write data to sensor register.
-\param ubAddress 	Sensor address.
-\param ubValue 		data.
-\retval True		1->I2C write sensor ok.
-\retval False		0->I2C write sensor fail.
-\par [Example]
-\code 
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
-\endcode
-*/
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress, uint8_t ubValue);
 //------------------------------------------------------------------------
 /*!
 \brief Set frame rate and pixel clock.

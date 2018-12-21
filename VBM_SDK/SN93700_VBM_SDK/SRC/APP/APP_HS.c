@@ -11,16 +11,15 @@
 	\file		APP_HS.c
 	\brief		Application function (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.3
-	\date		2017/11/27
-	\copyright	Copyright(C) 2017 SONiX Technology Co., Ltd. All rights reserved.
+	\version	1.7
+	\date		2018/09/13
+	\copyright	Copyright(C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
 #include "APP_HS.h"
 #include "APP_CFG.h"
-#include "BUF.h"
 #include "FWU_API.h"
 #include "PROFILE_API.h"
 #include "RTC_API.h"
@@ -70,6 +69,12 @@ extern uint8_t ubFactoryVoxOnCnt;
 
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
+#ifdef VBM_BU
+const char cAPP_ModelName[] __attribute__((section(".ARM.__at_0x00005FE0"))) = "937VBMBU";
+#endif
+#ifdef VBM_PU
+const char cAPP_ModelName[] __attribute__((section(".ARM.__at_0x00005FE0"))) = "937VBMPU";
+#endif
 const uint8_t ubAPP_SfWpGpioPin __attribute__((section(".ARM.__at_0x00005FF0"))) = SF_WP_GPIN;
 static uint8_t osHeap[osHeapSize] __attribute__((aligned (8)));
 osMessageQId APP_EventQueue;
@@ -77,6 +82,9 @@ pvAPP_StateCtrl APP_StateCtrlFunc;
 static APP_StatusReport_t tAPP_StsReport;
 osMutexId APP_UpdateMutex;
 uint32_t ulAPP_WaitTickTime;
+
+extern uint8_t ubPairSelCam; 
+
 static APP_StaNumMap_t tAPP_STANumTable[CAM_4T] =
 {
 	[CAM1] = {KNL_STA1, PAIR_STA1, TWC_STA1},
@@ -241,14 +249,13 @@ void APP_Init(void)
 	RTC_Init(RTC_TimerDisable);
 #endif
 	BSP_Init();
-	//printd(DBG_InfoLvl, "%s\n", osKernelSystemId);	// Move to CLI VCS command
     if(APP_OsStatus != osOK)
     {
         printd(DBG_ErrorLvl, "RTOS initial fail\n");
     }
 	if(ubAPP_SfWpGpioPin <= 13)
 	{
-		printd(DBG_InfoLvl, "SF_WP=GPIO%d\n",ubAPP_SfWpGpioPin);
+		printd(DBG_InfoLvl, "SF_WP=GPIO%d\n", ubAPP_SfWpGpioPin);
 	}
 	SF_SetWpPin(ubAPP_SfWpGpioPin);
 	SF_Init();
@@ -336,6 +343,8 @@ void APP_PowerOnFunc(void)
 #if USBD_ENABLE
 	//! USB Device initialization
 	USBD_Init(tAPP_KNLInfo.tUsbdClassMode);
+	if(USBD_COMPOSITE_MODE == tAPP_KNLInfo.tUsbdClassMode)
+		tUSBD_RegXuCbFunc(USBD_OPC_NVR, NULL);
 #endif
 
 	//! Firmware Upgrade Setup
@@ -460,10 +469,12 @@ void APP_LinkStateFunc(APP_EventMsg_t *ptEventMsg)
 		case APP_ADOSRCSEL_EVENT:
 		{
 			KNL_ROLE tKNL_Role = tAPP_STANumTable[ptEventMsg->ubAPP_Message[1]].tKNL_StaNum;
+			uint8_t ubUpdFlag  = ptEventMsg->ubAPP_Message[2];
 
 			tAPP_KNLInfo.tAdoSrcRole = tKNL_Role;
 			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
-			APP_UpdateKNLSetupInfo();
+			if(TRUE == ubUpdFlag)
+				APP_UpdateKNLSetupInfo();
 			break;
 		}
 		case APP_PTT_EVENT:
@@ -554,6 +565,9 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			tAPP_StsReport.tAPP_ReportType = APP_PAIRSTS_RPT;
 			tAPP_StsReport.tAPP_State 	   = APP_IDLE_STATE;
 			tAPP_StsReport.ubAPP_Report[0] = rFAIL;
+		#ifdef VBM_PU
+			tAPP_StsReport.ubAPP_Report[2] = tAPP_PairRoleInfo.ubAppUpdUiStsFlag;
+		#endif
 			UI_UpdateAppStatus(&tAPP_StsReport);
 			tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
 			printd(DBG_Debug1Lvl, (APP_PAIRING_STOP_EVENT == ptEventMsg->ubAPP_Event)?"Pairing_stop\r\n":"Pairing_fail\r\n");
@@ -567,8 +581,15 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			tAPP_StsReport.tAPP_State 	   = APP_IDLE_STATE;
 			tAPP_StsReport.ubAPP_Report[0] = rSUCCESS;
 		#ifdef VBM_PU
+			KNL_ResetLcdChannel();
 			APP_KNLRoleMap2CamNum(tAPP_KNLInfo.tAdoSrcRole, tAdoSrcCamNum);
 			tAPP_StsReport.ubAPP_Report[1] = tAdoSrcCamNum;
+			tAPP_StsReport.ubAPP_Report[2] = tAPP_PairRoleInfo.ubAppUpdUiStsFlag;
+			if(TRUE == tAPP_PairRoleInfo.ubAppUpdUiStsFlag)
+			{
+				tAPP_StsReport.ubAPP_Report[3] = tAPP_PairRoleInfo.tPairBURole;
+				tAPP_StsReport.ubAPP_Report[4] = tAPP_PairRoleInfo.tAppDispLoc;
+			}
 			UI_UpdateAppStatus(&tAPP_StsReport);
 			tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
 			if((UI_CamNum_t)tAPP_StsReport.ubAPP_Report[1] != tAdoSrcCamNum)
@@ -576,9 +597,11 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 				tAdoSrcCamNum = (UI_CamNum_t)tAPP_StsReport.ubAPP_Report[1];
 				tAPP_KNLInfo.tAdoSrcRole = APP_GetSTANumMappingTable(tAdoSrcCamNum)->tKNL_StaNum;
 			}
+                    printd(1,"ubPairSelCam %d\n",ubPairSelCam);
+			tAPP_PairRoleInfo.tPairBURole = ubPairSelCam;	
+			tAPP_PairRoleInfo.tPairBUDispLoc =ubPairSelCam;
 			tAPP_KNLInfo.tBURoleInfo[tAPP_PairRoleInfo.tPairBURole].tKNL_DispLoc = tAPP_PairRoleInfo.tPairBUDispLoc;
 			VDO_DisplayLocationSetup(tAPP_PairRoleInfo.tPairBURole, tAPP_PairRoleInfo.tPairBUDispLoc);
-			//VDO_SetPlayRole(tAPP_PairRoleInfo.tPairBURole); 
 			VDO_UpdateDisplayParameter();
 			if(APP_UNBIND_BU_EVENT == ptEventMsg->ubAPP_Message[2])
 			{
@@ -588,6 +611,7 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 				tAPP_StsReport.tAPP_State 	   = APP_IDLE_STATE;
 				APP_PairTagMap2CamNum((PAIR_TAG)ptEventMsg->ubAPP_Message[1], tDelCam);
 				tAPP_StsReport.ubAPP_Report[0] = tDelCam;
+				tAPP_StsReport.ubAPP_Report[1] = FALSE;
 				UI_UpdateAppStatus(&tAPP_StsReport);
 				tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
 			}
@@ -601,9 +625,6 @@ void APP_PairingStateFunc(APP_EventMsg_t *ptEventMsg)
 			ADO_KNLSysInfoSetup(tAPP_KNLInfo.tKNL_Role);
 		#endif
 			APP_UpdateKNLSetupInfo();
-		#ifdef VBM_PU
-			KNL_ResetLcdChannel();
-		#endif
 			break;
 		}
 		default:
@@ -620,6 +641,15 @@ void APP_doPairingStart(void *pvPairInfo)
 	PAIR_TAG tPair_Tag 					= tAPP_STANumTable[pAPP_PairInfo[1]].tPAIR_StaNum;
 	tAPP_PairRoleInfo.tPairBURole		= tAPP_STANumTable[pAPP_PairInfo[1]].tKNL_StaNum;
 	tAPP_PairRoleInfo.tPairBUDispLoc	= tAPP_DispLocMap[pAPP_PairInfo[2]].tKNL_DispLocation;
+	tAPP_PairRoleInfo.ubAppUpdUiStsFlag = pAPP_PairInfo[3];
+	tAPP_PairRoleInfo.tAppDispLoc 		= (UI_DisplayLocation_t)pAPP_PairInfo[2];
+
+	if(TRUE == tAPP_PairRoleInfo.ubAppUpdUiStsFlag)
+	{
+		tAPP_StsReport.tAPP_ReportType = APP_DISPPAIRICON_RPT;
+		UI_UpdateAppStatus(&tAPP_StsReport);
+		tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
+	}
 #endif
 #ifdef VBM_BU
 	PAIR_TAG tPair_Tag = PAIR_AP_ASSIGN;
@@ -643,7 +673,6 @@ void APP_doUnbindBU(APP_EventMsg_t *ptEventMsg)
 	tAPP_KNLInfo.tBURoleInfo[tKNL_Role].tKNL_DispLoc = KNL_DISP_LOCATION_ERR;
 	tAPP_KNLInfo.tAdoSrcRole = (tAPP_KNLInfo.tAdoSrcRole == tKNL_Role)?KNL_NONE:tAPP_KNLInfo.tAdoSrcRole;
 	APP_UpdateKNLSetupInfo();
-
 }
 #endif
 //------------------------------------------------------------------------------
@@ -680,7 +709,6 @@ uint8_t APP_UpdateLinkStatus(void)
 
 	if((ubAPP_Event == APP_LINK_EVENT)&&(ubLinkonceflag == 0))
 	{
-
 		if(ubPowerState == PWR_ON)
 		{
 			if(LCD_JPEG_DISABLE == tLCD_GetJpegDecoderStatus())
@@ -713,13 +741,9 @@ void APP_LoadKNLSetupInfo(void)
 	osMutexRelease(APP_UpdateMutex);
 	printd(DBG_InfoLvl, "KNL TAG:%s\n",tAPP_KNLInfo.cbKNL_InfoTag);
 	printd(DBG_InfoLvl, "KNL VER:%s\n",tAPP_KNLInfo.cbKNL_FwVersion);
-#ifdef OP_AP
-	if ((strncmp(tAPP_KNLInfo.cbKNL_InfoTag, SF_AP_KNL_SECTOR_TAG, sizeof(tAPP_KNLInfo.cbKNL_InfoTag) - 1) != 0)
-	|| (strncmp(tAPP_KNLInfo.cbKNL_FwVersion, SN937XX_FW_VERSION, sizeof(tAPP_KNLInfo.cbKNL_FwVersion) - 1) != 0)) {
-#else 
+#ifdef VBM_BU
 	if ((strncmp(tAPP_KNLInfo.cbKNL_InfoTag, SF_STA_KNL_SECTOR_TAG, sizeof(tAPP_KNLInfo.cbKNL_InfoTag) - 1) != 0)
 	|| (strncmp(tAPP_KNLInfo.cbKNL_FwVersion, SN937XX_FW_VERSION, sizeof(tAPP_KNLInfo.cbKNL_FwVersion) - 1) != 0)) {
-#endif
 		printd(DBG_ErrorLvl, "TAG no match, Reset KNL\n");
 		tAPP_KNLInfo.tUsbdClassMode = USBD_MSC_MODE;
 		tAPP_KNLInfo.tTuningMode = APP_TUNINGMODE_OFF;
@@ -729,9 +753,10 @@ void APP_LoadKNLSetupInfo(void)
 		tAPP_KNLInfo.tUsbdClassMode = USBD_MSC_MODE;
 	if(tAPP_KNLInfo.tTuningMode > APP_TUNINGMODE_ON)
 		tAPP_KNLInfo.tTuningMode = APP_TUNINGMODE_OFF;
-#if ((!USBD_ENABLE) || (defined(VBM_PU)))
-	tAPP_KNLInfo.tUsbdClassMode = USBD_MSC_MODE;
-	tAPP_KNLInfo.tTuningMode = APP_TUNINGMODE_OFF;
+#endif
+#ifdef VBM_PU
+	tAPP_KNLInfo.tUsbdClassMode = (!USBD_ENABLE)?USBD_MSC_MODE:USBD_DEFU_CLASS;
+	tAPP_KNLInfo.tTuningMode    = APP_TUNINGMODE_OFF;
 #endif
 }
 //------------------------------------------------------------------------------
@@ -761,16 +786,17 @@ void APP_KNLParamSetup(void)
 	UI_CamNum_t tCamNum;
 
 	KNL_SetRole((tAPP_KNLInfo.tKNL_Role = KNL_MASTER_AP));
-	if ((strncmp(tAPP_KNLInfo.cbKNL_InfoTag, SF_AP_KNL_SECTOR_TAG, sizeof(tAPP_KNLInfo.cbKNL_InfoTag) - 1) == 0)
-	&& (strncmp(tAPP_KNLInfo.cbKNL_FwVersion, SN937XX_FW_VERSION, sizeof(tAPP_KNLInfo.cbKNL_FwVersion) - 1) == 0)) {
+	if ((strncmp(tAPP_KNLInfo.cbKNL_InfoTag,   SF_AP_KNL_SECTOR_TAG, sizeof(tAPP_KNLInfo.cbKNL_InfoTag) - 1) == 0) &&
+		(strncmp(tAPP_KNLInfo.cbKNL_FwVersion, SN937XX_FW_VERSION, sizeof(tAPP_KNLInfo.cbKNL_FwVersion) - 1) == 0))
+	{
 		for(tCamNum = CAM1; tCamNum < DISPLAY_MODE; tCamNum++)
 		{
 			tKNL_BURole = tAPP_STANumTable[tCamNum].tKNL_StaNum;
 			VDO_DisplayLocationSetup(tKNL_BURole, tAPP_KNLInfo.tBURoleInfo[tKNL_BURole].tKNL_DispLoc);
 		}
-		if(tAPP_KNLInfo.tAdoSrcRole > KNL_STA4)
-			tAPP_KNLInfo.tAdoSrcRole = KNL_STA1;
 	}
+	if(tAPP_KNLInfo.tAdoSrcRole > KNL_STA4)
+		tAPP_KNLInfo.tAdoSrcRole = KNL_STA1;
 #endif
 #ifdef VBM_BU
 	if(USBD_UVC_MODE == tAPP_KNLInfo.tUsbdClassMode)
@@ -779,10 +805,13 @@ void APP_KNLParamSetup(void)
 												 [APP_TUNINGMODE_ON]  = KNL_TurnOnTuningTool};
 		tAPP_TuningFunc[tAPP_KNLInfo.tTuningMode].pvAPP_TuningFunc();
 	}
-	if ((strncmp(tAPP_KNLInfo.cbKNL_InfoTag, SF_STA_KNL_SECTOR_TAG, sizeof(tAPP_KNLInfo.cbKNL_InfoTag) - 1) == 0)
-	&& (strncmp(tAPP_KNLInfo.cbKNL_FwVersion, SN937XX_FW_VERSION, sizeof(tAPP_KNLInfo.cbKNL_FwVersion) - 1) == 0)) {
+	if ((strncmp(tAPP_KNLInfo.cbKNL_InfoTag,   SF_STA_KNL_SECTOR_TAG, sizeof(tAPP_KNLInfo.cbKNL_InfoTag) - 1) == 0) &&
+		(strncmp(tAPP_KNLInfo.cbKNL_FwVersion, SN937XX_FW_VERSION, sizeof(tAPP_KNLInfo.cbKNL_FwVersion) - 1) == 0))
+	{
 		tAPP_KNLInfo.tKNL_Role   = (tAPP_KNLInfo.tKNL_Role <= KNL_STA4)?tAPP_KNLInfo.tKNL_Role:KNL_NONE;
-	} else {
+	}
+	else
+	{
 		tAPP_KNLInfo.tKNL_Role   = KNL_NONE;
 	}
 	tAPP_KNLInfo.tAdoSrcRole = tAPP_KNLInfo.tKNL_Role;
@@ -809,7 +838,6 @@ void APP_FWUgradeStatusReport(uint8_t ubStsReport)
 			#ifdef VBM_PU
 			UI_TimerEventStop();
 			#endif
-//			KNL_Stop();
 			VDO_Stop();
 			ADO_Stop();
 			break;
@@ -841,7 +869,7 @@ void APP_FWUgradeSetup(void)
 	for(p=pFW_Ver; (q=strchr(p, '.'))!=NULL; p=q+1)
 		p = q;
 	strncpy(tAPP_FWUParam.cFileName, pFW_Ver, (p - pFW_Ver - 1));
-	strncpy(tAPP_FWUParam.cFileNameExt, p, (strlen(pFW_Ver) - (p - pFW_Ver)));
+	strncpy(tAPP_FWUParam.cFileNameExt, ((strlen(pFW_Ver) - (p - pFW_Ver)) > 3)?(p + 1):p, sizeof(tAPP_FWUParam.cFileNameExt));
 #if !USBD_ENABLE
 	if(FWU_USBDMSC == tAPP_FwuMode)
 		tAPP_FwuMode = FWU_DISABLE;
@@ -859,6 +887,24 @@ void APP_FWUgradeSetup(void)
 }
 //------------------------------------------------------------------------------
 #ifdef VBM_PU
+void APP_ViewTypeSetup(UI_CamViewType_t tAPP_ViewType)
+{
+	APP_EventMsg_t *ptViewTypeParam;	
+	KNL_DISP_TYPE tAPP_KnlDispType;
+	KNL_ROLE tAPP_KnlRole[2];
+
+	ptViewTypeParam = tUI_ViewTypeSetup(tAPP_ViewType);
+	if(NULL == ptViewTypeParam)
+		return;
+	tAPP_KnlRole[0] = (ptViewTypeParam->ubAPP_Message[0] <= CAM4)?tAPP_STANumTable[ptViewTypeParam->ubAPP_Message[0]].tKNL_StaNum:KNL_NONE;
+	tAPP_KnlRole[1] = (ptViewTypeParam->ubAPP_Message[1] <= CAM4)?tAPP_STANumTable[ptViewTypeParam->ubAPP_Message[1]].tKNL_StaNum:KNL_NONE;
+	if(tAPP_KNLInfo.tAdoSrcRole != tAPP_KnlRole[0])
+		tAPP_KNLInfo.tAdoSrcRole = tAPP_KnlRole[0];
+	tAPP_KnlDispType = (tAPP_ViewType == SINGLE_VIEW)?KNL_DISP_SINGLE:
+					   (tAPP_ViewType == DUAL_VIEW)?KNL_DISP_DUAL_C:KNL_DISP_QUAD;
+	VDO_SwitchDisplayType(tAPP_KnlDispType, tAPP_KnlRole);
+}
+//------------------------------------------------------------------------------
 void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 {
 	KNL_ROLE tKNL_Role[3];
@@ -870,12 +916,12 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 	tKNL_DispType = ((tAPP_CamView == SINGLE_VIEW) || (tAPP_CamView == SCAN_VIEW))?KNL_DISP_SINGLE:
 					 (tAPP_CamView == DUAL_VIEW)?KNL_DISP_DUAL_C:KNL_DISP_QUAD;
 	for(i = 0; i < 2; i++)
-		tKNL_Role[i] = tAPP_STANumTable[ptEventMsg->ubAPP_Message[2+i]].tKNL_StaNum;
+		tKNL_Role[i] = (ptEventMsg->ubAPP_Message[2+i] <= CAM4)?tAPP_STANumTable[ptEventMsg->ubAPP_Message[2+i]].tKNL_StaNum:KNL_NONE;
 	tAPP_StsReport.tAPP_ReportType = APP_VWMODESTS_RPT;
 	tAPP_StsReport.ubAPP_Report[0] = tAPP_CamView;
 	UI_UpdateAppStatus(&tAPP_StsReport);
 	tAPP_StsReport.tAPP_ReportType = APP_RPT_NONE;
-	if(ubPowerState == PWR_ON)
+	//if(ubPowerState == PWR_ON)
 	{
 		if ((tAPP_CamView == SINGLE_VIEW) || (tAPP_CamView == SCAN_VIEW)) {
 			if(tAPP_KNLInfo.tAdoSrcRole != tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum)
@@ -885,6 +931,7 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 		}
 	
 		VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
+            printd(1,"APP_SwitchViewTypeExec VDO_SwitchDisplayType\n");
 	}
 }
 //------------------------------------------------------------------------------
@@ -1002,7 +1049,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 		{
 			VDO_PsFuncPtr_t tAPP_VoxFunc[] = {VDO_Start, VDO_Stop};
 		#ifdef VBM_PU
-			APP_ActFuncPtr_t tAPP_LcdFunc[] = {APP_LcdDisplayOn, APP_LcdDisplayOff};	//! {LCD_Resume, LCD_Suspend};
+			APP_ActFuncPtr_t tAPP_LcdFunc[] = {APP_LcdDisplayOn, APP_LcdDisplayOff};
 			SYS_PowerState_t tAPP_PsState[]	= {SYS_PS0, SYS_PS1};
 		#endif
 			uint8_t ubAPP_PsFlag = ptEventMsg->ubAPP_Message[2];
@@ -1011,7 +1058,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 				tAPP_VoxFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
 		#ifdef VBM_PU
 			SYS_SetPowerStates(tAPP_PsState[ubAPP_PsFlag]);
-//			SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE; 
+			//SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE; 
 			tAPP_StsReport.tAPP_ReportType = APP_VOXMODESTS_RPT;
 			tAPP_StsReport.ubAPP_Report[0] = ubAPP_PsFlag;
 			UI_UpdateAppStatus(&tAPP_StsReport);
@@ -1036,7 +1083,7 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 			KNL_WakeupDevice(tKNL_Role, ptEventMsg->ubAPP_Message[2]);
 			break;
 		}
-		#endif			
+		#endif
 		case PS_WOR_MODE:
 		#ifdef VBM_BU
 		{
@@ -1053,8 +1100,31 @@ void APP_PowerSaveExec(APP_EventMsg_t *ptEventMsg)
 		#endif
 		#ifdef VBM_PU
 			KNL_EnableWORFunc();
-		#endif
 			break;
+		#endif
+		#ifdef VBM_PU
+		case PS_ADOONLY_MODE:
+		{
+			VDO_PsFuncPtr_t tAPP_AdoOnFunc[] = {VDO_Start, VDO_Stop};
+			APP_ActFuncPtr_t tAPP_LcdFunc[]  = {APP_LcdDisplayOn, APP_LcdDisplayOff};
+			SYS_PowerState_t tAPP_PsState[]	 = {SYS_PS0, SYS_PS1};
+			uint8_t ubAPP_PsFlag 			 = ptEventMsg->ubAPP_Message[2];
+
+			KNL_SetTRXPathActivity();
+			if(tAPP_AdoOnFunc[ubAPP_PsFlag].VDO_tPsFunPtr)
+				tAPP_AdoOnFunc[ubAPP_PsFlag].VDO_tPsFunPtr();
+			SYS_SetPowerStates(tAPP_PsState[ubAPP_PsFlag]);
+			//SIGNAL_LED_IO_ENABLE = (!ubAPP_PsFlag)?TRUE:FALSE;
+			if(tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr)
+				tAPP_LcdFunc[ubAPP_PsFlag].APP_tActFunPtr();
+			if(FALSE == ubAPP_PsFlag)
+			{
+				LCDBL_ENABLE(UI_ENABLE);
+				ubSwitchNormalFlag = 1;
+			}	
+			break;
+		}
+		#endif
 		default:
 			break;
 	}
@@ -1092,6 +1162,12 @@ void APP_Start(void)
 	#ifdef VBM_PU
 	//BB_SetTxPwr(1, 0x3D);
 	#endif
+
+#ifdef VBM_PU
+	//! Video View Type Setup
+	APP_ViewTypeSetup((DISPLAY_MODE == DISPLAY_4T1R)?SINGLE_VIEW:
+					  (DISPLAY_MODE == DISPLAY_2T1R)?DUAL_VIEW:SINGLE_VIEW);
+#endif
 
 	#ifdef VBM_BU
 	//BB_SetTxPwr(1, 0x35);

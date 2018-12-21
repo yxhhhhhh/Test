@@ -85,7 +85,8 @@ typedef enum
 typedef enum
 {
 	PS_VOX_MODE,
-	PS_WOR_MODE,
+	PS_ADOONLY_MODE,
+	PS_WOR_MODE,	
 	PS_ECO_MODE,
 	POWER_NORMAL_MODE = 8,
 }UI_PowerSaveMode_t;
@@ -151,9 +152,9 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport);
 void UI_UpdateAppStatus(void *ptAppStsReport);
 void UI_UpdateStatus(uint16_t *pThreadCnt);
 void UI_EventHandles(UI_Event_t *ptEventPtr);
+APP_EventMsg_t *tUI_ViewTypeSetup(UI_CamViewType_t tViewType);
 void UI_FrameTRXFinish(uint8_t ubFrmRpt);
 //------------------------------------------------------------------------------
-void UI_SwitchCameraSource(void);
 
 #endif
 

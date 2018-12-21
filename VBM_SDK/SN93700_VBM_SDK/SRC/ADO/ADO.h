@@ -50,7 +50,7 @@ void ADO_RemoveDataPath(KNL_ROLE tADO_Role);
 void ADO_PTTStart(void);
 void ADO_PTTStop(void);
 #endif
-KNL_SRC ADO_GetSourceNumber(KNL_ROLE tADO_KNLRole);
+KNL_SRC ADO_GetSourceNumber(KNL_VA_DATAPATH tADO_Path, KNL_ROLE tADO_KNLRole);
 void ADO_Start(KNL_ROLE tADO_Role);
 void ADO_Stop(void);
 void ADO_KNLParamSetup(void);

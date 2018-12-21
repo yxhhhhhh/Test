@@ -38,6 +38,9 @@ osSemaphoreId tBUF_Dac3BufAcc;
 osSemaphoreId tBUF_Dac4BufAcc;
 osSemaphoreId tBUF_Dac5BufAcc;
 
+osSemaphoreId tBUF_UsbdVdoAcc;
+osSemaphoreId tBUF_UsbdAdoAcc;
+
 //ISP Output (PATH1)
 uint8_t ubBUF_Sen1YuvBufTag[BUF_NUM_SEN_YUV];
 uint32_t ulBUF_Sen1YuvBufAddr[BUF_NUM_SEN_YUV];	
@@ -249,6 +252,14 @@ uint32_t ulBUF_FsBufAddr;
 //REC
 uint32_t ulBUF_RecBufAddr;
 
+//USBD path
+uint8_t ubBUF_VdoUsbdBufTag[BUF_NUM_USBD_VDO];
+uint32_t ulBUF_VdoUsbdBufAddr[BUF_NUM_USBD_VDO];	
+uint8_t ubBUF_VdoUsbdBufNum;
+uint8_t ubBUF_AdoUsbdBufTag[BUF_NUM_USBD_ADO];
+uint32_t ulBUF_AdoUsbdBufAddr[BUF_NUM_USBD_ADO];
+uint8_t ubBUF_AdoUsbdBufNum;
+
 uint32_t ulBUF_FreeBufAddr;
 uint32_t ulBUF_InitFreeBufAddr;
 
@@ -276,6 +287,11 @@ void BUF_Init(uint32_t ulBUF_StartAddress)
 	tBUF_Dac4BufAcc	= osSemaphoreCreate(osSemaphore(tBUF_Dac4BufAcc), 1);	
 	osSemaphoreDef(tBUF_Dac5BufAcc);
 	tBUF_Dac5BufAcc	= osSemaphoreCreate(osSemaphore(tBUF_Dac5BufAcc), 1);
+
+	osSemaphoreDef(tBUF_UsbdVdoAcc);
+	tBUF_UsbdVdoAcc	= osSemaphoreCreate(osSemaphore(tBUF_UsbdVdoAcc), 1);
+	osSemaphoreDef(tBUF_UsbdAdoAcc);
+	tBUF_UsbdAdoAcc	= osSemaphoreCreate(osSemaphore(tBUF_UsbdAdoAcc), 1);
 }
 
 void BUF_ResetFreeAddr(void)
@@ -354,7 +370,6 @@ void BUF_Reset(uint8_t ubBufMode)
 		}
 		ubBUF_VdoMainBs3BufIdx 	= ubBUF_VdoMainBs3BufNum-1;
 	}
-	
 	else if(ubBufMode == BUF_VDO_AUX_BS0)
 	{
 		for(i=0;i<ubBUF_VdoAuxBs0BufNum;i++)
@@ -387,7 +402,6 @@ void BUF_Reset(uint8_t ubBufMode)
 		}
 		ubBUF_VdoAuxBs3BufIdx = ubBUF_VdoAuxBs3BufNum-1;
 	}
-	
 	else if(ubBufMode == BUF_VDO_SUB_BS00)
 	{
 		for(i=0;i<ubBUF_VdoSubBs00BufNum;i++)
@@ -489,9 +503,27 @@ void BUF_Reset(uint8_t ubBufMode)
 	{
 		for(i=0;i<ubBUF_Dac3BufNum;i++)
 		{
-			ubBUF_Dac3BufTag[i]	= BUF_FREE;			
+			ubBUF_Dac3BufTag[i]	= BUF_FREE;
 		}
-		ubBUF_Dac3BufIdx = ubBUF_Dac3BufNum-1;		
+		ubBUF_Dac3BufIdx = ubBUF_Dac3BufNum-1;
+	}
+	else if(ubBufMode == BUF_USBD_VDO)
+	{
+		for(i = 0; i < ubBUF_VdoUsbdBufNum; i++)
+		{
+			ubBUF_VdoUsbdBufTag[i] = BUF_FREE;
+		}
+	}
+	else if(ubBufMode == BUF_USBD_ADO)
+	{
+		for(i = 0; i < ubBUF_AdoUsbdBufNum; i++)
+		{
+			ubBUF_AdoUsbdBufTag[i] = BUF_FREE;
+		}
+	}
+	else if(ubBufMode == BUF_RESV_YUV)
+	{
+		ulBUF_ResvYuvBuffAddr = BUF_FREE;
 	}
 }
 
@@ -917,6 +949,28 @@ void BUF_BufInit(uint8_t ubBufMode,uint8_t ubBufNum,uint32_t ulUnitSz,uint8_t ub
 		ulBUF_FreeBufAddr = ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
         printd(DBG_Debug3Lvl, "REC--->BUF_BufInit->ulBUF_FreeBufAddr:0x%X\n",ulBUF_FreeBufAddr); 
     }
+	else if(ubBufMode == BUF_USBD_VDO)
+	{
+		for(i=0;i<ubBufNum;i++)
+		{
+			ubBUF_VdoUsbdBufTag[i]	= BUF_FREE;
+			ulBUF_VdoUsbdBufAddr[i] = ulBUF_FreeBufAddr;
+			ulBUF_FreeBufAddr		= ulBUF_FreeBufAddr+ulUnitSz;
+			ulBUF_FreeBufAddr 		= ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
+		}
+		ubBUF_VdoUsbdBufNum	= ubBufNum;
+	}
+	else if(ubBufMode == BUF_USBD_ADO)
+	{
+		for(i=0;i<ubBufNum;i++)
+		{
+			ubBUF_AdoUsbdBufTag[i]	= BUF_FREE;
+			ulBUF_AdoUsbdBufAddr[i] = ulBUF_FreeBufAddr;
+			ulBUF_FreeBufAddr		= ulBUF_FreeBufAddr+ulUnitSz;
+			ulBUF_FreeBufAddr 		= ulBUF_AlignAddrTo1K(ulBUF_FreeBufAddr);
+		}
+		ubBUF_AdoUsbdBufNum	= ubBufNum;
+	}
 	else if(ubBufMode == BUF_JPG_BS)
 	{
 		for(i = 0; i < ubBufNum; i++)
@@ -2039,7 +2093,7 @@ uint8_t ubBUF_ReleaseDac5Buf(uint32_t ulBufAddr)
 
 #if RTOS
 	osSemaphoreWait(tBUF_Dac5BufAcc, osWaitForever);
-#endif	
+#endif
 	for(i=0;i<BUF_NUM_DAC;i++)
 	{
 		if(ulBufAddr == ulBUF_Dac5BufAddr[i])
@@ -2061,6 +2115,137 @@ uint8_t ubBUF_ReleaseDac5Buf(uint32_t ulBufAddr)
 	osSemaphoreRelease(tBUF_Dac5BufAcc);
 #endif
 	return ubDacResult;
+}
+
+uint32_t ulBUF_GetVdoUsbdFreeBuf(void)
+{
+	uint8_t ubBufIdx;
+	
+#if RTOS
+	osSemaphoreWait(tBUF_UsbdVdoAcc, osWaitForever);
+#endif
+	for(ubBufIdx = 0; ubBufIdx < ubBUF_VdoUsbdBufNum; ubBufIdx++)
+	{
+		if(ubBUF_VdoUsbdBufTag[ubBufIdx] == BUF_FREE)
+			break;
+	}
+	if(ubBUF_VdoUsbdBufNum == ubBufIdx)
+	{
+		printd(DBG_ErrorLvl, "Get USBD VDO Buf Err !\n");
+	#if RTOS
+		osSemaphoreRelease(tBUF_UsbdVdoAcc);
+	#endif
+		return BUF_FAIL;
+	}
+	ubBUF_VdoUsbdBufTag[ubBufIdx] = BUF_USED;
+#if RTOS
+	osSemaphoreRelease(tBUF_UsbdVdoAcc);
+#endif
+	return ulBUF_VdoUsbdBufAddr[ubBufIdx];
+}
+
+uint32_t ulBUF_GetAdoUsbdFreeBuf(void)
+{
+	uint8_t ubBufIdx;
+
+#if RTOS
+	osSemaphoreWait(tBUF_UsbdAdoAcc, osWaitForever);
+#endif
+	for(ubBufIdx = 0; ubBufIdx < ubBUF_AdoUsbdBufNum; ubBufIdx++)
+	{
+		if(ubBUF_AdoUsbdBufTag[ubBufIdx] == BUF_FREE)
+			break;
+	}
+	if(ubBUF_AdoUsbdBufNum == ubBufIdx)
+	{
+		printd(DBG_ErrorLvl, "Get USBD ADO Buf Err !\n");
+	#if RTOS
+		osSemaphoreRelease(tBUF_UsbdAdoAcc);
+	#endif
+		return BUF_FAIL;
+	}
+	ubBUF_AdoUsbdBufTag[ubBufIdx] = BUF_USED;
+#if RTOS
+	osSemaphoreRelease(tBUF_UsbdAdoAcc);
+#endif
+	return ulBUF_AdoUsbdBufAddr[ubBufIdx];
+}
+
+uint8_t ubBUF_ReleaseVdoUsbdBuf(uint32_t ulBufAddr)
+{
+	uint8_t ubBufIdx;
+
+#if RTOS
+	osSemaphoreWait(tBUF_UsbdVdoAcc, osWaitForever);
+#endif
+	for(ubBufIdx = 0; ubBufIdx < ubBUF_VdoUsbdBufNum; ubBufIdx++)
+	{
+		if(ulBufAddr == ulBUF_VdoUsbdBufAddr[ubBufIdx])
+			break;
+	}
+	if(ubBUF_VdoUsbdBufNum == ubBufIdx)
+	{
+//		printd(DBG_ErrorLvl, "Fail @ubBUF_ReleaseVdoUsbdBuf !!!\r\n");
+	#if RTOS
+		osSemaphoreRelease(tBUF_UsbdVdoAcc);
+	#endif
+		return BUF_FAIL;
+	}
+	ubBUF_VdoUsbdBufTag[ubBufIdx] = BUF_FREE;
+#if RTOS
+	osSemaphoreRelease(tBUF_UsbdVdoAcc);
+#endif
+	return BUF_OK;
+}
+
+uint8_t ubBUF_ReleaseAdoUsbdBuf(uint32_t ulBufAddr)
+{
+	uint8_t ubBufIdx;
+
+#if RTOS
+	osSemaphoreWait(tBUF_UsbdAdoAcc, osWaitForever);
+#endif
+	for(ubBufIdx = 0; ubBufIdx < ubBUF_AdoUsbdBufNum; ubBufIdx++)
+	{
+		if(ulBufAddr == ulBUF_AdoUsbdBufAddr[ubBufIdx])
+			break;
+	}
+	if(ubBUF_AdoUsbdBufNum == ubBufIdx)
+	{
+//		printd(DBG_ErrorLvl, "Fail @ubBUF_ReleaseAdoUsbdBuf !!!\r\n");
+	#if RTOS
+		osSemaphoreRelease(tBUF_UsbdAdoAcc);
+	#endif
+		return BUF_FAIL;
+	}
+	ubBUF_AdoUsbdBufTag[ubBufIdx] = BUF_FREE;
+#if RTOS
+	osSemaphoreRelease(tBUF_UsbdAdoAcc);
+#endif
+	return BUF_OK;
+}
+
+void BUF_ResetUsbdBuf(void)
+{
+	uint8_t ubBufIdx = 0;
+
+#if RTOS
+	osSemaphoreWait(tBUF_UsbdVdoAcc, osWaitForever);
+#endif
+	for(ubBufIdx = 0; ubBufIdx < BUF_NUM_USBD_VDO; ubBufIdx++)
+		ubBUF_VdoUsbdBufTag[ubBufIdx] = BUF_FREE;
+#if RTOS
+	osSemaphoreRelease(tBUF_UsbdVdoAcc);
+#endif
+
+#if RTOS
+	osSemaphoreWait(tBUF_UsbdAdoAcc, osWaitForever);
+#endif
+	for(ubBufIdx = 0; ubBufIdx < BUF_NUM_USBD_ADO; ubBufIdx++)
+		ubBUF_AdoUsbdBufTag[ubBufIdx] = BUF_FREE;
+#if RTOS
+	osSemaphoreRelease(tBUF_UsbdAdoAcc);
+#endif
 }
 
 //Get IP or Function Buffer Address

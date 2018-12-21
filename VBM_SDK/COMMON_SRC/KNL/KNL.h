@@ -11,8 +11,8 @@
 	\file		KNL.h
 	\brief		Kernel Control header file
 	\author		Justin Chen
-	\version	1.13
-	\date		2018/08/02
+	\version	1.18
+	\date		2018/09/05
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 
@@ -39,7 +39,6 @@
 #define KNL_MAX_NODE_NUM				16		//!< Maximum Node Number
 #define KNL_SRC_NUM						20		//!< Source Number
 
-//#define KNL_ADO_SUB_PKT_LEN				48		//!< Audio Sub-Packet Length
 #define KNL_ADO_SUB_PKT_LEN				36		//!< Audio Sub-Packet Length
 
 #define KNL_AVG_PLY_CNT_TH				4
@@ -229,6 +228,8 @@ typedef enum
 	KNL_NODE_UVC_MAIN		= 0x17,		//!< UVC Main Video
 	KNL_NODE_UVC_SUB		= 0x18,		//!< UVC Sub Video	
 	
+	KNL_NODE_MSC_ADO		= 0x31,
+	
 	KNL_NODE_NONE 			= 0xE0,		//!< None Node
 	KNL_NODE_END 			= 0xF0,		//!< End Node		
 }KNL_NODE;
@@ -396,7 +397,21 @@ typedef enum
 	KNL_TUNINGMODE_ON,
 }KNL_TuningMode_t;
 
-typedef KNL_SRC (*pvRoleSrcMap)(KNL_ROLE tRole);
+typedef enum
+{
+	KNL_VDO_I_FRAME,
+	KNL_VDO_P_FRAME,
+	KNL_ADO_FRAME,
+}KNL_UsbdFrm_t;
+
+typedef enum
+{	
+	KNL_MAIN_PATH = 0,				//!< MAIN Stream Output	
+	KNL_SUB_PATH,					//!< SUB Stream Output
+	KNL_AUX_PATH,					//!< AUX Stream Output
+}KNL_VA_DATAPATH;
+
+typedef KNL_SRC (*pvRoleMap2Src)(KNL_VA_DATAPATH, KNL_ROLE);
 
 //------------------------------------------------------------------------------
 /*!
@@ -681,6 +696,13 @@ void KNL_VdoStart(uint8_t ubSrcNum);
 \return(no)
 */
 void KNL_VdoStop(uint8_t ubSrcNum);
+
+//------------------------------------------------------------------------
+/*!
+\brief BB Datapath activity
+\return(no)
+*/
+void KNL_SetTRXPathActivity(void);
 
 //------------------------------------------------------------------------
 /*!
@@ -1460,18 +1482,18 @@ uint8_t ubKNL_JPEGDecode(KNL_NODE_INFO *pKNL_NodeInfo, uint16_t uwH, uint16_t uw
 //------------------------------------------------------------------------
 /*!
 \brief Source number mapping to role number for video
-\param pvRoleSrcMap		Mapping callback function
+\param VdoRoleMap_cb	Mapping callback function
 \return(no)
 */
-void KNL_SetVdoRoleInfoCbFunc(pvRoleSrcMap VdoRoleMap_cb);
+void KNL_SetVdoRoleInfoCbFunc(pvRoleMap2Src VdoRoleMap_cb);
 
 //------------------------------------------------------------------------
 /*!
 \brief Source number mapping to role number for audio
-\param pvRoleSrcMap		Mapping callback function
+\param AdoRoleMap_cb	Mapping callback function
 \return(no)
 */
-void KNL_SetAdoRoleInfoCbFunc(pvRoleSrcMap AdoRoleMap_cb);
+void KNL_SetAdoRoleInfoCbFunc(pvRoleMap2Src AdoRoleMap_cb);
 
 //------------------------------------------------------------------------
 /*!
@@ -1500,12 +1522,14 @@ H264_ENCODE_INDEX tKNL_GetEncIdx(void);
 \return no
 */
 void KNL_EnableWORFunc(void);
+
 //------------------------------------------------------------------------
 /*!
 \brief Disable WOR function
 \return no
 */
 void KNL_DisableWORFunc(void);
+
 //------------------------------------------------------------------------
 /*!
 \brief Wake-up device on WOR mode
@@ -1514,6 +1538,40 @@ void KNL_DisableWORFunc(void);
 \return no
 */
 uint8_t KNL_WakeupDevice(KNL_ROLE tKNL_Role, uint8_t ubMode);
+
+//------------------------------------------------------------------------
+/*!
+\brief Release Buffer of USBD
+\return no
+*/
+void KNL_ReleaseUsbdBuf(uint32_t ulBufAddr);
+
+//------------------------------------------------------------------------
+/*!
+\brief Setup USBD information of Audio packet
+\param ulAdoAddr		Audio data buffer address
+\param ulAdoSize		Audio data buffer size
+\return no
+*/
+uint32_t ulKNL_SetUsbdAdoPktInfo(uint32_t ulAdoAddr, uint32_t ulAdoSize);
+
+//------------------------------------------------------------------------
+/*!
+\brief Update audio data throught USBD.
+\param ulAdoPcmAddr		Audio data buffer address
+\param ulAdoPcmSize		Audio data buffer size
+\return no
+*/
+void KNL_UpdateUsbdAdoData(uint32_t ulAdoPcmAddr, uint32_t ulAdoPcmSize);
+
+//------------------------------------------------------------------------
+/*!
+\brief Audio data of PTT
+\param pAdoData			Audio data buffer address
+\return no
+*/
+void KNL_RecvAdoDataFromApp(uint8_t *pAdoData);
+
 //------------------------------------------------------------------------
 /*!
 \brief Turn on tuning tool
@@ -1538,15 +1596,68 @@ KNL_TuningMode_t KNL_GetTuningToolMode(void);
 \return no
 */
 void KNL_SDUpgradeFwFunc(void);
-
-typedef void(*pvRecordNtyFunc)(uint8_t);
+//------------------------------------------------------------------------
+/*!
+\brief Resend I Frame function
+\param tKNL_Role	Role number
+\return no
+*/
+void KNL_ResendIframeFunc(KNL_ROLE tKNL_Role);
+//------------------------------------------------------------------------
+/*!
+\brief Modify the view type for USBD application
+\param ubViewType	View type
+\return no
+*/
+void KNL_ModifyUsbdViewType(uint8_t ubViewType);
+//------------------------------------------------------------------------
+/*!
+\brief Audio encode activility for USBD application
+\param ubAct	Activility
+\return no
+*/
+void KNL_ActiveUsbdAdoEncFlag(uint8_t ubAct);
 
 typedef enum
 {
 	KNL_OK,
+	KNL_ERR,
 	KNL_ErrorNoCard,
 	KNL_ErrorTimeout,
 }KNL_Status_t;
+
+typedef enum
+{
+	JPG_LCDCH_DISABLE,
+	JPG_LCDCH_ENABLE,
+}KNL_JpgLcdChCtrl_t;
+
+//------------------------------------------------------------------------
+/*!
+\brief Enable or Disable LCD channel for JPEG
+\param tJpgLcdDispAct	Enable or Disable LCD channel for JPEG
+\par [Example]
+\code
+	//! Display jpeg on LCD panel.
+	if(KNL_OK != tKNL_EnJpegLcdCh(JPG_LCDCH_ENABLE))
+		return;
+	OSD_LogoJpeg(JPEG_PICTURE);
+
+	//! Display video image on LCD panel.
+	tKNL_EnJpegLcdCh(JPG_LCDCH_DISABLE)
+\endcode
+\return Setup result
+*/
+KNL_Status_t tKNL_EnJpegLcdCh(KNL_JpgLcdChCtrl_t tJpgLcdDispAct);
+//------------------------------------------------------------------------
+/*!
+\brief Get LCD channel status for JPEG
+\return Status
+*/
+KNL_JpgLcdChCtrl_t tKNL_GetJpegLcdChCtrl(void);
+
+typedef void(*pvRecordNtyFunc)(uint8_t);
+
 typedef enum
 {
 	KNL_RECORDFUNC_DISABLE,

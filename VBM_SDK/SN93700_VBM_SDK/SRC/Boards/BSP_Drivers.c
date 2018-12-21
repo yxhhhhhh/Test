@@ -70,7 +70,7 @@ void BSP_DriversInit(void)
 	GPIO->GPIO_OE10 = 0;
 
 	//! USB_DET	
-	GPIO->GPIO_OE11 = 0;
+	GPIO->GPIO_OE11 = 0;//PWM11 
 
 	//! FCHG_ON
 	GPIO->GPIO_OE12 = 1;
@@ -89,7 +89,6 @@ void BSP_DriversInit(void)
 	GPIO->GPIO_O3 	= 0;
 	GPIO->GPIO_OE13	= 1;
 	GPIO->GPIO_OE0	= 1;
-	GPIO->GPIO_OE1	= 1;
 
 	//! BL Control
 	PWM->PWM3_RATE  	= 127;
@@ -97,8 +96,8 @@ void BSP_DriversInit(void)
 	PWM->PWM3_HIGH_CNT 	= 0xA00;
 	//! BL Enable
 	GPIO->GPIO_OE11 = 1;
-	GPIO->GPIO_O11  = 1;
-	PWM->PWM_EN3    = 1;
+	GPIO->GPIO_O11  = 0;
+	PWM->PWM_EN3    = 0;
 
 	//! Speaker
 	GPIO->GPIO_OE12 = 1;

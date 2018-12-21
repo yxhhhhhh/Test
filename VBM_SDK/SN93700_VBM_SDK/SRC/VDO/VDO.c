@@ -124,8 +124,8 @@ void VDO_KNLSysInfoSetup(KNL_ROLE tVDO_KNLRole)
 	KNL_ImageEncodeSetup(tVDO_KNLMainSrcNum);
 	KNL_ImageEncodeSetup(tVDO_KNLSubSrcNum);
 	KNL_SenorSetup(tVDO_KNLMainSrcNum, tVDO_KNLSubSrcNum);
-	if((KNL_SRC_NONE != tVDO_KNLMainSrcNum) || (KNL_SRC_NONE != tVDO_KNLSubSrcNum))
-		KNL_SensorStartProcess();
+//	if((KNL_SRC_NONE != tVDO_KNLMainSrcNum) || (KNL_SRC_NONE != tVDO_KNLSubSrcNum))
+//		KNL_SensorStartProcess();
 	ubVDO_SysSetupFlag = TRUE;
 }
 #endif
@@ -145,6 +145,8 @@ void VDO_UpdateDisplayParameter(void)
 
 	tVDO_SvPlayRole = KNL_NONE;
 	tVDO_Status.tVdoDispType = KNL_DISP_NONSUP;
+	if(KNL_NONE == tKNL_Role)
+		return;
 	VDO_SwitchDisplayType(tVDO_DisplayType, &tKNL_Role);
 	*/
 
@@ -162,13 +164,13 @@ void VDO_UpdateDisplayParameter(void)
 	   (KNL_NONE == tKNL_Role[1]))
 		return;
 	VDO_SwitchDisplayType(tVDO_DisplayType, tKNL_Role);
-#endif
+#endif	
 }
 //------------------------------------------------------------------------------
 void VDO_DisplayLocationSetup(KNL_ROLE tVDO_BURole, KNL_DISP_LOCATION tVDO_DispLocation)
 {
 	KNL_DISP_LOCATION tVDO_DispLoc;
-
+        printd(1,"VDO_DisplayLocationSetup tVDO_DispLocation %d DISPLAY_MODE %d tKNL_GetDispType() %d \n",tVDO_DispLocation,DISPLAY_MODE,tKNL_GetDispType());
 	tVDO_DispLoc = tVDO_DispLocation;
 #if	(DISPLAY_MODE == DISPLAY_1T1R)
 	if(tKNL_GetDispType() == KNL_DISP_SINGLE)
@@ -229,6 +231,7 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 			else
 			{
 				KNL_ModifyDispType(KNL_DISP_SINGLE, tVDO_KNLSrcLocate);
+				KNL_BufSetup();
 				for(tKNL_Role = KNL_STA1; tKNL_Role < DISPLAY_MODE; tKNL_Role++)
 				{
 					if((tKNL_Role != tVDO_KNLRole) && (VDO_START == tVDO_Status.tVdoPlaySte[tKNL_Role]))
@@ -281,6 +284,7 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 			else
 			{
 				KNL_ModifyDispType(tVDO_DisplayType, tVDO_KNLSrcLocate);
+				KNL_BufSetup();
 				for(tKNL_Role = KNL_STA1; tKNL_Role < DISPLAY_MODE; tKNL_Role++)
 				{
 					if(((tKNL_Role != tKNL_DualBURole[0]) && (tKNL_Role != tKNL_DualBURole[1])) &&
@@ -310,13 +314,18 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 		default:
 			if(tVDO_DisplayType == tVDO_Status.tVdoDispType)
 				break;
-			if ((tVDO_DisplayType == KNL_DISP_DUAL_C) || (tVDO_DisplayType == KNL_DISP_DUAL_U)) {
+			if ((tVDO_DisplayType == KNL_DISP_DUAL_C) || (tVDO_DisplayType == KNL_DISP_DUAL_U))
+			{
 				tVDO_KNLSrcLocate.ubSetupFlag = TRUE;
-				tVDO_KNLSrcLocate.tSrcNum[0] = KNL_SRC_1_MAIN;
-				tVDO_KNLSrcLocate.tSrcNum[1] = KNL_SRC_2_MAIN;
+				tKNL_DualBURole[0] = *pVDO_BURole;
+				tVDO_KNLSrcLocate.tSrcNum[0] = tVDO_KNLRoleInfo[tKNL_DualBURole[0]].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum;
+				tKNL_DualBURole[1] = *(pVDO_BURole + 1);
+				tVDO_KNLSrcLocate.tSrcNum[1] = tVDO_KNLRoleInfo[tKNL_DualBURole[1]].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum;
 				tVDO_KNLSrcLocate.tSrcLocate[0] = KNL_DISP_LOCATION2;
 				tVDO_KNLSrcLocate.tSrcLocate[1] = KNL_DISP_LOCATION1;
-			} else {
+			}
+			else
+			{
 				tVDO_KNLSrcLocate.ubSetupFlag = FALSE;
 			}
 			if((TRUE == ubVDO_ResChgFlag) || (TRUE == ubVDO_PathRstFlag))
@@ -335,6 +344,7 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 					KNL_ImageDecodeSetup(tVDO_KNLRoleInfo[tKNL_Role].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum);
 			} else {
 				KNL_ModifyDispType(tVDO_DisplayType, tVDO_KNLSrcLocate);
+				KNL_BufSetup();
 			}
 			for(tKNL_Role = KNL_STA1; tKNL_Role < DISPLAY_MODE; tKNL_Role++)
 			{
@@ -423,9 +433,12 @@ void VDO_ChangePlayState(KNL_ROLE tVDO_KNLRole, VDO_PlayState_t tVdoPlySte)
 	}
 }
 //------------------------------------------------------------------------------
-KNL_SRC VDO_GetSourceNumber(KNL_ROLE tVDO_KNLRole)
+KNL_SRC VDO_GetSourceNumber(KNL_VA_DATAPATH tVDO_Path, KNL_ROLE tVDO_KNLRole)
 {
-	return tVDO_KNLRoleInfo[tVDO_KNLRole].tVDO_KNLParam[VDO_MAIN_SRC].tKNL_SrcNum;
+	VDO_SrcType_t tVDO_SrcPath[] = {[KNL_MAIN_PATH] = VDO_MAIN_SRC,
+									[KNL_SUB_PATH]  = VDO_SUB_SRC,
+		                            [KNL_AUX_PATH]  = VDO_AUX_SRC};
+	return tVDO_KNLRoleInfo[tVDO_KNLRole].tVDO_KNLParam[tVDO_SrcPath[tVDO_Path]].tKNL_SrcNum;
 }
 //------------------------------------------------------------------------------
 KNL_ROLE VDO_KNLSrcNumMap2KNLRoleNum(KNL_SRC tVDO_SrcNum)

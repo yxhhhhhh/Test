@@ -11,9 +11,9 @@
 	\file		PAIR.h
 	\brief		Pairing header
 	\author		Bing
-	\version	0.4
-	\date		2017/11/30
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	0.7
+	\date		2018/09/05
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------
 #ifndef _PAIR_H_
@@ -40,6 +40,8 @@ typedef enum
 typedef enum 
 {
 	PAIR_NULL = 0,
+	PAIR_SUCCESS,
+	PAIR_STANDBY,
     PAIR_END,
     PAIR_TIMEOUT,
 	PAIR_START,
@@ -120,13 +122,15 @@ void PAIR_DeleteTxId(PAIR_TAG tStaNum);
 void PAIR_SetDevInvaildId(PAIR_TAG tTag);
 
 void PAIR_LoadId(void);
-void PAIR_SaveId(void); 
+void PAIR_SaveId(void);
 uint8_t *PAIR_GetId(PAIR_TAG tPair_SrcNum);
 void PAIR_Task(void* pdata);
-PAIR_STATE ubPAIR_GetPairState(void);
-#if (OP_STA||OP_AP_SLAVE)	
+PAIR_STATE tPAIR_GetPairState(void);
+void PAIR_SetPairState(PAIR_STATE tState);
+#if (OP_STA||OP_AP_SLAVE)
 void PAIR_PreparePrp(void);
 void PAIR_Pap(TWC_TAG GetSta,uint8_t *pData);
+void PAIR_PaapResp(TWC_TAG GetSta, TWC_STATUS tStatus);
 void PAIR_LoadPairingResult(uint8_t *pRole);
 #endif
 #if OP_AP

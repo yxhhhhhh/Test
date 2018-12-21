@@ -424,7 +424,6 @@ bool bLCD_MIPI_SSD2828_Init(void)
         printd(DBG_ErrorLvl, "LCD: SSD2828 Fail %X\n", uwId);
         return false;
     }
-
     LCD_SSD2828_RegWr(0xB1, 0x0418);   // VSA = 2,HSA = 2
     LCD_SSD2828_RegWr(0xB2, 0x1030);   // VBP = 14,VBP = 42
     LCD_SSD2828_RegWr(0xB3, 0x0fc8);   // VFP = 16,HFP = 44

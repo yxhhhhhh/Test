@@ -11,8 +11,8 @@
 	\file		ADO_API.h
 	\brief		Audio header file
 	\author		Chinwei Hsu/Bruce Hsu
-	\version	2.30
-	\date		2018/08/27
+	\version	3.0
+	\date		2018/10/08
 	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -23,13 +23,12 @@
 
 #define ADO_AUDIO32 			1
 #define ADO_AUDIO32_MAX_NUM 	7
+#define AUDIO32_ENCODE_SIZE		640
+#define AUDIO32_DECODE_SIZE		40
 #define ADO_SRC_NUM				4
 #define ADO_SELF_TEST_LENGTH	5
-#define AUDIO32_REMAIN_SIZE 	640
 
-extern osMessageQId tADO_EncodeQueue;       //!< Audio event queue for external
-extern osMessageQId tADO_EncodeQueueHandle;
-extern osMessageQId tADO_DecodeQueueHandle;
+#define ADO_STREAM_TAG			"SNX"
 
 // Audio function switch
 typedef enum 
@@ -40,23 +39,11 @@ typedef enum
 //------------------------------------------------------------------------------
 typedef enum 
 {
-	NONE,
+	NONE = 0,
 	AUDIO32,
-	AAC
+	AAC,
+	ALAW
 }ADO_ENCODE_TYPE;
-//------------------------------------------------------------------------------
-typedef struct ADO_Queue_Info
-{
-	ADO_ENCODE_TYPE EncType;
-	uint32_t PcmAddr;
-	uint32_t PcmSize;
-	uint32_t Audio32Addr;
-	uint32_t Audio32Size;
-	uint32_t AACAddr;
-	uint32_t AACSize;
-	uint8_t HighPriority;
-	uint8_t ubSrcNum;
-}ADO_Queue_INFO;
 //------------------------------------------------------------------------------
 typedef struct ADO_Aud32_Enc_Info
 {
@@ -74,7 +61,7 @@ typedef enum
 {
     DAC_RDY,
 	PLAY_BUF_EMP	
-}ADO_DEC_EVENT;
+}ADO_DAC_EVENT;
 //------------------------------------------------------------------------------
 typedef enum 
 {
@@ -343,9 +330,16 @@ typedef enum SNX_AUD32_FORMAT {
 // AEC/NR return flag
 typedef enum
 {
-	ERROR = 0,  //!< AEC/NR return error
-	OK          //!< AEC/NR return ok
+	AEC_NR_ERROR = 0,  //!< AEC/NR return error
+	AEC_NR_OK          //!< AEC/NR return ok
 }AEC_NR_RETURN_FLAG_t;
+//------------------------------------------------------------------------------
+// ALAW return flag
+typedef enum
+{
+	ALAW_ERROR = 0,  //!< ALAW return error
+	ALAW_OK          //!< ALAW return ok
+}ALAW_RETURN_FLAG_t;
 //------------------------------------------------------------------------------
 // AEC/NR sample rate mode
 typedef enum
@@ -429,11 +423,12 @@ typedef enum
 	ADO_PLY_BUF_AFTER_STARTUP
 }ADO_PLY_BUF_INIT_TYPE;
 //------------------------------------------------------------------------------
-// Audio test mode
+// Audio play mode
 typedef enum
 {
 	NORMAL_PLAY = 0,					//!< Dac normal play type
-	WAV_PLAY							//!< Dac wav play type
+	WAV_PLAY,							//!< Dac wav play type
+	MOVIE_PLAY							//!< Sd card movie play
 }ADO_PLAY_TYPE;
 //------------------------------------------------------------------------------
 // Audio clock
@@ -477,7 +472,6 @@ typedef struct KNL_ADO_PARAMETER
 	ADO_FORMAT_t Ply_fmt;               //!< DAC format
 	
 	ADO_COMPRESS_MODE Compress_method;  //!< compress method(hardware level)
-	
 	ADO_ADPCM_t Adpcm_func;             //!< ADPCM parameter function(if compress mothod is ADPCM)
 	
 	ADO_BUFFERSIZE Rec_buf_size;        //!< ADC buffer size
@@ -488,6 +482,8 @@ typedef struct KNL_ADO_PARAMETER
 	ADO_BUFFERSIZE AAC_En_buf_size;
 	ADO_BUFFERSIZE AAC_De_buf_size;
 	ADO_BUFFERSIZE Alarm_buf_size;
+	ADO_BUFFERSIZE Recording_buf_size;
+	ADO_BUFFERSIZE Alaw_Dec_buf_size;
 	
 	ADO_BUFFERTH Rec_buf_th;            //!< ADC buffer threshold
 	ADO_BUFFERTH Ply_buf_th;            //!< DAC buffer threshold
@@ -526,13 +522,11 @@ typedef struct AUDIO_METADATA
 	ADO_FORMAT_t Ply_fmt;                   //!< DAC format
 	
 	ADO_COMPRESS_MODE	Compress_method;    //!< Audio compress method
-	
 	ADO_ADPCM_t Adpcm_func;                 //!< ADPCM parameter function(if compress mothod is ADPCM)
 	
 	ADO_CLOCK_t ADO_clk;                    //!< Audio clock
 	
 	ADO_BUFFERSIZE Rec_buf_size;            //!< ADC buffer size
-	ADO_BUFFERSIZE Ply_buf_size_startup;	//!< DAC startup buffer size
 	ADO_BUFFERSIZE Ply_buf_size;            //!< DAC practical buffer size
 	ADO_BUFFERSIZE TempProcess_buf_size;	
 	ADO_BUFFERSIZE Audio32_En_buf_size;
@@ -541,6 +535,8 @@ typedef struct AUDIO_METADATA
 	ADO_BUFFERSIZE AAC_En_buf_size;
 	ADO_BUFFERSIZE AAC_De_buf_size;
 	ADO_BUFFERSIZE Alarm_buf_size;
+	ADO_BUFFERSIZE Recording_buf_size;
+	ADO_BUFFERSIZE Alaw_Dec_buf_size;
 	
 	ADO_BUFFERTH Rec_buf_th;                //!< ADC buffer threshold
 	ADO_BUFFERTH Ply_buf_th;                //!< DAC buffer threshold
@@ -550,7 +546,6 @@ typedef struct AUDIO_METADATA
 	ADO_BUF_MONIT_t Audio32Remain_BufMonit; //!< This biffer must locate on address before TempProcess
 	ADO_BUF_MONIT_t TempProcess_BufMonit;	
 	ADO_BUF_MONIT_t DeHowling_BufMonit;
-	
 	ADO_BUF_MONIT_t Audio32_En_BufMonit;
 	ADO_BUF_MONIT_t Audio32_De_BufMonit;
 	
@@ -561,10 +556,11 @@ typedef struct AUDIO_METADATA
 	ADO_BUF_MONIT_t AAC_En_BufMonit;
 	ADO_BUF_MONIT_t AAC_De_BufMonit;
 	ADO_BUF_MONIT_t Alarm_BufMonit;
+	ADO_BUF_MONIT_t Recording_BufMonit[ADO_SRC_NUM];
+	ADO_BUF_MONIT_t AlawDec_BufMonit;
 	
 	ADO_FUN_SWITCH Audio32_Switch;
 	ADO_FUN_SWITCH AAC_Switch;
-	
 	ADO_FUN_SWITCH AEC_Switch;
 	ADO_FUN_SWITCH NR_Switch;
 	ADO_FUN_SWITCH DeHowling_Switch;
@@ -573,8 +569,6 @@ typedef struct AUDIO_METADATA
 	uint32_t ulADO_TotalBufSize;            //!< Audio total buffer size(unit:bytes)
     
 	ADO_IP_READY_t ADO_IpReadyStatus;
-	
-	ADO_PLAY_TYPE ADO_PlayType;
 	
 	WavPlayInfo WavInfo;
 	uint8_t ubPlayStop;
@@ -588,6 +582,16 @@ typedef struct AUDIO_METADATA
 	uint32_t ulADO_WavplayVolCompGain;				//!< wav play compensation gain
 	
 	AdoSelfTest_t ADO_SelfTestInfo;
+	ADO_FUN_SWITCH ADO_RecordPathStatus;
+	
+	uint32_t ulStartupFlagBuf;
+	uint32_t ulRecvTimestampBuf;
+	uint32_t ulAud32_DecFrameBuf;
+	uint32_t ulAud32_DecPcmBuf;
+	uint32_t ulAud32_RecordingDecPcmBuf;
+	uint32_t ulAlaw_EncBuf;
+	uint32_t ulAlaw_DecFrameBuf;
+	uint32_t ulAlaw_DecPcmBuf;
 }ADO_METADATA_t;
 
 typedef enum 
@@ -595,7 +599,78 @@ typedef enum
 	ADO_WAV_IDLE = 0,
 	ADO_WAV_PLAYING
 }ADO_WAV_STATE;
+//------------------------------------------------------------------------------
+typedef struct ADO_Queue_Info
+{
+	ADO_PLAY_TYPE ADO_PlayType;
+	ADO_ENCODE_TYPE EncType;
+	uint32_t PcmAddr;
+	uint32_t PcmSize;
+	uint32_t Audio32Addr;
+	uint32_t Audio32Size;
+	uint32_t AACAddr;
+	uint32_t AACSize;
+	uint32_t AlawAddr;
+	uint32_t AlawSize;
+	uint8_t ubSrcNum;
+	uint32_t ulDecAddr;
+	uint8_t ubPlaySrcNum;
+}ADO_Queue_INFO;
+//------------------------------------------------------------------------------
+typedef struct ADO_Queue_Record
+{
+	uint8_t ubSrcNum;
+	uint32_t ulTimeStamp;
+	uint32_t ulStartAddr;
+	uint32_t ulSize;
+}ADO_Queue_RECORD;
+//------------------------------------------------------------------------------
+// Audio timestamp issue
+typedef struct AUDIO_TIMESTAMP
+{
+	uint32_t ulFirstStampFlag;
+	uint32_t ulStartupFlag;
+	uint32_t ulLocalTimestamp_pre;
+	uint32_t ulLocalTimestamp_now;
+	uint32_t ulRecvTimestamp_pre;
+	uint32_t ulRecvTimestamp_now;
+	uint32_t ulLocalTimestampDiff;
+	uint32_t ulRecvTimestampDiff;
+	uint32_t ulX;
+	uint32_t ulDeltaY;
+	uint32_t ulDeltaYSignedSwitchFlag;
+	uint32_t ulDropCnt;
+}ADO_TIMESTAMP_t;
+//------------------------------------------------------------------------------
+// Audio encode packge info
+#pragma pack(push)
+#pragma pack(1)
+typedef struct AUDIO_ENC_PACK_INFO
+{
+	char chADO_StreamTag[4];
+	uint32_t ulStartupFlag;
+	uint32_t ulTimestamp;
+	uint32_t ulEncodedSize;
+}ADO_ENC_PACK_INFO_t;
+#pragma pack(pop)
+//------------------------------------------------------------------------------
+typedef enum
+{
+	DeHowlingLV0 = 0,
+	DeHowlingLV1 = 1,										//!< cant play at this state
+	DeHowlingLV2 = 2,
+	DeHowlingLV3 = 3,
+	DeHowlingLV4 = 4,
+	DeHowlingLV5 = 5,
+	DeHowlingLV6 = 6
+	//!< allow play data
+}ADO_DeHowling_LV;
 
+typedef struct 
+{
+	uint16_t Block;
+	uint16_t Smaples;
+}DeHowlingPar;
 //------------------------------------------------------------------------------
 void ADO_SetAudioOutState (ADO_DAC_STATE_TYPE tState);
 ADO_DAC_STATE_TYPE tADO_GetAudioOutState (void);
@@ -617,13 +692,13 @@ ADO_IP_READY_t ADO_GetIpReadyStatus(void);
 /*!
 \brief Audio Setup
 \param ADO_KNL_PARA_t
-\param pADO_EncodeQIdHandle		
+\param pADO_EncodeQIdHandle
 \param pADO_DecodeQIdHandle
 \par Note:
 	1. You can set up the audio parameter and it will register ADC/DAC ISR and disable ADC/DAC related interrupt.
 \return(no)
 */
-void ADO_Setup(ADO_KNL_PARA_t *AdoPara ,osMessageQId* pADO_EncodeQIdHandle , osMessageQId* pADO_DecodeQIdHandle);
+void ADO_Setup(ADO_KNL_PARA_t *AdoPara, osMessageQId* pADO_EncodeQIdHandle, osMessageQId* pADO_DecodeQIdHandle);
 //------------------------------------------------------------------------------
 /*!
 \brief get audio total buffer size
@@ -892,11 +967,10 @@ uint16_t uwADO_GetSampleRate(void);
 //------------------------------------------------------------------------------
 /*!
 \brief Write audio data to decode buffer.
-\param AM		    Audio Metadata
 \param Input        Input audid data(encode data).
 \return(no)
 */
-void ADO_DecodeBufferWrtIn(ADO_METADATA_t *AM, ADO_Queue_INFO *Input);
+void ADO_DecodeBufferWrtIn(ADO_Queue_INFO *Input);
 //------------------------------------------------------------------------------
 #if ADO_AUDIO32
 /*!
@@ -1032,6 +1106,8 @@ uint8_t ubADO_Audio32_DecBufWrtIn(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_
 */
 uint8_t ubADO_Audio32_DecBufRdOut(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
 //------------------------------------------------------------------------
+#endif
+//------------------------------------------------------------------------
 /*!
 \brief wav play buffer write in function
 \param AM			Audio Metadata
@@ -1054,7 +1130,57 @@ void ADO_WavPlay_BufRdOut(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_t Size, 
 */
 void ADO_WavPlay_BufWrtIn(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
 //------------------------------------------------------------------------
-#endif
+/*!
+\brief Alaw encode Function
+\param ulSrc            Address of Source
+\param ulDes            Address of Destition
+\param ulInputSize      input size
+\param ulOutputSize     pointer of output size
+\return ALAW_RETURN_FLAG_t
+\par [Example]
+\code
+		ALAW_RETURN_FLAG_t AlawEncFlag;
+        AlawEncFlag = ADO_Alaw_Encode(SrcAddr,DesAddr,100);
+\endcode
+*/
+ALAW_RETURN_FLAG_t ADO_Alaw_Encode(uint32_t ulSrcAddr, uint32_t ulDstAddr, uint32_t ulInputSize, uint32_t *ulOutputSize);
+//------------------------------------------------------------------------------
+/*!
+\brief Alaw decode Function
+\param ulSrc            Address of Source
+\param ulDes            Address of Destition
+\param ulInputSize      input size
+\param ulOutputSize     pointer of output size
+\return ALAW_RETURN_FLAG_t
+\par [Example]
+\code
+		ALAW_RETURN_FLAG_t AlawDecFlag;
+        AlawDecFlag = ADO_Alaw_Decode(SrcAddr,DesAddr,100);
+\endcode
+*/
+ALAW_RETURN_FLAG_t ADO_Alaw_Decode(uint32_t ulSrcAddr, uint32_t ulDstAddr, uint32_t ulInputSize, uint32_t *ulOutputSize);
+//------------------------------------------------------------------------
+/*!
+\brief alaw decode buffer write in function
+\param AM			Audio Metadata
+\param SourAddr		source address
+\param Size			write in size
+\param Copy			Copy or not:ADO_ON/ADO_OFF.
+\return(no)
+\endcode
+*/
+void ADO_AlawDecBufWrtIn(ADO_METADATA_t *AM, uint32_t SourAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
+//------------------------------------------------------------------------
+/*!
+\brief alaw decode buffer read out function
+\param AM			Audio Metadata
+\param SourAddr		source address
+\param Size			write in size
+\param Copy			Copy or not:ADO_ON/ADO_OFF.
+\return(no)
+\endcode
+*/
+void ADO_AlawDecBufRdOut(ADO_METADATA_t *AM, uint32_t DestAddr, uint32_t Size, ADO_FUN_SWITCH Copy);
 //------------------------------------------------------------------------
 /*!
 \brief 	Get Audio Version	
@@ -1163,10 +1289,66 @@ void ADO_SelfTest_Close(void);
 \endcode
 */
 void ADO_WavplayVolCompensation(uint32_t ulGainValue);
-
+//------------------------------------------------------------------------------
+/*!
+\brief audio record switch, another path for recording
+\param Copy		ADO_ON:open the path;	ADO_OFF:close the path
+\par [Example]
+\code 
+        ADO_RecordPathSwitch(ADO_OFF);	//stop send alaw stream
+        ADO_RecordPathSwitch(ADO_ON);	//start send alaw stream
+\endcode
+*/
+void ADO_RecordPathSwitch(ADO_FUN_SWITCH Status);
+//------------------------------------------------------------------------------
+/*!
+\brief Get record buffer threshold
+\param AM 				Structure of audio metadata.
+\return RecBuf_Th
+*/
+uint32_t ulADO_GetRecBufTh(ADO_METADATA_t *AM);
+//------------------------------------------------------------------------------
 typedef void(*pvADO_OutputCbFunc)(uint32_t, uint32_t);
 void ADO_SetOutputCbFunc(pvADO_OutputCbFunc pOutput_Cb);
-
+//------------------------------------------------------------------------------
+/*!
+\brief Set DeHowling LV
+\param ADO_DeHowling_LV		DeHowling Level
+\par [Example]
+\code 
+        ADO_SetDeHowlingLV(DeHowlingLV0);
+\endcode
+*/
+void ADO_SetDeHowlingLV(ADO_DeHowling_LV LV);
+//------------------------------------------------------------------------------
+typedef void(*pvADO_OutputCbFunc)(uint32_t, uint32_t);
+void ADO_SetOutputCbFunc(pvADO_OutputCbFunc pOutput_Cb);
+//------------------------------------------------------------------------------
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+/*!
+\brief initial i2c-1 for control 7300
+\param (none)
+\par [Example]
+\code 
+        ADO_HwAecNr_I2C1_Init();
+\endcode
+*/
+void ADO_HwAecNr_I2C1_Init(void);
+//------------------------------------------------------------------------------
+/*!
+\brief send aec/nr setting command to 7300
+\param ubCommand
+	0x80->aec on  + nr off
+	0x08->aec off + nr on
+	0x88->aec on  + nr on
+	0x00->aec off + nr off
+\par [Example]
+\code 
+        ADO_HwAecNr_Command(0x80);
+\endcode
+*/
+void ADO_HwAecNr_Command(uint8_t ubCommand);
+#endif
 //------------------------------------------------------------------------------
 extern const uint32_t ulADO_BufTh[];
 extern ADO_METADATA_t GlobalAudioMeta;

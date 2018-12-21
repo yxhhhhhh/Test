@@ -11,8 +11,8 @@
 	\file		SC2235.h
 	\brief		Sensor SC2235 header
 	\author		BoCun
-	\version	1.2
-	\date		2018-07-06
+	\version	1.3
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -57,33 +57,6 @@
 //==============================================================================
 // FUNCTION
 //==============================================================================
-//------------------------------------------------------------------------
-/*!
-\brief Read data from sensor register.
-\param 	uwAddress 	Sensor address.
-\param 	pValue 		Point of sensor register.
-\retval Value		Sensor register data.
-\retval False		0->read sensor fail.
-\par [Example]
-\code 
-		ulSEN_I2C_Read(0x04, &ubValue);
-\endcode
-*/
-uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue);
-//------------------------------------------------------------------------
-/*!
-\brief Write data to sensor register.
-\param ubAddress1 	Sensor address(MSB).
-\param ubAddress2 	Sensor address(LSB).
-\param ubValue 		data.
-\retval True		1->I2C write sensor ok.
-\retval False		0->I2C write sensor fail.
-\par [Example]
-\code 
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
-\endcode
-*/
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue);
 //------------------------------------------------------------------------
 /*!
 \brief Set frame rate and pixel clock.

@@ -21,9 +21,10 @@
 #include <string.h>
 #include "cmd.h"
 #include "CLI.h"
-#include "KNL.h"
 #include "RTC_API.h"
+#include "FWU_API.h"
 #include "APP_CFG.h"
+#include "KNL.h"
 #include "WDT.h"
 
 //------------------------------------------------------------------------------
@@ -423,4 +424,59 @@ int32_t cmd_system_wdt(int argc, char* argv[]) {
 	return cliPASS; 
 }
 
+static void system_usbd_usage() {   
+	printf(" pls check uasge!\n");
+	printf("###################################\n");
+	printf(" Usage: usbd <OPT>\n");
+	printf(" OPT:\n");
+	printf("	m: USB Mass storage\n");
+	printf("###################################\n");
+}
+
+int32_t cmd_system_usbd(int argc, char* argv[])
+{
+	if(argc < 2)
+	{
+		system_usbd_usage();
+		return cliFAIL; 
+	}
+	switch(argv[1][0])
+	{
+		case 'm':
+			FWU_Enable();
+			break;
+		case 'u':
+			FWU_Disable();
+			break;
+		default:
+			break;
+	}
+	return cliPASS;
+}
+
+int32_t cmd_system_fwu(int argc, char* argv[])
+{
+	uint8_t ubTagType = 0;
+
+	if(argc < 3)
+		return cliFAIL;
+
+	ubTagType = strtoul(argv[2], NULL, 0);
+	if(ubTagType > 1)
+		return cliFAIL;
+	switch(argv[1][0])
+	{
+		case 'e':
+			*((uint8_t *)(0x00101000 + (ubTagType * 2))) = 1;
+			printf("	->>\n");
+			break;
+		case 'd':
+			*((uint8_t *)(0x00101000 + (ubTagType * 2))) = 0;
+			printf("	<<-\n");
+			break;
+		default:
+			break;
+	}
+	return cliPASS;
+}
 #endif

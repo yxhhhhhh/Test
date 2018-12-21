@@ -1,0 +1,19 @@
+1.ANIMA_LOGO.ini
+
+2.ANKER_Pubilc_Preview.ini
+
+3.ANKER_Public_Menu.ini
+
+4~11  ANKER_Menu1.ini ~~ANKER_Menu8.ini
+(如果是无温度报警版本，MENU4 换成ALARM2)
+
+5.Factorymode.ini
+
+6.ANKER_ENG.ini
+
+LOGO 添加顺序
+1.LOGO, 
+2.firstpage_bg.bmp
+3.LOSTLINK 按顺序来
+4.白色背景
+5.升级的

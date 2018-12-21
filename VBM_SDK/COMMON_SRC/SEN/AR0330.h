@@ -11,8 +11,8 @@
 	\file		AR0330.h
 	\brief		Sensor AR0330 header
 	\author		BoCun
-	\version	1.1
-	\date		2018-07-06
+	\version	1.2
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -59,34 +59,6 @@ typedef struct
 //==============================================================================
 // FUNCTION
 //==============================================================================
-//------------------------------------------------------------------------
-/*!
-\brief Read data from sensor register.
-\param 	uwAddr 		Sensor address.
-\param 	pValue 		Point of sensor register.
-\retval Value		Sensor register data.
-\retval False		0->read sensor fail.
-\par [Example]
-\code 
-		ulSEN_I2C_Read (AR0330_CHIP_ID_ADDR, pBuf);
-\endcode
-*/
-uint32_t ulSEN_I2C_Read(uint16_t uwAddr, uint8_t *pValue);
-//------------------------------------------------------------------------
-/*!
-\brief Write data to sensor register.
-\param ubAddr1 		Sensor address(MSB).
-\param ubAddr2 		Sensor address(LSB).
-\param ubValue1 	data(MSB).
-\param ubValue2 	data(LSB).
-\retval True		1->I2C write sensor ok.
-\retval False		0->I2C write sensor fail.
-\par [Example]
-\code 
-			ulSEN_I2C_Write(0x30, 0x1A , 0x10 ,0xDC);
-\endcode
-*/
-uint32_t ulSEN_I2C_Write(uint8_t ubAddr1, uint8_t ubAddr2, uint8_t ubValue1, uint8_t ubValue2);
 //------------------------------------------------------------------------
 /*!
 \brief Set frame rate and pixel clock.

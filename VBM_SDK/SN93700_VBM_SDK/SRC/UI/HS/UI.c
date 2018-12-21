@@ -117,10 +117,9 @@ uint32_t ulUI_BufSetup(uint32_t ulBUF_StartAddr)
 void UI_PlugIn(void)
 {
 #ifdef VBM_PU
-	GPIO->GPIO_O1 = 1;
 	LCD_Init(LCD_LCD_PANEL);
-	LCD_SetGammaLevel(4);
 	LCD_SetLcdBufAddr(ulBUF_GetBlkBufAddr(0, BUF_LCD_IP));
+	LCDBL_ENABLE(UI_ENABLE);
 	tOSD_Init(OSD_WEIGHT_8DIV8, uwLCD_GetLcdHoSize(), uwLCD_GetLcdVoSize(), 0, 0, OSD_SCALE_1X, OSD_SCALE_1X);
 	UI_OnInitDialog();
 	UI_PuInit();
@@ -187,8 +186,8 @@ void UI_FrameTRXFinish(uint8_t ubFrmRpt)
 #endif
 //		SIGNAL_LED_IO = !SIGNAL_LED_IO;
 		break;
-	default:
-		break;
+		default:
+			break;
 	}
 }
 //------------------------------------------------------------------------------

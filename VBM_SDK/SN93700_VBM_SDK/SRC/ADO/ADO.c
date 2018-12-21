@@ -111,11 +111,14 @@ void ADO_PTTStart(void)
 	{
 		ADO_Audio32_Encoder_Init(i,ADO_GetAudio32EncFormat(i));
 	}
+#if APP_ADOENC_TYPE == ALAW_ENC
+	ADO_Noise_Process_Type(NOISE_DISABLE,AEC_NR_16kHZ);	
+#else
 	ADO_Noise_Process_Type(NOISE_NR, AEC_NR_16kHZ);
-	
+#endif 
+
 	KNL_AdoStart(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	printd(DBG_InfoLvl, "		=>PTT Play\n");
-	printd(Apk_DebugLvl, "		=>PTT Play\n");
 }
 //------------------------------------------------------------------------------
 void ADO_PTTStop(void)
@@ -123,19 +126,18 @@ void ADO_PTTStop(void)
 	KNL_AdoStop(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	ubKNL_WaitNodeFinish(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	printd(DBG_InfoLvl, "		=>PTT Stop\n");
-	printd(Apk_DebugLvl, "		=>PTT Stop\n");
 }
 #endif
 //------------------------------------------------------------------------------
-KNL_SRC ADO_GetSourceNumber(KNL_ROLE tADO_KNLRole)
+KNL_SRC ADO_GetSourceNumber(KNL_VA_DATAPATH tADO_Path, KNL_ROLE tADO_KNLRole)
 {
-	return tADO_KNLRoleInfo[tADO_KNLRole].tKNL_SrcNum;
+	return (KNL_MAIN_PATH == tADO_Path)?tADO_KNLRoleInfo[tADO_KNLRole].tKNL_SrcNum:(KNL_SUB_PATH == tADO_Path)?tADO_KNLRoleInfo[tADO_KNLRole].tKNL_SubSrcNum:KNL_SRC_NONE;
 }
 //------------------------------------------------------------------------------
 void ADO_Start(KNL_ROLE tADO_Role)
 {
 	uint32_t i;
-	
+
 #ifdef VBM_PU
 	KNL_ROLE tADO_KNLRole = KNL_STA1;
 #endif
@@ -151,7 +153,12 @@ void ADO_Start(KNL_ROLE tADO_Role)
 	{
 		ADO_Audio32_Encoder_Init(i,ADO_GetAudio32EncFormat(i));
 	}
+
+#if APP_ADOENC_TYPE == ALAW_ENC
+	ADO_Noise_Process_Type(NOISE_DISABLE,AEC_NR_16kHZ);	
+#else
 	ADO_Noise_Process_Type(NOISE_NR, AEC_NR_16kHZ);
+#endif
 
 #ifdef VBM_PU
 	KNL_AdoPathReset();
@@ -173,7 +180,7 @@ void ADO_Stop(void)
 	KNL_AdoStop(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 	ubKNL_WaitNodeFinish(tADO_KNLRoleInfo[tADO_TargetRole].tKNL_SubSrcNum);
 #endif
-	tADO_TargetRole = KNL_NONE;	
+	tADO_TargetRole = KNL_NONE;
 }
 //------------------------------------------------------------------------------
 void ADO_KNLParamSetup(void)
@@ -182,8 +189,15 @@ void ADO_KNLParamSetup(void)
 	uint32_t i;
 
 	tADO_KNLParm.Sys_speed			 = HIGH_SPEED;
+	
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_SW
 	tADO_KNLParm.Rec_device			 = SIG_DEL_ADC;
 	tADO_KNLParm.Ply_device			 = R2R_DAC;
+#elif APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+	tADO_KNLParm.Rec_device			 = I2S_ADC;
+	tADO_KNLParm.Ply_device			 = I2S_DAC;
+#endif
+
     tADO_KNLParm.ADO_SigDelAdcMode   = ADO_SIG_DIFFERENTIAL;
 	tADO_KNLParm.Rec_fmt.sign_flag   = SIGNED;
 	tADO_KNLParm.Rec_fmt.channel     = MONO;
@@ -194,9 +208,14 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.Ply_fmt.sample_size = SAMPLESIZE_16_BIT;
 	tADO_KNLParm.Ply_fmt.sample_rate = SAMPLERATE_16kHZ;
 
+#if APP_ADOENC_TYPE == AUDIO32_ENC
 	tADO_KNLParm.Compress_method 	 = COMPRESS_NONE;
+#endif
+#if APP_ADOENC_TYPE == ALAW_ENC
+	tADO_KNLParm.Compress_method 	 = COMPRESS_ALAW;
+#endif
 
-	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;	
+	tADO_KNLParm.Rec_buf_size        = BUF_SIZE_16KB;
 	tADO_KNLParm.Ply_buf_size        = BUF_SIZE_32KB;
 	tADO_KNLParm.Audio32_En_buf_size = BUF_SIZE_8KB;
 	tADO_KNLParm.Audio32_De_buf_size = BUF_SIZE_8KB;
@@ -204,6 +223,8 @@ void ADO_KNLParamSetup(void)
 	tADO_KNLParm.AAC_En_buf_size     = BUF_SIZE_8KB;
 	tADO_KNLParm.AAC_De_buf_size     = BUF_SIZE_8KB;
 	tADO_KNLParm.Alarm_buf_size 	 = BUF_SIZE_1KB;
+	tADO_KNLParm.Recording_buf_size  = BUF_SIZE_64KB;
+	tADO_KNLParm.Alaw_Dec_buf_size   = BUF_SIZE_16KB;
 
 	tADO_KNLParm.Rec_buf_th			 = BUF_TH_4KB;
 	tADO_KNLParm.Ply_buf_th        	 = BUF_TH_4KB;
@@ -223,12 +244,22 @@ void ADO_KNLParamSetup(void)
 		ADO_Audio32_Encoder_Init(i,SNX_AUD32_FMT16_16K_16KBPS);
 		ADO_Audio32_Decoder_Init(i,SNX_AUD32_FMT16_16K_16KBPS);
 	}
+#if APP_ADOENC_TYPE == AUDIO32_ENC 
 	ADO_Set_Audio32_Enable(ADO_ON);
+#else
+	ADO_Set_Audio32_Enable(ADO_OFF);
+#endif
 
 	//! AEC and NR Setting
+#if APP_ADOENC_TYPE == ALAW_ENC
+	ADO_Noise_Process_Type(NOISE_DISABLE,AEC_NR_16kHZ);	
+#else	
 	ADO_Noise_Process_Type(NOISE_NR,AEC_NR_16kHZ);
+#endif
 
 	ADO_Set_DeHowling_Enable(ADO_OFF);
+
+	ADO_SetDeHowlingLV(DeHowlingLV0);
 
 	//! wav play volume compensation
 	ADO_WavplayVolCompensation(1);

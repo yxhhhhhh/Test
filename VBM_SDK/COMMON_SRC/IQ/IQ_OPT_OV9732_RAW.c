@@ -11,8 +11,8 @@
 	\file		IQ_OPT_OV9732_RAW.c
 	\brief		OV9732 image quality relation function
 	\author		
-	\version	0.7
-	\date		2018-05-11
+	\version	0.8
+	\date		2018-09-27
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ void IQ_DynamicDenoise_4G5(void) {
 	if (ubSEN_GetIrMode() == 0)
     {
         //Day mode        
-        if(slIQ_DayNrRes1Linear[1][0] == xtIQDnInst.uwCurrPrevHSz)
+        if((slIQ_DayNrRes1Linear[1][0] == xtIQDnInst.uwCurrPrevHSz) || (slIQ_DayNrRes1Linear[1][0] < xtIQDnInst.uwCurrPrevHSz))
         {
             IQ_DynamicLinearInterpolation((uint32_t)xtIQDnInst.xtIQJudgeInst.ubAE_Expidx * xtIQDnInst.xtIQJudgeInst.uwAE_CurrGain, slIQ_DayNrRes1Linear[0][1], sizeof(slIQ_DayNrRes1Linear[0]) / sizeof(int32_t), &slIQ_DayNrRes1Linear[3][0], slNrLinearTemp);
 

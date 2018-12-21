@@ -11,8 +11,8 @@
 	\file		FWU_API.h
 	\brief		Firmware upgrade function header file
 	\author		Hanyi Chiu
-	\version	1.9
-	\date		2018/08/21
+	\version	1.12
+	\date		2018/09/03
 	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -22,7 +22,7 @@
 #include <stdint.h>
 
 //! SN937XX Firmware Version
-#define SN937XX_FW_VERSION				"01.00.01.032"
+#define SN937XX_FW_VERSION				"01.00.01.034b"
 
 typedef enum
 {
@@ -77,6 +77,12 @@ void FWU_Setup(FWU_MODE_t tModeSel, void *pvModeParam);
 \return (no)
 */
 void FWU_Enable(void);
+//------------------------------------------------------------------------------
+/*!
+\brief Disable firmware upgrade function
+\return (no)
+*/
+void FWU_Disable(void);
 //------------------------------------------------------------------------
 /*!
 \brief Start upgrade function use SD card

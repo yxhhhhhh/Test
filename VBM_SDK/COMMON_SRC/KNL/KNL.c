@@ -11,8 +11,8 @@
 	\file		KNL.c
 	\brief		Kernel Control function
 	\author		Justin Chen
-	\version	1.13
-	\date		2018/08/02
+	\version	1.18
+	\date		2018/09/05
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -73,12 +73,14 @@ uint8_t ubKNL_SenStartFlg = 0;
 uint8_t ubKNL_ChgResFlg = 0;
 KNL_SrcLocateMap_t KNL_SwDispInfo;
 uint8_t ubKNL_SysStopFlag;
+uint8_t ubKNL_BbPathAct;
+KNL_SrcLocateMap_t KNL_SwDispInfo;
 
 //For Process
 KNL_INFO tKNL_Info;
 osMessageQId KNL_VdoInProcQueue;
 osMessageQId KNL_VdoCodecProcQueue;
-osMessageQId KNL_AdoCdoecProcQueue;
+osMessageQId KNL_AdoCodecProcQueue;
 osMessageQId KNL_CommTxProcQueue;
 
 //For AVG
@@ -124,7 +126,7 @@ uint32_t ulKNL_CurFrmIdx[4];
 uint8_t ubKNL_Qp[4] = {42,42,42,42};
 uint8_t ubKNL_VdoChkSrcNumFlg[4] = {0,0,0,0};
 uint8_t ubKNL_ImgBusyFlg;
-pvRoleSrcMap ptKNL_VdoRoleSrcMapT;
+pvRoleMap2Src ptKNL_VdoRoleMap2SrcNum;
 
 //For Node
 KNL_NODE_STATE tKNL_NodeState[KNL_SRC_NUM][256];
@@ -150,7 +152,9 @@ uint32_t ulKNL_DacStartToPlayCnt = 0;
 uint8_t ubKNL_DacStartToPlayFlg = 0;
 uint8_t ubKNL_AdcFlowActiveFlg = 0;
 uint8_t ubKNL_DacFlowActiveFlg[KNL_SRC_NUM];
-pvRoleSrcMap ptKNL_AdoRoleSrcMapT;
+uint8_t ubKNL_UsbdAdoEncAct    = 0;
+uint8_t ubKNL_UsbdAdoEncStFlag = TRUE;
+pvRoleMap2Src ptKNL_AdoRoleMap2SrcNum;
 osMessageQId tKNL_EncEventQue;		
 osMessageQId tKNL_DecEventQue;
 
@@ -162,12 +166,18 @@ uint8_t ubKNL_VdoGroupIdx[4] = {0,0,0,0};
 uint8_t ubKNL_VdoBsBusyCnt[4] = {0,0,0,0};
 uint8_t ubKNL_VdoResendITwcFlg[4] = {FALSE, FALSE, FALSE, FALSE};
 uint8_t ubKNL_VdoResChgTwcFlg[4] = {FALSE, FALSE, FALSE, FALSE};
+uint8_t ubKNL_AppResendIFrmFlg[4] = {FALSE, FALSE, FALSE, FALSE};
+uint8_t ubKNL_UsbdVdoViewType;
 
 //For Display
 LCD_BUF_TYP *pLcdCh0Buf,*pLcdCh1Buf,*pLcdCh2Buf,*pLcdCh3Buf;
 uint8_t ubKNL_DispCh0ActiveFlg=1,ubKNL_DispCh1ActiveFlg=1,ubKNL_DispCh2ActiveFlg=1,ubKNL_DispCh3ActiveFlg=1;
 LCD_INFOR_TYP *pLcdCropScaleParam;
 uint8_t ubKNL_LcdDispParamActiveFlg=1;
+
+//For JPEG LCD Display
+KNL_JpgLcdChCtrl_t tKNL_JpgLcdChCtrl;
+osMutexId osKNL_JpgLcdChMutex;
 
 //For TWC
 uint8_t ubKNL_TwcEndFlg = 1;
@@ -236,7 +246,7 @@ static void KNL_SecMonitThread(void const *argument);
 //------------------------------------------------------------------------------
 
 #define KNL_MAJORVER    1        //!< Major version = 1
-#define KNL_MINORVER    13       //!< Minor version = 13
+#define KNL_MINORVER    18       //!< Minor version = 18
 uint16_t uwKNL_GetVersion (void)
 {
     return ((KNL_MAJORVER << 8) + KNL_MINORVER);
@@ -368,31 +378,33 @@ uint32_t ulKNL_GetBbIpBufSz(void)
 void KNL_SetAdoInfo(ADO_KNL_PARA_t tAdoInfo)
 {
 	tKNL_AdoInfo.ulADO_BufStartAddr         = tAdoInfo.ulADO_BufStartAddr;
-	tKNL_AdoInfo.Sys_speed					= tAdoInfo.Sys_speed;	
+	tKNL_AdoInfo.Sys_speed					= tAdoInfo.Sys_speed;
 	tKNL_AdoInfo.Rec_device 				= tAdoInfo.Rec_device;
 	tKNL_AdoInfo.Ply_device 				= tAdoInfo.Ply_device;
     tKNL_AdoInfo.ADO_SigDelAdcMode  		= tAdoInfo.ADO_SigDelAdcMode;
 	tKNL_AdoInfo.Rec_fmt.sign_flag   		= tAdoInfo.Rec_fmt.sign_flag;
 	tKNL_AdoInfo.Rec_fmt.channel     		= tAdoInfo.Rec_fmt.channel;
 	tKNL_AdoInfo.Rec_fmt.sample_size 		= tAdoInfo.Rec_fmt.sample_size;
-	tKNL_AdoInfo.Rec_fmt.sample_rate		= tAdoInfo.Rec_fmt.sample_rate;	
+	tKNL_AdoInfo.Rec_fmt.sample_rate		= tAdoInfo.Rec_fmt.sample_rate;
 	tKNL_AdoInfo.Ply_fmt.sign_flag   		= tAdoInfo.Ply_fmt.sign_flag;
 	tKNL_AdoInfo.Ply_fmt.channel     		= tAdoInfo.Ply_fmt.channel;
 	tKNL_AdoInfo.Ply_fmt.sample_size		= tAdoInfo.Ply_fmt.sample_size;
-	tKNL_AdoInfo.Ply_fmt.sample_rate 		= tAdoInfo.Ply_fmt.sample_rate;	
-	tKNL_AdoInfo.Compress_method			= tAdoInfo.Compress_method;	
+	tKNL_AdoInfo.Ply_fmt.sample_rate 		= tAdoInfo.Ply_fmt.sample_rate;
+	tKNL_AdoInfo.Compress_method			= tAdoInfo.Compress_method;
 	tKNL_AdoInfo.Adpcm_func.extra_header	= tAdoInfo.Adpcm_func.extra_header;
 	tKNL_AdoInfo.Adpcm_func.step_size		= tAdoInfo.Adpcm_func.step_size;
 	tKNL_AdoInfo.Adpcm_func.enc_smpl_num	= tAdoInfo.Adpcm_func.enc_smpl_num;
-	tKNL_AdoInfo.Adpcm_func.dec_byte_num	= tAdoInfo.Adpcm_func.dec_byte_num;	
+	tKNL_AdoInfo.Adpcm_func.dec_byte_num	= tAdoInfo.Adpcm_func.dec_byte_num;
 	tKNL_AdoInfo.Rec_buf_size        		= tAdoInfo.Rec_buf_size;
 	tKNL_AdoInfo.Ply_buf_size        		= tAdoInfo.Ply_buf_size;
 	tKNL_AdoInfo.Audio32_En_buf_size 		= tAdoInfo.Audio32_En_buf_size;
 	tKNL_AdoInfo.Audio32_De_buf_size 		= tAdoInfo.Audio32_De_buf_size;
 	tKNL_AdoInfo.WavPlay_buf_size 		    = tAdoInfo.WavPlay_buf_size;
 	tKNL_AdoInfo.AAC_En_buf_size     		= tAdoInfo.AAC_En_buf_size;
-	tKNL_AdoInfo.AAC_De_buf_size     		= tAdoInfo.AAC_De_buf_size;	
-	tKNL_AdoInfo.Alarm_buf_size             = tAdoInfo.Alarm_buf_size;	
+	tKNL_AdoInfo.AAC_De_buf_size     		= tAdoInfo.AAC_De_buf_size;
+	tKNL_AdoInfo.Alarm_buf_size             = tAdoInfo.Alarm_buf_size;
+	tKNL_AdoInfo.Alaw_Dec_buf_size          = tAdoInfo.Alaw_Dec_buf_size;
+	tKNL_AdoInfo.Recording_buf_size         = tAdoInfo.Recording_buf_size;
 	tKNL_AdoInfo.Rec_buf_th					= tAdoInfo.Rec_buf_th;
 	tKNL_AdoInfo.Ply_buf_th        			= tAdoInfo.Ply_buf_th;
 }
@@ -403,11 +415,13 @@ void KNL_SetVdoGop(uint32_t ulGop)
 	tKNL_Info.ulGop = ulGop;
 }
 
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetVdoGop(void)
 {
 	return tKNL_Info.ulGop;
 }
 
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetVdoFrmIdx(uint8_t ubCh)
 {
 	return ulKNL_CurFrmIdx[ubCh];
@@ -419,9 +433,10 @@ void KNL_Init(void)
 	KNL_ROLE tKNLRole;
 
 	ubKNL_SysStopFlag		= FALSE;
+	ubKNL_BbPathAct			= FALSE;
 	pLcdCropScaleParam 		= NULL;
-	ptKNL_VdoRoleSrcMapT    = NULL;
-	ptKNL_AdoRoleSrcMapT    = NULL;
+	ptKNL_VdoRoleMap2SrcNum = NULL;
+	ptKNL_AdoRoleMap2SrcNum = NULL;
 	tKNL_Info.ubDisp1SrcNum = KNL_SRC_NONE;
 	tKNL_Info.ubDisp2SrcNum = KNL_SRC_NONE;
 	tKNL_Info.ubDisp3SrcNum = KNL_SRC_NONE;
@@ -430,6 +445,9 @@ void KNL_Init(void)
 	ubKNL_ChgResFlg			= FALSE;
 	ubKNL_ImgBusyFlg		= FALSE;
 	ubKNL_WorSts			= 1;
+	ubKNL_UsbdAdoEncAct		= 0;
+	ubKNL_UsbdAdoEncStFlag	= TRUE;
+	ubKNL_UsbdVdoViewType	= 1;
 	KNL_SwDispInfo.ubSetupFlag = FALSE;
 	for(tKNLRole = KNL_STA1; tKNLRole <= KNL_STA4; tKNLRole++)
 	{
@@ -439,6 +457,7 @@ void KNL_Init(void)
 		ubKNL_VdoResendITwcFlg[tKNLRole]	= FALSE;
 		ubKNL_VdoChkSrcNumFlg[tKNLRole]	 	= FALSE;
 		ubKNL_VdoResChgTwcFlg[tKNLRole]     = FALSE;
+		ubKNL_AppResendIFrmFlg[tKNLRole]	= FALSE;
 		KNL_SwDispInfo.tSrcNum[tKNLRole] 	= KNL_SRC_NONE;
 		KNL_SwDispInfo.tSrcLocate[tKNLRole] = KNL_DISP_LOCATION_ERR;
 	}
@@ -468,7 +487,7 @@ void KNL_Init(void)
 	KNL_VdoCodecProcQueue = osMessageCreate(osMessageQ(KNL_VDOPROCESS), NULL);
 
 	osMessageQDef(KNL_ADOPROCESS, KNL_PROC_QUEUE_NUM, KNL_PROCESS);
-	KNL_AdoCdoecProcQueue = osMessageCreate(osMessageQ(KNL_ADOPROCESS), NULL);
+	KNL_AdoCodecProcQueue = osMessageCreate(osMessageQ(KNL_ADOPROCESS), NULL);
 
 	osMessageQDef(KNL_VDOINPROCESS, BUF_NUM_SEN_YUV, KNL_PROCESS);
 	KNL_VdoInProcQueue = osMessageCreate(osMessageQ(KNL_VDOINPROCESS), NULL);
@@ -499,6 +518,10 @@ void KNL_Init(void)
 
 	osThreadDef(KNLSecMonitThread, KNL_SecMonitThread, THREAD_PRIO_SEC_MONIT, 1, THREAD_STACK_SEC_MONIT);
 	osThreadCreate(osThread(KNLSecMonitThread), NULL);
+
+	tKNL_JpgLcdChCtrl = JPG_LCDCH_DISABLE;
+	osMutexDef(KNL_JpgLcdCtrlMutex);
+	osKNL_JpgLcdChMutex = osMutexCreate(osMutex(KNL_JpgLcdCtrlMutex));
 
 	tKNL_RecordAct.tRecordFunc = KNL_RECORDFUNC_DISABLE;
 	for(tKNLRole = KNL_STA1; tKNLRole <= KNL_STA4; tKNLRole++)
@@ -625,6 +648,10 @@ static void KNL_AdoEncMonitThread(void const *argument)
 			{
 				printd(DBG_Debug3Lvl, "AdoEncQ(ADPCM) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.PcmAddr,tAdoInfo.PcmSize);
 			}
+			else if(tKNL_AdoInfo.Compress_method == COMPRESS_ALAW)
+			{
+				printd(DBG_Debug3Lvl, "AdoEncQ(ALAW) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.PcmAddr,tAdoInfo.PcmSize);
+			}
 			else if(tKNL_AdoInfo.Compress_method == COMPRESS_NONE)
 			{
 				printd(DBG_Debug3Lvl, "AdoEncQ(PCM) : Addr:0x%x,SZ:0x%x\r\n",tAdoInfo.PcmAddr,tAdoInfo.PcmSize);
@@ -673,7 +700,7 @@ static void KNL_AdoEncMonitThread(void const *argument)
 			tProcess.ulDramAddr2 = ulAddr;
 			tProcess.ulSize		 = ulSize;
 //			KNL_AdcBufProcess(tProcess);
-			if(osMessagePut(KNL_AdoCdoecProcQueue, &tProcess, 0) == osErrorResource)
+			if(osMessagePut(KNL_AdoCodecProcQueue, &tProcess, 0) == osErrorResource)
 			{
 				printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!!\r\n");
 			}
@@ -683,13 +710,13 @@ static void KNL_AdoEncMonitThread(void const *argument)
 //------------------------------------------------------------------------------
 static void KNL_AdoDecMonitThread(void const *argument)
 {	
-	ADO_DEC_EVENT tKNL_DecEvent;
+	ADO_DAC_EVENT tKNL_DacEvent;
 
 	while(1)
 	{
 		//Get Queue from Audio Interface
-		osMessageGet(tKNL_DecEventQue, &tKNL_DecEvent, osWaitForever);
-		switch(tKNL_DecEvent)
+		osMessageGet(tKNL_DecEventQue, &tKNL_DacEvent, osWaitForever);
+		switch(tKNL_DacEvent)
 		{
 			case DAC_RDY:
 #if defined(VBM_PU) || defined(VBM_BU)
@@ -715,7 +742,7 @@ static void KNL_AdoDecMonitThread(void const *argument)
 				#endif
 				break;
 			case PLAY_BUF_EMP:
-				printf("-Dac play empty-\n");
+				printd(DBG_CriticalLvl, "-Dac play empty-\n");
 				break;
 		}
 	}
@@ -746,6 +773,30 @@ void KNL_BufInit(void)
 #if USBD_ENABLE
 	fBufSize = USBD_BufSetup(ulBUF_GetFreeAddr());
 	BUF_BufInit(BUF_USBD_IP,1,fBufSize,0);	    //USBD IP Buffer
+	#ifdef OP_AP
+	if(tUSBD_GetClassMode() == USBD_COMPOSITE_MODE)
+	{
+	#define KNL_USBDUVC_AUX_SIZE		(32)
+	#define KNL_USBDMSC_AUX_SIZE		(16)
+	#define USBDVDO_SUBFRAME_SIZE		(4 * 1024)
+	#define USBDADO_SUBFRAME_SIZE		(7 * AUDIO32_ENCODE_SIZE)
+	#define UVC_OFS_CH_INFO				(12)
+	#define UVC_OFS_AUX_INFO			(13)
+	#define UVC_OFS_TIME_STAMP			(14)
+	#define UVC_OFS_NUM_SUB_FRAME		(22)
+	#define UVC_OFS_SUB_FRAME_IDX		(23)
+	#define UVC_OFS_SUB_FRAME_LEN		(24)
+	#define UVC_OFS_TOTAL_FRAME_IDX		(26)
+	#define UVC_OFS_RESERVED			(27)
+	#define UVC_OFS_SUB_FRAME_DATA		KNL_USBDUVC_AUX_SIZE
+		fBufSize = USBDVDO_SUBFRAME_SIZE + KNL_USBDUVC_AUX_SIZE + USBD_UVC_DUMMY_SZ;
+		BUF_BufInit(BUF_USBD_VDO, BUF_NUM_USBD_VDO, fBufSize, 0);
+		BUF_Reset(BUF_USBD_VDO);
+		fBufSize = USBDADO_SUBFRAME_SIZE + KNL_USBDUVC_AUX_SIZE + USBD_UVC_DUMMY_SZ;
+		BUF_BufInit(BUF_USBD_ADO, BUF_NUM_USBD_ADO, fBufSize, 0);
+		BUF_Reset(BUF_USBD_ADO);
+	}
+	#endif
 #endif
 
 	//Audio
@@ -764,7 +815,7 @@ void KNL_BufInit(void)
 	//DAC
 	for(i=0;i<4;i++)
 	{
-		if(ubKNL_ExistNode(KNL_SRC_1_OTHER_A+i,KNL_NODE_DAC_BUF) ||ubKNL_ExistNode(KNL_SRC_1_OTHER_B+i,KNL_NODE_DAC_BUF))
+		if(ubKNL_ExistNode(KNL_SRC_1_OTHER_A+i,KNL_NODE_DAC_BUF) || ubKNL_ExistNode(KNL_SRC_1_OTHER_B+i,KNL_NODE_DAC_BUF))
 		{
 			BUF_BufInit(BUF_ADO_DAC0+i,BUF_NUM_DAC,ulKNL_AlignAdoPktSz(ulADO_BufTh[tKNL_AdoInfo.Ply_buf_th]),0);
 			BUF_Reset(BUF_ADO_DAC0+i);
@@ -822,6 +873,14 @@ void KNL_BufInit(void)
     SEN_SetPathAddr(IQ_BIN_FILE, ulBUF_GetBlkBufAddr(0, BUF_IQ_BIN_FILE));
 #endif
 
+	//LCD Node
+	//================================================================
+	ubNodeExist = ubKNL_ChkExistNode(KNL_NODE_LCD);
+	if(ubNodeExist)
+	{
+		fBufSize = ulKNL_CalLcdBufSz();
+		BUF_BufInit(BUF_LCD_IP,1,fBufSize,0);
+	}
 	//VDO_BS_BUF Node
 	//================================================================
 	//(For BS_BUF1)
@@ -831,8 +890,8 @@ void KNL_BufInit(void)
 		if(ubKNL_ExistNode(KNL_SRC_1_MAIN+i,KNL_NODE_VDO_BS_BUF1))
 		{
 			tNodeInfo = tKNL_GetNodeInfo(KNL_SRC_1_MAIN+i,KNL_NODE_VDO_BS_BUF1);
-			tNodeInfo.uwVdoH = ISP_WIDTH;
-			tNodeInfo.uwVdoV = ISP_HEIGHT;
+//			tNodeInfo.uwVdoH = ISP_WIDTH;
+//			tNodeInfo.uwVdoV = ISP_HEIGHT;
 			fBufSize = ( ((uint32_t)tNodeInfo.uwVdoH) * ((uint32_t)tNodeInfo.uwVdoV) * 1.5 )/KNL_MIN_COMPRESS_RATIO;
 			BUF_BufInit(BUF_VDO_MAIN_BS0+i,BUF_NUM_VDO_BS,fBufSize,0);
 			BUF_Reset(BUF_VDO_MAIN_BS0+i);
@@ -887,15 +946,6 @@ void KNL_BufInit(void)
 			ubSrc = ubKNL_GetDispSrc(KNL_DISP_LOCATION1);
 			tDMAC_MemSet (0x00,ulAddr,((float)uwKNL_GetLcdDmyImgH())*((float)uwKNL_GetVdoV(ubSrc))*1.5,NULL);
 		}
-	}
-
-	//LCD Node
-	//================================================================
-	ubNodeExist = ubKNL_ChkExistNode(KNL_NODE_LCD);
-	if(ubNodeExist)
-	{
-		fBufSize = ulKNL_CalLcdBufSz();
-		BUF_BufInit(BUF_LCD_IP,1,fBufSize,0);
 	}
 	
 	//H264_ENC Node	
@@ -1054,8 +1104,9 @@ void KNL_BufInit(void)
 				BUF_BufInit(BUF_IMG_DEC,1,fBufSize,3);
 			}
 		}
-	}	
+	}
 
+	BUF_Reset(BUF_RESV_YUV);
 #if KNL_SD_FUNC_ENABLE
     //FS
 	if(ubSD_ChkIFSetup())
@@ -1075,8 +1126,8 @@ void KNL_BufInit(void)
 	{
 		fBufSize = KNL_JPG_HEADER_SIZE + KNL_JPG_BS_SIZE;
 		BUF_BufInit(BUF_JPG_BS, (1 << ubKNL_GetOpMode()), fBufSize, 0);
-		if((KNL_OPMODE_VBM_4T != ubKNL_GetOpMode()) ||
-		   ((KNL_OPMODE_VBM_4T == ubKNL_GetOpMode()) && (KNL_DISP_SINGLE == tKNL_GetDispType())))
+		if((KNL_OPMODE_VBM_1T == ubKNL_GetOpMode()) ||
+		   ((KNL_OPMODE_VBM_4T == ubKNL_GetOpMode()) && ((KNL_DISP_DUAL_C != tKNL_GetDispType()) && (KNL_DISP_DUAL_U != tKNL_GetDispType()))))
 		{
 			fBufSize = ISP_WIDTH * ISP_HEIGHT * 1.5;
 			BUF_BufInit(BUF_RESV_YUV, 1, fBufSize, 0);
@@ -1405,11 +1456,11 @@ void KNL_BlockInit(void)
 		KNL_DisableWORFunc();
 		if((!ubRTC_GetKey()) && (ubKNL_PsValue == RTC_PS_WOR_TAG))
 		{			
-			BB_Init(tKNL_BbSlotMode, NULL, 0,0x2B,0x2B,0,165);	//Step(n)  //倒数第二个参数设置FCC(0) 和CE (1)
+			BB_Init(tKNL_BbSlotMode, NULL, 0, 0x2B, 0x2B, 0, 165, APP_ADOENC_TYPE);	//Step(n)
 			ubKNL_WorSts = BB_ConfirmWakeUpInf();
 		}
 		else
-			BB_Init(tKNL_BbSlotMode, NULL, 1,0x2B,0x2B,0,165);	//Step(n)
+			BB_Init(tKNL_BbSlotMode, NULL, 1, 0x2B, 0x2B, 0, 165, APP_ADOENC_TYPE);	//Step(n)
 
 		osMessageQDef(KNL_QueBbFrmOk, 150, uint8_t);
 		KNL_QueBbFrmOk = osMessageCreate(osMessageQ(KNL_QueBbFrmOk), NULL);
@@ -1533,6 +1584,10 @@ void KNL_BlockInit(void)
 		//---------------------------------
 		//ADO_SetDacR2RVol(R2R_VOL_n0DB);	// DAC R2R volume
 		ADO_SetDacM2so(ADO_OFF);		// M2SO
+		
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+		ADO_SetDacGain(DAC_GAIN_n14DB, ADO_ON);
+#endif
 		//====================================	
 
 		osThreadDef(ADOEncProcessThread, KNL_AdoEncMonitThread, THREAD_PRIO_ADO_ENC_PROC, 1, THREAD_STACK_ADO_PROC);
@@ -1571,6 +1626,14 @@ void KNL_BlockInit(void)
 
 #if USBD_ENABLE
 	USBD_Start();
+	#ifdef OP_AP
+	if(tUSBD_GetClassMode() == USBD_COMPOSITE_MODE)
+	{
+		ADO_SetOutputCbFunc(KNL_UpdateUsbdAdoData);
+		tUSBD_RegMscCbFunc(USBDM_OPC_ADO, KNL_RecvAdoDataFromApp);
+		tUSBD_RegUvcReleaseBuffCbFunc(KNL_ReleaseUsbdBuf);
+	}
+	#endif
 #endif
 
 #if KNL_SD_FUNC_ENABLE
@@ -1639,12 +1702,12 @@ void KNL_SetOpMode(uint8_t ubOpMode)
 {
 	tKNL_Info.ubOpMode = ubOpMode;
 }
-
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetOpMode(void)
 {
 	return tKNL_Info.ubOpMode;
 }
-
+//------------------------------------------------------------------------------
 void KNL_SetAuxInfoFunc(uint8_t ubEnable)
 {
 	tKNL_Info.ubAuxInfoFlg = ubEnable;
@@ -1657,13 +1720,28 @@ uint8_t ubKNL_GetAuxInfoFunc(void)
 //------------------------------------------------------------------------------
 uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulAddr,uint32_t ulSize,uint32_t ulFrmIdx,uint32_t ulGop,uint8_t ubVdoGroupIdx)
 {
+#define KNL_AUX_INFO_LEN		(16 * 3)
+#define KNL_INFO_FRMSEQ			(1)
+#define KNL_INFO_RES			(2)
+#define KNL_INFO_VGOP			(6)
+#define KNL_INFO_GOP			(7)
+#define KNL_INFO_FRMIDX			(11)
+#define KNL_INFO_OPMODE			(15)
+#define KNL_INFO_SRCNUM			(16)
+#define KNL_INFO_TIMESTP_LSB	(20)
+#define KNL_INFO_TIMESTP_MSB	(24)
+#define KNL_INFO_PADD			(25)
+#define KNL_INFO_ADOSIZE		(3)
 //	uint8_t ubCrc8 = 0;
 //	CRC_t tCRC2_Setup;
 	uint32_t ulTemp;
 	uint32_t ulRtnSz;
 	uint32_t i;
-	uint32_t ulDmy0Time;
-	uint32_t ulCrcCalSz;
+	uint32_t ulDmy0Time = 0;
+//	uint32_t ulCrcCalSz;
+	uint8_t ubVdoIdx = 0;
+	static uint8_t ubKNL_VdoFrameSeq[2] = {0, 0};
+	static uint8_t ubKNL_AdoFrameSeq = 0;
 
 	//Case (%16) = 0
 	//-------------------------------------------
@@ -1671,9 +1749,7 @@ uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulA
 	//| Original Size			 				|
 	//|							 				|
 	//-------------------------------------------
-	//|CrcCalSz(4)|(12)			 				|
-	//-------------------------------------------
-	//|Crc(4)|  (12)   			 				|
+	//|TimeStamp (24)  			 				|
 	//--------------------------------------------------
 	//|SrcNum(1)|OpMode(1)|FrmIdx(4)|GOP(4)|VGOP(1)|(5)|
 	//--------------------------------------------------
@@ -1688,25 +1764,25 @@ uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulA
 		ulTemp = ulSize;
 		if((ulTemp % 16) == 0)
 		{
-			ulRtnSz    = ulTemp + 16 + 16 + 16;
-			ulCrcCalSz = ulTemp;
+			ulRtnSz    = ulTemp + KNL_AUX_INFO_LEN;
+//			ulCrcCalSz = ulTemp;
 		}
 		else
 		{
-			ulRtnSz    = ((ulTemp/16)*16) + (16*3) + 16;
-			ulCrcCalSz = ((ulTemp/16)*16) + 16;
+			ulRtnSz    = ((ulTemp / 16) * 16) + 16 + KNL_AUX_INFO_LEN;
+//			ulCrcCalSz = ((ulTemp / 16) * 16) + 16;
 			//Padd 0 value
-			ulDmy0Time = 16 - (ulSize%16);
-			for(i=0;i<ulDmy0Time;i++)
+			ulDmy0Time = 16 - (ulTemp % 16);
+			for(i = 0; i < ulDmy0Time; i++)
 			{
-				*((uint8_t *)(ulAddr+ulSize+i)) = 0;
+				*((uint8_t *)(ulAddr + ulSize + i)) = 0;
 			}
 		}
 
 		//CRC-Information
-		if(KNL_AUX_CRC_FUNC)
-		{
-			ulCrcCalSz = ulCrcCalSz;
+//		if(KNL_AUX_CRC_FUNC)
+//		{
+//			ulCrcCalSz = ulCrcCalSz;
 //			tCRC2_Setup.CRC_INIT_VALUE = INIT_ALL_ZERO;
 //			tCRC2_Setup.CRC_FINAL_XOR_VALUE = XOR_ALL_ZERO;
 //			tCRC2_Setup.CRC_ORDER = 7;
@@ -1716,55 +1792,69 @@ uint32_t ulKNL_AddAuxInfo(KNL_PACKET_TYPE tPktType,uint8_t ubSrcNum,uint32_t ulA
 //			
 //			*((uint32_t *)(ulAddr+ulRtnSz-16-16-16)) = ulCrcCalSz;
 //			*((uint32_t *)(ulAddr+ulRtnSz-16-16)) = (uint32_t)ubCrc8;
-		}
+//		}
 
 		//Aux-Information
-		*((uint8_t *)(ulAddr+ulRtnSz-16)) = ubSrcNum;									//SrcNum Information
-		*((uint8_t *)(ulAddr+ulRtnSz-15)) = ubKNL_GetOpMode();				//OpMode Information
+		
+		//Padd
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_PADD))  		 = (uint8_t)ulDmy0Time;
 
-		*((uint8_t *)(ulAddr+ulRtnSz-14)) = (uint8_t)(((ulFrmIdx&0x000000FF)>>0));	//Frame Index Information
-		*((uint8_t *)(ulAddr+ulRtnSz-13)) = (uint8_t)(((ulFrmIdx&0x0000FF00)>>8));
-		*((uint8_t *)(ulAddr+ulRtnSz-12)) = (uint8_t)(((ulFrmIdx&0x00FF0000)>>16));
-		*((uint8_t *)(ulAddr+ulRtnSz-11)) = (uint8_t)(((ulFrmIdx&0xFF000000)>>24));	
+		//Time Stamp
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_MSB)) = 0;
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_LSB)) = 0;
+		
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_SRCNUM)) 		 = ubSrcNum;								//SrcNum Information
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_OPMODE)) 		 = ubKNL_GetOpMode();						//OpMode Information
 
-		*((uint8_t *)(ulAddr+ulRtnSz-10)) = (uint8_t)(((ulGop&0x000000FF)>>0));	//Codec GOP Information
-		*((uint8_t *)(ulAddr+ulRtnSz-9))  = (uint8_t)(((ulGop&0x0000FF00)>>8));
-		*((uint8_t *)(ulAddr+ulRtnSz-8))  = (uint8_t)(((ulGop&0x00FF0000)>>16));
-		*((uint8_t *)(ulAddr+ulRtnSz-7))  = (uint8_t)(((ulGop&0xFF000000)>>24));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_FRMIDX + 3))) = (uint8_t)(((ulFrmIdx&0x000000FF)>>0));	//Frame Index Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_FRMIDX + 2))) = (uint8_t)(((ulFrmIdx&0x0000FF00)>>8));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_FRMIDX + 1))) = (uint8_t)(((ulFrmIdx&0x00FF0000)>>16));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_FRMIDX)) 		 = (uint8_t)(((ulFrmIdx&0xFF000000)>>24));
 
-		*((uint8_t *)(ulAddr+ulRtnSz-6))  = ubVdoGroupIdx;	//Video Group Information
-		*((uint8_t *)(ulAddr+ulRtnSz-5))  = uwKNL_GetVdoH(ubSrcNum) >> 8;
-		*((uint8_t *)(ulAddr+ulRtnSz-4))  = uwKNL_GetVdoH(ubSrcNum) & 0xFF;
-		*((uint8_t *)(ulAddr+ulRtnSz-3))  = uwKNL_GetVdoV(ubSrcNum) >> 8;
-		*((uint8_t *)(ulAddr+ulRtnSz-2))  = uwKNL_GetVdoV(ubSrcNum) & 0xFF;
-		*((uint8_t *)(ulAddr+ulRtnSz-1))  = (uint8_t)(ulRtnSz - ulTemp);
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_GOP + 3))) 	 = (uint8_t)(((ulGop&0x000000FF)>>0));		//Codec GOP Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_GOP + 2)))  	 = (uint8_t)(((ulGop&0x0000FF00)>>8));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_GOP + 1)))  	 = (uint8_t)(((ulGop&0x00FF0000)>>16));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_GOP))  		 = (uint8_t)(((ulGop&0xFF000000)>>24));
+
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_VGOP))  		 = ubVdoGroupIdx;							//Video Group Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_RES + 3)))  	 = uwKNL_GetVdoH(ubSrcNum) >> 8;
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_RES + 2)))  	 = uwKNL_GetVdoH(ubSrcNum) & 0xFF;
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_RES + 1)))  	 = uwKNL_GetVdoV(ubSrcNum) >> 8;
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_RES))  		 = uwKNL_GetVdoV(ubSrcNum) & 0xFF;
+		ubVdoIdx = (ubSrcNum <= KNL_SRC_4_MAIN)?0:1;
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_FRMSEQ))  	 = ubKNL_VdoFrameSeq[ubVdoIdx]++;		
 	}
 	else if(tPktType == KNL_ADO_PKT)
 	{
 		ulTemp = ulSize;
-
 		if((ulTemp % KNL_ADO_SUB_PKT_LEN) == 0)
 		{
-			ulRtnSz = ulTemp+KNL_ADO_SUB_PKT_LEN;
+			ulRtnSz = ulTemp + KNL_ADO_SUB_PKT_LEN;
 		}
 		else
 		{
-			if((ulTemp+16)  <= (((ulTemp/KNL_ADO_SUB_PKT_LEN)*KNL_ADO_SUB_PKT_LEN)+KNL_ADO_SUB_PKT_LEN))
+			if((ulTemp + 16) <= (((ulTemp / KNL_ADO_SUB_PKT_LEN) * KNL_ADO_SUB_PKT_LEN) + KNL_ADO_SUB_PKT_LEN))
 			{
-				ulRtnSz = ((ulTemp/KNL_ADO_SUB_PKT_LEN)*KNL_ADO_SUB_PKT_LEN)+KNL_ADO_SUB_PKT_LEN;
+				ulRtnSz = ((ulTemp / KNL_ADO_SUB_PKT_LEN) * KNL_ADO_SUB_PKT_LEN) + KNL_ADO_SUB_PKT_LEN;
 			}
 			else
 			{
-				ulRtnSz = ((ulTemp/KNL_ADO_SUB_PKT_LEN)*KNL_ADO_SUB_PKT_LEN)+(KNL_ADO_SUB_PKT_LEN*2);
+				ulRtnSz = ((ulTemp / KNL_ADO_SUB_PKT_LEN) * KNL_ADO_SUB_PKT_LEN) + (KNL_ADO_SUB_PKT_LEN * 2);
 			}
 		}
 		//Aux-Information
-		*((uint8_t *)(ulAddr+ulRtnSz-16)) = ubSrcNum;								//SrcNum Information
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_SRCNUM)) = ubSrcNum;					//SrcNum Information
+
+		//Time Stamp
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_MSB))   = 0;
+		*((uint32_t *)(ulAddr + ulRtnSz - KNL_INFO_TIMESTP_LSB))   = 0;
 		
-		*((uint8_t *)(ulAddr+ulRtnSz-6))  = (uint8_t)(((ulSize&0x000000FF)>>0));	//Real-Size Information
-		*((uint8_t *)(ulAddr+ulRtnSz-5))  = (uint8_t)(((ulSize&0x0000FF00)>>8));
-		*((uint8_t *)(ulAddr+ulRtnSz-4))  = (uint8_t)(((ulSize&0x00FF0000)>>16));
-		*((uint8_t *)(ulAddr+ulRtnSz-3))  = (uint8_t)(((ulSize&0xFF000000)>>24));
+
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_ADOSIZE + 3)))  = (uint8_t)(((ulSize&0x000000FF)>>0));		//Real-Size Information
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_ADOSIZE + 2)))  = (uint8_t)(((ulSize&0x0000FF00)>>8));
+		*((uint8_t *)(ulAddr + ulRtnSz - (KNL_INFO_ADOSIZE + 1)))  = (uint8_t)(((ulSize&0x00FF0000)>>16));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_ADOSIZE))   	   = (uint8_t)(((ulSize&0xFF000000)>>24));
+		*((uint8_t *)(ulAddr + ulRtnSz - KNL_INFO_FRMSEQ))  	   = ubKNL_AdoFrameSeq++;
 	}
 
 	return ulRtnSz;
@@ -1858,6 +1948,7 @@ uint8_t ubKNL_TwcSend(uint8_t ubRole,TWC_OPC Opc,uint8_t *Data,uint8_t ubLen,uin
 		{
 			case TWC_RESEND_I:
 				ubKNL_VdoResendITwcFlg[ubRole] = FALSE;
+				ubKNL_AppResendIFrmFlg[ubRole] = FALSE;
 				break;
 			case TWC_VDORES_SETTING:
 				ubKNL_VdoResChgTwcFlg[ubRole]  = FALSE;
@@ -2071,6 +2162,7 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 	uint8_t ubDisp3Src;
 	uint8_t ubDisp4Src;
 	static KNL_DISP_TYPE tKNL_DispType;
+	static uint8_t ubDualDectFlag = FALSE;
 
 	//Step1
 	ubKNL_DispCh0ActiveFlg = 0;
@@ -2104,7 +2196,7 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 		sLcdInfor.tDispType = LCD_DISP_1T;
 		sLcdInfor.ubChNum = 1;
 
-		KNL_SwDispInfo.ubSetupFlag = TRUE;	//FALSE;
+		KNL_SwDispInfo.ubSetupFlag = TRUE;	//! FALSE;
 		ubDisp1Src = KNL_SwDispInfo.tSrcNum[0];
 		if(tKNL_GetDispRotate() == KNL_DISP_ROTATE_0)
 		{
@@ -2182,12 +2274,17 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 			uint8_t ubRole[2];
 			uint8_t i;
 
-			for(i = 0; i < 2; i++)
-				ubRole[i] = ubKNL_SrcNumMap(KNL_SwDispInfo.tSrcNum[i]);
-			if(ubKNL_GetCommLinkStatus(ubRole[0]) == BB_LOST_LINK)
-				LCD_ChDisable(LCD_CH1);
-			if(ubKNL_GetCommLinkStatus(ubRole[1]) == BB_LOST_LINK)
-				LCD_ChDisable(LCD_CH0);
+			if(TRUE == ubDualDectFlag)
+			{
+				for(i = 0; i < 2; i++)
+					ubRole[i] = ubKNL_SrcNumMap(KNL_SwDispInfo.tSrcNum[i]);
+				if(ubKNL_GetCommLinkStatus(ubRole[0]) == BB_LOST_LINK)
+					LCD_ChDisable(LCD_CH1);
+				if(ubKNL_GetCommLinkStatus(ubRole[1]) == BB_LOST_LINK)
+					LCD_ChDisable(LCD_CH0);
+			}
+			else
+				ubDualDectFlag = FALSE;
 		}
 	}
 	else if(tKNL_GetDispType() == KNL_DISP_QUAD)
@@ -2323,16 +2420,21 @@ void KNL_ModifyDispType(KNL_DISP_TYPE tDispType, KNL_SrcLocateMap_t tSrcLocate)
 			sLcdInfor.tChRes[1].uwCropVsize  = (uwKNL_GetVdoH(ubDisp2Src) == 1280)?860:uwKNL_GetVdoH(ubDisp2Src);
 		}
 		if(TRUE == KNL_SwDispInfo.ubSetupFlag)
-		{
+		{			
 			uint8_t ubRole[2];
 			uint8_t i;
 
-			for(i = 0; i < 2; i++)
-				ubRole[i] = ubKNL_SrcNumMap(KNL_SwDispInfo.tSrcNum[i]);
-			if(ubKNL_GetCommLinkStatus(ubRole[0]) == BB_LOST_LINK)
-				LCD_ChDisable(LCD_CH1);
-			if(ubKNL_GetCommLinkStatus(ubRole[1]) == BB_LOST_LINK)
-				LCD_ChDisable(LCD_CH0);
+			if(TRUE == ubDualDectFlag)
+			{
+				for(i = 0; i < 2; i++)
+					ubRole[i] = ubKNL_SrcNumMap(KNL_SwDispInfo.tSrcNum[i]);
+				if(ubKNL_GetCommLinkStatus(ubRole[0]) == BB_LOST_LINK)
+					LCD_ChDisable(LCD_CH1);
+				if(ubKNL_GetCommLinkStatus(ubRole[1]) == BB_LOST_LINK)
+					LCD_ChDisable(LCD_CH0);
+			}
+			else
+				ubDualDectFlag = TRUE;
 		}
 	}
 	if(NULL == pLcdCropScaleParam)
@@ -2427,7 +2529,7 @@ uint32_t ulKNL_CalLcdBufSz(void)
 		else
 		{
 			sInfor.tInput[0].bJpegEn = TRUE;
-		}		
+		}
 		sInfor.tInput[0].uwHSize = (KNL_SRC_NONE == ubDisp1Src)?uwKNL_GetVdoH(KNL_SRC_1_MAIN):uwKNL_GetVdoH(ubDisp1Src);
 		sInfor.tInput[0].uwVSize = (KNL_SRC_NONE == ubDisp1Src)?uwKNL_GetVdoV(KNL_SRC_1_MAIN):uwKNL_GetVdoV(ubDisp1Src);		
 		
@@ -2439,7 +2541,7 @@ uint32_t ulKNL_CalLcdBufSz(void)
 		else
 		{
 			sInfor.tInput[1].bJpegEn = TRUE;
-		}	
+		}
 		sInfor.tInput[1].uwHSize = (KNL_SRC_NONE == ubDisp2Src)?uwKNL_GetVdoH(KNL_SRC_2_MAIN):uwKNL_GetVdoH(ubDisp2Src);
 		sInfor.tInput[1].uwVSize = (KNL_SRC_NONE == ubDisp2Src)?uwKNL_GetVdoV(KNL_SRC_2_MAIN):uwKNL_GetVdoV(ubDisp2Src);
 		
@@ -3117,11 +3219,11 @@ uint8_t ubKNL_SetDispCropScaleParam(void)
 			sLcdInfor.tChRes[1].uwCropVsize = uwKNL_GetVdoV(ubDisp3Src);		
 		}
 		else if(tKNL_GetDispRotate() == KNL_DISP_ROTATE_90)
-		{	
+		{
 			if(tKNL_GetDispRotate() == KNL_DISP_ROTATE_90)
 			{
 				printd(DBG_Debug3Lvl, "Need to Add !!!!\r\n");
-			}			
+			}
 		}
 		pLcdCropScaleParam = (LCD_INFOR_TYP *)(&sLcdInfor);
 	}
@@ -3131,7 +3233,7 @@ uint8_t ubKNL_SetDispCropScaleParam(void)
 		sLcdInfor.tDispType = LCD_DISP_3T_2L1R;
 		sLcdInfor.ubChNum = 3;
 		sLcdInfor.uwLcdOutputHsize = uwLCD_GetLcdHoSize();
-		sLcdInfor.uwLcdOutputVsize = uwLCD_GetLcdVoSize();		
+		sLcdInfor.uwLcdOutputVsize = uwLCD_GetLcdVoSize();
 		
 		//Get Correspond Source
 		ubDisp1Src = ubKNL_GetDispSrc(KNL_DISP_LOCATION1);
@@ -3429,6 +3531,9 @@ void KNL_ResetDispSrc(uint8_t ubSrcNum)
 void KNL_SetDispSrc(KNL_DISP_LOCATION tDispLocation,uint8_t ubDispSrcNum)
 {
 	KNL_ResetDispSrc(ubDispSrcNum);
+
+
+            
 	if(tDispLocation == KNL_DISP_LOCATION1)
 	{
 		tKNL_Info.ubDisp1SrcNum = ubDispSrcNum;
@@ -3445,10 +3550,19 @@ void KNL_SetDispSrc(KNL_DISP_LOCATION tDispLocation,uint8_t ubDispSrcNum)
 	{
 		tKNL_Info.ubDisp4SrcNum = ubDispSrcNum;
 	}
+/*        printd(1,"KNL_SetDispSrc\n");
+        printd(1," tDispLocation %d \n ",tDispLocation);
+        printd(1," ubDispSrcNum %d \n ",ubDispSrcNum);
+
+        printd(1," tKNL_Info.ubDisp1SrcNum %d \n ",tKNL_Info.ubDisp1SrcNum);
+        printd(1," tKNL_Info.ubDisp2SrcNum %d \n ",tKNL_Info.ubDisp2SrcNum);
+*/        
+
 }
 //------------------------------------------------------------------------------
 uint8_t ubKNL_GetDispSrc(KNL_DISP_LOCATION tDispLocation)
 {
+
 	if(tDispLocation == KNL_DISP_LOCATION1)
 	{
 		return tKNL_Info.ubDisp1SrcNum;
@@ -3473,6 +3587,12 @@ uint8_t ubKNL_GetDispSrc(KNL_DISP_LOCATION tDispLocation)
 //------------------------------------------------------------------------------
 KNL_DISP_LOCATION tKNL_GetDispLocation(uint8_t ubSrcNum)
 {
+/*        printd(1," tKNL_GetDispLocation \n ");
+        printd(1," ubSrcNum %d \n ",ubSrcNum);
+        printd(1," tKNL_Info.ubDisp1SrcNum %d \n ",tKNL_Info.ubDisp1SrcNum);
+        printd(1," tKNL_Info.ubDisp2SrcNum %d \n ",tKNL_Info.ubDisp2SrcNum);
+*/
+
 	if(tKNL_Info.ubDisp1SrcNum == ubSrcNum)
 	{
 		return KNL_DISP_LOCATION1;
@@ -3787,7 +3907,14 @@ uint8_t ubKNL_UpdateUvcImage(KNL_PROCESS tProc, KNL_NODE tCurNode)
 					if(TRUE == ubUVC_CheckResolution(uwVdoHSize, uwVdoVSize))
 					{
 						SEN_SetUvcPathFlag(1);
-						uvc_update_image((uint32_t *)tProc.ulDramAddr2, (uint32_t)tProc.ulSize);
+						if(FALSE == uvc_update_image((uint32_t *)tProc.ulDramAddr2, (uint32_t)tProc.ulSize))
+						{
+							if(tNodeInfo.ubPreNode == KNL_NODE_H264_ENC)
+							{
+								ubKNL_ReleaseBsBufAddr(KNL_NODE_H264_ENC, tProc.ubSrcNum, tProc.ulDramAddr2);
+								return 0;
+							}
+						}
 					}
 					else
 					{
@@ -4627,9 +4754,9 @@ void KNL_ActiveLcdDispBuf(uint8_t ubSrcNum)
 	if((tKNL_GetDispType() == KNL_DISP_H) && (tKNL_GetDispRotate() == KNL_DISP_ROTATE_0))
 	{
 		tDispLocate = tKNL_GetDispLocation(ubSrcNum);
-		
+
 		if(tDispLocate == KNL_DISP_LOCATION2)
-		{			
+		{
 			if(ubKNL_DispCh0ActiveFlg)
 			{
 				LCD_SetChBufReady(pLcdCh0Buf);
@@ -5101,7 +5228,7 @@ void KNL_H264DecProcess(KNL_PROCESS tProc)
 				ubKNL_ReleaseBsBufAddr(KNL_NODE_H264_DEC,tProc.ubSrcNum,tProc.ulDramAddr2);
 				return;
 			}
-			if(KNL_PHOTO_PLAY == tKNL_GetRecordFunc())
+			if((KNL_PHOTO_PLAY == tKNL_GetRecordFunc()) || (JPG_LCDCH_ENABLE == tKNL_GetJpegLcdChCtrl()))
 			{
 				ulAddr = ulKNL_GetResvDecAddr();
 				printd(DBG_InfoLvl, "		>H264 DEC: 0x%X\n", ulAddr);
@@ -5799,23 +5926,23 @@ RTYSEND_VDO:
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulKNL_GetPktSZ(uint32_t ulAddr,uint32_t ulSize)
+uint32_t ulKNL_GetAdoPktSZ(uint32_t ulAddr,uint32_t ulSize)
 {
-	uint32_t ulRtnValue;	
-	
+	uint32_t ulRtnValue;
+
 	ulRtnValue = 0;
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-6))))<<0);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-5))))<<8);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-4))))<<16);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-3))))<<24);
-	
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_ADOSIZE+3)))))<<0);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_ADOSIZE+2)))))<<8);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_ADOSIZE+1)))))<<16);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-KNL_INFO_ADOSIZE))))<<24);
+
 	return ulRtnValue;
 }		
 
 //------------------------------------------------------------------------------
 void KNL_AdcBufProcess(KNL_PROCESS tProc)
 {
-	uint32_t ulTempAddr;
+	uint32_t ulAdcAddr = 0;
 	uint8_t ubTemp;
 	uint8_t ubNextNode;	
 	uint8_t ubLinkRole;
@@ -5851,11 +5978,11 @@ RTYSEND_ADO:
 		ubLinkRole = KNL_MASTER_AP;
 	}
 
-	ubNextNode = ubKNL_GetNextNode(tProc.ubSrcNum,KNL_NODE_ADC_BUF);
-	if(ubNextNode == KNL_NODE_COMM_TX_ADO)
+	ubNextNode = (tProc.ubNextNode == KNL_NODE_MSC_ADO)?KNL_NODE_MSC_ADO:ubKNL_GetNextNode(tProc.ubSrcNum, KNL_NODE_ADC_BUF);
+	if((ubNextNode == KNL_NODE_COMM_TX_ADO) || (ubNextNode == KNL_NODE_MSC_ADO))
 	{
 		if(ubKNL_GetCommLinkStatus(ubLinkRole) == BB_LOST_LINK)		
-			return;
+			goto SEND_ADO_ERR;
 
 		ubBufOkFlg = 0;
 		ubTotalBufNum = ubBB_GetTxTotalBufNum(BB_DATA_AUDIO,BB_TX_MASTER);
@@ -5870,19 +5997,45 @@ RTYSEND_ADO:
 			{
 				DMAC_RESULT tDmaResult = DMAC_OK;
 
-				ulTempAddr = ulBUF_GetAdcFreeBuf();
-				if(BUF_FAIL == ulTempAddr)
-					return;
-				tDmaResult = tDMAC_MemCopy(tProc.ulDramAddr2,ulTempAddr,tProc.ulSize,NULL);
-				if(DMAC_OK != tDmaResult)
+				ulAdcAddr = ulBUF_GetAdcFreeBuf();
+				if(BUF_FAIL == ulAdcAddr)
+					goto SEND_ADO_ERR;
+				switch(ubNextNode)
 				{
-					ubBUF_ReleaseAdcBuf(ulTempAddr);
-					printd(DBG_ErrorLvl, "DMA NRDY @%s !\n", __func__);
-					return;
+					case KNL_NODE_COMM_TX_ADO:
+						tDmaResult = tDMAC_MemCopy(tProc.ulDramAddr2, ulAdcAddr, tProc.ulSize,NULL);
+						if(DMAC_OK != tDmaResult)
+						{
+							printd(DBG_ErrorLvl, "DMA NRDY @%s !\n", __func__);
+							goto SEND_ADO_ERR;
+						}
+						break;
+					case KNL_NODE_MSC_ADO:
+					{
+						ADO_AUD32_ENC_INFO tAdo32EncInfo;
+						uint32_t *pEncData;
+
+						pEncData 	= (uint32_t *)ulAdcAddr;
+						pEncData[0] = ubKNL_UsbdAdoEncStFlag;
+						pEncData[1] = osKernelSysTick();
+						if(TRUE == ubKNL_UsbdAdoEncStFlag)
+							ubKNL_UsbdAdoEncStFlag = FALSE;
+						tAdo32EncInfo = ADO_Audio32_Encode(0, tProc.ulDramAddr1, (uint32_t)(&pEncData[2]), tProc.ulSize);
+						if(!tAdo32EncInfo.ulOutputSize)
+						{
+							printd(DBG_ErrorLvl, "ADO32 ENC Fail @%s !\n", __func__);
+							goto SEND_ADO_ERR;
+						}
+						tProc.ulSize = tAdo32EncInfo.ulOutputSize + 8;
+						ubBUF_ReleaseAdoUsbdBuf(tProc.ulDramAddr1);
+						break;
+					}
+					default:
+						goto SEND_ADO_ERR;
 				}
-				ulExtSz = ulKNL_AddAuxInfo(KNL_ADO_PKT,tProc.ubSrcNum,ulTempAddr,tProc.ulSize,0,0,0);
+				ulExtSz = ulKNL_AddAuxInfo(KNL_ADO_PKT, tProc.ubSrcNum, ulAdcAddr, tProc.ulSize, 0, 0, 0);
 			}
-			tKNL_BbStatus = tBB_SendData(NULL,BB_DATA_AUDIO,(uint8_t *)ulTempAddr,ulExtSz,(SET_TX_PATH)NULL);
+			tKNL_BbStatus = tBB_SendData(NULL,BB_DATA_AUDIO,(uint8_t *)ulAdcAddr,ulExtSz,(SET_TX_PATH)NULL);
 			switch(tKNL_BbStatus)
 			{
 				case BB_SET_BUF_SUCCESS:
@@ -5899,7 +6052,7 @@ RTYSEND_ADO:
 				default:
 					break;
 			}
-			ubTemp = ubBUF_ReleaseAdcBuf(ulTempAddr);
+			ubTemp = ubBUF_ReleaseAdcBuf(ulAdcAddr);
 			if(ubTemp == BUF_OK)
 			{
 				printd(DBG_Debug3Lvl, "Release BUF_ADC Ok\r\n");
@@ -5914,6 +6067,11 @@ RTYSEND_ADO:
 			BB_ClearTxBuf(BB_TX_MASTER, BB_DATA_AUDIO);
 		}
 	}
+SEND_ADO_ERR:
+	if(ubNextNode == KNL_NODE_MSC_ADO)
+		ubBUF_ReleaseAdoUsbdBuf(tProc.ulDramAddr1);
+	if((ulAdcAddr) && (BUF_FAIL != ulAdcAddr))
+		ubBUF_ReleaseAdcBuf(ulAdcAddr);
 }
 //------------------------------------------------------------------------------
 void KNL_RetryAdcBufProcess(KNL_PROCESS tProc)
@@ -5978,7 +6136,7 @@ void KNL_RetryAdcBufProcess(KNL_PROCESS tProc)
 			tKNLInfo.ulDramAddr1 = tProc.ulDramAddr1;
 			tKNLInfo.ulDramAddr2 = tProc.ulDramAddr2;
 			tKNLInfo.ulSize      = tProc.ulSize;
-			if(osMessagePutToFront(KNL_AdoCdoecProcQueue, &tKNLInfo, 0) == osErrorResource)
+			if(osMessagePutToFront(KNL_AdoCodecProcQueue, &tKNLInfo, 0) == osErrorResource)
 			{
 				ubBUF_ReleaseAdcBuf(tKNLInfo.ulDramAddr2);
 				printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!!\r\n");
@@ -6005,44 +6163,64 @@ void KNL_DacBufProcess(KNL_PROCESS tProc)
 {
 	uint8_t ubTemp = BUF_FAIL, ubSrcNumMap;
 	uint8_t ubNextNode;
-//	uint32_t ulDwCnt;
+	uint32_t ulAdoPktSize = 0;
 	ADO_Queue_INFO EN_INFO;	//!< static ADO_Queue_INFO EN_INFO;
 
-	ubNextNode = ubKNL_GetNextNode(tProc.ubSrcNum,tProc.ubNextNode);
-	if(ubKNL_ChkAdoFlowAct(tProc.ubSrcNum))
+	ulAdoPktSize = ulKNL_GetAdoPktSZ(tProc.ulDramAddr2, tProc.ulSize);
+	ubNextNode   = ubKNL_GetNextNode(tProc.ubSrcNum,tProc.ubNextNode);
+	if((ubKNL_ChkAdoFlowAct(tProc.ubSrcNum)) || (tUSBD_GetClassMode() == USBD_COMPOSITE_MODE))
 	{
 		if(ubNextNode == KNL_NODE_DAC)
 		{
 			if((tADO_GetAdo32Enable() == ADO_ON) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
-				EN_INFO.EncType = AUDIO32;			
+				EN_INFO.EncType = AUDIO32;
 				EN_INFO.Audio32Addr = tProc.ulDramAddr2;
-				EN_INFO.Audio32Size	= tProc.ulSize;
+				EN_INFO.Audio32Size	= ulAdoPktSize;
+				EN_INFO.PcmAddr = 0;
 			}
 			else if((tADO_GetAACEnable() == ADO_ON) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
-				EN_INFO.EncType = AAC;			
+				EN_INFO.EncType = AAC;
 				EN_INFO.AACAddr = tProc.ulDramAddr2;
-				EN_INFO.AACSize	= tProc.ulSize;
+				EN_INFO.AACSize	= ulAdoPktSize;
 			}
 			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_MSADPCM))
 			{
 				//MS-ADPCM
-				EN_INFO.EncType = NONE;			
+				EN_INFO.EncType = NONE;
 				EN_INFO.PcmAddr = tProc.ulDramAddr2;
-				EN_INFO.PcmSize	= tProc.ulSize;
+				EN_INFO.PcmSize	= ulAdoPktSize;
+			}
+			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_ALAW))
+			{
+				//ALAW
+				EN_INFO.EncType = NONE;
+				EN_INFO.PcmAddr = tProc.ulDramAddr2;
+				EN_INFO.PcmSize	= ulAdoPktSize;
 			}
 			else if((tADO_GetAdo32Enable() == ADO_OFF) && (tADO_GetAACEnable() == ADO_OFF) && (tKNL_AdoInfo.Compress_method == COMPRESS_NONE))
 			{
 				//PCM
-				EN_INFO.EncType = NONE;			
+				EN_INFO.EncType = NONE;
 				EN_INFO.PcmAddr = tProc.ulDramAddr2;
-				EN_INFO.PcmSize	= tProc.ulSize;
+				EN_INFO.PcmSize	= ulAdoPktSize;
 			}
-			EN_INFO.ubSrcNum = ubKNL_SrcNumMap(tProc.ubSrcNum);
 //			printf("----->Src:%d\n",EN_INFO.ubSrcNum);
-			ADO_DecodeBufferWrtIn(&GlobalAudioMeta,&EN_INFO);
-		}	
+			EN_INFO.ADO_PlayType = NORMAL_PLAY;
+			EN_INFO.ubSrcNum = ubKNL_SrcNumMap(tProc.ubSrcNum);
+			EN_INFO.ubPlaySrcNum = EN_INFO.ubSrcNum;
+			EN_INFO.ulDecAddr	 = 0;
+		#ifdef OP_AP
+			if(tUSBD_GetClassMode() == USBD_COMPOSITE_MODE)
+			{
+				EN_INFO.ubPlaySrcNum = (ubKNL_ChkAdoFlowAct(tProc.ubSrcNum))?ubKNL_SrcNumMap(tProc.ubSrcNum):0xFF;
+				EN_INFO.ulDecAddr  	 = ulKNL_SetUsbdAdoPktInfo(tProc.ulDramAddr2, tProc.ulSize);
+				EN_INFO.ulDecAddr 	+= ((EN_INFO.ulDecAddr)?UVC_OFS_SUB_FRAME_DATA:0);
+			}
+		#endif
+			ADO_DecodeBufferWrtIn(&EN_INFO);
+		}
 		else
 		{
 			printd(DBG_ErrorLvl, "Err @KNL_DacBufProcess\r\n");
@@ -6095,62 +6273,77 @@ uint32_t ulKNL_AlignAdoPktSz(uint32_t ulInputSz)
 	}
 }
 //------------------------------------------------------------------------------
+uint32_t ulKNL_GetTimeStamp1(uint32_t ulAddr,uint32_t ulSize)
+{
+	return *((uint32_t *)(ulAddr+ulSize-KNL_INFO_TIMESTP_LSB));
+}
+//------------------------------------------------------------------------------
+uint32_t ulKNL_GetTimeStamp2(uint32_t ulAddr,uint32_t ulSize)
+{
+	return *((uint32_t *)(ulAddr+ulSize-KNL_INFO_TIMESTP_MSB));
+}
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetPktSrcNum(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-16));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_SRCNUM));
 }
-
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetPktOpMode(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-15));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_OPMODE));
 }
-
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetPktFrmIdx(uint32_t ulAddr,uint32_t ulSize)
 {
 	uint32_t ulRtnValue;	
 	
 	ulRtnValue = 0;
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-14))))<<0);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-13))))<<8);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-12))))<<16);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-11))))<<24);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_FRMIDX+3)))))<<0);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_FRMIDX+2)))))<<8);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_FRMIDX+1)))))<<16);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-KNL_INFO_FRMIDX))))<<24);
 	
 	return ulRtnValue;
 }
-
+//------------------------------------------------------------------------------
 uint32_t ulKNL_GetPktGop(uint32_t ulAddr,uint32_t ulSize)
 {
 	uint32_t ulRtnValue;	
 	
 	ulRtnValue = 0;
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-10))))<<0);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-9))))<<8);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-8))))<<16);
-	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-7))))<<24);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_GOP+3)))))<<0);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_GOP+2)))))<<8);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_GOP+1)))))<<16);
+	ulRtnValue += (((uint32_t)(*((uint8_t *)(ulAddr+ulSize-KNL_INFO_GOP))))<<24);
 	
 	return ulRtnValue;
 }
-
+//------------------------------------------------------------------------------
 uint8_t ubKNL_GetPktVdoGop(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-6));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_VGOP));
 }
-
+//------------------------------------------------------------------------------
 uint16_t ubKNL_GetPktHRes(uint32_t ulAddr,uint32_t ulSize)
 {
-	return (*((uint8_t *)(ulAddr+ulSize-5)) << 8) + (*((uint8_t *)(ulAddr+ulSize-4)));
+	return (*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_RES+3))) << 8) + (*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_RES+2))));
 }
-
+//------------------------------------------------------------------------------
 uint16_t ubKNL_GetPktVRes(uint32_t ulAddr,uint32_t ulSize)
 {
-	return (*((uint8_t *)(ulAddr+ulSize-3)) << 8) + (*((uint8_t *)(ulAddr+ulSize-2)));
+	return (*((uint8_t *)(ulAddr+ulSize-(KNL_INFO_RES+1))) << 8) + (*((uint8_t *)(ulAddr+ulSize-KNL_INFO_RES)));
 }
-
-uint16_t ubKNL_GetPaddLen(uint32_t ulAddr,uint32_t ulSize)
+//------------------------------------------------------------------------------
+uint8_t ubKNL_GetFrameSeq(uint32_t ulAddr,uint32_t ulSize)
 {
-	return *((uint8_t *)(ulAddr+ulSize-1));
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_FRMSEQ));
 }
-
+//------------------------------------------------------------------------------
+uint8_t ubKNL_GetPaddLen(uint32_t ulAddr,uint32_t ulSize)
+{
+	return *((uint8_t *)(ulAddr+ulSize-KNL_INFO_PADD));
+}
+//------------------------------------------------------------------------------
 uint8_t ubKNL_ChkDebugPkt(uint32_t ulAddr,uint32_t ulSize)
 {
 //	uint8_t hw_crc_8 = 0;	
@@ -6178,6 +6371,15 @@ uint8_t ubKNL_ChkDebugPkt(uint32_t ulAddr,uint32_t ulSize)
 //		return 0;
 //	}	
 //	return 1;		
+}
+
+void KNL_ResendIframeFunc(KNL_ROLE tKNL_Role)
+{
+#ifdef OP_AP
+	if(tKNL_Role <= KNL_STA4)
+		ubKNL_AppResendIFrmFlg[tKNL_Role] = TRUE;
+	printd(DBG_CriticalLvl, "	I->STA[%d]\n", tKNL_Role);
+#endif
 }
 
 static void KNL_TwcMonitThread(void const *argument)
@@ -6521,9 +6723,10 @@ static void KNL_AdoCodecProcThread(void const *argument)
 
 	while(1)
 	{
-        osMessageGet(KNL_AdoCdoecProcQueue, &tProc, osWaitForever);
+        osMessageGet(KNL_AdoCodecProcQueue, &tProc, osWaitForever);
 		switch(tProc.ubNextNode)
 		{
+			case KNL_NODE_MSC_ADO:
 			case KNL_NODE_ADC_BUF:
 				KNL_AdcBufProcess(tProc);
 				break;
@@ -7046,11 +7249,6 @@ static void KNL_CommLinkUpdateThread(void const *argument)
 								}
 							}
 						}
-//						if(ptKNL_AdoRoleSrcMapT)
-//						{
-//							tAdoSrcNum = ptKNL_AdoRoleSrcMapT((KNL_ROLE)ubKNL_GetRole());
-//							KNL_AdoResume(tAdoSrcNum);
-//						}
 					#endif
 					}
 					if(FALSE == ubKNL_SetLhFlag)
@@ -7136,6 +7334,87 @@ static void KNL_CommLinkUpdateThread(void const *argument)
 }
 //------------------------------------------------------------------------------
 #if OP_AP
+void KNL_ModifyUsbdViewType(uint8_t ubViewType)
+{
+	ubKNL_UsbdVdoViewType = ubViewType;
+}
+//------------------------------------------------------------------------------
+void KNL_ReleaseUsbdBuf(uint32_t ulBufAddr)
+{
+	if(0xFFFFFFFF == ulBufAddr)
+	{
+		BUF_ResetUsbdBuf();
+	}
+	else if(BUF_FAIL == ubBUF_ReleaseVdoUsbdBuf(ulBufAddr))
+	{
+		if(BUF_FAIL == ubBUF_ReleaseAdoUsbdBuf(ulBufAddr))
+			printd(DBG_ErrorLvl, "Release Usbd Buf Err: 0x%X !\n", ulBufAddr);
+	}
+}
+//------------------------------------------------------------------------------
+uint8_t ubKNL_UpdateUvcImage(uint32_t ulVdoAddr, uint32_t ulVdoSize)
+{
+	uint32_t ulBsAddr = 0, ulTimeStp1 = 0, ulTimeStp2 = 0, ulFrmIdx = 0;
+	uint32_t ulBsSize = 0, ulRemindBsSize = 0;
+	uint32_t ulBsSrcAddr = 0, ulBsDestAddr = 0;
+	uint32_t ulUvcAuxSize = 0, ulSubFrmSize = 0;
+	uint8_t ubSrcNum, ubRoleNum, ubIdx;
+	uint8_t ubFrmType, ubFrmSeq, ubNumOfSubData, ubSubIdx;
+	DMAC_RESULT tDmaResult = DMAC_OK;
+
+	ulUvcAuxSize   = KNL_USBDUVC_AUX_SIZE - UVC_OFS_CH_INFO;
+	ulSubFrmSize   = USBDVDO_SUBFRAME_SIZE - KNL_USBDUVC_AUX_SIZE;
+	ulBsSize 	   = ulVdoSize - KNL_AUX_INFO_LEN;
+	ubNumOfSubData = ulBsSize / ulSubFrmSize;
+	if(ulBsSize % ulSubFrmSize)
+	{
+		ulRemindBsSize = ulBsSize - (ubNumOfSubData * ulSubFrmSize);
+		ubNumOfSubData++;
+	}
+	ubSrcNum   = ubKNL_GetPktSrcNum(ulVdoAddr, ulVdoSize);
+	ubRoleNum  = ubKNL_SrcNumMap(ubSrcNum);
+	ulFrmIdx   = ulKNL_GetPktFrmIdx(ulVdoAddr, ulVdoSize);
+	ubFrmType  = (ulFrmIdx == 0)?KNL_VDO_I_FRAME:KNL_VDO_P_FRAME;
+	ulTimeStp1 = ulKNL_GetTimeStamp1(ulVdoAddr, ulVdoSize);
+	ulTimeStp2 = ulKNL_GetTimeStamp2(ulVdoAddr, ulVdoSize);
+	ubFrmSeq   = ubKNL_GetFrameSeq(ulVdoAddr, ulVdoSize);
+	for(ubSubIdx = 0; ubSubIdx < ubNumOfSubData; ubSubIdx++)
+	{
+		ulBsAddr = ulBUF_GetVdoUsbdFreeBuf();
+		if(BUF_FAIL == ulBsAddr)
+			return FALSE;
+		memset((uint8_t *)ulBsAddr, 0, KNL_USBDUVC_AUX_SIZE);
+		*((uint8_t *)(ulBsAddr + UVC_OFS_CH_INFO))	= (ubRoleNum + (ubKNL_UsbdVdoViewType * 6));
+		*((uint8_t *)(ulBsAddr + UVC_OFS_AUX_INFO))	= ubFrmType;
+		for(ubIdx = 0; ubIdx < 4; ubIdx++)
+			*((uint8_t *)(ulBsAddr + UVC_OFS_TIME_STAMP + ubIdx)) = ((ulTimeStp1 >> (ubIdx * 8)) & 0xFF);
+		for(ubIdx = 0; ubIdx < 4; ubIdx++)
+			*((uint8_t *)(ulBsAddr + UVC_OFS_TIME_STAMP + ubIdx + 4)) = ((ulTimeStp2 >> (ubIdx * 8)) & 0xFF);
+		*((uint8_t *)(ulBsAddr + UVC_OFS_NUM_SUB_FRAME)) 	 = ubNumOfSubData;
+		*((uint8_t *)(ulBsAddr + UVC_OFS_SUB_FRAME_IDX)) 	 = ubSubIdx;
+		ulBsSize = ((ubSubIdx + 1) == ubNumOfSubData)?ulRemindBsSize:ulSubFrmSize;
+		*((uint8_t *)(ulBsAddr + UVC_OFS_SUB_FRAME_LEN)) 	 = ulBsSize & 0xFF;
+		*((uint8_t *)(ulBsAddr + UVC_OFS_SUB_FRAME_LEN + 1)) = (ulBsSize >> 8) & 0xFF;
+		*((uint8_t *)(ulBsAddr + UVC_OFS_TOTAL_FRAME_IDX))   = ubFrmSeq;
+		*((uint8_t *)(ulBsAddr + UVC_OFS_RESERVED))   		 = 0;
+		ulBsSrcAddr  = ulVdoAddr + (ubSubIdx * ulSubFrmSize);
+		ulBsDestAddr = ulBsAddr + UVC_OFS_SUB_FRAME_DATA;
+		tDmaResult   = tDMAC_MemCopy(ulBsSrcAddr, ulBsDestAddr, ulBsSize, NULL);
+		if((DMAC_OK != tDmaResult) || (FALSE == uvc_update_image((uint32_t *)ulBsAddr, (ulBsSize + ulUvcAuxSize))))
+		{
+			KNL_ReleaseUsbdBuf(ulBsAddr);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+//------------------------------------------------------------------------------
+#define FRM_LOSS_ERR		1
+#define FRM_CRC_ERR			2
+#define FRM_TX_BUFF_FULL	3
+#define FRM_SRCNUM_ERR		4
+#define FRM_ERR5			5
+#define FRM_ERR6			6
 static void KNL_CommVdoRxMonitThread(void const *argument)
 {
 	KNL_PROCESS tKNLInfo;
@@ -7213,7 +7492,6 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 		{
 			KNL_FRAME_TYPE tKNL_RecvFrmType;
 			uint16_t uwKNL_PktHSize = 0, uwKNL_PktVSize = 0;
-			//uint8_t ubKNL_PaddLen = 0;
 
 			//Reset the Status
 			ubMultiOutFlg = 0;
@@ -7230,7 +7508,23 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 			if((ubOpMode != ubKNL_GetOpMode() || (ubSrcNumMap > KNL_STA4)))
 				goto RX_VDORES_ERR;
 
-			//ubKNL_PaddLen  = ubKNL_GetPaddLen(Don.ulAddr,Don.ulSize);
+			if(TRUE == ubKNL_AppResendIFrmFlg[ubSrcNumMap])
+			{
+				ubKNL_RcvFirstIFrame[ubSrcNum] 	= 0;
+				ubChkSeqFlg[ubSrcNumMap] 		= 0;
+				tKNLInfo.ubSrcNum     = ubSrcNum;
+				tKNLInfo.ubTargetRole = Don.tSTA;
+				tKNLInfo.ubTwcCmd	  = TWC_RESEND_I;
+				if(FALSE == ubKNL_VdoResendITwcFlg[tKNLInfo.ubTargetRole])
+				{
+					if(osMessagePut(KNL_TwcMonitQueue, &tKNLInfo, 0) == osErrorResource)
+					{
+						printd(DBG_ErrorLvl, "KNL_TwcMonitQ->Full !!!!\r\n");
+					}
+				}
+				goto RX_VDORES_ERR;
+			}
+
 			uwKNL_PktHSize = ubKNL_GetPktHRes(Don.ulAddr,Don.ulSize);
 			uwKNL_PktVSize = ubKNL_GetPktVRes(Don.ulAddr,Don.ulSize);
 			if((uwKNL_PktHSize != uwKNL_GetVdoH(ubSrcNum)) || (uwKNL_PktVSize != uwKNL_GetVdoV(ubSrcNum)))
@@ -7269,7 +7563,7 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 				{
 					ubChkSeqOk[ubSrcNumMap] = 2;
 				}
-				else if((ulCurFrmIdx[ubSrcNum] == 0) && (tKNL_RecvFrmType == KNL_I_FRAME) && (ubKNL_RcvFirstIFrame[ubSrcNum]))
+				else if((ulCurFrmIdx[ubSrcNum] == 0) && (tKNL_RecvFrmType == KNL_I_FRAME) && (ubKNL_RcvFirstIFrame[ubSrcNum]) && (ulPreFrmIdx[ubSrcNumMap] == (ulKNL_GetVdoGop() - 1)))
 				{
 					ubKNL_RcvFirstIFrame[ubSrcNum] = 0;
 				}
@@ -7285,6 +7579,7 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 				if(tKNL_RecvFrmType == KNL_I_FRAME)
 				{
 					ubKNL_VdoResendITwcFlg[ubSrcNumMap] = FALSE;
+					ubKNL_AppResendIFrmFlg[ubSrcNumMap] = FALSE;
 					ubKNL_RcvFirstIFrame[ubSrcNum] = 1;
 					printd(DBG_CriticalLvl, "Find I[%d]\r\n",ubSrcNum);
 					if(TRUE == ubKNL_WakeUpFlag[ubSrcNumMap])
@@ -7344,7 +7639,7 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 
 				if(ubCnt[ubSrcNumMap] == ubKNL_GetVdoFps())
 				{
-					printd(DBG_CriticalLvl, "TB[%d]:%d\r\n",ubSrcNum,ulSum[ubSrcNumMap]/1024);
+					printd(DBG_CriticalLvl, "TB[%d]:%d\n",ubSrcNum,ulSum[ubSrcNumMap]/1024);
 					ulKNL_InVdoFpsCnt[ubSrcNum] = ulKNL_InVdoFpsCntTemp[ubSrcNum];
 					ulKNL_InVdoFpsCntTemp[ubSrcNum] = 0;
 					ubCnt[ubSrcNumMap] = 0;
@@ -7409,10 +7704,7 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 					{
 						ulChkSz = Don.ulSize;
 						//(5)Get Source Side Information
-						tKNLInfo.ubSrcNum	= ubSrcNum;
-
-						//(6)Release BB Buffer
-						BB_RxBufRelease(Don.Type,Don.tSTA);	
+						tKNLInfo.ubSrcNum = ubSrcNum;
 
 						if(ubKNL_ChkDebugPkt(ulTemp,ulChkSz) == 1)
 						{
@@ -7422,8 +7714,6 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 								//Copy Data to Src2
 								tDMAC_MemCopy(ulTemp,ulOutAddr2,ulChkSz,NULL);
 							}
-
-							//printd(DBG_Debug3Lvl, "CRC->P\r\n");
 
 							//(7)Send Queue to Next Node
 							if(ubMultiOutFlg == 0)	//Single Out Case
@@ -7501,18 +7791,21 @@ static void KNL_CommVdoRxMonitThread(void const *argument)
 					else
 					{
 						ubKNL_ReleaseBsBufAddr(KNL_NODE_COMM_RX_VDO, ubSrcNum, ulTemp);
-						BB_RxBufRelease(Don.Type,Don.tSTA);
 						printd(DBG_ErrorLvl, "DMA NRDY @%s !\n", __func__);
 					}
 				}
 				else
 				{
 					printd(DBG_ErrorLvl, "Busy[%d]:%d\r\n", Don.tSTA, ubSrcNum);
-					//(6)Release BB Buffer
-					BB_RxBufRelease(Don.Type, Don.tSTA);
 					if(Don.tSTA <= KNL_STA4)
 						ubKNL_VdoBsBusyCnt[Don.tSTA]++;
 				}
+				if(tUSBD_GetClassMode() == USBD_COMPOSITE_MODE)
+				{
+					ubKNL_UpdateUvcImage(Don.ulAddr, Don.ulSize);
+				}
+				//(6)Release BB Buffer
+				BB_RxBufRelease(Don.Type, Don.tSTA);
 			}
 			else
 			{
@@ -7538,14 +7831,125 @@ RX_VDORES_ERR:
 		}
 	}
 }
+//------------------------------------------------------------------------------
+void KNL_UpdateUsbdAdoData(uint32_t ulAdoPcmAddr, uint32_t ulAdoPcmSize)
+{
+	uint32_t ulUsbdAdoAddr = 0;
+	uint32_t ulUvcAuxSize = UVC_OFS_SUB_FRAME_DATA - UVC_OFS_CH_INFO;
+	
+	ulUsbdAdoAddr = ulAdoPcmAddr - UVC_OFS_SUB_FRAME_DATA;
+	if(!ulAdoPcmSize)
+	{
+		uint8_t *pSrcNum = (uint8_t *)ulUsbdAdoAddr;
+
+		ubBUF_ReleaseAdoUsbdBuf(ulUsbdAdoAddr);
+		printd(DBG_ErrorLvl, "\n	[%d]Drop ado frame\n", pSrcNum[12]);
+		return;
+	}
+	*((uint8_t *)(ulUsbdAdoAddr + UVC_OFS_SUB_FRAME_LEN)) 	  = ulAdoPcmSize & 0xFF;
+	*((uint8_t *)(ulUsbdAdoAddr + UVC_OFS_SUB_FRAME_LEN + 1)) = (ulAdoPcmSize >> 8) & 0xFF;
+	//! USBD Send
+	if(FALSE == uvc_update_image((uint32_t *)ulUsbdAdoAddr, (ulAdoPcmSize + ulUvcAuxSize)))
+		KNL_ReleaseUsbdBuf(ulUsbdAdoAddr);
+}
+//------------------------------------------------------------------------------
+uint32_t ulKNL_SetUsbdAdoPktInfo(uint32_t ulAdoAddr, uint32_t ulAdoSize)
+{
+	uint32_t ulAdoPktAddr = 0, ulTimeStp1, ulTimeStp2;
+	uint8_t ubSrcNum, ubRoleNum, ubFrmSeq, ubIdx;
+
+	ulAdoPktAddr = ulBUF_GetAdoUsbdFreeBuf();
+	if(BUF_FAIL == ulAdoPktAddr)
+		return 0;
+
+	ubSrcNum   = ubKNL_GetPktSrcNum(ulAdoAddr, ulAdoSize);
+	ubRoleNum  = ubKNL_SrcNumMap(ubSrcNum);
+	ulTimeStp1 = ulKNL_GetTimeStamp1(ulAdoAddr, ulAdoSize);
+	ulTimeStp2 = ulKNL_GetTimeStamp2(ulAdoAddr, ulAdoSize);
+	ubFrmSeq   = ubKNL_GetFrameSeq(ulAdoAddr, ulAdoSize);
+	*((uint8_t *)(ulAdoPktAddr + UVC_OFS_CH_INFO))	= ubRoleNum;
+	*((uint8_t *)(ulAdoPktAddr + UVC_OFS_AUX_INFO)) = KNL_ADO_FRAME;
+	for(ubIdx = 0; ubIdx < 4; ubIdx++)
+		*((uint8_t *)(ulAdoPktAddr + UVC_OFS_TIME_STAMP + ubIdx)) = ((ulTimeStp1 >> (ubIdx * 8)) & 0xFF);
+	for(ubIdx = 0; ubIdx < 4; ubIdx++)
+		*((uint8_t *)(ulAdoPktAddr + UVC_OFS_TIME_STAMP + ubIdx + 4)) = ((ulTimeStp2 >> (ubIdx * 8)) & 0xFF);
+	*((uint8_t *)(ulAdoPktAddr + UVC_OFS_NUM_SUB_FRAME))   = 1;
+	*((uint8_t *)(ulAdoPktAddr + UVC_OFS_SUB_FRAME_IDX))   = 0;
+	*((uint8_t *)(ulAdoPktAddr + UVC_OFS_TOTAL_FRAME_IDX)) = ubFrmSeq;
+
+	return ulAdoPktAddr;
+}
+//------------------------------------------------------------------------------
+void KNL_RecvAdoDataFromApp(uint8_t *pAdoData)
+{
+	uint32_t ulPcmAddr, ulSrcAddr;
+	uint16_t uwAdoSize;
+	uint8_t ubAuxInfo, ubChInfo;
+	DMAC_RESULT tDmaResult = DMAC_OK;
+	KNL_PROCESS tProcess;
+
+	if(!ubKNL_UsbdAdoEncAct)
+		return;
+	ubAuxInfo 		= *((uint8_t *)(pAdoData + 0));
+	ubChInfo  		= *((uint8_t *)(pAdoData + 1));
+	uwAdoSize		= *((uint8_t *)(pAdoData + 4)) + (*((uint8_t *)(pAdoData + 5)) << 8);
+	if(KNL_ADO_FRAME != (ubAuxInfo & 0x07))
+		return;
+	ulPcmAddr = ulBUF_GetAdoUsbdFreeBuf();
+	if(BUF_FAIL == ulPcmAddr)
+		return;
+	ulSrcAddr = (uint32_t)((pAdoData + KNL_USBDMSC_AUX_SIZE));
+	tDmaResult = tDMAC_MemCopy(ulSrcAddr, ulPcmAddr, uwAdoSize, NULL);
+	if(DMAC_OK != tDmaResult)
+	{
+		ubBUF_ReleaseAdoUsbdBuf(ulPcmAddr);
+		printd(DBG_ErrorLvl, "DMA NRDY @%s !\n", __func__);
+		return;
+	}
+	if(ptKNL_AdoRoleMap2SrcNum)
+	{
+		KNL_SRC tAdoSrcNum;
+
+		tAdoSrcNum = ptKNL_AdoRoleMap2SrcNum(KNL_SUB_PATH, (KNL_ROLE)ubChInfo);
+		if(KNL_SRC_NONE == tAdoSrcNum)
+		{
+			printd(DBG_ErrorLvl, "Err Src Num @%s !\n", __func__);
+			ubBUF_ReleaseAdoUsbdBuf(ulPcmAddr);
+			return;
+		}
+		if((ubKNL_GetRole() == KNL_SLAVE_AP) || (ubKNL_GetRole() == KNL_MASTER_AP))
+		{
+			uint8_t ubRxVdo_Path, ubTxAdo_Path;
+
+			ubRxVdo_Path = ubBB_GetRxVdoDataPath();
+			ubTxAdo_Path = tAdoSrcNum % 4;
+			BB_SetDataPath((TXADO)ubTxAdo_Path, BB_RX_ADO_ALL_STA, (PAYLOAD_PATH)ubRxVdo_Path);
+		}
+		tProcess.ubSrcNum	 = tAdoSrcNum;
+		tProcess.ubCurNode	 = KNL_NODE_MSC_ADO;
+		tProcess.ubNextNode	 = KNL_NODE_MSC_ADO;
+		tProcess.ulDramAddr1 = ulPcmAddr;
+		tProcess.ulDramAddr2 = 0;
+		tProcess.ulSize		 = uwAdoSize;
+		if(osMessagePut(KNL_AdoCodecProcQueue, &tProcess, 0) >= osEventTimeout)
+			printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!!\r\n");
+	}
+}
+//------------------------------------------------------------------------------
+void KNL_ActiveUsbdAdoEncFlag(uint8_t ubAct)
+{
+	ubKNL_UsbdAdoEncAct = ubAct;
+	if(!ubKNL_UsbdAdoEncAct)
+		ubKNL_UsbdAdoEncStFlag = TRUE;
+}
 #endif
 //------------------------------------------------------------------------------
 static void KNL_CommAdoRxMonitThread(void const *argument)
 {		
 	KNL_PROCESS tKNLInfo;
 	RX_DON Don;
-	uint32_t ulTemp;		
-	uint8_t ubIdx;	
+	uint32_t ulTemp;
+	uint8_t ubSrcNum;
 	uint32_t ulRealSz;
 
 	// ADO
@@ -7556,14 +7960,14 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 	//| STA4       -> KNL_SRC_4_MAIN  |
 	//| AP(Master) -> KNL_SRC_1_AUX   |
 	//| AP(Slave)  -> KNL_SRC_2_AUX   |
-	//=================================	
+	//=================================
 
 	while(1)
 	{
 		//(1)Wait Event
 		osMessageGet(KNL_QueRxAdo, &Don, osWaitForever);
 		//printd(DBG_Debug3Lvl, "A[%d]:0x%x\r\n",Don.tSTA,Don.ulSize);
-		
+
 		if(Don.ubGetCrc != ubBB_GetCrcReport(Don.ulAddr,Don.ulCrcLen))
 		{
 			printd(DBG_ErrorLvl, " Ado Crc->Fail[%d][%d_%d]\r\n", ubKNL_GetPktSrcNum(Don.ulAddr,Don.ulSize), Don.tSTA, Don.Type);
@@ -7571,24 +7975,23 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 		}
 		else if( ADO_GetIpReadyStatus() == ADO_IP_READY )
         {
-            ubIdx = ubKNL_GetPktSrcNum(Don.ulAddr,Don.ulSize);
-
-            if(ubKNL_ChkAdoFlowAct(ubIdx))
+            ubSrcNum = ubKNL_GetPktSrcNum(Don.ulAddr,Don.ulSize);
+            if((ubKNL_ChkAdoFlowAct(ubSrcNum)) || (tUSBD_GetClassMode() == USBD_COMPOSITE_MODE))
             {
                 //(2)Request Buffer to Temp
-                if(ubKNL_SrcNumMap(ubIdx) == 0)
+                if(ubKNL_SrcNumMap(ubSrcNum) == 0)
                 {
                     ulTemp = ulBUF_GetDac0FreeBuf();
                 }
-                else if(ubKNL_SrcNumMap(ubIdx) == 1)
+                else if(ubKNL_SrcNumMap(ubSrcNum) == 1)
                 {
                     ulTemp = ulBUF_GetDac1FreeBuf();
                 }
-                else if(ubKNL_SrcNumMap(ubIdx) == 2)
+                else if(ubKNL_SrcNumMap(ubSrcNum) == 2)
                 {
                     ulTemp = ulBUF_GetDac2FreeBuf();
                 }
-                else if(ubKNL_SrcNumMap(ubIdx) == 3)
+                else if(ubKNL_SrcNumMap(ubSrcNum) == 3)
                 {
                     ulTemp = ulBUF_GetDac3FreeBuf();
                 }
@@ -7599,7 +8002,7 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 
                 if(ulTemp == BUF_FAIL)
                 {
-                    printd(DBG_ErrorLvl, "[%d]BUF_ADO Err !!!\r\n", ubIdx);
+                    printd(DBG_ErrorLvl, "[%d]BUF_ADO Err !!!\r\n", ubSrcNum);
 					BB_RxBufRelease(Don.Type,Don.tSTA);
                 }
                 else
@@ -7610,18 +8013,17 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 					if(DMAC_OK == tDmaResult)
 					{
 						//(4-1)Check Real-Size Information
-						ulRealSz = ulKNL_GetPktSZ(ulTemp,Don.ulSize);
-						//printd(DBG_Debug3Lvl, "Real-Sz:0x%x\r\n",ulRealSz);
-
+						ulRealSz = ulKNL_GetAdoPktSZ(ulTemp, Don.ulSize);
+						printd(DBG_Debug3Lvl, "Real-Sz:0x%x\r\n", ulRealSz);
 
 						//(5)Send Queue to Next Node
-						tKNLInfo.ubSrcNum    = ubIdx;
+						tKNLInfo.ubSrcNum    = ubSrcNum;
 						tKNLInfo.ulDramAddr2 = ulTemp;
-						tKNLInfo.ulSize		 = ulRealSz;
+						tKNLInfo.ulSize		 = Don.ulSize;
 						tKNLInfo.ubCurNode   = KNL_NODE_COMM_RX_ADO;
-						tKNLInfo.ubNextNode  = ubKNL_GetNextNode(ubIdx,KNL_NODE_COMM_RX_ADO);
+						tKNLInfo.ubNextNode  = ubKNL_GetNextNode(ubSrcNum,KNL_NODE_COMM_RX_ADO);
 //							KNL_DacBufProcess(tKNLInfo);
-						if(osMessagePut(KNL_AdoCdoecProcQueue, &tKNLInfo, 0) == osErrorResource)
+						if(osMessagePut(KNL_AdoCodecProcQueue, &tKNLInfo, 0) == osErrorResource)
 						{
 							ubBUF_ReleaseDac0Buf(tKNLInfo.ulDramAddr2);
 							printd(DBG_ErrorLvl, "KNL_ADO Q->Full !!!\r\n");
@@ -7633,19 +8035,19 @@ static void KNL_CommAdoRxMonitThread(void const *argument)
 
 					if( DMAC_OK != tDmaResult )
 					{
-						if(ubKNL_SrcNumMap(ubIdx) == 0)
+						if(ubKNL_SrcNumMap(ubSrcNum) == 0)
 						{
 							ubBUF_ReleaseDac0Buf(ulTemp);
 						}
-						else if(ubKNL_SrcNumMap(ubIdx) == 1)
+						else if(ubKNL_SrcNumMap(ubSrcNum) == 1)
 						{
 							ubBUF_ReleaseDac1Buf(ulTemp);
 						}
-						else if(ubKNL_SrcNumMap(ubIdx) == 2)
+						else if(ubKNL_SrcNumMap(ubSrcNum) == 2)
 						{
 							ubBUF_ReleaseDac2Buf(ulTemp);
 						}
-						else if(ubKNL_SrcNumMap(ubIdx) == 3)
+						else if(ubKNL_SrcNumMap(ubSrcNum) == 3)
 						{
 							ubBUF_ReleaseDac3Buf(ulTemp);
 						}
@@ -7732,19 +8134,19 @@ static void KNL_JpegMonitThread(void const *argument)
 	uint32_t ulInfo_YuvAddr;
 	uint32_t ulInfo_BsAddr;
 	uint32_t ulInfo_Size;	
-	
+
 	while(1)
 	{
         osMessageGet(KNL_QueueJpegMonit, &tJpegInfo, osWaitForever);
-		
+
 		//(1)Update Information First
-		ubInfo_PreNode 		= ubKNL_JpegPreNode;
-		ubInfo_PreSrc		= ubKNL_JpegSrc;
-		ubInfo_Action		= tJpegInfo.tJPEG_CodecMode;
-		ulInfo_YuvAddr		= tJpegInfo.ulJPEG_YUVAddr;
-		ulInfo_BsAddr		= tJpegInfo.ulJPEG_BsAddr;
-		ulInfo_Size			= tJpegInfo.ulJPEG_BsSize;
-		
+		ubInfo_PreNode 	= ubKNL_JpegPreNode;
+		ubInfo_PreSrc	= ubKNL_JpegSrc;
+		ubInfo_Action	= tJpegInfo.tJPEG_CodecMode;
+		ulInfo_YuvAddr	= tJpegInfo.ulJPEG_YUVAddr;
+		ulInfo_BsAddr	= tJpegInfo.ulJPEG_BsAddr;
+		ulInfo_Size		= tJpegInfo.ulJPEG_BsSize;
+
 		//(2)Release JPEG Codec
 		osSemaphoreRelease(JPEG_CodecSem);
 
@@ -7768,7 +8170,7 @@ static void KNL_JpegMonitThread(void const *argument)
 		printd(DBG_Debug3Lvl, "JPEG_Action:%d\r\n",ubInfo_Action);
 		printd(DBG_Debug3Lvl, "JPEGc_YuvAddr:0x%x\r\n",ulInfo_YuvAddr);
 		printd(DBG_Debug3Lvl, "JPEG_BsAddr:0x%x\r\n",ulInfo_BsAddr);
-		printd(DBG_Debug3Lvl, "JPEG_Size:0x%x\r\n",ulInfo_Size);		
+		printd(DBG_Debug3Lvl, "JPEG_Size:0x%x\r\n",ulInfo_Size);
 		*/
 		if((ubInfo_Action == 1) && (ubInfo_PreNode == KNL_NODE_JPG_DEC1))
 		{
@@ -7785,13 +8187,13 @@ static void KNL_JpegMonitThread(void const *argument)
 			KNL_SetNodeState(ubInfo_PreSrc,KNL_NODE_JPG_ENC,KNL_NODE_STOP);
 			printd(DBG_Debug3Lvl, "J->E[%d]:0x%x_0x%x_0x%x\r\n",ubInfo_PreSrc,ulInfo_YuvAddr,ulInfo_BsAddr,ulInfo_Size);
 		}
-		
+
 		//(3)Release BS Buffer
 		if((ubInfo_PreNode == KNL_NODE_JPG_DEC1) || (ubInfo_PreNode == KNL_NODE_JPG_DEC2))
 		{			
 			ubKNL_ReleaseBsBufAddr(ubInfo_PreNode,ubInfo_PreSrc,ulInfo_BsAddr);
 		}
-		
+
 		//(4)To Next Node
 		if(ubKNL_ChkVdoFlowAct(ubInfo_PreSrc))
 		{
@@ -7799,7 +8201,7 @@ static void KNL_JpegMonitThread(void const *argument)
 			if(ubNextNode == KNL_NODE_LCD)
 			{
 				KNL_ActiveLcdDispBuf(ubInfo_PreSrc);
-			}			
+			}
 			else
 			{
 				//Next Node
@@ -7894,8 +8296,8 @@ void KNL_RestartDataPath(uint8_t ubRole)
 {
 	KNL_SRC tSrcNum = KNL_SRC_NONE;
 
-	if(ptKNL_VdoRoleSrcMapT)
-		tSrcNum = ptKNL_VdoRoleSrcMapT((KNL_ROLE)ubRole);
+	if(ptKNL_VdoRoleMap2SrcNum)
+		tSrcNum = ptKNL_VdoRoleMap2SrcNum(KNL_MAIN_PATH, (KNL_ROLE)ubRole);
 	if(KNL_SRC_NONE != tSrcNum)
 	{
 		KNL_VdoStop(tSrcNum);
@@ -7912,9 +8314,10 @@ static void KNL_SysMonitThread(void const *argument)
 {
 #if OP_AP
 	KNL_ROLE tKNL_Role;
-	uint8_t ubSysErrFlg1 = FALSE;
-	uint8_t ubSysIChkCnt[4] = {0, 0, 0, 0};
+	uint8_t ubSysErrFlg1 	   = FALSE;
+	uint8_t ubSysIChkCnt[4]    = {0, 0, 0, 0};
 	uint8_t ubSysVResChkCnt[4] = {0, 0, 0, 0};
+	uint8_t ubSysIfChkCnt[4]   = {0, 0, 0, 0};
 	#if KNL_RFPWR_CTRL_ENABLE
 	uint8_t ubSysLoop = 0, ubSysLoopNum = 20;
 	uint8_t ubSysPowerMap[2] = {0x37, 0x2C};
@@ -7956,6 +8359,16 @@ static void KNL_SysMonitThread(void const *argument)
 			} 
 			else
 				ubSysVResChkCnt[tKNL_Role] = 0;
+			if(TRUE == ubKNL_AppResendIFrmFlg[tKNL_Role])
+			{
+				if(++ubSysIfChkCnt[tKNL_Role] >= 2)
+				{
+					ubKNL_AppResendIFrmFlg[tKNL_Role] = FALSE;
+					ubSysIfChkCnt[tKNL_Role] = 0;
+				}
+			}
+			else
+				ubSysIfChkCnt[tKNL_Role] = 0;
 		}
 		if((TRUE == ubKNL_ImgBusyFlg))
 		{
@@ -8291,7 +8704,7 @@ void KNL_ImgMonitorFunc(struct IMG_RESULT ReceiveResult)
 			printd(DBG_Debug3Lvl, "H->DOK\r\n");
 
 		//(3)Post-Process
-		ubNextNode = ubKNL_GetNextNode(ubSrcNum,KNL_NODE_H264_DEC);
+		ubNextNode = ubKNL_GetNextNode(ubSrcNum, KNL_NODE_H264_DEC);
 		if(ubKNL_ChkVdoFlowAct(ubSrcNum))
 		{
 			tNodeInfo = tKNL_GetNodeInfo(ubSrcNum, KNL_NODE_H264_DEC);
@@ -8303,7 +8716,8 @@ void KNL_ImgMonitorFunc(struct IMG_RESULT ReceiveResult)
 								 (ulBUF_GetBlkBufAddr((ubKNL_SrcNumMap(ubSrcNum)), BUF_JPG_BS) + KNL_JPG_HEADER_SIZE));
 				return;
 			}
-			else if((KNL_PHOTO_PLAY != tKNL_GetRecordFunc()) && (ubNextNode == KNL_NODE_LCD))
+			else if((KNL_PHOTO_PLAY != tKNL_GetRecordFunc()) && (JPG_LCDCH_DISABLE == tKNL_GetJpegLcdChCtrl()) &&
+				    (ubNextNode == KNL_NODE_LCD))
 			{
 				KNL_ActiveLcdDispBuf(ubSrcNum);
 			}
@@ -8739,23 +9153,21 @@ void KNL_AdoStart(uint8_t ubSrcNum)
 {
 	uint8_t ubRxVdo_Path;
 	uint8_t ubTxAdo_Path;
-	
+
 	if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_ADC))
 	{
 		if((ubKNL_GetRole() == KNL_SLAVE_AP) || (ubKNL_GetRole() == KNL_MASTER_AP))
 		{
 			ubRxVdo_Path = ubBB_GetRxVdoDataPath();
 			ubTxAdo_Path = ubSrcNum % 4;
-			
 			BB_SetDataPath((TXADO)ubTxAdo_Path,BB_RX_ADO_ALL_STA,(PAYLOAD_PATH)ubRxVdo_Path);
-		}		
-			
+		}
 		KNL_AdcStart();
 	}	
 	if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_DAC)||ubKNL_ExistNode(ubSrcNum,KNL_NODE_DAC_BUF)||ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
 	{
 		KNL_DacStart(ubSrcNum);
-	}	
+	}
 }
 //------------------------------------------------------------------------------
 void KNL_AdoStop(uint8_t ubSrcNum)
@@ -8792,8 +9204,7 @@ void KNL_AdcStart(void)
 	if(ubKNL_AdcFlowActiveFlg)
 		return;
 	ubKNL_AdcFlowActiveFlg = 1;
-//	ADO_Reset();
-	ADO_RecStart();	
+	ADO_RecStart();
 }
 //------------------------------------------------------------------------------
 void KNL_AdcStop(void)
@@ -8906,10 +9317,19 @@ uint8_t ubKNL_ChkNodeFinish(uint8_t ubSrcNum)
 
 	if(ubKNL_ExistNode(ubSrcNum, KNL_NODE_VDO_BS_BUF1))
 	{
-		BUF_Reset((BUF_VDO_MAIN_BS0+ubSrcNumMap));
+		BUF_Reset((BUF_VDO_MAIN_BS0 + ubSrcNumMap));
 	}
 
 	return 1;
+}
+//------------------------------------------------------------------------------
+void KNL_SetTRXPathActivity(void)
+{
+	uint8_t ubTxAdo_Path;
+
+	ubKNL_BbPathAct = TRUE;
+	ubTxAdo_Path	= ubBB_GetTxAdoDataPath();
+	BB_SetDataPath((TXADO)ubTxAdo_Path, BB_RX_ADO_ALL_STA, BB_OPEN_ALL_PAYLOAD);
 }
 //------------------------------------------------------------------------------
 void KNL_VdoStart(uint8_t ubSrcNum)
@@ -8923,13 +9343,12 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 #endif
 
 	ubSrcNumMap = ubKNL_SrcNumMap(ubSrcNum);
-	printd(Apk_DebugLvl, "KNL_VdoStart ubSrcNum: %d, ubSrcNumMap: %d ###\n", ubSrcNum, ubSrcNumMap);
 	if(ubSrcNumMap <= KNL_STA4)
 	{
 		ubKNL_VdoFlowActiveFlg[ubSrcNum] = 1;
 		ubKNL_RcvFirstIFrame[ubSrcNum]	 = 0;
 
-		for(i=0;i<256;i++)
+		for(i = 0; i < 256; i++)
 		{
 			if(ubKNL_ExistNode(ubSrcNum,i))
 			{
@@ -8949,11 +9368,16 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 		}
 
 #if OP_AP
-		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
+		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) ||
+		   ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
 		{
 			ubRxVdo_OriPath = ubBB_GetRxVdoDataPath();
 			ubTxAdo_Path	= ubBB_GetTxAdoDataPath();
-			
+			if(TRUE == ubKNL_BbPathAct)
+			{
+				ubRxVdo_OriPath = BB_PAYLOAD_NONE;
+				ubKNL_BbPathAct = FALSE;
+			}
 			if(ubSrcNumMap == 0)
 			{
 				ubRxVdo_NewPath = ubRxVdo_OriPath | BB_OPEN_STA1_PAYLOAD;
@@ -8972,7 +9396,7 @@ void KNL_VdoStart(uint8_t ubSrcNum)
 			}
 			BB_SetDataPath((TXADO)ubTxAdo_Path,BB_RX_ADO_ALL_STA,(PAYLOAD_PATH)ubRxVdo_NewPath);
 		}
-#endif	
+#endif
 	}
 }
 //------------------------------------------------------------------------------
@@ -8981,7 +9405,7 @@ void KNL_VdoStop(uint8_t ubSrcNum)
 	uint16_t i;
 	uint8_t ubSrcNumMap;
 #if OP_AP
-	uint8_t ubRxVdo_OriPath,ubRxVdo_NewPath;	
+	uint8_t ubRxVdo_OriPath,ubRxVdo_NewPath;
 	uint8_t ubTxAdo_Path;
 #endif
 
@@ -8992,18 +9416,27 @@ void KNL_VdoStop(uint8_t ubSrcNum)
 		ubKNL_RcvFirstIFrame[ubSrcNum]	 	= 0;
 		ubKNL_VdoResendITwcFlg[ubSrcNumMap] = FALSE;
 		ubKNL_VdoResChgTwcFlg[ubSrcNumMap]  = FALSE;
-		for(i=0;i<256;i++)
+		ubKNL_AppResendIFrmFlg[ubSrcNumMap]	= FALSE;
+		for(i = 0; i < 256; i++)
 		{
 			tKNL_NodeState[ubSrcNum][i] = KNL_NODE_STOP;
 		}
+
+//		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_SEN))
+//		{
+//			KNL_SenStop(ubSrcNum);
+//		}
+
 #if OP_AP
 		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_VDO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_VDO) ||
 		   ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_TX_ADO) || ubKNL_ExistNode(ubSrcNum,KNL_NODE_COMM_RX_ADO))
 		{
 			KNL_SRC tAdoSrcNum;
 
-			if(ptKNL_AdoRoleSrcMapT)
-				tAdoSrcNum = ptKNL_AdoRoleSrcMapT((KNL_ROLE)ubSrcNumMap);
+			if(TRUE == ubKNL_BbPathAct)
+				return;
+			if(ptKNL_AdoRoleMap2SrcNum)
+				tAdoSrcNum = ptKNL_AdoRoleMap2SrcNum(KNL_MAIN_PATH, (KNL_ROLE)ubSrcNumMap);
 			if(!ubKNL_ChkDacFlowAct((uint8_t)tAdoSrcNum))
 			{
 				ubRxVdo_OriPath = ubBB_GetRxVdoDataPath();
@@ -9028,10 +9461,6 @@ void KNL_VdoStop(uint8_t ubSrcNum)
 			}
 		}
 #endif
-		if(ubKNL_ExistNode(ubSrcNum,KNL_NODE_SEN))
-		{
-			KNL_SenStop(ubSrcNum);
-		}
 	}
 }
 //------------------------------------------------------------------------------
@@ -9054,6 +9483,7 @@ void KNL_VdoSuspend(uint8_t ubSrcNum)
 	ulKNL_FrmTRxNumTemp[ubRole]	 	 = 0;
 	ubKNL_VdoResendITwcFlg[ubRole] 	 = FALSE;
 	ubKNL_VdoResChgTwcFlg[ubRole]  	 = FALSE;
+	ubKNL_AppResendIFrmFlg[ubRole] 	 = FALSE;
 }
 //------------------------------------------------------------------------------
 void KNL_VdoResume(uint8_t ubSrcNum)
@@ -9275,14 +9705,14 @@ uint8_t ubKNL_JPEGDecode(KNL_NODE_INFO *pKNL_NodeInfo, uint16_t uwH, uint16_t uw
 	return JPEG_DECODE_OK;
 }
 //------------------------------------------------------------------------------
-void KNL_SetVdoRoleInfoCbFunc(pvRoleSrcMap VdoRoleMap_cb)
+void KNL_SetVdoRoleInfoCbFunc(pvRoleMap2Src VdoRoleMap_cb)
 {
-	ptKNL_VdoRoleSrcMapT = VdoRoleMap_cb;
+	ptKNL_VdoRoleMap2SrcNum = VdoRoleMap_cb;
 }
 //------------------------------------------------------------------------------
-void KNL_SetAdoRoleInfoCbFunc(pvRoleSrcMap AdoRoleMap_cb)
+void KNL_SetAdoRoleInfoCbFunc(pvRoleMap2Src AdoRoleMap_cb)
 {
-	ptKNL_AdoRoleSrcMapT = AdoRoleMap_cb;
+	ptKNL_AdoRoleMap2SrcNum = AdoRoleMap_cb;
 }
 //------------------------------------------------------------------------------
 uint8_t KNL_GetRssiValue(KNL_ROLE tKNL_Role)
@@ -9363,8 +9793,6 @@ uint8_t KNL_WakeupDevice(KNL_ROLE tKNL_Role, uint8_t ubMode)
 void KNL_TurnOnTuningTool(void)
 {
 #ifdef OP_STA
-	KNL_SetVdoGop(15);
-	SEN_SetUvcPathFlag(1);
 	IQ_SetupTuningToolMode(KNL_TUNINGMODE_ON);
 	tKNL_TuningMode = KNL_TUNINGMODE_ON;
 #endif
@@ -9385,6 +9813,45 @@ KNL_TuningMode_t KNL_GetTuningToolMode(void)
 	tKNL_TuningMode = KNL_TUNINGMODE_OFF;
 #endif
 	return tKNL_TuningMode;
+}
+//------------------------------------------------------------------------------
+KNL_Status_t tKNL_EnJpegLcdCh(KNL_JpgLcdChCtrl_t tJpgLcdChCtrl)
+{
+	uint8_t ubCodecRetryCnt = 18;
+
+	for(;;)
+	{
+		if(ubKNL_ChkImgRdy())
+			break;
+		if(!--ubCodecRetryCnt)
+		{
+			printd(DBG_ErrorLvl, "H->D NRDY@%s\r\n", __func__);
+			return KNL_ERR;
+		}
+		osDelay(10);
+	}
+	osMutexWait(osKNL_JpgLcdChMutex, osWaitForever);
+	tKNL_JpgLcdChCtrl = tJpgLcdChCtrl;
+	if((KNL_OPMODE_VBM_1T == ubKNL_GetOpMode()) ||
+	   ((KNL_OPMODE_VBM_4T == ubKNL_GetOpMode()) && ((KNL_DISP_DUAL_C != tKNL_GetDispType()) && (KNL_DISP_DUAL_U != tKNL_GetDispType()))))
+	{
+		if(BUF_FREE == ulBUF_GetBlkBufAddr(0, BUF_RESV_YUV))
+			BUF_BufInit(BUF_RESV_YUV, 1, ((ISP_WIDTH * ISP_HEIGHT * 3) >> 1), 0);
+	}
+	osMutexRelease(osKNL_JpgLcdChMutex);
+
+	return KNL_OK;
+}
+//------------------------------------------------------------------------------
+KNL_JpgLcdChCtrl_t tKNL_GetJpegLcdChCtrl(void)
+{
+	KNL_JpgLcdChCtrl_t tJpgLcdChCtrl;
+
+	osMutexWait(osKNL_JpgLcdChMutex, osWaitForever);
+	tJpgLcdChCtrl = tKNL_JpgLcdChCtrl;
+	osMutexRelease(osKNL_JpgLcdChMutex);
+
+	return tJpgLcdChCtrl;
 }
 //------------------------------------------------------------------------------
 KNL_Status_t tKNL_ChkSdCardSts(void)
@@ -9424,7 +9891,7 @@ uint32_t ulKNL_GetResvDecAddr(void)
 		{
 			LCD_CH_TYP tLcdCh;
 
-			tLcdCh    = (KNL_DISP_SINGLE == tDispType)?LCD_CH0:(KNL_DISP_QUAD == tDispType)?LCD_CH2:LCD_CH1;
+			tLcdCh    = ((KNL_DISP_DUAL_C == tKNL_GetDispType()) || (KNL_DISP_DUAL_U == tKNL_GetDispType()))?LCD_CH1:LCD_CH0;
 			ulDecAddr = (LCD_CH0 == tLcdCh)?ulBUF_GetBlkBufAddr(0, BUF_RESV_YUV):pLCD_GetLcdChBufInfor(tLcdCh)->ulBufAddr;
 			break;
 		}

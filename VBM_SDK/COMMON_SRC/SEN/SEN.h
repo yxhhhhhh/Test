@@ -11,8 +11,8 @@
 	\file	    SEN.h
 	\brief		Sensor funcations header
 	\author     BoCun
-	\version    0.9
-	\date		2018-07-06
+	\version    1.1
+	\date		2018-09-11
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -188,22 +188,6 @@ typedef void (*pvSEN_CbFunc)(void);
 
 	#define SEN_USE				    SEN_H62
 
-    #if (SEN_USE == SEN_OV9715)
-        #include "OV9715.h"    
-    #elif (SEN_USE == SEN_OV9732)
-        #include "OV9732.h"      
-    #elif (SEN_USE == SEN_AR0330)
-        #include "AR0330.h" 
-    #elif (SEN_USE == SEN_H62)
-        #include "H62.h"  
-    #elif (SEN_USE == SEN_H62_MIPI)
-        #include "H62_MIPI.h"    
-    #elif (SEN_USE == SEN_IMX323)
-        #include "IMX323.h"
-    #elif (SEN_USE == SEN_SC2235)
-        #include "SC2235.h"            
-    #endif
-
 	//---------------------------------------
 	// Image for ISP
 	//---------------------------------------
@@ -211,27 +195,48 @@ typedef void (*pvSEN_CbFunc)(void);
     #define ISP_FHD				1	
     #define ISP_1296P			2
 
-    #define ISP_RES				ISP_HD  
-    
+    #if (SEN_USE == SEN_OV9715)
+        #include "OV9715.h"
+        #define ISP_RES				ISP_HD
+    #elif (SEN_USE == SEN_OV9732)
+        #include "OV9732.h"
+        #define ISP_RES				ISP_HD
+    #elif (SEN_USE == SEN_AR0330)
+        #include "AR0330.h"
+        #define ISP_RES				ISP_FHD
+    #elif (SEN_USE == SEN_H62)
+        #include "H62.h"
+        #define ISP_RES				ISP_HD
+    #elif (SEN_USE == SEN_H62_MIPI)
+        #include "H62_MIPI.h"
+        #define ISP_RES				ISP_HD
+    #elif (SEN_USE == SEN_IMX323)
+        #include "IMX323.h"
+        #define ISP_RES				ISP_FHD
+    #elif (SEN_USE == SEN_SC2235)
+        #include "SC2235.h"
+        #define ISP_RES				ISP_FHD
+    #endif
+
     #if (ISP_RES == ISP_HD)  
         #define ISP_WIDTH	1280
         #define ISP_HEIGHT	720
 
         #define YUY2_WIDTH	1280
-        #define YUY2_HEIGHT	720        
+        #define YUY2_HEIGHT	720
     #elif (ISP_RES == ISP_FHD)
         #define ISP_WIDTH	1920
         #define ISP_HEIGHT	1088 
         
         #define YUY2_WIDTH	1920
-        #define YUY2_HEIGHT	1080            
+        #define YUY2_HEIGHT	1080
     #elif (ISP_RES == ISP_1296P)
         #define ISP_WIDTH	2304
         #define ISP_HEIGHT	1296 
         
         #define YUY2_WIDTH	1920
-        #define YUY2_HEIGHT	1080         
-    #endif    
+        #define YUY2_HEIGHT	1080
+    #endif
 
 ////----------------------------------------------------------
 	#define AE_EN									1

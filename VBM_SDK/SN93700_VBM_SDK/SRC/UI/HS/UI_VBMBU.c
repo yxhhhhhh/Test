@@ -1,19 +1,19 @@
 /*!
-    The information contained herein is the exclusive property of SONiX and
-    shall not be distributed, or disclosed in whole or in part without prior
-    permission of SONiX.
-    SONiX reserves the right to make changes without further notice to the
-    product to improve reliability, function or design. SONiX does not assume
-    any liability arising out of the application or use of any product or
-    circuits described herein. All application information is advisor and does
-    not from part of the specification.
+	The information contained herein is the exclusive property of SONiX and
+	shall not be distributed, or disclosed in whole or in part without prior
+	permission of SONiX.
+	SONiX reserves the right to make changes without further notice to the
+	product to improve reliability, function or design. SONiX does not assume
+	any liability arising out of the application or use of any product or
+	circuits described herein. All application information is advisor and does
+	not from part of the specification.
 
-    \file       UI_VBMBU.c
-    \brief      User Interface of VBM Baby Unit (for High Speed Mode)
-    \author     Hanyi Chiu
-    \version    1.3
-    \date       2018/05/21
-    \copyright  Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
+	\file		UI_VBMBU.c
+	\brief		User Interface of VBM Baby Unit (for High Speed Mode)
+	\author		Hanyi Chiu
+	\version	1.3
+	\date		2018/05/21
+	\copyright	Copyright (C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #include <string.h>
@@ -32,7 +32,7 @@
 #include "WDT.h"
 #include "AWB_API.h"
 
-#define osUI_SIGNALS    0x6A
+#define osUI_SIGNALS	0x6A
 
 #define MC_ENABLE  1
 #define MC_AUYO_TEST_ENABLE  1
@@ -42,9 +42,9 @@
 /**
  * Key event mapping table
  *
- * @param ubKeyID           Key ID
- * @param ubKeyCnt          Key count   (100ms per 1 count, ex.long press 5s, the count set to 50)
- * @param KeyEventFuncPtr   Key event mapping to function
+ * @param ubKeyID  			Key ID
+ * @param ubKeyCnt 			Key count	(100ms per 1 count, ex.long press 5s, the count set to 50)
+ * @param KeyEventFuncPtr 	Key event mapping to function
  */
 UI_KeyEventMap_t UiKeyEventMap[] =
 {
@@ -134,34 +134,34 @@ uint8_t ubVoxchangeIRMode = 0;
 //------------------------------------------------------------------------------
 void UI_KeyEventExec(void *pvKeyEvent)
 {
-    static uint8_t ubUI_KeyEventIdx = 0;
-    uint16_t uwUiKeyEvent_Cnt = 0, uwIdx;
+	static uint8_t ubUI_KeyEventIdx = 0;
+	uint16_t uwUiKeyEvent_Cnt = 0, uwIdx;
 
-    KEY_Event_t *ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
-    uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
-    if (ptKeyEvent->ubKeyAction == KEY_UP_ACT)
-    {
-        if ((ubUI_KeyEventIdx) && (ubUI_KeyEventIdx < uwUiKeyEvent_Cnt))
-        {
-            if (UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr)
-                UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
-        }
-        ubUI_KeyEventIdx = 0;
-        return;
-    }
-    for (uwIdx = 1; uwIdx < uwUiKeyEvent_Cnt; uwIdx++)
-    {
-        if ((ptKeyEvent->ubKeyID  == UiKeyEventMap[uwIdx].ubKeyID) &&
-           (ptKeyEvent->uwKeyCnt == UiKeyEventMap[uwIdx].uwKeyCnt))
-        {
-            ubUI_KeyEventIdx = uwIdx;
-            if ((ptKeyEvent->uwKeyCnt != 0) && (UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr))
-            {
-                UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
-                ubUI_KeyEventIdx = 0;
-            }
-        }
-    }
+	KEY_Event_t *ptKeyEvent = (KEY_Event_t *)pvKeyEvent;
+	uwUiKeyEvent_Cnt = sizeof UiKeyEventMap / sizeof(UI_KeyEventMap_t);
+	if(ptKeyEvent->ubKeyAction == KEY_UP_ACT)
+	{
+		if((ubUI_KeyEventIdx) && (ubUI_KeyEventIdx < uwUiKeyEvent_Cnt))
+		{
+			if(UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr)
+				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
+		}
+		ubUI_KeyEventIdx = 0;
+		return;
+	}
+	for(uwIdx = 1; uwIdx < uwUiKeyEvent_Cnt; uwIdx++)
+	{
+		if((ptKeyEvent->ubKeyID  == UiKeyEventMap[uwIdx].ubKeyID) &&
+		   (ptKeyEvent->uwKeyCnt == UiKeyEventMap[uwIdx].uwKeyCnt))
+		{
+			ubUI_KeyEventIdx = uwIdx;
+			if((ptKeyEvent->uwKeyCnt != 0) && (UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr))
+			{
+				UiKeyEventMap[ubUI_KeyEventIdx].KeyEventFuncPtr();
+				ubUI_KeyEventIdx = 0;
+			}
+		}
+	}
 }
 //------------------------------------------------------------------------------
 void UI_StateReset(void)
@@ -211,15 +211,15 @@ void UI_UpdateFwUpgStatus(void *ptUpgStsReport)
 //------------------------------------------------------------------------------
 void UI_UpdateAppStatus(void *ptAppStsReport)
 {
-    APP_StatusReport_t *pAppStsRpt = (APP_StatusReport_t *)ptAppStsReport;
-    static uint8_t ubUI_BuSysSetFlag = FALSE;
+	APP_StatusReport_t *pAppStsRpt = (APP_StatusReport_t *)ptAppStsReport;
+	static uint8_t ubUI_BuSysSetFlag = FALSE;
 
-    osMutexWait(UI_BUMutex, osWaitForever);
-    switch(pAppStsRpt->tAPP_ReportType)
-    {
-        case APP_PAIRSTS_RPT:
-        {
-            UI_Result_t tPair_Result = (UI_Result_t)pAppStsRpt->ubAPP_Report[0];
+	osMutexWait(UI_BUMutex, osWaitForever);
+	switch(pAppStsRpt->tAPP_ReportType)
+	{
+		case APP_PAIRSTS_RPT:
+		{
+			UI_Result_t tPair_Result = (UI_Result_t)pAppStsRpt->ubAPP_Report[0];
 
             if (rUI_SUCCESS == tPair_Result)
                 UI_ResetDevSetting();
@@ -296,7 +296,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
             uint16_t uwChkType = UI_SYSVOICELVL_CHK;
             osMessagePut(osUI_SysChkQue, &uwChkType, 0);
         }
-	//printd(1,"UI_UpdateStatus APP_LINK_STATE  UI_BrightnessCheck() gogogo!\n");
+
         UI_BrightnessCheck();
 
         if (((*pThreadCnt)%5) == 0)
@@ -402,7 +402,6 @@ static void UI_SysCheckStatus(void const *argument)
 
         if (uwUI_ChkType & UI_SYSIRLEDDATA_CHK)
         {
-        	//printd(1,"UI_SysCheckStatus uwUI_ChkType & UI_SYSIRLEDDATA_CHK  UI_BrightnessCheck() gogogo!\n");
 //          UI_BrightnessCheck();
             uwUI_ChkType &= ~UI_SYSIRLEDDATA_CHK;
         }
@@ -468,12 +467,11 @@ void UI_UpdateBUStatusToPU(void)
 	}
    printd(Apk_DebugLvl,"ubSNValueResut +=%d\n",ubSNValueResut);
 
+
    if (ubSNValueResut < 16) {
         ubSNValueResut+= UI_SendSnValueToPu(ubSNValueResut);
     }
-
 }
-
 //------------------------------------------------------------------------------
 UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
 {
@@ -510,59 +508,62 @@ UI_Result_t UI_SendRequestToPU(osThreadId thread_id, UI_BUReqCmd_t *ptReqCmd)
 //------------------------------------------------------------------------------
 void UI_RecvPUResponse(TWC_TAG tRecv_StaNum, TWC_STATUS tStatus)
 {
-//  UI_CamNum_t tCamNum;
-//  TWC_TAG tTWC_StaNum;
+//	UI_CamNum_t tCamNum;
+//	TWC_TAG tTWC_StaNum;
 
-//  APP_KNLRoleMap2CamNum(ubKNL_GetRole(), tCamNum);
-//  tTWC_StaNum = APP_GetSTANumMappingTable(tCamNum)->tTWC_StaNum;
-//  if ((tRecv_StaNum != tTWC_StaNum) || (NULL == tosUI_Notify.thread_id))
-//      return;
-    if ((tRecv_StaNum != TWC_AP_MASTER) || (NULL == tosUI_Notify.thread_id))
-        return;
-    tosUI_Notify.tReportSts = (tStatus == TWC_SUCCESS)?rUI_SUCCESS:rUI_FAIL;
-    if (osSignalSet(tosUI_Notify.thread_id, osUI_SIGNALS) != osOK)
-        printd(DBG_ErrorLvl, "UI thread notify fail !\n");
+//	APP_KNLRoleMap2CamNum(ubKNL_GetRole(), tCamNum);
+//	tTWC_StaNum = APP_GetSTANumMappingTable(tCamNum)->tTWC_StaNum;
+//	if((tRecv_StaNum != tTWC_StaNum) || (NULL == tosUI_Notify.thread_id))
+//		return;
+	if((tRecv_StaNum != TWC_AP_MASTER) || (NULL == tosUI_Notify.thread_id))
+		return;
+	tosUI_Notify.tReportSts = (tStatus == TWC_SUCCESS)?rUI_SUCCESS:rUI_FAIL;
+	if(osSignalSet(tosUI_Notify.thread_id, osUI_SIGNALS) != osOK)
+		printd(DBG_ErrorLvl, "UI thread notify fail !\n");
 }
 //------------------------------------------------------------------------------
 void UI_RecvPURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data)
 {
-//  UI_CamNum_t tCamNum;
-//  TWC_TAG tTWC_StaNum;
+//	UI_CamNum_t tCamNum;
+//	TWC_TAG tTWC_StaNum;
 
-//  APP_KNLRoleMap2CamNum(ubKNL_GetRole(), tCamNum);
-//  tTWC_StaNum = APP_GetSTANumMappingTable(tCamNum)->tTWC_StaNum;
-//  if (tRecv_StaNum != tTWC_StaNum)
-//      return;
-    if (tRecv_StaNum != TWC_AP_MASTER)
-        return;
-    switch(pTwc_Data[UI_TWC_TYPE])
-    {
-    case UI_SETTING:
-        if (tUiSettingMap2Func[pTwc_Data[UI_SETTING_ITEM]].pvAction)
-            tUiSettingMap2Func[pTwc_Data[UI_SETTING_ITEM]].pvAction((uint8_t *)(&pTwc_Data[UI_SETTING_DATA]));
-        break;
-    default:
-        break;
-    }
+//	APP_KNLRoleMap2CamNum(ubKNL_GetRole(), tCamNum);
+//	tTWC_StaNum = APP_GetSTANumMappingTable(tCamNum)->tTWC_StaNum;
+//	if(tRecv_StaNum != tTWC_StaNum)
+//		return;
+	if(tRecv_StaNum != TWC_AP_MASTER)
+		return;
+	switch(pTwc_Data[UI_TWC_TYPE])
+	{
+		case UI_SETTING:
+			if(tUiSettingMap2Func[pTwc_Data[UI_SETTING_ITEM]].pvAction)
+				tUiSettingMap2Func[pTwc_Data[UI_SETTING_ITEM]].pvAction((uint8_t *)(&pTwc_Data[UI_SETTING_DATA]));
+			break;
+		default:
+			break;
+	}
 }
 //------------------------------------------------------------------------------
 void UI_SetMotionEvent (uint8_t ubReport)
-{
-    if (ubReport)
-    {
-        UI_BUReqCmd_t tUI_MdMsg;
+{       
+	if(ubReport)
+	{
+		UI_BUReqCmd_t tUI_MdMsg;
 
-        tUI_MdMsg.ubCmd[UI_TWC_TYPE]    = UI_REPORT;
-        tUI_MdMsg.ubCmd[UI_REPORT_ITEM] = UI_MD_TRIG;
-        tUI_MdMsg.ubCmd[UI_REPORT_DATA] = TRUE;
-        tUI_MdMsg.ubCmd_Len             = 3;
-        UI_SendRequestToPU(NULL, &tUI_MdMsg);
-    }
+		tUI_MdMsg.ubCmd[UI_TWC_TYPE]	= UI_REPORT;
+		tUI_MdMsg.ubCmd[UI_REPORT_ITEM] = UI_MD_TRIG;
+		tUI_MdMsg.ubCmd[UI_REPORT_DATA] = TRUE;
+		tUI_MdMsg.ubCmd_Len  			= 3;
+		UI_SendRequestToPU(NULL, &tUI_MdMsg);
+	}
 }
 //------------------------------------------------------------------------------
 void UI_SystemSetup(void)
 {
 	UI_IspSetup();
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+	ADO_HwAecNr_I2C1_Init();
+#endif
 	UI_ANRSetting(&tUI_BuStsInfo.tCamAnrMode);
 	UI_AECSetting(&tUI_BuStsInfo.tCamAecMode);	
 	UI_MDSetting(&tUI_BuStsInfo.MdParam.ubMD_Param[0]);
@@ -574,10 +575,10 @@ void UI_SystemSetup(void)
     MD_ReportReadyCbFunc(UI_SetMotionEvent);
     MD_SetMdState(MD_UNSTABLE);
 }
-#define ADC_SUMRPT_VOX_THL          5000
-#define ADC_SUMRPT_VOX_THH          5000
-#define ADC_SUMRPT_VOICETRIG_THL    7000
-#define ADC_SUMRPT_VOICETRIG_THH    7000
+#define ADC_SUMRPT_VOX_THL			5000
+#define ADC_SUMRPT_VOX_THH			5000
+#define ADC_SUMRPT_VOICETRIG_THL	7000
+#define ADC_SUMRPT_VOICETRIG_THH	7000
 //------------------------------------------------------------------------------
 void UI_PowerSaveSetting(void *pvPS_Mode)
 {
@@ -624,10 +625,14 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         UI_SendMessageToAPP(&tUI_PsMessage);
         tUI_BuStsInfo.tCamPsMode = PS_ECO_MODE;
         break;
-    case PS_WOR_MODE:
-        ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_ON);
-        if (PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
-            break;
+		case PS_WOR_MODE:
+			ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_ON);
+			ubUI_WorWakeUpCnt = 0;
+			if(PS_WOR_MODE == tUI_BuStsInfo.tCamPsMode)
+			{
+				UI_ChangePsModeToWorMode();
+				break;
+			}
         tUI_BuStsInfo.tCamPsMode   = PS_WOR_MODE;
         tUI_BuStsInfo.tCamScanMode = CAMSET_OFF;
         UI_UpdateDevStatusInfo();
@@ -644,23 +649,23 @@ void UI_PowerSaveSetting(void *pvPS_Mode)
         ubVoxchangeIRMode = 0;
        printd(1,"POWER_NORMAL_MODE  START\n");
         break;
-    default:
-        break;
-    }
+		default:
+			break;
+	}
 }
 //------------------------------------------------------------------------------
 void UI_ChangePsModeToWorMode(void)
 {
-    APP_EventMsg_t tUI_PsMessage = {0};
+	APP_EventMsg_t tUI_PsMessage = {0};
 
-    tUI_PsMessage.ubAPP_Event      = APP_POWERSAVE_EVENT;
-    tUI_PsMessage.ubAPP_Message[0] = 4;     //! Message Length
-    tUI_PsMessage.ubAPP_Message[1] = PS_WOR_MODE;
-    tUI_PsMessage.ubAPP_Message[2] = FALSE;
-    tUI_PsMessage.ubAPP_Message[3] = FALSE;
-    tUI_PsMessage.ubAPP_Message[4] = TRUE;
-    UI_SendMessageToAPP(&tUI_PsMessage);
-    ubUI_WorModeEnFlag = TRUE;
+	tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+	tUI_PsMessage.ubAPP_Message[0] = 4;		//! Message Length
+	tUI_PsMessage.ubAPP_Message[1] = PS_WOR_MODE;
+	tUI_PsMessage.ubAPP_Message[2] = FALSE;
+	tUI_PsMessage.ubAPP_Message[3] = FALSE;
+	tUI_PsMessage.ubAPP_Message[4] = TRUE;
+	UI_SendMessageToAPP(&tUI_PsMessage);
+	ubUI_WorModeEnFlag = TRUE;
 }
 //------------------------------------------------------------------------------
 void UI_ChangePsModeToNormalMode(void)
@@ -684,19 +689,19 @@ void UI_ChangePsModeToNormalMode(void)
 //------------------------------------------------------------------------------
 void UI_DisableVox(void)
 {
-    APP_EventMsg_t tUI_VoxMsg = {0};
+	APP_EventMsg_t tUI_VoxMsg = {0};
 
-    ADO_SetAdcRpt(ADC_SUMRPT_VOX_THL, ADC_SUMRPT_VOX_THH, ADO_OFF);
-    tUI_VoxMsg.ubAPP_Event      = APP_POWERSAVE_EVENT;
-    tUI_VoxMsg.ubAPP_Message[0] = 2;        //! Message Length
-    tUI_VoxMsg.ubAPP_Message[1] = PS_VOX_MODE;
-    tUI_VoxMsg.ubAPP_Message[2] = FALSE;
-    UI_SendMessageToAPP(&tUI_VoxMsg);
-    tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
-//  tUI_BuStsInfo.tCamScanMode = CAMSET_ON;
-//  UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
-    UI_UpdateDevStatusInfo();
-    printd(DBG_InfoLvl, "       => VOX Mode Disable\n");
+	ADO_SetAdcRpt(ADC_SUMRPT_VOX_THL, ADC_SUMRPT_VOX_THH, ADO_OFF);
+	tUI_VoxMsg.ubAPP_Event 	    = APP_POWERSAVE_EVENT;
+	tUI_VoxMsg.ubAPP_Message[0] = 2;		//! Message Length
+	tUI_VoxMsg.ubAPP_Message[1] = PS_VOX_MODE;
+	tUI_VoxMsg.ubAPP_Message[2] = FALSE;
+	UI_SendMessageToAPP(&tUI_VoxMsg);
+	tUI_BuStsInfo.tCamPsMode = POWER_NORMAL_MODE;
+//	tUI_BuStsInfo.tCamScanMode = CAMSET_ON;
+//	UI_VoiceTrigSetting(&tUI_BuStsInfo.tCamScanMode);
+	UI_UpdateDevStatusInfo();
+	printd(DBG_InfoLvl, "		=> VOX Mode Disable\n");
 }
 //------------------------------------------------------------------------------
 void UI_VoxTrigger(void)
@@ -765,48 +770,92 @@ void UI_VoiceTrigger(void)
             UI_SendAlarmTypeToPu(ubAlarmType);
             APP_EventMsg_t tUI_PsMessage = {0};
 
-            tUI_PsMessage.ubAPP_Event      = APP_POWERSAVE_EVENT;
-            tUI_PsMessage.ubAPP_Message[0] = 4;     //! Message Length
-            tUI_PsMessage.ubAPP_Message[1] = PS_WOR_MODE;
-            tUI_PsMessage.ubAPP_Message[2] = TRUE;
-            tUI_PsMessage.ubAPP_Message[3] = TRUE;
-            tUI_PsMessage.ubAPP_Message[4] = TRUE;
-            UI_SendMessageToAPP(&tUI_PsMessage);
-            ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_OFF);
-            ubUI_WorWakeUpCnt++;
-            printd(DBG_InfoLvl, "       => Voice Trigger\n");
-        }
-    }
-    else if (CAMSET_ON == tUI_BuStsInfo.tCamScanMode)
-    {
-        if (ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
-        {
-            tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]    = UI_REPORT;
-            tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_TRIG;
-            tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] = TRUE;
-            tUI_VoiceReqCmd.ubCmd_Len             = 3;
-            UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
-            printd(DBG_InfoLvl, "       => Voice Trigger\n");
-        }
-    }
+			tUI_PsMessage.ubAPP_Event 	   = APP_POWERSAVE_EVENT;
+			tUI_PsMessage.ubAPP_Message[0] = 4;		//! Message Length
+			tUI_PsMessage.ubAPP_Message[1] = PS_WOR_MODE;
+			tUI_PsMessage.ubAPP_Message[2] = TRUE;
+			tUI_PsMessage.ubAPP_Message[3] = TRUE;
+			tUI_PsMessage.ubAPP_Message[4] = TRUE;
+			UI_SendMessageToAPP(&tUI_PsMessage);
+			ADO_SetAdcRpt(ADC_SUMRPT_VOICETRIG_THL, ADC_SUMRPT_VOICETRIG_THH, ADO_OFF);
+			ubUI_WorWakeUpCnt++;
+			printd(DBG_InfoLvl, "		=> Voice Trigger\n");
+		}
+	}
+	else if((PS_VOX_MODE == tUI_BuStsInfo.tCamPsMode) ||
+		    (CAMSET_ON == tUI_BuStsInfo.tCamScanMode))
+	{
+		if(ulUI_AdcRpt > ADC_SUMRPT_VOICETRIG_THH)
+		{
+			tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]	  = UI_REPORT;
+			tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM] = UI_VOICE_TRIG;
+			tUI_VoiceReqCmd.ubCmd[UI_REPORT_DATA] = TRUE;
+			tUI_VoiceReqCmd.ubCmd_Len  			  = 3;
+			UI_SendRequestToPU(NULL, &tUI_VoiceReqCmd);
+			printd(DBG_InfoLvl, "		=> Voice Trigger\n");
+		}
+	}
+}
+//------------------------------------------------------------------------------
+uint8_t ubGetAecNrCommand(UI_CamsSetMode_t AecSwitch, UI_CamsSetMode_t NrSwitch)
+{
+	//printf("		=> aec:%d,  nr:%d\n",AecSwitch,NrSwitch);	
+	if( AecSwitch==CAMSET_ON && NrSwitch==CAMSET_OFF )
+	{
+		return 0x80;
+	}
+	else if( AecSwitch==CAMSET_OFF && NrSwitch==CAMSET_ON )
+	{
+		return 0x08;
+	}
+	else if( AecSwitch==CAMSET_ON && NrSwitch==CAMSET_ON )
+	{
+		return 0x88;
+	}
+	else if( AecSwitch==CAMSET_OFF && NrSwitch==CAMSET_OFF )
+	{
+		return 0x00;
+	}
+	return 0;
 }
 //------------------------------------------------------------------------------
 void UI_ANRSetting(void *pvAnrMode)
 {
 	uint8_t *pUI_AnrMode = (uint8_t *)pvAnrMode;
-	
+
+#if APP_ADOENC_TYPE == ALAW_ENC
+	ADO_Noise_Process_Type(NOISE_DISABLE,AEC_NR_16kHZ);
+#else
+	//! AEC and NR Setting
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_SW
 	ADO_Noise_Process_Type((CAMSET_ON == (UI_CamsSetMode_t)pUI_AnrMode[0])?NOISE_NR:NOISE_DISABLE, AEC_NR_16kHZ);
+#elif APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+	ADO_Noise_Process_Type(NOISE_DISABLE,AEC_NR_16kHZ);
+	ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_ON);
+#endif
+#endif
+
 	if(tUI_BuStsInfo.tCamAnrMode != (UI_CamsSetMode_t)pUI_AnrMode[0])
 	{
 		tUI_BuStsInfo.tCamAnrMode = (UI_CamsSetMode_t)pUI_AnrMode[0];
 		UI_UpdateDevStatusInfo();
 	}
 	printd(DBG_InfoLvl, "		=> ANR %s\n", (CAMSET_ON == tUI_BuStsInfo.tCamAnrMode)?"ON":"OFF");
+
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+	ADO_HwAecNr_Command(ubGetAecNrCommand(tUI_BuStsInfo.tCamAecMode,tUI_BuStsInfo.tCamAnrMode));
+	ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
+#endif
 }
 //------------------------------------------------------------------------------
 void UI_AECSetting(void *pvAecMode)
 {
 	uint8_t *pUI_AecMode = (uint8_t *)pvAecMode;
+	
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+		ADO_Noise_Process_Type(NOISE_DISABLE,AEC_NR_16kHZ);
+		ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_ON);
+#endif
 
 	//! Setting AEC
 	if(tUI_BuStsInfo.tCamAecMode != (UI_CamsSetMode_t)pUI_AecMode[0])
@@ -815,6 +864,11 @@ void UI_AECSetting(void *pvAecMode)
 //		UI_UpdateDevStatusInfo();
 	}
 	printd(DBG_InfoLvl, "		=> AEC %s\n", (CAMSET_ON == tUI_BuStsInfo.tCamAecMode)?"ON":"OFF");
+	
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_HW
+	ADO_HwAecNr_Command(ubGetAecNrCommand(tUI_BuStsInfo.tCamAecMode,tUI_BuStsInfo.tCamAnrMode));
+	ADO_SetDacMute(DAC_MR_0p5DB_1SAMPLE, ADO_OFF);
+#endif
 }
 
 void UI_VoiceCheck (void)
@@ -874,7 +928,7 @@ void UI_TempCheck(void) //20180322
     uint8_t ubRdData[2] = {0};
     bool    ret = 0;
     int32_t tem = 0;
-    int32_t tem_test = 0;
+     int32_t tem_test = 0;
     static int32_t tem_last  = 0;
     static uint8_t temp_flag = 0;
     uint8_t ubTempValueH = 0;
@@ -969,22 +1023,22 @@ void UI_IspSetup(void)
 	};
 	uint8_t ubUI_IspItem, ubUI_IspParam;
 
-    for (ubUI_IspItem = UI_IMG3DNR_SETTING; ubUI_IspItem < UI_IMGSETTING_MAX; ubUI_IspItem++)
-    {
-        if (tUI_IspFunc[ubUI_IspItem].pvImgFunc)
-        {
-            ubUI_IspParam = (*tUI_IspFunc[ubUI_IspItem].pImgParam) * (((UI_IMGBL_SETTING        == ubUI_IspItem) ||
-                                                                      (UI_IMGCONTRAST_SETTING   == ubUI_IspItem) ||
-                                                                      (UI_IMGSATURATION_SETTING == ubUI_IspItem) ||
-                                                                      (UI_IMGHUE_SETTING        == ubUI_IspItem))?2:1);
-            tUI_IspFunc[ubUI_IspItem].pvImgFunc(ubUI_IspParam);
-        }
-    }
+	for(ubUI_IspItem = UI_IMG3DNR_SETTING; ubUI_IspItem < UI_IMGSETTING_MAX; ubUI_IspItem++)
+	{
+		if(tUI_IspFunc[ubUI_IspItem].pvImgFunc)
+		{
+			ubUI_IspParam = (*tUI_IspFunc[ubUI_IspItem].pImgParam) * (((UI_IMGBL_SETTING        == ubUI_IspItem) ||
+																	  (UI_IMGCONTRAST_SETTING   == ubUI_IspItem) ||
+														              (UI_IMGSATURATION_SETTING == ubUI_IspItem) ||
+															          (UI_IMGHUE_SETTING 		== ubUI_IspItem))?2:1);
+			tUI_IspFunc[ubUI_IspItem].pvImgFunc(ubUI_IspParam);
+		}
+	}
 }
 //------------------------------------------------------------------------------
 void UI_ImageProcSetting(void *pvImgProc)
 {
-    uint8_t *pUI_ImgProc = (uint8_t *)pvImgProc;
+	uint8_t *pUI_ImgProc = (uint8_t *)pvImgProc;
 
 	switch(pUI_ImgProc[0])
 	{
@@ -1036,128 +1090,128 @@ void UI_ImageProcSetting(void *pvImgProc)
 	UI_UpdateDevStatusInfo();
 }
 //------------------------------------------------------------------------------
-#define MD_TRIG_LVL 16
+#define MD_TRIG_LVL	16
 void UI_MDTrigger(void)
 {
-    uint32_t ulUI_MdTrig = 0;
+	uint32_t ulUI_MdTrig = 0;
     uint32_t ulUI_MdTrig_LV = 0;
+    
+	ulUI_MdTrig = uwMD_GetCnt(MD_REG1_CNT_01);    
+	printd(DBG_InfoLvl, "=>MD Trig1: %d\n", ulUI_MdTrig);
+   	//ulUI_MdTrig_LV = (((tUI_BuStsInfo.MdParam.ubMD_Param[2]+1) * (tUI_BuStsInfo.MdParam.ubMD_Param[3]+1)) < 30)? 
+   	//     ((tUI_BuStsInfo.MdParam.ubMD_Param[2]+1) * (tUI_BuStsInfo.MdParam.ubMD_Param[3]+1) * MD_TRIG_LVL) : (30 * MD_TRIG_LVL);
+    
+	if(ulUI_MdTrig > ulUI_MdTrig_LV)
+	{
+		UI_BUReqCmd_t tUI_MdMsg;
 
-    ulUI_MdTrig = uwMD_GetCnt(MD_REG1_CNT_01);
-    printd(DBG_InfoLvl, "=>MD Trig1: %d\n", ulUI_MdTrig);
-    //ulUI_MdTrig_LV = (((tUI_BuStsInfo.MdParam.ubMD_Param[2]+1) * (tUI_BuStsInfo.MdParam.ubMD_Param[3]+1)) < 30)?
-    //     ((tUI_BuStsInfo.MdParam.ubMD_Param[2]+1) * (tUI_BuStsInfo.MdParam.ubMD_Param[3]+1) * MD_TRIG_LVL) : (30 * MD_TRIG_LVL);
-
-    if (ulUI_MdTrig > ulUI_MdTrig_LV)
-    {
-        UI_BUReqCmd_t tUI_MdMsg;
-
-        tUI_MdMsg.ubCmd[UI_TWC_TYPE]    = UI_REPORT;
-        tUI_MdMsg.ubCmd[UI_REPORT_ITEM] = UI_MD_TRIG;
-        tUI_MdMsg.ubCmd[UI_REPORT_DATA] = TRUE;
-        tUI_MdMsg.ubCmd_Len             = 3;
-        UI_SendRequestToPU(NULL, &tUI_MdMsg);
-        printd(DBG_InfoLvl, "=>MD Trig2: %d\n", ulUI_MdTrig);
-    }
+		tUI_MdMsg.ubCmd[UI_TWC_TYPE]	= UI_REPORT;
+		tUI_MdMsg.ubCmd[UI_REPORT_ITEM] = UI_MD_TRIG;
+		tUI_MdMsg.ubCmd[UI_REPORT_DATA] = TRUE;
+		tUI_MdMsg.ubCmd_Len  			= 3;
+		UI_SendRequestToPU(NULL, &tUI_MdMsg);
+		printd(DBG_InfoLvl, "=>MD Trig2: %d\n", ulUI_MdTrig);
+	}
 }
 //------------------------------------------------------------------------------
 void UI_MDSetting(void *pvMdParam)
 {
-#define MD_H_WINDOWSIZE     64
-#define MD_V_WINDOWSIZE     48
-    uint16_t uwMD_X          = 0;
-    uint16_t uwMD_Y          = 0;
-    uint16_t uwMD_BlockSIdx  = 0;
-    uint16_t uwMD_BlockEIdx  = 0;
-    uint16_t uwMD_BlockH     = sensor_cfg.ulHSize / 30;
-    uint16_t uwMD_BlockV     = sensor_cfg.ulVSize / 23;
-    uint16_t uwMD_H_WinNum   = sensor_cfg.ulHSize / MD_H_WINDOWSIZE;
-    uint16_t uwMD_StartIdx   = 0, i, j;
-    uint16_t uwMD_TotalBlock = (30 * 23) / 2;   //1 block is 4 bits data, 1 byte is 2 block
-    uint16_t uwMD_BlockNum1  = 0, uwMD_BlockNum2 = 0;
-    uint8_t ubMD_BlockCnt    = 0;
-    uint8_t *pMD_Param       = (uint8_t *)pvMdParam;
-    uint8_t *pMD_BlockValue, *pMD_BlockGroup;
-    static uint8_t ubUI_MdUpdateFlag = FALSE;
+#define MD_H_WINDOWSIZE		64
+#define MD_V_WINDOWSIZE		48
+	uint16_t uwMD_X          = 0;
+	uint16_t uwMD_Y          = 0;
+	uint16_t uwMD_BlockSIdx  = 0;
+	uint16_t uwMD_BlockEIdx  = 0;
+	uint16_t uwMD_BlockH     = sensor_cfg.ulHSize / 30;
+	uint16_t uwMD_BlockV     = sensor_cfg.ulVSize / 23;
+	uint16_t uwMD_H_WinNum   = sensor_cfg.ulHSize / MD_H_WINDOWSIZE;
+	uint16_t uwMD_StartIdx   = 0, i, j;
+	uint16_t uwMD_TotalBlock = (30 * 23) / 2;	//1 block is 4 bits data, 1 byte is 2 block
+	uint16_t uwMD_BlockNum1  = 0, uwMD_BlockNum2 = 0;
+	uint8_t ubMD_BlockCnt    = 0;
+	uint8_t *pMD_Param       = (uint8_t *)pvMdParam;
+	uint8_t *pMD_BlockValue, *pMD_BlockGroup;
+	static uint8_t ubUI_MdUpdateFlag = FALSE;
 
-    if ((pMD_Param[2] == 0) && (pMD_Param[3] == 0))
-    {
-        tUI_BuStsInfo.MdParam.ubMD_Mode = MD_OFF;
-        if (TRUE == ubUI_MdUpdateFlag)
-        {
-            MD_Switch(tUI_BuStsInfo.MdParam.ubMD_Mode);
-            UI_UpdateDevStatusInfo();
-            printd(DBG_InfoLvl, "=>MD OFF\n");
-        }
-        else
-            ubUI_MdUpdateFlag = TRUE;
-        return;
-    }
-    printd(DBG_InfoLvl, "=>MD %d_%d_%d\n", ((pMD_Param[1] << 8) | pMD_Param[0]),  pMD_Param[2],  pMD_Param[3]);
-    ubMD_BlockCnt  = pMD_Param[3] + 1;
-    pMD_BlockValue = malloc(uwMD_TotalBlock);
-    pMD_BlockGroup = malloc(uwMD_TotalBlock);
-    for (i = 0; i < uwMD_TotalBlock; i++)
-    {
-        pMD_BlockValue[i] = MD_REG1_CNT_00;
-        pMD_BlockGroup[i] = 0x88;
-    }
-    uwMD_StartIdx  = ((pMD_Param[1] << 8) | pMD_Param[0]);
-    uwMD_X = (uwMD_StartIdx % uwMD_H_WinNum) * MD_H_WINDOWSIZE;
-    uwMD_Y = (uwMD_StartIdx / uwMD_H_WinNum) * MD_V_WINDOWSIZE;
-    uwMD_BlockSIdx = ((uwMD_X / uwMD_BlockH) + ((uwMD_Y / uwMD_BlockV) * 30));
-    printd(DBG_InfoLvl, "=>MD x=%d,y=%d,S=%d\n",uwMD_X,uwMD_Y,uwMD_BlockSIdx);
-    if (!((uwMD_StartIdx + pMD_Param[2] + 1) % uwMD_H_WinNum))
-    {
-        uwMD_Y = ((uwMD_StartIdx + pMD_Param[2]) / uwMD_H_WinNum) * MD_V_WINDOWSIZE;
-        uwMD_BlockEIdx = (((uwMD_Y / uwMD_BlockV) + 1) * 30) - 1;
-        printd(DBG_InfoLvl, "1=>MD y=%d,e=%d\n",uwMD_Y,uwMD_BlockEIdx);
-    }
-    else
-    {
-        uwMD_X = ((uwMD_StartIdx + pMD_Param[2]) % uwMD_H_WinNum) * MD_H_WINDOWSIZE;
-        uwMD_Y = ((uwMD_StartIdx + pMD_Param[2]) / uwMD_H_WinNum) * MD_V_WINDOWSIZE;
-        uwMD_BlockEIdx = ((uwMD_X / uwMD_BlockH) + ((uwMD_Y / uwMD_BlockV) * 30));
-        printd(DBG_InfoLvl, "2=>MD x=%d,y=%d,e=%d\n",uwMD_X,uwMD_Y,uwMD_BlockEIdx);
-    }
-    ubMD_BlockCnt  = ((((ubMD_BlockCnt * MD_V_WINDOWSIZE) / uwMD_BlockV) + 1) > 23) ? 23 : (((ubMD_BlockCnt * MD_V_WINDOWSIZE) / uwMD_BlockV) + 1);
-    printd(DBG_InfoLvl, "3=>MD c=%d\n",ubMD_BlockCnt);
+	if((pMD_Param[2] == 0) && (pMD_Param[3] == 0))
+	{
+		tUI_BuStsInfo.MdParam.ubMD_Mode = MD_OFF;
+		if(TRUE == ubUI_MdUpdateFlag)
+		{
+			MD_Switch(tUI_BuStsInfo.MdParam.ubMD_Mode);
+			UI_UpdateDevStatusInfo();
+			printd(DBG_InfoLvl, "=>MD OFF\n");
+		}
+		else
+			ubUI_MdUpdateFlag = TRUE;
+		return;
+	}
+	printd(DBG_InfoLvl, "=>MD %d_%d_%d\n", ((pMD_Param[1] << 8) | pMD_Param[0]),  pMD_Param[2],  pMD_Param[3]);
+	ubMD_BlockCnt  = pMD_Param[3] + 1;
+	pMD_BlockValue = malloc(uwMD_TotalBlock);
+	pMD_BlockGroup = malloc(uwMD_TotalBlock);
+	for(i = 0; i < uwMD_TotalBlock; i++)
+	{
+		pMD_BlockValue[i] = MD_REG1_CNT_00;
+		pMD_BlockGroup[i] = 0x88;
+	}
+	uwMD_StartIdx  = ((pMD_Param[1] << 8) | pMD_Param[0]);
+	uwMD_X = (uwMD_StartIdx % uwMD_H_WinNum) * MD_H_WINDOWSIZE;
+	uwMD_Y = (uwMD_StartIdx / uwMD_H_WinNum) * MD_V_WINDOWSIZE;
+	uwMD_BlockSIdx = ((uwMD_X / uwMD_BlockH) + ((uwMD_Y / uwMD_BlockV) * 30));
+	printd(DBG_InfoLvl, "=>MD x=%d,y=%d,S=%d\n",uwMD_X,uwMD_Y,uwMD_BlockSIdx);
+	if(!((uwMD_StartIdx + pMD_Param[2] + 1) % uwMD_H_WinNum))
+	{
+		uwMD_Y = ((uwMD_StartIdx + pMD_Param[2]) / uwMD_H_WinNum) * MD_V_WINDOWSIZE;
+		uwMD_BlockEIdx = (((uwMD_Y / uwMD_BlockV) + 1) * 30) - 1;
+		printd(DBG_InfoLvl, "1=>MD y=%d,e=%d\n",uwMD_Y,uwMD_BlockEIdx);
+	}
+	else
+	{
+		uwMD_X = ((uwMD_StartIdx + pMD_Param[2]) % uwMD_H_WinNum) * MD_H_WINDOWSIZE;
+		uwMD_Y = ((uwMD_StartIdx + pMD_Param[2]) / uwMD_H_WinNum) * MD_V_WINDOWSIZE;
+		uwMD_BlockEIdx = ((uwMD_X / uwMD_BlockH) + ((uwMD_Y / uwMD_BlockV) * 30));
+		printd(DBG_InfoLvl, "2=>MD x=%d,y=%d,e=%d\n",uwMD_X,uwMD_Y,uwMD_BlockEIdx);
+	}
+	ubMD_BlockCnt  = ((((ubMD_BlockCnt * MD_V_WINDOWSIZE) / uwMD_BlockV) + 1) > 23) ? 23 : (((ubMD_BlockCnt * MD_V_WINDOWSIZE) / uwMD_BlockV) + 1);
+	printd(DBG_InfoLvl, "3=>MD c=%d\n",ubMD_BlockCnt);
 
-    MD_Init();
+	MD_Init();
     MD_SetUserThreshold(MD_TRIG_LVL);
-    MD_Switch(MD_OFF);
-    for (i = uwMD_BlockSIdx; i <= uwMD_BlockEIdx; i++)
-    {
-        for (j = 0; j < ubMD_BlockCnt; j++)
-        {
-            uwMD_BlockNum1 = (i + (j * 30)) / 2;
-            uwMD_BlockNum2 = (i + (j * 30)) % 2;
-            if (!uwMD_BlockNum2)
-            {
-                pMD_BlockValue[uwMD_BlockNum1] = (pMD_BlockValue[uwMD_BlockNum1] & 0xF0) | MD_REG1_CNT_01;
-                pMD_BlockGroup[uwMD_BlockNum1] = (pMD_BlockGroup[uwMD_BlockNum1] & 0xF0) | 2;
-            }
-            else
-            {
-                pMD_BlockValue[uwMD_BlockNum1] = (pMD_BlockValue[uwMD_BlockNum1] & 0x0F) | (MD_REG1_CNT_01 << 4);
-                pMD_BlockGroup[uwMD_BlockNum1] = (pMD_BlockGroup[uwMD_BlockNum1] & 0x0F) | (2 << 4);
-            }
-        }
-    }
-    MD_SetROIindex((uint32_t *)pMD_BlockValue);
-    MD_SetROIweight((uint32_t *)pMD_BlockGroup);
-    MD_SetSensitivity(80);
-    tUI_BuStsInfo.MdParam.ubMD_Mode = MD_ON;
-    MD_Switch(tUI_BuStsInfo.MdParam.ubMD_Mode);
-    free(pMD_BlockValue);
-    free(pMD_BlockGroup);
-    if (TRUE == ubUI_MdUpdateFlag)
-    {
-        for (i = 0; i < 4; i++)
-            tUI_BuStsInfo.MdParam.ubMD_Param[i] = pMD_Param[i];
-        UI_UpdateDevStatusInfo();
-    }
-    else
-        ubUI_MdUpdateFlag = TRUE;
+	MD_Switch(MD_OFF);
+	for(i = uwMD_BlockSIdx; i <= uwMD_BlockEIdx; i++)
+	{
+		for(j = 0; j < ubMD_BlockCnt; j++)
+		{
+			uwMD_BlockNum1 = (i + (j * 30)) / 2;
+			uwMD_BlockNum2 = (i + (j * 30)) % 2;
+			if(!uwMD_BlockNum2)
+			{
+				pMD_BlockValue[uwMD_BlockNum1] = (pMD_BlockValue[uwMD_BlockNum1] & 0xF0) | MD_REG1_CNT_01;
+				pMD_BlockGroup[uwMD_BlockNum1] = (pMD_BlockGroup[uwMD_BlockNum1] & 0xF0) | 2;
+			}
+			else
+			{
+				pMD_BlockValue[uwMD_BlockNum1] = (pMD_BlockValue[uwMD_BlockNum1] & 0x0F) | (MD_REG1_CNT_01 << 4);
+				pMD_BlockGroup[uwMD_BlockNum1] = (pMD_BlockGroup[uwMD_BlockNum1] & 0x0F) | (2 << 4);
+			}
+		}
+	}
+	MD_SetROIindex((uint32_t *)pMD_BlockValue);
+	MD_SetROIweight((uint32_t *)pMD_BlockGroup);
+	MD_SetSensitivity(80);
+	tUI_BuStsInfo.MdParam.ubMD_Mode = MD_ON;
+	MD_Switch(tUI_BuStsInfo.MdParam.ubMD_Mode);
+	free(pMD_BlockValue);
+	free(pMD_BlockGroup);
+	if(TRUE == ubUI_MdUpdateFlag)
+	{
+		for(i = 0; i < 4; i++)
+			tUI_BuStsInfo.MdParam.ubMD_Param[i] = pMD_Param[i];
+		UI_UpdateDevStatusInfo();
+	}
+	else
+		ubUI_MdUpdateFlag = TRUE;
 }
 //------------------------------------------------------------------------------
 void UI_ResetDevSetting(void)
@@ -1174,7 +1228,7 @@ void UI_ResetDevSetting(void)
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamCondenseMode, 	CAMSET_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorBL, 		  64);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorContrast,	  64);
-	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);  //±¥ºÍ¶È
+	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorSaturation, 64);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamColorParam.ubColorHue, 		  64);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.MdParam.ubMD_Mode,	MD_OFF);
 	UI_CLEAR_CAMSETTINGTODEFU(tUI_BuStsInfo.tCamPsMode,			POWER_NORMAL_MODE);
@@ -1187,17 +1241,17 @@ void UI_ResetDevSetting(void)
 //------------------------------------------------------------------------------
 void UI_LoadDevStatusInfo(void)
 {
-    uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
-    uint8_t i;
+	uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
+	uint8_t i;
 
-    memset(&tUI_BuStsInfo, 0xFF, sizeof(UI_BUStatus_t));
-    osMutexWait(APP_UpdateMutex, osWaitForever);
-    SF_Read(ulUI_SFAddr, sizeof(UI_BUStatus_t), (uint8_t *)&tUI_BuStsInfo);
-    osMutexRelease(APP_UpdateMutex);
-    printd(DBG_InfoLvl, "UI TAG:%s\n",tUI_BuStsInfo.cbUI_DevStsTag);
-    printd(DBG_InfoLvl, "UI VER:%s\n",tUI_BuStsInfo.cbUI_FwVersion);
-    if ((strncmp(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1) == 0)
-    && (strncmp(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1) == 0)) {
+	memset(&tUI_BuStsInfo, 0xFF, sizeof(UI_BUStatus_t));
+	osMutexWait(APP_UpdateMutex, osWaitForever);
+	SF_Read(ulUI_SFAddr, sizeof(UI_BUStatus_t), (uint8_t *)&tUI_BuStsInfo);
+	osMutexRelease(APP_UpdateMutex);
+	printd(DBG_InfoLvl, "UI TAG:%s\n",tUI_BuStsInfo.cbUI_DevStsTag);
+	printd(DBG_InfoLvl, "UI VER:%s\n",tUI_BuStsInfo.cbUI_FwVersion);
+	if ((strncmp(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1) == 0)
+	&& (strncmp(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1) == 0)) {
 
 	} else {
 		printd(DBG_ErrorLvl, "TAG no match, Reset UI\n");
@@ -1231,16 +1285,16 @@ void UI_LoadDevStatusInfo(void)
 //------------------------------------------------------------------------------
 void UI_UpdateDevStatusInfo(void)
 {
-    uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
+	uint32_t ulUI_SFAddr = pSF_Info->ulSize - (UI_SF_START_SECTOR * pSF_Info->ulSecSize);
 
-    osMutexWait(APP_UpdateMutex, osWaitForever);
-    memcpy(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1);
-    memcpy(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1);
-    SF_DisableWrProtect();
-    SF_Erase(SF_SE, ulUI_SFAddr, pSF_Info->ulSecSize);
-    SF_Write(ulUI_SFAddr, sizeof(UI_BUStatus_t), (uint8_t *)&tUI_BuStsInfo);
-    SF_EnableWrProtect();
-    osMutexRelease(APP_UpdateMutex);
+	osMutexWait(APP_UpdateMutex, osWaitForever);
+	memcpy(tUI_BuStsInfo.cbUI_DevStsTag, SF_STA_UI_SECTOR_TAG, sizeof(tUI_BuStsInfo.cbUI_DevStsTag) - 1);
+	memcpy(tUI_BuStsInfo.cbUI_FwVersion, SN937XX_FW_VERSION, sizeof(tUI_BuStsInfo.cbUI_FwVersion) - 1);
+	SF_DisableWrProtect();
+	SF_Erase(SF_SE, ulUI_SFAddr, pSF_Info->ulSecSize);
+	SF_Write(ulUI_SFAddr, sizeof(UI_BUStatus_t), (uint8_t *)&tUI_BuStsInfo);
+	SF_EnableWrProtect();
+	osMutexRelease(APP_UpdateMutex);
 }
 
 
@@ -1632,7 +1686,6 @@ void UI_SetIrMode(uint8_t mode)
 		AWB_Start();
 		SEN_SetIrMode(0);
 		ISP_SetIQSaturation(128);
-
 	}
 
 }

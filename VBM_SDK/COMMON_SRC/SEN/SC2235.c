@@ -11,8 +11,8 @@
 	\file		SC2235.c
 	\brief		Sensor SC2235 relation function
 	\author		BoCun
-	\version	1.3
-	\date		2018-07-25
+	\version	1.5
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -39,36 +39,36 @@ struct AE_ExpLineTblObj {
 
 static struct AE_ExpLineTblObj ctAE_MaxExpLTbl[] = {
 	//FPS(DEC),	Max Exposure Offset(DEC, Sign),
-	{30,    0},
-	{29,	0},
-	{28,	0},
-	{27,	0},
-	{26,	0},
-	{25,	0},
-	{24,	0},
-	{23,	0},
-	{22,	0},
-	{21,	0},
-	{20,	0},
-	{19,	0},
-	{18,	0},
-	{17,	0},
-	{16,	0},
-	{15,	0},
-	{14,	0},
-	{13,	0},
-	{12,	0},
-	{11,	0},
-	{10,	0},
-	{9, 0},
-	{8,	0},
-	{7,	0},
-	{6,	0},
-	{5,	0},
-	{4,	0},
-	{3,	0},
-	{2,	0},
-	{1,	0},
+	{30,        0},
+	{29,	    0},
+	{28,	    0},
+	{27,	    0},
+	{26,	    0},
+	{25,	    0},
+	{24,	    0},
+	{23,	    0},
+	{22,	    0},
+	{21,	    0},
+	{20,	    0},
+	{19,	    0},
+	{18,	    0},
+	{17,	    0},
+	{16,	    0},
+	{15,	    0},
+	{14,	    0},
+	{13,	    0},
+	{12,	    0},
+	{11,	    0},
+	{10,	    0},
+	{9,         0},
+	{8,	        0},
+	{7,	        0},
+	{6,	        0},
+	{5,	        0},
+	{4,	        0},
+	{3,	        0},
+	{2,	        0},
+	{1,	        0},
 };
 
 uint8_t ubSEN_InitTable[] = {
@@ -277,12 +277,15 @@ uint8_t ubSEN_InitTable[] = {
     
     // output window height((1080 to 1088
     0x83, 0x32, 0x0a, 0x04,		
-    0x83, 0x32, 0x0b, 0x40,		
+    0x83, 0x32, 0x0b, 0x40,
+    // row start position (8 to 6
+    0x83, 0x32, 0x12, 0x00,
+    0x83, 0x32, 0x13, 0x06,
 	//0x83, 0x01, 0x00, 0x01,
 };
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
+bool bSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
 {
 	uint8_t *pAddr, pBuf[2];
 	
@@ -294,7 +297,7 @@ uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue)
+bool bSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue)
 {	
 	uint8_t pBuf[3];
 	
@@ -307,27 +310,21 @@ uint32_t ulSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_WriteTry(uint16_t uwAddress, uint8_t ubValue, uint8_t ubTryCnt)
+bool bSEN_I2C_WriteTry(uint16_t uwAddress, uint8_t ubValue, uint8_t ubTryCnt)
 {	
-    uint8_t ubData, pBuf[3], i = 0;
+    uint8_t pBuf[3], ret, i=0;
     
     pBuf[0] = (uint8_t)((uwAddress>>8) & 0x00ff);        
     pBuf[1] = (uwAddress & 0x00ff);
     pBuf[2] = ubValue;
-    
-    do{
-        bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);
-        // read sensor register and check wirte success
-        bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 2, &ubData, 1);      
-    }while((ubData != ubValue)  || ((i++) >= ubTryCnt));
        
-    if(i >= ubTryCnt)
-    {
-        printf("Sensor I2C write REG=0x%x failed! 0x%x 0x%x\n", uwAddress, ubData, ubValue);
-        return 0; 
-    }    		
+    do{
+        ret = bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);     
+        if(ret == 0)
+            printf("wr fail 0x%x.\r\n",uwAddress);
+    }while((ret == 0) && ((i++) < ubTryCnt));
     
-	return 1;
+	return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -421,16 +418,16 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting, uint8_t ubFPS)
 	IQ_SetI2cType(pI2C_type);    
     
     // software reset
-    ulSEN_I2C_Read (0x0103, &ubTemp);
+    bSEN_I2C_Read (0x0103, &ubTemp);
     ubTemp |= (0x1<<0);
-    ulSEN_I2C_Write(0x01, 0x03, ubTemp);
+    bSEN_I2C_Write(0x01, 0x03, ubTemp);
     TIMER_Delay_ms(30);
     
 _RETRY:   
 	// I2C by read sensor ID
 	pBuf = (uint8_t*)&uwPID;    
-	ulSEN_I2C_Read (SC2235_CHIP_ID_HIGH_ADDR, &pBuf[1]);
-	ulSEN_I2C_Read (SC2235_CHIP_ID_LOW_ADDR, &pBuf[0]);
+	bSEN_I2C_Read (SC2235_CHIP_ID_HIGH_ADDR, &pBuf[1]);
+	bSEN_I2C_Read (SC2235_CHIP_ID_LOW_ADDR, &pBuf[0]);
 	if (SC2235_CHIP_ID != uwPID)
 	{
 		printf("This is not SC2235 Sensor!! 0x%x 0x%x\n", SC2235_CHIP_ID, uwPID);
@@ -440,19 +437,19 @@ _RETRY:
     printf("chip ID check ok!\r\n");
 
 	// stop streaming(sleep mode
-	ulSEN_I2C_Write(0x01, 0x00, 0x00); 
+	bSEN_I2C_Write(0x01, 0x00, 0x00); 
 	
     // initial table
 	for (i=0; i<sizeof(ubSEN_InitTable); i+=4)
 	{
 		if (ubSEN_InitTable[i] == 0x83)	// write
 		{
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
+			bSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
 		}
 	}
     TIMER_Delay_ms(50);
 	// start streaming
-	ulSEN_I2C_Write(0x01, 0x00, 0x01);     
+	bSEN_I2C_Write(0x01, 0x00, 0x01);     
     // set frame rate
 	SEN_PclkSetting(ubFPS);
 	return 1;
@@ -566,13 +563,13 @@ void SEN_WrDummyLine(uint16_t uwDL)
 {
     uint16_t uwTemp;
 	//Set dummy lines
-	ulSEN_I2C_WriteTry(SC2235_FRAME_LENGTH_H, (uint8_t)((uwDL>>8) &0x00ff), TRY_COUNTS);
-	ulSEN_I2C_WriteTry(SC2235_FRAME_LENGTH_L, (uint8_t)(uwDL &0x00ff), TRY_COUNTS);     
+	bSEN_I2C_WriteTry(SC2235_FRAME_LENGTH_H, (uint8_t)((uwDL>>8) &0x00ff), TRY_COUNTS);
+	bSEN_I2C_WriteTry(SC2235_FRAME_LENGTH_L, (uint8_t)(uwDL &0x00ff), TRY_COUNTS);     
     
     // for smartsense suggestion
     uwTemp = uwDL - 0x02;   
-    ulSEN_I2C_WriteTry(SC2235_D_FRAME_LENGTH_H, (uint8_t)((uwTemp>>8) &0x00ff), TRY_COUNTS);  
-    ulSEN_I2C_WriteTry(SC2235_D_FRAME_LENGTH_L, (uint8_t)(uwTemp &0x00ff), TRY_COUNTS);   
+    bSEN_I2C_WriteTry(SC2235_D_FRAME_LENGTH_H, (uint8_t)((uwTemp>>8) &0x00ff), TRY_COUNTS);  
+    bSEN_I2C_WriteTry(SC2235_D_FRAME_LENGTH_L, (uint8_t)(uwTemp &0x00ff), TRY_COUNTS);   
 }
 
 //------------------------------------------------------------------------------
@@ -585,21 +582,21 @@ void SEN_WrExpLine(uint16_t uwExpLine)
         return;
     
     // set exposure
-    ulSEN_I2C_WriteTry(SC2235_EXPH, (uint8_t)((uwExpLine>>12)&0x001f), TRY_COUNTS);
-    ulSEN_I2C_WriteTry(SC2235_EXPM, (uint8_t)((uwExpLine>>4)&0x00ff), TRY_COUNTS);
-    ulSEN_I2C_WriteTry(SC2235_EXPL, (uint8_t)((uwExpLine&0x0f) << 4), TRY_COUNTS);
+    bSEN_I2C_WriteTry(SC2235_EXPH, (uint8_t)((uwExpLine>>12)&0x001f), TRY_COUNTS);
+    bSEN_I2C_WriteTry(SC2235_EXPM, (uint8_t)((uwExpLine>>4)&0x00ff), TRY_COUNTS);
+    bSEN_I2C_WriteTry(SC2235_EXPL, (uint8_t)((uwExpLine&0x0f) << 4), TRY_COUNTS);
     
     // set trigger
     //step1~3
-	ulSEN_I2C_Write(0x39, 0x03, 0x84);
-	ulSEN_I2C_Write(0x39, 0x03, 0x04);    
+	bSEN_I2C_Write(0x39, 0x03, 0x84);
+	bSEN_I2C_Write(0x39, 0x03, 0x04);    
     //step5
     ubTemp = ((uwExpLine >> 4) & 0XFF); 
     if(ubTemp < 0x05)
     {
-        ulSEN_I2C_Write(0x33, 0x14, 0x12);
+        bSEN_I2C_Write(0x33, 0x14, 0x12);
     }else if(ubTemp > 0x0a){
-        ulSEN_I2C_Write(0x33, 0x14, 0x02);    
+        bSEN_I2C_Write(0x33, 0x14, 0x02);    
     }
     
     ulOldExpLine = uwExpLine;
@@ -648,28 +645,28 @@ void SEN_WrGain(uint32_t ulGainX1024)
     ubGain_3e09 = (((ulGainX1024 - (uwGain_H<<10))/(uwGain_H<<6)) | 0x10);
     
     // set gain
-    ulSEN_I2C_WriteTry(SC2235_GAIN_H, ubGain_3e08, TRY_COUNTS);
-    ulSEN_I2C_WriteTry(SC2235_GAIN_L, ubGain_3e09, TRY_COUNTS);
+    bSEN_I2C_WriteTry(SC2235_GAIN_H, ubGain_3e08, TRY_COUNTS);
+    bSEN_I2C_WriteTry(SC2235_GAIN_L, ubGain_3e09, TRY_COUNTS);
     
     // set trigger
     // step4
     if(((ubGain_3e08>>2)&0x07)==0x00)             // gain < 2
     {
-        ulSEN_I2C_Write(0x33, 0x01, 0x0b);
-        ulSEN_I2C_Write(0x36, 0x31, 0x84);
-        ulSEN_I2C_Write(0x36, 0x6f, 0x2f);                                   
+        bSEN_I2C_Write(0x33, 0x01, 0x0b);
+        bSEN_I2C_Write(0x36, 0x31, 0x84);
+        bSEN_I2C_Write(0x36, 0x6f, 0x2f);                                   
     }else if((((ubGain_3e08>>2)&0x07))<=0x03){	
-        ulSEN_I2C_Write(0x33, 0x01, 0x14);
-        ulSEN_I2C_Write(0x36, 0x31, 0x88);
-        ulSEN_I2C_Write(0x36, 0x6f, 0x2f);      		   
+        bSEN_I2C_Write(0x33, 0x01, 0x14);
+        bSEN_I2C_Write(0x36, 0x31, 0x88);
+        bSEN_I2C_Write(0x36, 0x6f, 0x2f);      		   
     }else if((((ubGain_3e08>>2)&0x07)==0x07) && ubGain_3e09<=0x1e){
-        ulSEN_I2C_Write(0x33, 0x01, 0x1c);
-        ulSEN_I2C_Write(0x36, 0x31, 0x88);
-        ulSEN_I2C_Write(0x36, 0x6f, 0x2f);  
+        bSEN_I2C_Write(0x33, 0x01, 0x1c);
+        bSEN_I2C_Write(0x36, 0x31, 0x88);
+        bSEN_I2C_Write(0x36, 0x6f, 0x2f);  
     }else if((((ubGain_3e08>>2)&0x07)==0x07) && ubGain_3e09==0x1f){ 
-        ulSEN_I2C_Write(0x33, 0x01, 0xff);
-        ulSEN_I2C_Write(0x36, 0x31, 0x88);
-        ulSEN_I2C_Write(0x36, 0x6f, 0x3c);            
+        bSEN_I2C_Write(0x33, 0x01, 0xff);
+        bSEN_I2C_Write(0x36, 0x31, 0x88);
+        bSEN_I2C_Write(0x36, 0x6f, 0x3c);            
     }    
     // save gain value    
     ulOldGainValue = ulGainX1024;
@@ -688,7 +685,7 @@ void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
     else
         xtSENInst.ubImgMode &=  ~SC2235_FLIP;
     
-    ulSEN_I2C_Write(0x32, 0x21, xtSENInst.ubImgMode);
+    bSEN_I2C_Write(0x32, 0x21, xtSENInst.ubImgMode);
     //
     SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }

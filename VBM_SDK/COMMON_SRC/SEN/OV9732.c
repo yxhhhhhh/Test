@@ -11,11 +11,11 @@
 	\file		OV9732.c
 	\brief		Sensor OV9732 relation function
 	\author		BoCun
-	\version	1.2
-	\date		2018-07-25
+	\version	1.3
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
-//------------------------------------------------------------------------------#include <stdio.h>
+//------------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -305,16 +305,9 @@ bool bSEN_I2C_WriteTry(uint16_t uwAddress, uint8_t ubValue, uint8_t ubTryCnt)
         ret = bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);
 #if SEN_I2C_DEBUG       
         if(ret == 0)
-        {
             printf("wr fail 0x%x %d.\r\n",uwAddress, ++uwI2C_FailCount);    
-        } 
 #endif
-    }while((ret == 0) && ((i++) < ubTryCnt));
-    
-    if(i >= ubTryCnt)
-    {
-        return 0; 
-    }    
+    }while((ret == 0) && ((i++) < ubTryCnt)); 
     
 	return ret;
 }
@@ -437,7 +430,7 @@ _RETRY:
 uint8_t ubSEN_Open(struct SENSOR_SETTING *setting, uint8_t ubFPS)
 {		
 		// Set ISP clock
-		SEN_SetISPRate(8);		
+		SEN_SetISPRate(8);
 		// Set parallel mode
 		SEN->MIPI_MODE = 0;
 		// Set sensor clock
@@ -505,7 +498,6 @@ uint8_t ubSEN_Open(struct SENSOR_SETTING *setting, uint8_t ubFPS)
 void SEN_CalExpLDmyL(uint32_t ulAlgExpTime)
 {
 	//Transfor the ExpLine of Algorithm	to ExpLine and DmyLine of Sensor here
-
 	xtSENInst.xtSENCtl.ulExpTime = ulAlgExpTime;
 	xtSENInst.xtSENCtl.uwExpLine = uwSEN_CalExpLine(ulAlgExpTime);
 

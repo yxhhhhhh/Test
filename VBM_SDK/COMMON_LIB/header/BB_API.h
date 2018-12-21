@@ -11,9 +11,9 @@
 	\file		BB_API.h
 	\brief		Baseband API header
 	\author		Bing
-	\version	1.19
-	\date		2018/08/27
-	\copyright	Copyright(C) 2017 SONiX Technology Co.,Ltd. All rights reserved.
+	\version	1.21
+	\date		2018/09/11
+	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------
 #ifndef __ST53510_BB_API_H
@@ -383,9 +383,10 @@ typedef struct
 \param ubRFGIO2 (input) 	Control RF GIO2 setting
 \param ubMode   (input) 	0:Run FCC/1:Run CE
 \param ubDetectRssi (input) Detect TX channel RSSI.RSSI >= ubDetectRssi.Do not TX.CE only
+\param ubAdoMode (input)    0:Audio32,1:a-law
 \return(No)
 */
-void BB_Init(SET_SLOT_MODE tBB_SlotMode, uint8_t *pData, uint8_t ubStauts,uint8_t ubGIO1,uint8_t ubGIO2,uint8_t ubMode,uint8_t ubDetectRssi);
+void BB_Init(SET_SLOT_MODE tBB_SlotMode, uint8_t *pData, uint8_t ubStauts,uint8_t ubGIO1,uint8_t ubGIO2,uint8_t ubMode,uint8_t ubDetectRssi,uint8_t ubAdoMode);
 //------------------------------------------------------------------------
 /*!
     \brief      Baseband Start

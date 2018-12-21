@@ -11,8 +11,8 @@
 	\file		TIMER.c
 	\brief		TIMER Function
 	\author		Hanyi Chiu
-	\version	0.5
-	\date		2018/08/27
+	\version	0.6
+	\date		2018/09/11
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -21,7 +21,7 @@
 #include "INTC.h"
 
 #define TIMER_MAJORVER	0
-#define TIMER_MINORVER	5
+#define TIMER_MINORVER	6
 
 //------------------------------------------------------------------------------
 uint32_t ulTimer_DeviceAddr[] = {Timer1_BASE, Timer1_BASE, Timer1_BASE,
@@ -222,7 +222,6 @@ void TIMER1_INT_Handler(void)
 		tDev = ((TmFlag & TIMER1_FLAG_MASK) && (!(TmMask & TIMER1_FLAG_MASK)))?TIMER1_1:
 			   ((TmFlag & TIMER2_FLAG_MASK) && (!(TmMask & TIMER2_FLAG_MASK)))?TIMER1_2:
 			   ((TmFlag & TIMER3_FLAG_MASK) && (!(TmMask & TIMER3_FLAG_MASK)))?TIMER1_3:TIMER_NULL;
-		TmFlag &= ~((tDev == TIMER1_1)?TIMER1_FLAG_MASK:(tDev == TIMER1_2)?TIMER2_FLAG_MASK:(tDev == TIMER1_3)?TIMER3_FLAG_MASK:TmFlag);
 		if(TIMER_NULL == tDev)
 			break;
 #ifdef RTOS
@@ -249,9 +248,9 @@ void TIMER1_INT_Handler(void)
 			if(Event_CB != NULL)
 				Event_CB(ubEvent);
 		}
+		Timer1->TIMER_FLAG = (TmFlag << 9) & 0x3FE00;
+		TmFlag &= ~((tDev == TIMER1_1)?TIMER1_FLAG_MASK:(tDev == TIMER1_2)?TIMER2_FLAG_MASK:(tDev == TIMER1_3)?TIMER3_FLAG_MASK:TmFlag);
 	}
-	TmFlag = (Timer1->TIMER_FLAG & 0x1FF);
-	Timer1->TIMER_FLAG = (TmFlag << 9) & 0x3FE00;
 	INTC_IrqClear(INTC_TIMER1_IRQ);	
 }
 //------------------------------------------------------------------------------
@@ -267,7 +266,6 @@ void TIMER2_INT_Handler(void)
 		tDev = ((TmFlag & TIMER1_FLAG_MASK) && (!(TmMask & TIMER1_FLAG_MASK)))?TIMER2_1:
 			   ((TmFlag & TIMER2_FLAG_MASK) && (!(TmMask & TIMER2_FLAG_MASK)))?TIMER2_2:
 			   ((TmFlag & TIMER3_FLAG_MASK) && (!(TmMask & TIMER3_FLAG_MASK)))?TIMER2_3:TIMER_NULL;
-		TmFlag &= ~((tDev == TIMER2_1)?TIMER1_FLAG_MASK:(tDev == TIMER2_2)?TIMER2_FLAG_MASK:(tDev == TIMER2_3)?TIMER3_FLAG_MASK:TmFlag);
 		if(TIMER_NULL == tDev)
 			break;
 #ifdef RTOS
@@ -294,9 +292,9 @@ void TIMER2_INT_Handler(void)
 			if(Event_CB != NULL)
 				Event_CB(ubEvent);
 		}
+		Timer2->TIMER_FLAG = (TmFlag << 9) & 0x3FE00;
+		TmFlag &= ~((tDev == TIMER2_1)?TIMER1_FLAG_MASK:(tDev == TIMER2_2)?TIMER2_FLAG_MASK:(tDev == TIMER2_3)?TIMER3_FLAG_MASK:TmFlag);
 	}
-	TmFlag = (Timer2->TIMER_FLAG & 0x1FF);
-	Timer2->TIMER_FLAG = (TmFlag << 9) & 0x3FE00;
 	INTC_IrqClear(INTC_TIMER2_IRQ);
 }
 //------------------------------------------------------------------------------

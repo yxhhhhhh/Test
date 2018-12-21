@@ -20,6 +20,7 @@
 
 #include "BSP.h"
 #include "_510PF.h"
+#include "APP_CFG.h"
 
 //------------------------------------------------------------------------------
 #ifdef BSP_BOARD_VBMPU_DEMO
@@ -90,7 +91,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO52 = 0;
 
 	//! USB_DET
-	GLB->PADIO11 = 7; //PWM11 /GLB->PADIO11 = 3会导致开机进不了系统,一直卡在开机logo
+	GLB->PADIO11 = 7; //PWM11 
 	GLB->PADIO25 = 3;
 	GLB->PADIO39 = 3; //PWM9
 	GLB->PADIO53 = 0;
@@ -244,7 +245,7 @@ void BSP_BoardInit(void)
 	GLB->PADIO6 = 4;
 	GLB->PADIO7 = 4;
 
-	//! I2C
+	//! I2C-2
 	GLB->PADIO13 = 4;
 	GLB->PADIO14 = 4;
 
@@ -262,6 +263,19 @@ void BSP_BoardInit(void)
 	//! Temp I2c
 	GLB->PADIO37 = 2;
 	GLB->PADIO38 = 2;
+	
+#if APP_ADO_AEC_NR_TYPE == AEC_NR_HW 
+	//! Tx I2S
+	GLB->PADIO37 = 6;
+	GLB->PADIO38 = 6;
+	GLB->PADIO39 = 6;
+	GLB->PADIO40 = 6;
+	GLB->PADIO41 = 6;
+	
+	//! I2C-1
+	GLB->PADIO6  = 5;	//i2c_0 clk
+	GLB->PADIO46 = 1;	//i2c_0 sda
+#endif
 }
 #endif
 //------------------------------------------------------------------------------

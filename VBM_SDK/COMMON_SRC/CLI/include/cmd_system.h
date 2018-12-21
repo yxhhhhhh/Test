@@ -26,6 +26,8 @@ int32_t cmd_system_phymem_rw(int argc, char* argv[]);
 int32_t cmd_system_fps(int argc, char* argv[]);
 int32_t cmd_system_padio(int argc, char* argv[]);
 int32_t cmd_system_wdt(int argc, char* argv[]);
+int32_t cmd_system_usbd(int argc, char* argv[]);
+int32_t cmd_system_fwu(int argc, char* argv[]);
 
 #define CMD_TBL_SYSTEM    CMD_TBL_ENTRY(          \
 	"system",		6,	NULL,       \
@@ -60,6 +62,18 @@ int32_t cmd_system_wdt(int argc, char* argv[]);
 #define CMD_TBL_SYS_WDT    CMD_TBL_ENTRY(          \
 	"wdt",	3,	cmd_system_wdt,       \
 	"wdt		- Watch Dog Timer Control",	CFG_DEFAULT_CMD_LEVEL,\
+	NULL,		NULL			\
+),
+
+#define CMD_TBL_SYS_USBD    CMD_TBL_ENTRY(          \
+	"usbd",	4,	cmd_system_usbd,       \
+	"usbd		- USB Device Control",	CFG_DEFAULT_CMD_LEVEL,\
+	NULL,		NULL			\
+),
+
+#define CMD_TBL_SYS_FWU    CMD_TBL_ENTRY(          \
+	"fwu",	3,	cmd_system_fwu,       \
+	"fwu		- FWU Control",	CFG_DEFAULT_CMD_LEVEL,\
 	NULL,		NULL			\
 ),
 

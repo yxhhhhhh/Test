@@ -11,8 +11,8 @@
 	\file		H62.c
 	\brief		Sensor H62 relation function
 	\author		BoCun
-	\version	1
-	\date		2018-07-06
+	\version	1.1
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------#include <stdio.h>
@@ -143,14 +143,13 @@ uint8_t ubSEN_PckSettingTable[] = {
 };
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Read(uint8_t ubAddress, uint8_t *pValue)
+bool bSEN_I2C_Read(uint8_t ubAddress, uint8_t *pValue)
 {
-	
 	return bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &ubAddress, 1, pValue, 1);
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress, uint8_t ubValue)
+bool bSEN_I2C_Write(uint8_t ubAddress, uint8_t ubValue)
 {		
 	uint8_t ubData, pBuf[2];
 	
@@ -214,11 +213,11 @@ void SEN_PclkSetting(uint8_t ubPclkIdx)
 	{
 		if (ubSEN_PckSettingTable[i] == 0x82)	// write
 		{
-			ulSEN_I2C_Write(ubSEN_PckSettingTable[i+1], ubSEN_PckSettingTable[i+2]);
+			bSEN_I2C_Write(ubSEN_PckSettingTable[i+1], ubSEN_PckSettingTable[i+2]);
 		}
 	}
     //Please set this trigger to frame end
-    ulSEN_I2C_Write(0x1F, 0x80); 
+    bSEN_I2C_Write(0x1F, 0x80); 
 }
 
 //------------------------------------------------------------------------------
@@ -286,8 +285,8 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 _RETRY:    
 	pBuf = (uint8_t*)&uwPID;  
 	// I2C by Read Sensor ID
-	ulSEN_I2C_Read (H62_CHIP_ID_HIGH_ADDR, &pBuf[1]);
-	ulSEN_I2C_Read (H62_CHIP_ID_LOW_ADDR, &pBuf[0]);
+	bSEN_I2C_Read (H62_CHIP_ID_HIGH_ADDR, &pBuf[1]);
+	bSEN_I2C_Read (H62_CHIP_ID_LOW_ADDR, &pBuf[0]);
 	if (H62_CHIP_ID != uwPID)
 	{
 		printd(DBG_ErrorLvl, "This is not H62 MIPI Sensor!! 0x%x 0x%x\n", H62_CHIP_ID, uwPID);
@@ -297,18 +296,18 @@ _RETRY:
     printf("chip ID[0x%04X] check ok!\r\n",uwPID);
 
 	//software reset
-	ulSEN_I2C_Read (0x12, &temp);
+	bSEN_I2C_Read (0x12, &temp);
 	temp |= (0x1<<7);
-	ulSEN_I2C_Write(0x12, temp);
+	bSEN_I2C_Write(0x12, temp);
 	
     //stream off
-    ulSEN_I2C_Read (0x74, &temp);
+    bSEN_I2C_Read (0x74, &temp);
     temp |= (0x01<<7);
-	ulSEN_I2C_Write(0xCE, 0x74);
-	ulSEN_I2C_Write(0xCF, temp);
+	bSEN_I2C_Write(0xCE, 0x74);
+	bSEN_I2C_Write(0xCF, temp);
 	
     //Please set this trigger to frame end
-    ulSEN_I2C_Write(0x1F, 0x80); 
+    bSEN_I2C_Write(0x1F, 0x80); 
     
 	//wait 33ms
     TIMER_Delay_ms(33);
@@ -318,7 +317,7 @@ _RETRY:
 	{
 		if (ubSEN_InitTable[i] == 0x82)	// write
 		{
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2]);
+			bSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2]);
 		}else if (ubSEN_InitTable[i] == 0xbb){
             TIMER_Delay_ms(((ubSEN_InitTable[i+1]<<8) + ubSEN_InitTable[i+2]));
         }
@@ -328,13 +327,13 @@ _RETRY:
     TIMER_Delay_ms(167);
 	
     //stream on
-    ulSEN_I2C_Read (0x74, &temp);
+    bSEN_I2C_Read (0x74, &temp);
     temp &= ~(0x01<<7);
-	ulSEN_I2C_Write(0xCE, 0x74);
-    ulSEN_I2C_Write(0xCF, temp);
+	bSEN_I2C_Write(0xCE, 0x74);
+    bSEN_I2C_Write(0xCF, temp);
 	
     //Please set this trigger to frame end
-    ulSEN_I2C_Write(0x1F, 0x80);
+    bSEN_I2C_Write(0x1F, 0x80);
     
 	//FPS setting	
 	SEN_PclkSetting(ubFPS);
@@ -513,11 +512,11 @@ void SEN_WrDummyLine(uint16_t uwDL)
 {
 	//Set dummy lines
 	
-	ulSEN_I2C_Write(0xc6, 0x23);
-	ulSEN_I2C_Write(0xc7, (uint8_t)((uwDL>>8) & 0xff));
+	bSEN_I2C_Write(0xc6, 0x23);
+	bSEN_I2C_Write(0xc7, (uint8_t)((uwDL>>8) & 0xff));
 	TIMER_Delay_us(20);
-	ulSEN_I2C_Write(0xc8, 0x22);
-	ulSEN_I2C_Write(0xc9, (uint8_t)(uwDL & 0xff));	
+	bSEN_I2C_Write(0xc8, 0x22);
+	bSEN_I2C_Write(0xc9, (uint8_t)(uwDL & 0xff));	
 	
 }
 
@@ -526,11 +525,11 @@ void SEN_WrExpLine(uint16_t uwExpLine)
 {
     //Set long exposure
 	
-	ulSEN_I2C_Write(0xc0, 0x02);
-	ulSEN_I2C_Write(0xc1, (uint8_t)((uwExpLine>>8) & 0xff));
+	bSEN_I2C_Write(0xc0, 0x02);
+	bSEN_I2C_Write(0xc1, (uint8_t)((uwExpLine>>8) & 0xff));
 	
-	ulSEN_I2C_Write(0xc2, 0x01);
-	ulSEN_I2C_Write(0xc3, (uint8_t)(uwExpLine & 0xff));
+	bSEN_I2C_Write(0xc2, 0x01);
+	bSEN_I2C_Write(0xc3, (uint8_t)(uwExpLine & 0xff));
 	
 }
 
@@ -573,8 +572,8 @@ void SEN_WrGain(uint32_t ulGainX1024)
         ubGaintmp = 0x4f;							
     }
 	// gain	
-	ulSEN_I2C_Write(0xc4, 0x00);
-	ulSEN_I2C_Write(0xc5, (ubGaintmp & 0xff));
+	bSEN_I2C_Write(0xc4, 0x00);
+	bSEN_I2C_Write(0xc5, (ubGaintmp & 0xff));
 }
 
 //------------------------------------------------------------------------------
@@ -590,7 +589,7 @@ void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
     else
         xtSENInst.ubImgMode &=  ~H62_FLIP;
     
-    ulSEN_I2C_Write(0x12, xtSENInst.ubImgMode);
+    bSEN_I2C_Write(0x12, xtSENInst.ubImgMode);
     //
     SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
@@ -605,7 +604,7 @@ void SEN_GroupHoldOnVSync(void)
 void SEN_GroupHoldOffVSync(void)
 {
 	
-	ulSEN_I2C_Write(0x1f, 0x80);
+	bSEN_I2C_Write(0x1f, 0x80);
 	
 }
 

@@ -11,8 +11,8 @@
 	\file		ISP_API.h
 	\brief		ISP API header
 	\author			
-	\version	0.7
-	\date		2018-08-01
+	\version	0.8
+	\date		2018-09-13
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -54,6 +54,12 @@ enum
 {
 	DS_PATH1 = 1,
 	DS_PATH2,
+};
+
+enum
+{
+	DS_LINE1 = 1,
+	DS_LINE2,
 };
 
 enum
@@ -177,12 +183,20 @@ void ISP_SetOsdSwitch(uint8_t ubPath, uint8_t ubFlag);
 void ISP_SetOsdColor(uint8_t ubSelect, uint8_t ubIndex, uint8_t ubRed, uint8_t ubGreen, uint8_t ubBlue);
 //------------------------------------------------------------------------------
 /*!
-\brief Set OSD Gain
-\param ubPath DS_PATH1 or DS_PATH2
-\param ubGain DS Gain
+\brief Set Line1/2 Gain
+\param ubPath PATH1 or PATH2
+\param ubGain gain value.(max is 8)
 \return(no)
+\par [Example]
+\code
+    uint8_t ubGain;
+
+	ISP_SetLine1Gain(DS_PATH1, ubGain);
+    where ubGain is 0~7. (0 is GAIN8)
+\endcode
 */
-void ISP_SetOsdGain(uint8_t ubPath,uint8_t ubGain);
+void ISP_SetLine1Gain(uint8_t ubPath,uint8_t ubGain);
+void ISP_SetLine2Gain(uint8_t ubPath,uint8_t ubGain);
 //------------------------------------------------------------------------
 /*!
 \brief Date stamp font table.

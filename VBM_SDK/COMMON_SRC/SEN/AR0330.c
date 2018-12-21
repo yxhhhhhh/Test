@@ -11,8 +11,8 @@
 	\file		AR0330.c
 	\brief		Sensor AR0330 relation function
 	\author		BoCun
-	\version	1.1
-	\date		2018-07-06
+	\version	1.2
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ uint8_t ubSEN_PckSettingTable[] = {
 };
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Read(uint16_t uwAddr, uint8_t *pValue)
+bool bSEN_I2C_Read(uint16_t uwAddr, uint8_t *pValue)
 {
 	uint8_t *pAddr, pBuf[2];
 	
@@ -222,7 +222,7 @@ uint32_t ulSEN_I2C_Read(uint16_t uwAddr, uint8_t *pValue)
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Write(uint8_t ubAddr1, uint8_t ubAddr2, uint8_t ubValue1, uint8_t ubValue2)
+bool bSEN_I2C_Write(uint8_t ubAddr1, uint8_t ubAddr2, uint8_t ubValue1, uint8_t ubValue2)
 {	
 	uint8_t pBuf[4], *pBufTemp;
 	uint16_t uwData = 0, uwRdData = 0;	
@@ -284,7 +284,7 @@ void SEN_PclkSetting(uint8_t ubPclkIdx)
 	{
 		if (ubSEN_PckSettingTable[i] == 0x84)	// write
 		{
-			ulSEN_I2C_Write(ubSEN_PckSettingTable[i+1], ubSEN_PckSettingTable[i+2], ubSEN_PckSettingTable[i+3], ubSEN_PckSettingTable[i+4]);
+			bSEN_I2C_Write(ubSEN_PckSettingTable[i+1], ubSEN_PckSettingTable[i+2], ubSEN_PckSettingTable[i+3], ubSEN_PckSettingTable[i+4]);
              i+=5;
         }else if (ubSEN_PckSettingTable[i] == 0xbb){
 			// delay 10ms
@@ -360,7 +360,7 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting,uint8_t ubFPS)
 	TIMER_Delay_us(10000);
 _RETRY:	
 	// Test I2C by Read Sensor ID
-	ulSEN_I2C_Read (AR0330_CHIP_ID_ADDR, pBuf);
+	bSEN_I2C_Read (AR0330_CHIP_ID_ADDR, pBuf);
 	uwPID = (uint16_t) (*pBuf << 8) + (uint16_t) *(pBuf+1);	
 	if (AR0330_CHIP_ID != uwPID)
 	{
@@ -371,7 +371,7 @@ _RETRY:
     printf("chip ID check ok!\r\n");
     
 	// sensor soft reset	
-	ulSEN_I2C_Write(0x30, 0x1A, 0x10, 0xDD);
+	bSEN_I2C_Write(0x30, 0x1A, 0x10, 0xDD);
 	// wait 150000 * (1/ExtClk) = 6.25ms		
 	TIMER_Delay_us(10000);    
     for (i=0; i<(sizeof(ubSEN_InitTable)/sizeof(ubSEN_InitTable[0])); i++)
@@ -380,12 +380,12 @@ _RETRY:
         {
             TIMER_Delay_us((ubSEN_InitTable[i].uwData & 0xff) * 1000);
         }else{
-        ulSEN_I2C_Write((uint8_t)(ubSEN_InitTable[i].uwAddress >> 8) & 0xff, (uint8_t)(ubSEN_InitTable[i].uwAddress & 0xff),
+        bSEN_I2C_Write((uint8_t)(ubSEN_InitTable[i].uwAddress >> 8) & 0xff, (uint8_t)(ubSEN_InitTable[i].uwAddress & 0xff),
                         (uint8_t)(ubSEN_InitTable[i].uwData >> 8) & 0xff, (uint8_t)(ubSEN_InitTable[i].uwData & 0xff));          
         }
     }
 
-	ulSEN_I2C_Write(0x30, 0x1A , 0x10 ,0xDC);
+	bSEN_I2C_Write(0x30, 0x1A , 0x10 ,0xDC);
     //temp
 	SEN_PclkSetting(ubFPS);
  	return 1;
@@ -504,7 +504,7 @@ void SEN_WrDummyLine(uint16_t uwDL)
 void SEN_WrExpLine(uint16_t uwExpLine)
 {
 	//Set exposure line
-	ulSEN_I2C_Write(0x30, 0x12, (uint8_t)((uwExpLine>>8) & 0xff), (uint8_t)(uwExpLine & 0xff));
+	bSEN_I2C_Write(0x30, 0x12, (uint8_t)((uwExpLine>>8) & 0xff), (uint8_t)(uwExpLine & 0xff));
 }
 
 //------------------------------------------------------------------------------
@@ -547,10 +547,10 @@ void SEN_WrGain(uint16_t uwGainX1024)
     }
     // Set analog gain
     uwAnalogGain = (uwAnalog_1st_gain|uwAnalog_2nd_gain);
-	ulSEN_I2C_Write(0x30, 0x60, 0x00, (uwAnalogGain & 0x3F));
+	bSEN_I2C_Write(0x30, 0x60, 0x00, (uwAnalogGain & 0x3F));
     
     //Set digital gain
-    ulSEN_I2C_Write(0x30, 0x5e, (uint8_t)((uwDigitalGain>>8) & 0xff), (uint8_t)(uwDigitalGain & 0xff));
+    bSEN_I2C_Write(0x30, 0x5e, (uint8_t)((uwDigitalGain>>8) & 0xff), (uint8_t)(uwDigitalGain & 0xff));
 }
 
 //------------------------------------------------------------------------------
@@ -566,9 +566,9 @@ void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
     else
         xtSENInst.ubImgMode &=  ~AR0330_FLIP;
     
-    ulSEN_I2C_Write(0x30, 0x40, xtSENInst.ubImgMode);
+//    bSEN_I2C_Write(0x30, 0x40, xtSENInst.ubImgMode);
     //
-    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
+//    SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
 
 //------------------------------------------------------------------------------

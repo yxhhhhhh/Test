@@ -11,9 +11,9 @@
 	\file		APP_HS.h
 	\brief		Application header file (for High Speed Mode)
 	\author		Hanyi Chiu
-	\version	1.3
-	\date		2017/11/27
-	\copyright	Copyright(C) 2017 SONiX Technology Co., Ltd. All rights reserved.
+	\version	1.6
+	\date		2018/09/10
+	\copyright	Copyright(C) 2018 SONiX Technology Co., Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
 #ifndef _APP_HS_H_
@@ -28,7 +28,7 @@
 //------------------------------------------------------------------------------
 #define APP_EVENTQUEUE_SZ			30
 #define APP_PAIRING_TIMEOUT			60	//!< Unit: seconds
-#define osHeapSize                  ((size_t) (820*1024))
+#define osHeapSize                  ((size_t) (860*1024))
 
 typedef enum
 {
@@ -55,6 +55,7 @@ typedef enum
 	APP_PAIRUDBU_PRT,
 	APP_VWMODESTS_RPT,
 	APP_VOXMODESTS_RPT,
+	APP_DISPPAIRICON_RPT,
 	APP_RPT_NONE = 0xFF,
 }APP_ReportType_t;
 
@@ -108,14 +109,15 @@ typedef struct
 
 typedef struct
 {
-	KNL_ROLE 			tPairBURole;
-	KNL_DISP_LOCATION 	tPairBUDispLoc;
+	KNL_ROLE 			 tPairBURole;
+	KNL_DISP_LOCATION 	 tPairBUDispLoc;
+	uint8_t 			 ubAppUpdUiStsFlag;
+	UI_DisplayLocation_t tAppDispLoc;
 }APP_PairRoleInfo_t;
 #endif
 
 typedef struct
 {
-//	uint32_t 		  ulKNLInfo_Tag;
 	char 		   	  cbKNL_InfoTag[12];
 	char 		      cbKNL_FwVersion[11];
 	KNL_ROLE		  tKNL_Role;

@@ -135,7 +135,7 @@
           <Target>
             <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>0</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
+            <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
             <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
@@ -143,7 +143,7 @@
             <RestoreToolbox>1</RestoreToolbox>
             <RestoreTracepoints>0</RestoreTracepoints>
             <RestoreSysVw>1</RestoreSysVw>
-            <UsePdscDebugDescription>1</UsePdscDebugDescription>
+            <UsePdscDebugDescription>0</UsePdscDebugDescription>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
           <TargetSelection>5</TargetSelection>
@@ -165,14 +165,14 @@
         </DebugOption>
         <Utilities>
           <Flash1>
-            <UseTargetDll>1</UseTargetDll>
+            <UseTargetDll>0</UseTargetDll>
             <UseExternalTool>1</UseExternalTool>
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
             <DriverSelection>4096</DriverSelection>
           </Flash1>
-          <bUseTDR>1</bUseTDR>
+          <bUseTDR>0</bUseTDR>
           <Flash2>BIN\UL2ARM.DLL</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
@@ -921,7 +921,7 @@
               <StopOnExitCode>11</StopOnExitCode>
               <CustomArgument></CustomArgument>
               <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>0</ComprImg>
+              <ComprImg>1</ComprImg>
             </CommonProperty>
             <GroupArmAds>
               <Cads>
@@ -1002,6 +1002,11 @@
               <FileType>1</FileType>
               <FilePath>..\COMMON_SRC\SEN\IMX323.c</FilePath>
             </File>
+            <File>
+              <FileName>SC2235.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\COMMON_SRC\SEN\SC2235.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1021,7 +1026,7 @@
               <StopOnExitCode>11</StopOnExitCode>
               <CustomArgument></CustomArgument>
               <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>0</ComprImg>
+              <ComprImg>1</ComprImg>
             </CommonProperty>
             <GroupArmAds>
               <Cads>
@@ -1102,6 +1107,11 @@
               <FileType>1</FileType>
               <FilePath>..\COMMON_SRC\IQ\IQ_OPT_IMX323_RAW.c</FilePath>
             </File>
+            <File>
+              <FileName>IQ_OPT_SC2235_RAW.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\COMMON_SRC\IQ\IQ_OPT_SC2235_RAW.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1121,7 +1131,7 @@
               <StopOnExitCode>11</StopOnExitCode>
               <CustomArgument></CustomArgument>
               <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>0</ComprImg>
+              <ComprImg>1</ComprImg>
             </CommonProperty>
             <GroupArmAds>
               <Cads>
@@ -1415,7 +1425,7 @@
           <Target>
             <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>0</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
+            <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
             <RestoreWatchpoints>1</RestoreWatchpoints>
             <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
@@ -1423,7 +1433,7 @@
             <RestoreToolbox>1</RestoreToolbox>
             <RestoreTracepoints>0</RestoreTracepoints>
             <RestoreSysVw>1</RestoreSysVw>
-            <UsePdscDebugDescription>1</UsePdscDebugDescription>
+            <UsePdscDebugDescription>0</UsePdscDebugDescription>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
           <TargetSelection>5</TargetSelection>
@@ -2086,7 +2096,7 @@
               <StopOnExitCode>11</StopOnExitCode>
               <CustomArgument></CustomArgument>
               <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>0</ComprImg>
+              <ComprImg>1</ComprImg>
             </CommonProperty>
             <GroupArmAds>
               <Cads>
@@ -2282,6 +2292,11 @@
               <FileType>1</FileType>
               <FilePath>..\COMMON_SRC\SEN\IMX323.c</FilePath>
             </File>
+            <File>
+              <FileName>SC2235.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\COMMON_SRC\SEN\SC2235.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2321,6 +2336,11 @@
               <FileName>IQ_OPT_IMX323_RAW.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\COMMON_SRC\IQ\IQ_OPT_IMX323_RAW.c</FilePath>
+            </File>
+            <File>
+              <FileName>IQ_OPT_SC2235_RAW.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\COMMON_SRC\IQ\IQ_OPT_SC2235_RAW.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -11,8 +11,8 @@
 	\file		IMX323.c
 	\brief		Sensor IMX323 relation function
 	\author		BoCun
-	\version	1.3
-	\date		2018-07-25
+	\version	1.4
+	\date		2018-09-19
 	\copyright	Copyright(C) 2018 SONiX Technology Co.,Ltd. All rights reserved.
 */
 //------------------------------------------------------------------------------
@@ -39,36 +39,36 @@ struct AE_ExpLineTblObj {
 
 static struct AE_ExpLineTblObj ctAE_MaxExpLTbl[] = {
 	//FPS(DEC),	Max Exposure Offset(DEC, Sign),
-	{30,    0},
-	{29,	0},
-	{28,	0},
-	{27,	0},
-	{26,	0},
-	{25,	0},
-	{24,	0},
-	{23,	0},
-	{22,	0},
-	{21,	0},
-	{20,	0},
-	{19,	0},
-	{18,	0},
-	{17,	0},
-	{16,	0},
-	{15,	0},
-	{14,	0},
-	{13,	0},
-	{12,	0},
-	{11,	0},
-	{10,	0},
-	{9, 0},
-	{8,	0},
-	{7,	0},
-	{6,	0},
-	{5,	0},
-	{4,	0},
-	{3,	0},
-	{2,	0},
-	{1,	0},
+	{30,        0},
+	{29,	    0},
+	{28,	    0},
+	{27,	    0},
+	{26,	    0},
+	{25,	    0},
+	{24,	    0},
+	{23,	    0},
+	{22,	    0},
+	{21,	    0},
+	{20,	    0},
+	{19,	    0},
+	{18,	    0},
+	{17,	    0},
+	{16,	    0},
+	{15,	    0},
+	{14,	    0},
+	{13,	    0},
+	{12,	    0},
+	{11,	    0},
+	{10,	    0},
+	{9,         0},
+	{8,	        0},
+	{7,	        0},
+	{6,	        0},
+	{5,	        0},
+	{4,	        0},
+	{3,	        0},
+	{2,	        0},
+	{1,	        0},
 };
 
 #define PIX_H 2300
@@ -266,7 +266,7 @@ struct Sen_GainTblObj ctSensor_SensorVTbl[] = {
 };
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
+bool bSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
 {
 	uint8_t *pAddr,pBuf[2];
 	
@@ -278,7 +278,7 @@ uint32_t ulSEN_I2C_Read(uint16_t uwAddress, uint8_t *pValue)
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue)
+bool bSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue)
 {	
 	uint8_t pBuf[3];
 	
@@ -291,27 +291,21 @@ uint32_t ulSEN_I2C_Write(uint8_t ubAddress1, uint8_t ubAddress2, uint8_t ubValue
 }
 
 //------------------------------------------------------------------------------
-uint32_t ulSEN_I2C_WriteTry(uint16_t uwAddress, uint8_t ubValue, uint8_t ubTryCnt)
+bool bSEN_I2C_WriteTry(uint16_t uwAddress, uint8_t ubValue, uint8_t ubTryCnt)
 {	
-    uint8_t ubData, pBuf[3], i = 0;
+    uint8_t pBuf[3], ret, i=0;
     
-    pBuf[0] = (uint8_t)((uwAddress>>8) & 0x00ff);        
+    pBuf[0] = (uint8_t)((uwAddress>>8) & 0x00ff);
     pBuf[1] = (uwAddress & 0x00ff);
     pBuf[2] = ubValue;
-    
+
     do{
-        bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);
-        // read sensor register and check wirte success
-        bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 2, &ubData, 1);      
-    }while((ubData != ubValue)  || ((i++) >= ubTryCnt));
-       
-    if(i >= ubTryCnt)
-    {
-        printf("Sensor I2C write REG=0x%x failed! 0x%x 0x%x\n", uwAddress, ubData, ubValue);
-        return 0; 
-    }    		
+        ret = bI2C_MasterProcess (pI2C_type, SEN_SLAVE_ADDR, &pBuf[0], 3, NULL, 0);
+        if(ret == 0)     
+            printf("wr fail 0x%x.\r\n",uwAddress);
+    }while((ret==0) && ((i++) < ubTryCnt));
     
-	return 1;
+	return ret;
 }
 //------------------------------------------------------------------------------
 void SEN_PclkSetting(uint8_t ubPclkIdx)
@@ -405,7 +399,7 @@ uint8_t ubSEN_Start(struct SENSOR_SETTING *setting, uint8_t ubFPS)
 
 _RETRY:
 	pBuf = (uint8_t*)&ubPID;   
-	ulSEN_I2C_Read (IMX323_CHIP_MODELID_ADDR, &pBuf[0]);
+	bSEN_I2C_Read (IMX323_CHIP_MODELID_ADDR, &pBuf[0]);
 	if (IMX323_CHIP_MODELID != ubPID)
 	{
 		printf("This is not IMX323 Sensor!! 0x%x 0x%x\n", IMX323_CHIP_MODELID, ubPID);
@@ -413,15 +407,15 @@ _RETRY:
         goto _RETRY;
 	}	
 
-	ulSEN_I2C_Write(0x30, 0x00, 0x31);	// Standby
-	ulSEN_I2C_Write(0x01, 0x00, 0x00);	// Mode_Sel Standby
-	ulSEN_I2C_Write(0x30, 0x2C, 0x01);	// Master mode standby
+	bSEN_I2C_Write(0x30, 0x00, 0x31);	// Standby
+	bSEN_I2C_Write(0x01, 0x00, 0x00);	// Mode_Sel Standby
+	bSEN_I2C_Write(0x30, 0x2C, 0x01);	// Master mode standby
 
 	for (i=0; i<sizeof(ubSEN_InitTable); i+=4)
 	{
 		if (ubSEN_InitTable[i] == 0x83)	// write
 		{
-			ulSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
+			bSEN_I2C_Write(ubSEN_InitTable[i+1], ubSEN_InitTable[i+2], ubSEN_InitTable[i+3]);
 		}else if (ubSEN_InitTable[i] == 0xbb){
             TIMER_Delay_ms(((ubSEN_InitTable[i+1]<<8) + ubSEN_InitTable[i+2]));
         }
@@ -535,8 +529,8 @@ void SEN_WriteTotalLine(void)
 void SEN_WrDummyLine(uint16_t uwDL)
 {
     //Set Dummy Line         
-    ulSEN_I2C_WriteTry(IMX322_FRAME_LENGTH_H, (uint8_t)((uwDL>>8) & 0x00ff), TRY_COUNTS);		
-    ulSEN_I2C_WriteTry(IMX322_FRAME_LENGTH_L, (uint8_t)((uwDL) & 0x00ff), TRY_COUNTS);	   
+    bSEN_I2C_WriteTry(IMX322_FRAME_LENGTH_H, (uint8_t)((uwDL>>8) & 0x00ff), TRY_COUNTS);		
+    bSEN_I2C_WriteTry(IMX322_FRAME_LENGTH_L, (uint8_t)((uwDL) & 0x00ff), TRY_COUNTS);	   
 }
 
 //------------------------------------------------------------------------------
@@ -555,8 +549,8 @@ void SEN_WrExpLine(uint16_t uwExpLine)
     if(uwTargetExpLine == uwOldExpLine)
         return;
     // set exposure
-    ulSEN_I2C_WriteTry(IMX322_DUMMY_LINE_H, (uint8_t)(((uwTargetExpLine)>>8)&0x00ff), TRY_COUNTS);	
-    ulSEN_I2C_WriteTry(IMX322_DUMMY_LINE_L, (uint8_t)((uwTargetExpLine)&0x00ff), TRY_COUNTS);     
+    bSEN_I2C_WriteTry(IMX322_DUMMY_LINE_H, (uint8_t)(((uwTargetExpLine)>>8)&0x00ff), TRY_COUNTS);	
+    bSEN_I2C_WriteTry(IMX322_DUMMY_LINE_L, (uint8_t)((uwTargetExpLine)&0x00ff), TRY_COUNTS);     
     
     uwOldExpLine = uwTargetExpLine;
 }
@@ -590,7 +584,7 @@ void SEN_WrGain(uint32_t ulGainX1024)
 		xtSENInst.ubBuf[2] = ctSensor_SensorVTbl[ubIdx-1].ubSenGain;		
 	}
     
-    ulSEN_I2C_WriteTry(IMX322_GAIN, xtSENInst.ubBuf[2], TRY_COUNTS);
+    bSEN_I2C_WriteTry(IMX322_GAIN, xtSENInst.ubBuf[2], TRY_COUNTS);
     //save gain value
     ulOldGainValue = ulGainX1024;
 }
@@ -608,7 +602,7 @@ void SEN_SetMirrorFlip(uint8_t ubMirrorEn, uint8_t ubFlipEn)
     else
         xtSENInst.ubImgMode &=  ~IMX322_FLIP;
     
-    ulSEN_I2C_Write(0x01, 0x01, xtSENInst.ubImgMode);
+    bSEN_I2C_Write(0x01, 0x01, xtSENInst.ubImgMode);
     //
     SEN_SetRawReorder(ubMirrorEn, ubFlipEn);
 }
