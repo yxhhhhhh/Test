@@ -9867,6 +9867,10 @@ uint8_t UI_TempFToC(uint8_t fTemp)
 void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 {
 	uint8_t *pvdata = (uint8_t *)pvTrig;
+        static uint8_t ubLastTemp = 0xff;
+        static uint8_t ubStartcnt = 0;
+
+        uint8_t ubDiffTemp = 0;  
 
 
     if (ubUpdateFWFlag == 1)return;
@@ -9877,19 +9881,31 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
         ubTempBelowZoreSta = pvdata[1];
 		ubTempInvalidSta = pvdata[2];
 
-		printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempBelowZoreSta %d, ubTempInvalidSta %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
-		if (ubTempInvalidSta == 1)
-		{
-			ubRealTemp = 0xFF;
-			UI_TempBarDisplay(ubRealTemp);
-			return;
-		}
-        
-        if(pvdata[0] > 50 || (pvdata[0] > 10 && pvdata[1])) 
-            ubRealTemp = 0xFF;
-        else
-            ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+    		printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempBelowZoreSta %d, ubTempInvalidSta %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
+    		if (ubTempInvalidSta == 1)
+    		{
+    			ubRealTemp = 0xFF;
+    			UI_TempBarDisplay(ubRealTemp);
+    			return;
+    		}
 
+                if(ubStartcnt == 0)
+                {
+                    ubLastTemp = pvdata[0];
+                    ubStartcnt++;
+                }                    
+                 ubDiffTemp = ubLastTemp >=  pvdata[0] ? (ubLastTemp - pvdata[0] ) : (pvdata[0] - ubLastTemp);
+                 if(ubDiffTemp < 3)
+                 {
+                    ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+                    ubLastTemp = ubRealTemp;
+                 }
+                 else
+                 {
+                    ubRealTemp = ubLastTemp;
+                 }
+
+             
 #if TEMP_TEST
    		 OSD_IMG_INFO info;
 		int16_t ubTempValue = 0;
@@ -10178,7 +10194,10 @@ void UI_TempBarDisplay(uint8_t value)
     if (ubUpdateFWFlag == 1)return;
     if (tUI_SyncAppState != APP_LINK_STATE || tUI_PuSetting.ubDefualtFlag == TRUE)
 		return;
-    //printd(Apk_DebugLvl,"value %d\n",value);
+    
+    if(temp > 50 || (temp <= -10)) 
+            value = 0xFF;
+   // printd(Apk_DebugLvl,"value %d\n",value);
     if (value != 0xff)
 	    sprintf(str, "%4d", temp);
     else
