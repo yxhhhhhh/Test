@@ -944,12 +944,14 @@ void UI_TempCheck(void) //20180322
         ubWrData[1] = 0x81;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
         if (!ret) {
+            printd(1,"bI2C_MasterProcess Fail !\n");
             pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
             goto report;
         }
         ubWrData[0] = 0x00;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
         if (!ret) {
+            printd(1,"bI2C_MasterProcess2 Fail !\n");
             pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
             goto report;
         }
@@ -977,16 +979,16 @@ void UI_TempCheck(void) //20180322
     //-- tempture compensation
 
     ubTempValueH = (((int16_t)tem) >> 8) & 0xff;
-    ubTempValueL = (((int16_t)tem) >> 0) & 0xff;
+    ubTempValueL = (((int16_t)tem) >> 0) & 0xff; 
 
-    printd(Apk_DebugLvl,"1111111111tem  %d  tem_test %d  ubTempValueH %x ubTempValueL %x\n",tem,tem_test,ubTempValueH,ubTempValueL);
+    printd(1,"tem  %d  tem_test %d  ubTempValueH %x ubTempValueL %x\n",tem,tem_test,ubTempValueH,ubTempValueL);
     tem += tem > 0 ?  50 : -50;
     tem /= 100;
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
 
 report:
-    printd(Apk_DebugLvl, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
+    printd(1, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
     // if (tem_last != tem) 
     {
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
@@ -999,7 +1001,11 @@ report:
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]  = (uint8_t)(tUI_TempReqCmd.ubCmd[2] + tUI_TempReqCmd.ubCmd[3] + tUI_TempReqCmd.ubCmd[4] + tUI_TempReqCmd.ubCmd[5] + tUI_TempReqCmd.ubCmd[6]);
 
         tUI_TempReqCmd.ubCmd_Len                = 8;
-        UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
+        if (rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_TempReqCmd))
+        {
+            printd(1, "UI_SendTempToPu Fail!\n");
+        }
+        
         tem_last = tem;
     }
 }

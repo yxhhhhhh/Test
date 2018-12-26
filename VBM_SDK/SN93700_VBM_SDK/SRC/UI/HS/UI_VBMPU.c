@@ -1266,7 +1266,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
         ubUI_SendMsg2AppFlag = ((tUI_State == UI_DISPLAY_STATE)||(tUI_State == UI_SUBSUBMENU_STATE))?TRUE:FALSE;
         break;
     case APP_LOSTLINK_STATE:
-	printd(Apk_DebugLvl,"UI_UpdateStatus ubLostLinkEnterSanMode = %d.tUI_PuSetting.ubDefualtFlag = %d",ubLostLinkEnterSanMode,tUI_PuSetting.ubDefualtFlag);
+	printd(Apk_DebugLvl,"UI_UpdateStatus ubLostLinkEnterSanMode = %d.tUI_PuSetting.ubDefualtFlag = %d\n",ubLostLinkEnterSanMode,tUI_PuSetting.ubDefualtFlag);
 
 	ubShowAlarmstate  = 0;
     if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
@@ -10033,7 +10033,7 @@ uint8_t UI_TempCToF(uint8_t cTemp)
 
     fTemp = ctemp*18/10 + (((ctemp*18%10) >= 5)?1:0) + 32;
 
-   	//printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+   	printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = fTemp? 0 : 1;
     return (uint8_t)abs(fTemp);
 }
@@ -10047,7 +10047,7 @@ uint8_t UI_TempFToC(uint8_t fTemp)
     int16_t cTemp = 0;
 
     cTemp = ((ftemp-32)*10/18) + ((((ftemp-32)*10%18) >= 5)?1:0);
-   // printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+   printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = cTemp? 0 : 1;
      return (uint8_t)abs(cTemp);
 }
@@ -10075,6 +10075,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 			UI_TempBarDisplay(ubRealTemp);
 			return;
 		}
+		printd(1, "UI_GetTempData  pvdata[0] %d  \n",pvdata[0]);
 
                 if(ubStartCnt == 0)
                 {
@@ -10132,7 +10133,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		
     }
 
-   printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+   printd(1, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
     if ((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
     {
         UI_TempBarDisplay(ubRealTemp);
@@ -10380,10 +10381,10 @@ void UI_TempBarDisplay(uint8_t value)
     if (ubUpdateFWFlag == 1)return;
     if (tUI_SyncAppState != APP_LINK_STATE || tUI_PuSetting.ubDefualtFlag == TRUE)
 		return;
+    printd(1,"value %d\n",value);
 
     if(temp > 50 || temp < -10) 
             value = 0xFF;
-    //printd(Apk_DebugLvl,"value %d\n",value);
     if (value != 0xff)
 	    sprintf(str, "%4d", temp);
     else
@@ -15542,7 +15543,11 @@ void UI_RecvBURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data)
             UI_CamNum_t tCamNum = NO_CAM;
             
             APP_TwcTagMap2CamNum(tRecv_StaNum, tCamNum);
-            if(pTwc_Data[1] == UI_TEMP_CHECK && (pTwc_Data[7] != (uint8_t) (pTwc_Data[2] + pTwc_Data[3] + pTwc_Data[4] + pTwc_Data[5] + pTwc_Data[6]))) break;
+            if(pTwc_Data[1] == UI_TEMP_CHECK && (pTwc_Data[7] != (uint8_t) (pTwc_Data[2] + pTwc_Data[3] + pTwc_Data[4] + pTwc_Data[5] + pTwc_Data[6]))) 
+            {
+                printd(1,"UI_RecvBURequest TWC checkbit fail\n");
+                break;
+            }
             if (tUiReportMap2Func[pTwc_Data[UI_REPORT_ITEM]].pvAction)
                 tUiReportMap2Func[pTwc_Data[UI_REPORT_ITEM]].pvAction(tCamNum, (uint8_t *)(&pTwc_Data[UI_REPORT_DATA]));
             break;
