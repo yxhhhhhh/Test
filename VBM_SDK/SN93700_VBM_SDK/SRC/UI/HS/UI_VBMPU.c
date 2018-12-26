@@ -315,9 +315,9 @@ uint8_t ubGetIR1Temp = 0;
 uint8_t ubGetIR2Temp = 0;
 
 uint8_t ubPuHWVersion = 1;
-uint32_t ubPuSWVersion = 165;
+uint32_t ubPuSWVersion = 166;
 uint32_t ubFactoryPuSWVersion = 110;
-uint32_t ubHWVersion = 165;
+uint32_t ubHWVersion = 166;
 uint8_t ubBuHWVersion = 0;
 uint16_t ubBuSWVersion = 0;
 
@@ -9845,7 +9845,7 @@ uint8_t UI_TempCToF(uint8_t cTemp)
 
     fTemp = ctemp*18/10 + (((ctemp*18%10) >= 5)?1:0) + 32;
 
-   	//printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+   	printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = fTemp? 0 : 1;
     return (uint8_t)abs(fTemp);
 }
@@ -9859,7 +9859,7 @@ uint8_t UI_TempFToC(uint8_t fTemp)
     int16_t cTemp = 0;
 
     cTemp = ((ftemp-32)*10/18) + ((((ftemp-32)*10%18) >= 5)?1:0);
-   // printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
+   printd(1, "UI_TempCToF cTemp: %d, fTemp: %d.\r\n", cTemp, fTemp);
 	ubTempBelowZoreSta = cTemp? 0 : 1;
      return (uint8_t)abs(cTemp);
 }
@@ -9881,13 +9881,14 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
         ubTempBelowZoreSta = pvdata[1];
 		ubTempInvalidSta = pvdata[2];
 
-    		printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempBelowZoreSta %d, ubTempInvalidSta %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
+    		printd(1, "UI_GetTempData ubRealTemp: %d, ubTempBelowZoreSta %d, ubTempInvalidSta %d. \n",ubRealTemp, ubTempBelowZoreSta, ubTempInvalidSta);
     		if (ubTempInvalidSta == 1)
     		{
     			ubRealTemp = 0xFF;
     			UI_TempBarDisplay(ubRealTemp);
     			return;
     		}
+		printd(1, "UI_GetTempData .pvdata[0]  %d  \n",pvdata[0]);
 
                 if(ubStartcnt == 0)
                 {
@@ -9946,7 +9947,7 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		
     }
 
-   printd(Apk_DebugLvl, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
+   printd(1, "UI_GetTempData ubRealTemp: %d, ubTempunitFlag: %d. \n",ubRealTemp, tUI_PuSetting.ubTempunitFlag);
     if ((tUI_PuSetting.ubDefualtFlag == FALSE)&&(ubClearOsdFlag == 1))
     {
         UI_TempBarDisplay(ubRealTemp);
@@ -10197,7 +10198,7 @@ void UI_TempBarDisplay(uint8_t value)
     
     if(temp > 50 || (temp <= -10)) 
             value = 0xFF;
-   // printd(Apk_DebugLvl,"value %d\n",value);
+   printd(1,"value %d\n",value);
     if (value != 0xff)
 	    sprintf(str, "%4d", temp);
     else

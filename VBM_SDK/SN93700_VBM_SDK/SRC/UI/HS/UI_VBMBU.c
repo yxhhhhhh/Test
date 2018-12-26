@@ -109,7 +109,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint16_t ubBuSWVersion = 165;
+uint16_t ubBuSWVersion = 166;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
@@ -925,14 +925,14 @@ void UI_TempCheck(void) //20180322
     ubTempValueH = (((int16_t)tem) >> 8) & 0xff;
     ubTempValueL = (((int16_t)tem) >> 0) & 0xff;
 
-    printd(Apk_DebugLvl,"1111111111tem  %d  tem_test %d  ubTempValueH %x ubTempValueL %x\n",tem,tem_test,ubTempValueH,ubTempValueL);
+    printd(1," tem_test %d  ubTempValueH %x ubTempValueL %x\n",tem_test,ubTempValueH,ubTempValueL);
     tem += tem > 0 ?  50 : -50;
     tem /= 100;
     ubTempBelowZore = tem < 0;
     ubCurTempVal    = tem > 0 ? tem : -tem;
 
 report:
-    printd(Apk_DebugLvl, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
+    printd(1, "### ret %d   tem: %d, ubCurTempVal: %d. ubTempBelowZore :%d\n", ret,tem, ubCurTempVal, ubTempBelowZore);
     // if (tem_last != tem) 
     {
         tUI_TempReqCmd.ubCmd[UI_TWC_TYPE]       = UI_REPORT;
@@ -947,6 +947,8 @@ report:
         tUI_TempReqCmd.ubCmd_Len                = 8;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
         tem_last = tem;
+            printd(1, "###  tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]:%d\n", tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]);
+
     }
 }
 
