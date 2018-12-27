@@ -9886,12 +9886,12 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		return;
 	}
         printd(1,"UI_GetTempData pvdata[0]  %d pvdata[3] %d pvdata[4]  %d\n",pvdata[0] ,pvdata[3] ,pvdata[4] );
-        if((pvdata[0] == pvdata[4]) && ((pvdata[3]+pvdata[4]) == 0xFF)) 
+        if((pvdata[0] == pvdata[4]) || ((pvdata[3]+pvdata[4]) == 0xFF)) 
         {
-            if(pvdata[0] > 50 || (pvdata[0] > 10 && pvdata[1])) 
+            if(pvdata[4] > 50 || (pvdata[4] > 10 && pvdata[1])) 
                 ubRealTemp = 0xFF;
             else
-                ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
+                ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[4]:UI_TempCToF(pvdata[4]);
         }
 
 
