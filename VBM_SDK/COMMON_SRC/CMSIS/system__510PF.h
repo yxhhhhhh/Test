@@ -101,7 +101,7 @@ typedef enum
 } SYS_PrintLevel_t;
 
 #define Current_Test	1
-#define Current_Mode	PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
+#define Current_Mode	 PS_VOX_MODE //A:PS_VOX_MODE / B: PS_WOR_MODE
 
 #define SCREEN_RZW	1
 

@@ -169,6 +169,7 @@ void VDO_DisplayLocationSetup(KNL_ROLE tVDO_BURole, KNL_DISP_LOCATION tVDO_DispL
 {
 	KNL_DISP_LOCATION tVDO_DispLoc;
 
+        printd(1,"VDO_DisplayLocationSetup tVDO_BURole %d  tVDO_DispLocation %d\n",tVDO_BURole,tVDO_DispLocation);
 	tVDO_DispLoc = tVDO_DispLocation;
 #if	(DISPLAY_MODE == DISPLAY_1T1R)
 	if(tKNL_GetDispType() == KNL_DISP_SINGLE)
@@ -194,12 +195,12 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 		uwVDO_VSIZE = uwVSize;
 		ubVDO_ResChgFlag = TRUE;
 	}
+        printd(1,"VDO_SwitchDisplayType tVDO_DisplayType %d \n",tVDO_DisplayType);
 	switch(tVDO_DisplayType)
 	{
 		case KNL_DISP_SINGLE:
 		{
 			KNL_ROLE tVDO_KNLRole = KNL_NONE;
-
 			tVDO_KNLRole = *pVDO_BURole;
 			if(ubSwitchCamWakeupSstate == 1)
 			{
@@ -215,6 +216,7 @@ void VDO_SwitchDisplayType(KNL_DISP_TYPE tVDO_DisplayType, KNL_ROLE *pVDO_BURole
 			if(((TRUE == ubVDO_ResChgFlag) || (TRUE == ubVDO_PathRstFlag)) &&
 			   ((tKNL_DualBURole[0] != tVDO_KNLRole) && (tKNL_DualBURole[1] != tVDO_KNLRole)))
 			{
+                            printd(1,"KNL_DISP_SINGLE \n");
 				VDO_Stop();
 				KNL_VdoPathReset();
 				KNL_SetVdoResolution(tVDO_KNLSrcNum, uwVDO_HSIZE, uwVDO_VSIZE);

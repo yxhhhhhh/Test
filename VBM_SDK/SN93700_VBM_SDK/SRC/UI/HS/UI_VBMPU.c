@@ -508,7 +508,7 @@ void UI_KeyEventExec(void *pvKeyEvent)
 
     if (ptKeyEvent->ubKeyID != PKEY_ID0)
     {
-	printd(Apk_DebugLvl,"UI_CameraResetCycleTime gogogo\n");
+	printd(1,"UI_CameraResetCycleTime gogogo\n");
         UI_CameraResetCycleTime(ptKeyEvent->ubKeyAction);
     }
 
@@ -1526,12 +1526,12 @@ void UI_WakeUp(void)
 
     UI_TimerDeviceEventStart(TIMER1_2, ubAutoSleepTime[tUI_PuSetting.ubSleepMode]*1000*70, UI_AutoLcdSetSleepTimerEvent);
 
-    /*
+    
     if ((TRUE == tUI_PuSetting.ubScanModeEn) && (FALSE == ubUI_ScanStartFlag))
     {
         UI_EnableScanMode();
     }
-    */
+    
 
     //UI_TriggerWakeUpAlarm();
 }
@@ -7792,7 +7792,7 @@ void UI_GetPairCamInfo(void)
 
     for (i = 0; i < 4 ; i++)
     {
-        printd(Apk_DebugLvl, "tUI_CamStatus[%d].ulCAM_ID  %lx \n",i,tUI_CamStatus[i].ulCAM_ID);
+        printd(1, "tUI_CamStatus[%d].ulCAM_ID  %lx \n",i,tUI_CamStatus[i].ulCAM_ID);
         if (tUI_CamStatus[i].ulCAM_ID != INVALID_ID)
         {
             ubCamPairFlag[i] = 1;
@@ -7801,7 +7801,7 @@ void UI_GetPairCamInfo(void)
         {
             ubCamPairFlag[i] = 0;
         }
-        printd(Apk_DebugLvl, "ubCamPairFlag[%d]= %d \n",i,ubCamPairFlag[i] );
+        printd(1, "ubCamPairFlag[%d]= %d \n",i,ubCamPairFlag[i] );
     }
 
 
@@ -7810,6 +7810,7 @@ void UI_GetPairCamInfo(void)
         if (tUI_CamStatus[i].ulCAM_ID == INVALID_ID)
         {
             ubPairSelCam = i;
+            printd(1, "ubPairSelCam= %d \n",i,ubPairSelCam );
             break;
         }
     }
@@ -8380,7 +8381,7 @@ void UI_CameraResetCycleTime(uint8_t KeyAction)
     if (ubShowAlarmstate >0)
     	return;
 		
-
+    printd(1,"UI_CameraResetCycleTime tUI_PuSetting.tPsMode %d \n",tUI_PuSetting.tPsMode);
     if (KeyAction == KEY_UP_ACT)
     {
         UI_SetupScanModeTimer(TRUE);
@@ -15541,7 +15542,7 @@ void UI_ScanModeTimerEvent(void)
 //------------------------------------------------------------------------------
 void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 {
-    //printd(1, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
+    printd(1, "UI_SetupScanModeTimer ubTimerEn: %d, Time: %d.\n", ubTimerEn, ubCameraScanTime[tUI_PuSetting.ubScanTime]*1000);
 	//osDelay(1);
     ubUI_ScanStartFlag = ubTimerEn;
     if (TRUE == ubTimerEn)
@@ -15563,7 +15564,7 @@ void UI_SetupScanModeTimer(uint8_t ubTimerEn)
 //------------------------------------------------------------------------------
 void UI_EnableScanMode(void)
 {
-    printd(Apk_DebugLvl, "UI_EnableScanMode ubScanTime: %d.ubShowAlarmstate =%d\n", tUI_PuSetting.ubScanTime,ubShowAlarmstate);
+    printd(1, "UI_EnableScanMode ubScanTime: %d.ubShowAlarmstate =%d\n", tUI_PuSetting.ubScanTime,ubShowAlarmstate);
 
     if (tUI_PuSetting.ubScanTime == 0)
     {

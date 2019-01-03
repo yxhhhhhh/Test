@@ -455,6 +455,7 @@ void APP_LinkStateFunc(APP_EventMsg_t *ptEventMsg)
 			APP_doUnbindBU(ptEventMsg);
 			break;
 		case APP_VIEWTYPECHG_EVENT:
+                        printd(1,"APP_LinkStateFunc APP_VIEWTYPECHG_EVENT\n");
 			APP_SwitchViewTypeExec(ptEventMsg);
 			break;
 		case APP_ADOSRCSEL_EVENT:
@@ -766,6 +767,7 @@ void APP_KNLParamSetup(void)
 		for(tCamNum = CAM1; tCamNum < DISPLAY_MODE; tCamNum++)
 		{
 			tKNL_BURole = tAPP_STANumTable[tCamNum].tKNL_StaNum;
+                     printd(1,"APP_KNLParamSetup \n");
 			VDO_DisplayLocationSetup(tKNL_BURole, tAPP_KNLInfo.tBURoleInfo[tKNL_BURole].tKNL_DispLoc);
 		}
 		if(tAPP_KNLInfo.tAdoSrcRole > KNL_STA4)
@@ -883,7 +885,7 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 			tAPP_KNLInfo.tAdoSrcRole = tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum;
 			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 		}
-	
+	        printd(1,"APP_SwitchViewTypeExec \n");
 		VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
 	}
 }

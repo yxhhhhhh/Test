@@ -889,16 +889,19 @@ void UI_TempCheck(void) //20180322
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 2, NULL, 0);
         if (!ret) {
             pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+            printd(1,"UI_TempCheck pI2C_MasterInit1 fail\n");
             goto report;
         }
         ubWrData[0] = 0x00;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
         if (!ret) {
             pTempI2C = pI2C_MasterInit (I2C_1, I2C_SCL_100K);
+            printd(1,"UI_TempCheck pI2C_MasterInit2 fail\n");
             goto report;
         }
 
         tem = (int16_t)((ubRdData[0] << 8) | (ubRdData[1] << 0)) * 100 / 256;
+        printd(1, "!!!!ubRdData[0]  %d ubRdData[1] %d  tem: %d\n", ubRdData[0],ubRdData[1],tem);
     }
 
     //++ tempture compensation
