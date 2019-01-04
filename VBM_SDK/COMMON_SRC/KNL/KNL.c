@@ -3480,10 +3480,10 @@ uint8_t ubKNL_GetDispSrc(KNL_DISP_LOCATION tDispLocation)
 //------------------------------------------------------------------------------
 KNL_DISP_LOCATION tKNL_GetDispLocation(uint8_t ubSrcNum)
 {
-        printd(1,"tKNL_GetDispLocation\n");
-        printd(1,"ubSrcNum %d \n",ubSrcNum);
-        printd(1,"tKNL_Info.ubDisp1SrcNum %d  tKNL_Info.ubDisp2SrcNum %d\n",tKNL_Info.ubDisp1SrcNum,tKNL_Info.ubDisp2SrcNum);
-        printd(1,"tKNL_Info.ubDisp3SrcNum %d  tKNL_Info.ubDisp4SrcNum %d\n",tKNL_Info.ubDisp3SrcNum,tKNL_Info.ubDisp4SrcNum);
+        //printd(1,"tKNL_GetDispLocation\n");
+        //printd(1,"ubSrcNum %d \n",ubSrcNum);
+        //printd(1,"tKNL_Info.ubDisp1SrcNum %d  tKNL_Info.ubDisp2SrcNum %d\n",tKNL_Info.ubDisp1SrcNum,tKNL_Info.ubDisp2SrcNum);
+        //printd(1,"tKNL_Info.ubDisp3SrcNum %d  tKNL_Info.ubDisp4SrcNum %d\n",tKNL_Info.ubDisp3SrcNum,tKNL_Info.ubDisp4SrcNum);
 
 	if(tKNL_Info.ubDisp1SrcNum == ubSrcNum)
 	{

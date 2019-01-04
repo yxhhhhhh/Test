@@ -901,8 +901,8 @@ void UI_TempCheck(void) //20180322
         }
 
         tem = (int16_t)((ubRdData[0] << 8) | (ubRdData[1] << 0)) * 100 / 256;
-        printd(1, "!!!!ubRdData[0]  %d ubRdData[1] %d  tem: %d\n", ubRdData[0],ubRdData[1],tem);
     }
+        printd(1, "!!!!ubRdData[0]  %d ubRdData[1] %d  tem: %d\n", ubRdData[0],ubRdData[1],tem);
 
     //++ tempture compensation
     if (tem >= 2000 && temp_flag == 0) {
