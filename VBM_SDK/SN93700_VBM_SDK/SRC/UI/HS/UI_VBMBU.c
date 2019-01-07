@@ -885,6 +885,8 @@ void UI_TempCheck(void) //20180322
     ret = bI2C_MasterProcess(pTempI2C, 0x40, ubWrData, 1, ubRdData, 2);
     if (ret) {
         tem = 17572 * (ubRdData[0] * 256 + ubRdData[1]) / 65536 - 4685;
+        printd(1, " 11ubRdData[0]  %d ubRdData[1] %d  tem: %d\n", ubRdData[0],ubRdData[1],tem);
+
     } else { // try ct75 sensor
         ubWrData[0] = 0x01;
         ubWrData[1] = 0x81;
@@ -894,6 +896,7 @@ void UI_TempCheck(void) //20180322
             printd(1,"UI_TempCheck pI2C_MasterInit1 fail\n");
             goto report;
         }
+        osDelay(35);
         ubWrData[0] = 0x00;
         ret = bI2C_MasterProcess(pTempI2C, 0x48, ubWrData, 1, ubRdData, 2);
         if (!ret) {
@@ -903,8 +906,9 @@ void UI_TempCheck(void) //20180322
         }
 
         tem = (int16_t)((ubRdData[0] << 8) | (ubRdData[1] << 0)) * 100 / 256;
+        printd(1, "CT75  ubRdData[0]  %d ubRdData[1] %d  tem: %d\n", ubRdData[0],ubRdData[1],tem);
+
     }
-        printd(1, "!!!!ubRdData[0]  %d ubRdData[1] %d  tem: %d\n", ubRdData[0],ubRdData[1],tem);
 
     //++ tempture compensation
     if (tem >= 2000 && temp_flag == 0) {
@@ -948,7 +952,6 @@ report:
         tUI_TempReqCmd.ubCmd_Len                = 7;
         UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
         tem_last = tem;
-            printd(1, "###  tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]:%d\n", tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]);
 
     }
 }
