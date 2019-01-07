@@ -9886,15 +9886,11 @@ void UI_GetTempData(UI_CamNum_t tCamNum, void *pvTrig) //20180322
 		UI_TempBarDisplay(ubRealTemp);
 		return;
 	}
-        printd(1,"UI_GetTempData pvdata[0]  %d pvdata[3] %d pvdata[4]  %d\n",pvdata[0] ,pvdata[3] ,pvdata[4] );
-        if((pvdata[0] == pvdata[4]) && ((pvdata[3]+pvdata[4]) == 0xFF)) 
-        {
-            if(pvdata[0] > 50 || (pvdata[0] > 10 && pvdata[1])) 
-                ubRealTemp = 0xFF;
-            else
-                ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
-        }
-
+        
+        if(pvdata[0] > 50 || (pvdata[0] > 10 && pvdata[1])) 
+            ubRealTemp = 0xFF;
+        else
+            ubRealTemp = tUI_PuSetting.ubTempunitFlag?pvdata[0]:UI_TempCToF(pvdata[0]);
 
 #if TEMP_TEST
    		 OSD_IMG_INFO info;
@@ -10473,7 +10469,7 @@ void UI_EnableMotor(uint8_t value)
 {
     UI_PUReqCmd_t tUI_motorReqCmd;
 
-    printd(1, "UI_EnableMotor value: %d, tCamConnSts: %d.\n", value, tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
+    printd(Apk_DebugLvl, "UI_EnableMotor value: %d, tCamConnSts: %d.\n", value, tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts);
     if ((tUI_CamStatus[tCamViewSel.tCamViewPool[0]].ulCAM_ID != INVALID_ID) &&
         (tUI_CamStatus[tCamViewSel.tCamViewPool[0]].tCamConnSts == CAM_ONLINE))
     {

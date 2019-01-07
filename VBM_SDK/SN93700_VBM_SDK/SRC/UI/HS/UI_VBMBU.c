@@ -829,6 +829,7 @@ void UI_VoiceCheck (void)
     ADO_SetAdcRpt(128, 256, ADO_ON);
     ulUI_AdcRpt = ulADO_GetAdcSumHigh();
 
+//  printd(Apk_DebugLvl, "ulUI_AdcRpt  0x%lx , uwDetLvl %x \n",ulUI_AdcRpt,uwDetLvl);
 
     if (ulUI_AdcRpt > 0x1388)//0x3000
         voice_temp = 5;
@@ -848,7 +849,7 @@ void UI_VoiceCheck (void)
 
     //if (ubVoicetemp_bak != voice_temp)
     //{
-        printd(Apk_DebugLvl, "ulUI_AdcRpt 0x%lx voice_temp: %d \n",ulUI_AdcRpt,voice_temp);
+    //  printd(Apk_DebugLvl, "voice_temp: %d \n",voice_temp);
 
         tUI_VoiceReqCmd.ubCmd[UI_TWC_TYPE]      = UI_REPORT;
         tUI_VoiceReqCmd.ubCmd[UI_REPORT_ITEM]   = UI_VOICE_CHECK;
@@ -862,6 +863,7 @@ void UI_VoiceCheck (void)
     //  ubVoicetemp_bak = voice_temp;
     //}
 
+    //UI_SendPickupVolumeToPu(ulUI_AdcRpt);
 }
 
 void UI_TempCheck(void) //20180322
@@ -941,14 +943,12 @@ report:
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA]    = ubCurTempVal;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+1]  = ubTempBelowZore;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  =!ret;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+3]  = 0xFF-ubCurTempVal;//ubTempValueH;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+4]  = ubCurTempVal;//ubTempValueL;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+3]  = ubTempValueH;
+        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+4]  = ubTempValueL;
         tUI_TempReqCmd.ubCmd_Len                = 7;
-        if (rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_TempReqCmd))
-        {
-            printd(DBG_ErrorLvl, "UI_SendTempToPu Fail!\n");
-        }     
-       // tem_last = tem;
+        UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
+        tem_last = tem;
+            printd(1, "###  tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]:%d\n", tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]);
 
     }
 }
@@ -1686,7 +1686,7 @@ void UI_BrightnessCheck(void) //20180408
 	 uwDetdifferent = uwDetLvl - ubLastDetValue;
     else
 	 uwDetdifferent = ubLastDetValue - uwDetLvl;
-    printd(Apk_DebugLvl,"UI_BrightnessCheck uwDetLvl %d ubLastDetValue %d   uwDetdifferent = %x\n",uwDetLvl,ubLastDetValue,uwDetdifferent);
+    printd(1,"UI_BrightnessCheck uwDetLvl %d ubLastDetValue %d   uwDetdifferent = %x\n",uwDetLvl,ubLastDetValue,uwDetdifferent);
     ubLastDetValue  = uwDetLvl;
 
     if( uwDetdifferent > 0x05)
