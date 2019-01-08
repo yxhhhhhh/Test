@@ -1623,6 +1623,17 @@ void UI_RecvPUCmdSetting(void *pvRecvPuParam)
         break;
     }
 }
+
+void set_ircut(int en)
+{
+   	GPIO->GPIO_O7 =  !en;
+   	GPIO->GPIO_O8 =    en;
+        osDelay(100);
+    	GPIO->GPIO_O7 =    0;
+   	GPIO->GPIO_O8 =    0;       
+
+}
+
 void UI_SetIrMode(uint8_t mode)
 {
 	if(mode == 1)
@@ -1651,6 +1662,7 @@ void UI_SetIRLed(uint8_t LedState)
 	UI_SetIrMode(1); //开IR, 黑白色
 	osDelay(50);
 	GPIO->GPIO_O4 = 1;
+        set_ircut(1);
     	printd(1, "UI_SetIRLed On###\n");
         //BUZ_PlaySingleSound();
         
@@ -1661,6 +1673,7 @@ void UI_SetIRLed(uint8_t LedState)
 	 GPIO->GPIO_O4 = 0;
 	 osDelay(50);
         UI_SetIrMode(0); //关IR, 彩色
+         set_ircut(0);
         printd(1, "UI_SetIRLed Off###\n");
         //BUZ_PlaySingleSound();
     }

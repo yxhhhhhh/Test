@@ -262,6 +262,10 @@ void BSP_BoardInit(void)
 	//! Temp I2c
 	GLB->PADIO37 = 2;
 	GLB->PADIO38 = 2;
+
+    	//! IR-CUT 
+	GLB->PADIO35 = 0;
+	GLB->PADIO36 = 0;
 }
 #endif
 //------------------------------------------------------------------------------
