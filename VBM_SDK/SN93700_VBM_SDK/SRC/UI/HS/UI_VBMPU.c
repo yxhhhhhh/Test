@@ -391,32 +391,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
            		 if (ptKeyEvent->ubKeyID != PKEY_ID0)
                		 return;
         }
-/*	//语言设置界面进行唤醒，但是唤醒之后无LOGO
-	   if (PWR_ON != ubPowerState)
-	   {
-           		 if (ptKeyEvent->ubKeyID != PKEY_ID0) //Powerkey
-           	 	{
-           	 		if(ubFS_MenuItem == 0)
-           	 		{
-           	 			if ((ptKeyEvent->ubKeyID == AKEY_UP) || (ptKeyEvent->ubKeyID == AKEY_DOWN) || (ptKeyEvent->ubKeyID > AKEY_ENTER))
-					{
-						UI_SetSleepState(1);
-						LCDBL_ENABLE(UI_ENABLE);
-						return;
-           	 				}
-           	 		}
-				if(ubFS_MenuItem == 1)
-           	 		{
-           	 			if ((ptKeyEvent->ubKeyID >= AKEY_UP) ||(ptKeyEvent->ubKeyID <= AKEY_ENTER))
-					{
-						UI_SetSleepState(1);
-						LCDBL_ENABLE(UI_ENABLE);
-						return;
-           	 				}
-           	 		}
-           	 	}
-	   }	
-*/
     }
     else
     {
@@ -443,12 +417,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
     {
         if ((ptKeyEvent->ubKeyID == PKEY_ID0)&&(GPIO->GPIO_I9 == 0))
         {
- /*           if (ubPUEnterAdotestFLag == 0)
-            {
-                ubPUEnterAdotestFLag = 1;
-                //UI_EnterLocalAdoTest_RX();
-            }
-*/
 	     	if(ubEnterFactoryDelCam == 0)
 	     	{
 	     	    if(ubFactoryDelCamFlag == 0)	
@@ -473,15 +441,6 @@ void UI_KeyEventExec(void *pvKeyEvent)
         }
         if (ptKeyEvent->ubKeyAction == KEY_UP_ACT)
         {
-            /*
-            tOsdImgInfo.uwHSize  = 76;
-            tOsdImgInfo.uwVSize  = 300;
-            tOsdImgInfo.uwXStart = 60;
-            tOsdImgInfo.uwYStart = 50;
-            OSD_EraserImg2(&tOsdImgInfo);
-            */
-            //ubPUEnterAdotestFLag = 0;
-            //ubBUEnterAdotestFLag = 0;
         }
     }
     else
@@ -873,17 +832,7 @@ void UI_LinkStatusCheck(uint16_t ubLinkCheckCount)
         {
             getBuResult = UI_GetBuVersion();
         }
-/*	if(ubBUEnterAdotestFLag == 1)	
-	{
-      		  if (getBuMICResult == rUI_FAIL)
-      		  	{
-			  	getBuMICResult = UI_GetBuMICTest();
-				ubBUEnterAdotestFLag =0;
-      		  	}
-	}  
-	ubBUEnterAdotestFLag = 1;
 
-	*/
     }
     
     
