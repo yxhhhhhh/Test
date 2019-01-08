@@ -412,7 +412,7 @@ void PAIR_Paap(TWC_TAG GetSta,uint8_t *pData)
         if(memcmp(&PAIR_PapPket , pData, sizeof(PAIR_RAP_Hdr))==0)
         {
 			memcpy(&PAIR_IdTable, pData, sizeof(PAIR_ID_TABLE));
-            PAIR_SaveId();
+           //PAIR_SaveId();
             ubPAIR_State = PAIR_END;
         }
         else
