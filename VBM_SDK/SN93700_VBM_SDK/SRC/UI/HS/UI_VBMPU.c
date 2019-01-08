@@ -937,7 +937,7 @@ void UI_StatusCheck(uint16_t ubCheckCount)
     OSD_IMG_INFO tOsdImgInfo;
     static uint8_t ubSetAlarmRet = rUI_FAIL;
     static uint8_t ubNightModeRet = rUI_FAIL;
-
+    
 
 #if AUTO_RESTART
 
@@ -7928,7 +7928,7 @@ void UI_GetPairCamInfo(void)
     }
 
 
-    for (i = 0; i < 4 ; i++)
+/*    for (i = 0; i < 4 ; i++)
     {
         if (tUI_CamStatus[i].ulCAM_ID == INVALID_ID)
         {
@@ -7936,7 +7936,7 @@ void UI_GetPairCamInfo(void)
             break;
         }
     }
-
+*/
     if ((ubCamPairFlag[0] == 1)&&(ubCamPairFlag[1] == 1)
         &&(ubCamPairFlag[2] == 1)&&(ubCamPairFlag[3] == 1))
         ubCamFullFlag = 1;
@@ -8732,7 +8732,7 @@ else
 
 
         UI_ResetDevSetting(tPairInfo.tPairSelCam);
-        UI_UpdateDevStatusInfo();
+       UI_UpdateDevStatusInfo();
 
 	ubPairSelCamcnt++;
 	if(ubPairSelCamcnt > 3)
@@ -8741,7 +8741,7 @@ else
 }
 
 	
-        //UI_GetPairCamInfo();
+        UI_GetPairCamInfo();
 
 #if 0
         if (tCamViewSel.tCamViewPool[0] != tPairInfo.tPairSelCam)
@@ -14337,7 +14337,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
     UI_CamNum_t tCamNum;
     uint16_t uwUI_LostPeriod = UI_SHOWLOSTLOGO_PERIOD * 3;
     OSD_IMG_INFO tOsdImgInfo;
-    	//printd(1,"111111UI_ShowLostLinkLogotUI_PuSetting.IconSts.ubShowLostLogoFlag  %d  \n",tUI_PuSetting.IconSts.ubShowLostLogoFlag);
+    printd(1," UI_ShowLostLinkLogotUI_PuSetting.IconSts.ubShowLostLogoFlag  %d  \n",tUI_PuSetting.IconSts.ubShowLostLogoFlag);
 /*	if(TRUE == ubUI_ResetPeriodFlag)
 	{
 		switch(tUI_PuSetting.tPsMode)
@@ -14440,7 +14440,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                     }
 			if(ubWorWakeUpFlag == 1)
 				LCDBL_ENABLE(UI_ENABLE);
-                    //printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
+                    printd(1, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOCAM1.\n");
                 }
                 else
                 {
@@ -14457,7 +14457,7 @@ void UI_ShowLostLinkLogo(uint16_t *pThreadCnt)
                     */
                     tLCD_JpegDecodeDisable();
                     OSD_LogoJpeg(OSDLOGO_LOSTLINK+tUI_PuSetting.ubLangageFlag);
-                    //printd(Apk_DebugLvl, "UI_ShowLostLinkLogo OSD2IMG_MENU_NOSIGNAL1.\n");
+                    printd(1, "UI_ShowLostLinkLogo OSDLOGO_LOSTLINK tUI_PuSetting.ubLangageFlag %d. \n",tUI_PuSetting.ubLangageFlag);
  
  		       //ubTempAlarmState = TEMP_ALARM_IDLE;
                     //ubTempAlarmCheckCount = 0;

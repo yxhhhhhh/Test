@@ -388,7 +388,7 @@ void PAIR_Prp(TWC_TAG GetSta,uint8_t *pData)
 					ubPAIR_Number = tPAIR_Tag;
 					PAIR_PrpPket.ubTxNumber = ubPAIR_Number;
 					ubPairSelCam = ubPAIR_Number;
-					//printf("ubPairSelCam 11  = %d \n",ubPairSelCam);
+					printf("ubPairSelCam 11  = %d \n",ubPairSelCam);
 					//tPAIR_DelStaNum = tPAIR_Tag;
 					//PAIR_IdTable.ulSTA_ID[tPAIR_Tag] = PAIR_INVAILD_ID;
 				}
