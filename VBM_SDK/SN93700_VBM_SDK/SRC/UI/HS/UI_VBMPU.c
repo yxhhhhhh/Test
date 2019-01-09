@@ -2893,7 +2893,8 @@ UI_Result_t UI_SetupPuAdoOnlyMode(void)
 	UI_SendMessageToAPP(&tUI_PsMessage);
 	tUI_PuSetting.tPsMode = PS_ADOONLY_MODE;
 	UI_EnableScanMode();
-
+        LCD_UnInit();
+        LCD->LCD_MODE = LCD_GPIO;
 	return rUI_SUCCESS;
 }
 //------------------------------------------------------------------------------
