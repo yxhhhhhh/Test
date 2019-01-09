@@ -109,7 +109,7 @@ static uint8_t ubMcHandshakeLost = 0;
 I2C1_Type *pTempI2C;
 
 uint8_t ubBuHWVersion = 1;
-uint16_t ubBuSWVersion = 200;
+uint16_t ubBuSWVersion = 201;
 
 uint8_t ubTalkCnt = 0;
 uint8_t ubPairVolCnt = 0;
