@@ -1531,7 +1531,7 @@ void UI_SwitchMode(UI_PowerSaveMode_t tUI_PsMode)
 //  OSD_IMG_INFO tOsdImgInfo;
     UI_PUReqCmd_t tPsCmd;
     int i = 0;
-    printd(Apk_DebugLvl, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
+    printd(1, "UI_SwitchMode tUI_PsMode: %d.\n", tUI_PsMode);
     if (PS_VOX_MODE == tUI_PsMode)
     {
     	 for( i = 0; i < 4; i++)
@@ -6607,7 +6607,7 @@ void UI_ShowAlarm(uint8_t type)
 
     if(ubShowAlarmstate > 0)
     {
-        if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+        if(PS_VOX_MODE == tUI_PuSetting.tPsMode || PS_ADOONLY_MODE== tUI_PuSetting.tPsMode )
         {
             if(PWR_Sleep_Complete == ubPowerState)
                 UI_SetSleepState(1);
