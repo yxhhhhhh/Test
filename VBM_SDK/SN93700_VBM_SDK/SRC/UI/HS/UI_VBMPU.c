@@ -15528,11 +15528,8 @@ void UI_RecvBURequest(TWC_TAG tRecv_StaNum, uint8_t *pTwc_Data)
             UI_CamNum_t tCamNum = NO_CAM;
             
             APP_TwcTagMap2CamNum(tRecv_StaNum, tCamNum);
-            if(pTwc_Data[1] == UI_TEMP_CHECK && (pTwc_Data[7] != (uint8_t) (pTwc_Data[2] + pTwc_Data[3] + pTwc_Data[4] + pTwc_Data[5] + pTwc_Data[6]))) 
-            {
-                printd(1,"UI_RecvBURequest TWC checkbit fail\n");
-                break;
-            }
+            if(pTwc_Data[1] == UI_TEMP_CHECK && (pTwc_Data[7] != (uint8_t) pTwc_Data[2] + pTwc_Data[3] + pTwc_Data[4] + pTwc_Data[5] + pTwc_Data[6])) break;
+
             if (tUiReportMap2Func[pTwc_Data[UI_REPORT_ITEM]].pvAction)
                 tUiReportMap2Func[pTwc_Data[UI_REPORT_ITEM]].pvAction(tCamNum, (uint8_t *)(&pTwc_Data[UI_REPORT_DATA]));
             break;
