@@ -998,14 +998,8 @@ report:
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+2]  =!ret;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+3]  = ubTempValueH;
         tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+4]  = ubTempValueL;
-        tUI_TempReqCmd.ubCmd[UI_REPORT_DATA+5]  = (uint8_t)tUI_TempReqCmd.ubCmd[2] + tUI_TempReqCmd.ubCmd[3] + tUI_TempReqCmd.ubCmd[4] + tUI_TempReqCmd.ubCmd[5] + tUI_TempReqCmd.ubCmd[6];
-
-        tUI_TempReqCmd.ubCmd_Len                = 8;
-        if (rUI_FAIL == UI_SendRequestToPU(NULL, &tUI_TempReqCmd))
-        {
-            printd(1, "UI_SendTempToPu Fail!\n");
-        }
-        
+        tUI_TempReqCmd.ubCmd_Len                = 7;
+        UI_SendRequestToPU(NULL, &tUI_TempReqCmd);
         tem_last = tem;
     }
 }
