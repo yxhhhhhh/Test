@@ -66,7 +66,7 @@ extern uint8_t ubFS_MenuItem;
 extern uint8_t ubFactoryVoxOnFlag;
 extern uint8_t ubFactoryVoxOnCnt;
 
-
+extern uint8_t ubCameraOnlineNum;
 uint8_t ubLinkonceflag = 0;
 //------------------------------------------------------------------------------
 #ifdef VBM_BU
@@ -929,7 +929,7 @@ void APP_SwitchViewTypeExec(APP_EventMsg_t *ptEventMsg)
 			tAPP_KNLInfo.tAdoSrcRole = tAPP_STANumTable[tKNL_Role[0]].tKNL_StaNum;
 			ADO_Start(tAPP_KNLInfo.tAdoSrcRole);
 		}
-	
+	    if((ubPowerState == PWR_ON) ||ubCameraOnlineNum > 1)
 		VDO_SwitchDisplayType(tKNL_DispType, tKNL_Role);
             printd(1,"APP_SwitchViewTypeExec VDO_SwitchDisplayType\n");
 	}
