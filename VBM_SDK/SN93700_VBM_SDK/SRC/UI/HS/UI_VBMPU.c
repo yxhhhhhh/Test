@@ -1269,7 +1269,7 @@ void UI_UpdateStatus(uint16_t *pThreadCnt)
 	printd(Apk_DebugLvl,"UI_UpdateStatus ubLostLinkEnterSanMode = %d.tUI_PuSetting.ubDefualtFlag = %d\n",ubLostLinkEnterSanMode,tUI_PuSetting.ubDefualtFlag);
 
 	ubShowAlarmstate  = 0;
-    if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+    if(PS_VOX_MODE == tUI_PuSetting.tPsMode ||PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
     {
         if(ubVOXModeToBuRet[ubSendVoxInfocnt] != 1)
         {
@@ -2836,7 +2836,7 @@ void UI_PuPowerSaveKey(void)
 	if((APP_LOSTLINK_STATE == tUI_SyncAppState)
 	|| (tUI_State != UI_DISPLAY_STATE)
 //	|| (DISPLAY_1T1R != tUI_PuSetting.ubTotalBuNum)
-	|| (PS_VOX_MODE == tUI_PuSetting.tPsMode))
+	|| (PS_VOX_MODE == tUI_PuSetting.tPsMode)||PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
 		return;
 
 	if(tOSD_GetOsdImgInfor(1, OSD_IMG2, OSD2IMG_VOXOPT_ICON, 5, &tOsdImgInfo[0]) != OSD_OK)
@@ -3377,7 +3377,7 @@ void UI_DisplayArrowKeyFunc(UI_ArrowKey_t tArrowKey)
 //  UI_PUReqCmd_t tPsCmd;
 	printd(Apk_DebugLvl,"UI_DisplayArrowKeyFunc\n");
 
-    if(PS_VOX_MODE == tUI_PuSetting.tPsMode)
+    if(PS_VOX_MODE == tUI_PuSetting.tPsMode ||PS_ADOONLY_MODE == tUI_PuSetting.tPsMode)
 	return;
 
 #if 1
@@ -15858,8 +15858,8 @@ void UI_TimerDeviceEventStart(TIMER_DEVICE_t tDevice, uint32_t ulTime_ms, void *
     tUI_TimerParam.tEM          = TIMER_CB;
     tUI_TimerParam.pvEvent      = pvRegCb;
 
-    printd(1, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
     TIMER_Start(tDevice, tUI_TimerParam);
+        printd(1, "UI_TimerDeviceEventStart tDevice: %d, ulTime_ms: %d.\n", tDevice, ulTime_ms);
     ubTimerDevEventStopSta = 1;
 }
 //------------------------------------------------------------------------------

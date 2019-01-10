@@ -300,14 +300,14 @@ void PAIR_Pap(TWC_TAG GetSta,uint8_t *pData)
     {
         memcpy(&PAIR_PapPket, pData, sizeof(PAIR_PapPket));
 		memcpy(&PAIR_IdTable, pData, sizeof(PAIR_ID_TABLE));
-        PAIR_SaveId();
+        //PAIR_SaveId();
         ubPAIR_State = PAIR_PAAP;
     }
     else if(((pData[0] == PAIR_PrpPket.ubTxNumber)||(PAIR_PrpPket.ubTxNumber == PAIR_AP_ASSIGN))&&(PAIR_PrpPket.ubIdCheckKey == pData[ubTemp*4+8]) && (ubPAIR_State == PAIR_PRP))
     {
         memcpy(&PAIR_PapPket, pData, sizeof(PAIR_PapPket));
 		memcpy(&PAIR_IdTable, pData, sizeof(PAIR_ID_TABLE));
-        PAIR_SaveId();
+       // PAIR_SaveId();
         ubPAIR_State = PAIR_PAAP;
     }
 }
